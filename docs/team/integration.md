@@ -39,3 +39,17 @@ Architecture tests must allow these adapters to reference the source module's `.
 | Cross-schema foreign keys (orders, locations) in the initial migration | E3 |
 | Initial migration runs all `DatabaseObjectsSql` after tables (Reporting views need real Ordering/Inventory/Catalog columns) | E5 |
 | SALE movements use `reference_type = 'ORDER_ITEM'` (Reporting assumption) — verify | E5 |
+
+## From E1 (Identity, Customers, Settings, Audit, Notifications)
+
+| Item | Action |
+|---|---|
+| Cross-module events blocked by architecture tests | D30: move consumed events to `.Public/Events`; update tests |
+| Cart handles `CustomerSignedIn` (guest cart merge) | adapter after D30 |
+| Notifications on order/payment/delivery events, `CustomerDeleted` drops device tokens | adapters after D30 |
+| HTTP 401/403/429 per error | D31 shared exceptions; remove Identity/Customers/Payments/Reporting/Inventory/Delivery filters |
+| Module "Uses": Identity, Customers, Settings, Notifications → Audit; Customers → Locations; Notifications → Settings, Customers | update architecture doc and project refs |
+| Host: `refresh` rate-limit policy; Development SMTP `localhost:1025` (Mailpit) | Api/Worker appsettings |
+| Migrations host `--create-admin` → `IFirstAdminService.CreateFirstAdminAsync(new CreateFirstAdminCommand(email, fullName, password))` after reference data | Migrations host |
+| Ordering implements `ICustomerDeletionCheck` (`ACTIVE_ORDERS_EXIST`) | E4 / manager |
+| Wishlist priced products; address `isServiceable` | after Catalog/Locations Public lookups exist |
