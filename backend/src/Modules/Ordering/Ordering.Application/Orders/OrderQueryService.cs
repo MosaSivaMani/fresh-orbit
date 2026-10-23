@@ -48,7 +48,7 @@ public sealed class OrderQueryService(
     {
         ArgumentNullException.ThrowIfNull(actor);
         var order = await orders.GetAsync(orderId, cancellationToken) ?? throw new NotFoundException("The order does not exist.");
-        return actor.CanAccessLocation(order.FulfillmentLocationId) ? order : throw OrderingAccessException.LocationDenied();
+        return actor.CanAccessLocation(order.FulfillmentLocationId) ? order : throw OrderingAccess.LocationDenied();
     }
 
     public async Task<OrderDetailResponse> CustomerDetailAsync(Order order, CancellationToken cancellationToken)
@@ -102,7 +102,7 @@ public sealed class OrderQueryService(
         var method = ParseOptional<PaymentMethod>(query.PaymentMethod, "paymentMethod");
         if (query.FulfillmentLocationId is { } locationId && !actor.CanAccessLocation(locationId))
         {
-            throw OrderingAccessException.LocationDenied();
+            throw OrderingAccess.LocationDenied();
         }
 
         DateTimeOffset? slotFrom = null;
@@ -130,7 +130,7 @@ public sealed class OrderQueryService(
         ArgumentNullException.ThrowIfNull(actor);
         if (!actor.CanAccessLocation(fulfillmentLocationId))
         {
-            throw OrderingAccessException.LocationDenied();
+            throw OrderingAccess.LocationDenied();
         }
 
         return new PickListResponse(fulfillmentLocationId, slotId, await reads.PickListAsync(fulfillmentLocationId, slotId, cancellationToken));

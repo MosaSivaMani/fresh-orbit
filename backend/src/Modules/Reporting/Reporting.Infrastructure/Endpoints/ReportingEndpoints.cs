@@ -5,7 +5,6 @@ using FreshOrbit.Reporting.Domain;
 using FreshOrbit.Reporting.Infrastructure.Reports;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
-using FreshOrbit.SharedKernel.Web.Errors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -18,25 +17,6 @@ public static class ReportingPermissions
     public const string ReportsView = "reports.view";
 }
 
-/// <summary>Maps <see cref="LocationAccessDeniedException"/> to 403 (the shared handler maps domain refusals to 422).</summary>
-public sealed class ReportingProblemFilter : IEndpointFilter
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
-        try
-        {
-            return await next(context);
-        }
-        catch (LocationAccessDeniedException exception)
-        {
-            var problem = FreshOrbitExceptionHandler.ToProblem(exception);
-            return TypedResults.Problem(detail: problem.Detail, statusCode: StatusCodes.Status403Forbidden, title: "Forbidden.", extensions: problem.Extensions);
-        }
-    }
-}
-
 /// <summary>Staff report endpoints (docs/api §4.20). Read-only: no If-Match, no Idempotency-Key (REP-R13).</summary>
 internal static class ReportingEndpoints
 {
@@ -46,7 +26,6 @@ internal static class ReportingEndpoints
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         var reports = endpoints.MapGroup("/admin/reports")
-            .AddEndpointFilter<ReportingProblemFilter>()
             .RequirePermission(ReportingPermissions.ReportsView);
 
         foreach (var report in ReportDefinitions.All)

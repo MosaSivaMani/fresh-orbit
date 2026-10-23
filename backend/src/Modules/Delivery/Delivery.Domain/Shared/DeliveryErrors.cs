@@ -34,7 +34,7 @@ public static class DeliveryErrors
 }
 
 /// <summary>A staff member acted on a fulfillment location outside their scope (HTTP 403 LOCATION_ACCESS_DENIED).</summary>
-public sealed class LocationAccessDeniedException : DomainException
+public sealed class LocationAccessDeniedException : ForbiddenException
 {
     public LocationAccessDeniedException()
         : base(DeliveryErrors.LocationAccessDenied, "You may not act on this fulfillment location; ask for access to it.", "fulfillmentLocationId")

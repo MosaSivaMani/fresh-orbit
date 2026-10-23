@@ -52,7 +52,7 @@ public sealed class StaffAuthService(
             await unitOfWork.SaveChangesAsync(cancellationToken);
             if (!wasLocked && user.Status == UserStatus.Locked)
             {
-                throw new DomainException(IdentityErrors.AccountLocked, "Too many wrong passwords; this account is now locked.");
+                throw new ForbiddenException(IdentityErrors.AccountLocked, "Too many wrong passwords; this account is now locked.");
             }
 
             throw InvalidCredentials();
@@ -62,7 +62,7 @@ public sealed class StaffAuthService(
         var member = await staff.FindByUserAsync(user.Id, cancellationToken);
         if (member is null || !member.IsActive)
         {
-            throw new DomainException(IdentityErrors.AccountDisabled, "This staff account is inactive.");
+            throw new ForbiddenException(IdentityErrors.AccountDisabled, "This staff account is inactive.");
         }
 
         if (needsRehash)
@@ -115,5 +115,5 @@ public sealed class StaffAuthService(
 
     internal static StaffRoleRef ToRef(Role role) => new(role.Id, role.Code, role.Name);
 
-    private static DomainException InvalidCredentials() => new(IdentityErrors.InvalidCredentials, "The email or password is wrong.");
+    private static UnauthorizedException InvalidCredentials() => new(IdentityErrors.InvalidCredentials, "The email or password is wrong.");
 }

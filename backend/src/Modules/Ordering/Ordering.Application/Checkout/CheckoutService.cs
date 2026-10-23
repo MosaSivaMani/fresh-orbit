@@ -244,7 +244,7 @@ public sealed class CheckoutService(
         var customer = await customers.GetCustomerAsync(customerId, cancellationToken);
         if (customer is null || customer.Status != CustomerStatus.Active)
         {
-            throw OrderingAccessException.CustomerDeleted();
+            throw OrderingAccess.CustomerDeleted();
         }
 
         var (method, preference) = ValidateRequest(request);

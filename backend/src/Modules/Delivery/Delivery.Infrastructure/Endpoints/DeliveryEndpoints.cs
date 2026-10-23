@@ -34,7 +34,6 @@ internal static class DeliveryEndpoints
         endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).AllowAnonymous();
 
         var admin = endpoints.MapGroup("/admin/delivery").RequirePermission(Permission);
-        admin.AddEndpointFilter<LocationAccessFilter>();
 
         admin.MapGet("/slot-templates", ListTemplatesAsync);
         admin.MapPost("/slot-templates", CreateTemplateAsync).WithValidation<CreateSlotTemplateRequest>();

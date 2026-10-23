@@ -2,36 +2,10 @@ using FreshOrbit.Delivery.Domain.Shared;
 using FreshOrbit.Delivery.Infrastructure.Persistence;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Errors;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace FreshOrbit.Delivery.Infrastructure.Endpoints;
-
-/// <summary>
-/// Turns <see cref="LocationAccessDeniedException"/> into 403 Problem Details with <c>code</c> (the shared exception
-/// handler maps every DomainException to 422; a shared 403 exception is proposed for the SharedKernel).
-/// </summary>
-internal sealed class LocationAccessFilter : IEndpointFilter
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
-        try
-        {
-            return await next(context);
-        }
-        catch (LocationAccessDeniedException denied)
-        {
-            var problem = new ProblemDetails { Status = StatusCodes.Status403Forbidden, Title = "Forbidden.", Detail = denied.Message };
-            problem.Extensions["code"] = denied.Code;
-            problem.Extensions["errors"] = new Dictionary<string, object[]> { [denied.Field!] = [new { code = denied.Code, message = denied.Message }] };
-            return TypedResults.Problem(problem);
-        }
-    }
-}
 
 internal static class SaveSupport
 {

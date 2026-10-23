@@ -29,7 +29,7 @@ internal static class OrderingEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        var root = endpoints.MapGroup(string.Empty).AddEndpointFilter<AccessProblemFilter>();
+        var root = endpoints.MapGroup(string.Empty);
         MapCustomer(root);
         MapAdmin(root);
     }
@@ -164,7 +164,7 @@ internal static class OrderingEndpoints
     }
 
     private static Guid CustomerOf(ICurrentActor actor)
-        => actor.CustomerId ?? throw OrderingAccessException.LoginRequired();
+        => actor.CustomerId ?? throw OrderingAccess.LoginRequired();
 
     private static Microsoft.AspNetCore.Http.HttpResults.Ok<OrderDetailResponse> WithETag(HttpResponse response, OrderDetailResponse detail)
     {
@@ -220,27 +220,5 @@ internal static class OrderingEndpoints
         }
 
         return errors.Count > 0 ? throw new RefusalException(errors) : (p, size);
-    }
-}
-
-/// <summary>Turns <see cref="OrderingAccessException"/> into 401 / 403 Problem Details with its code.</summary>
-internal sealed class AccessProblemFilter : IEndpointFilter
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
-        try
-        {
-            return await next(context);
-        }
-        catch (OrderingAccessException denied)
-        {
-            return TypedResults.Problem(
-                statusCode: denied.StatusCode,
-                title: denied.StatusCode == StatusCodes.Status401Unauthorized ? "Unauthorized." : "Forbidden.",
-                detail: denied.Message,
-                extensions: new Dictionary<string, object?> { ["code"] = denied.Code });
-        }
     }
 }

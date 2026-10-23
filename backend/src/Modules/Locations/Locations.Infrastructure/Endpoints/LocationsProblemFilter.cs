@@ -1,4 +1,3 @@
-using FreshOrbit.Locations.Application.Common;
 using FreshOrbit.Locations.Domain.Cities;
 using FreshOrbit.Locations.Domain.Shared;
 using FreshOrbit.Locations.Infrastructure.Persistence.Configurations;
@@ -11,7 +10,7 @@ namespace FreshOrbit.Locations.Infrastructure.Endpoints;
 
 /// <summary>
 /// Problem Details the shared exception handler cannot produce: CITY_NOT_READY with <c>missing</c>,
-/// CITY_RETIREMENT_BLOCKED with <c>blocking</c>, 403 LOCATION_ACCESS_DENIED, and unique-index violations (the last
+/// CITY_RETIREMENT_BLOCKED with <c>blocking</c>, and unique-index violations (the last
 /// line behind the command's own checks) as 409.
 /// </summary>
 public sealed class LocationsProblemFilter : IEndpointFilter
@@ -41,10 +40,6 @@ public sealed class LocationsProblemFilter : IEndpointFilter
                 ["blocking"] = exception.Blocking,
                 ["errors"] = new Dictionary<string, ProblemError[]>(),
             });
-        }
-        catch (LocationAccessDeniedException exception)
-        {
-            return Problem(StatusCodes.Status403Forbidden, "Forbidden.", exception.Code, exception.Message, []);
         }
         catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: UniqueViolation } postgres)
         {

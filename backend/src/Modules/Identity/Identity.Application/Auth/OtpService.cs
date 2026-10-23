@@ -116,7 +116,7 @@ public sealed class OtpService(
             throw check switch
             {
                 OtpCheck.Expired => new DomainException(IdentityErrors.OtpExpired, "The code has expired; request a new one.", "code"),
-                OtpCheck.TooManyAttempts => new RetryLaterException(IdentityErrors.OtpTooManyAttempts, "Too many wrong codes; request a new one.", settings.OtpResendSeconds),
+                OtpCheck.TooManyAttempts => new TooManyRequestsException(IdentityErrors.OtpTooManyAttempts, "Too many wrong codes; request a new one.", settings.OtpResendSeconds),
                 _ => new DomainException(IdentityErrors.OtpInvalid, "The code is not valid for this phone; check the code or request a new one.", "code"),
             };
         }
@@ -130,14 +130,14 @@ public sealed class OtpService(
         else if (user.Status != DomainUserStatus.Active || user.UserType != DomainUserType.Customer)
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new DomainException(IdentityErrors.AccountDisabled, "This account is disabled.");
+            throw new ForbiddenException(IdentityErrors.AccountDisabled, "This account is disabled.");
         }
 
         var account = await customers.EnsureCustomerAsync(user.Id, cancellationToken);
         if (account.IsDeleted)
         {
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new DomainException(IdentityErrors.AccountDisabled, "This account was deleted.");
+            throw new ForbiddenException(IdentityErrors.AccountDisabled, "This account was deleted.");
         }
 
         user.RecordCustomerSignIn(account.CustomerId, account.IsNew, request.GuestCartToken, request.DeviceLabel, now);
@@ -161,7 +161,7 @@ public sealed class OtpService(
             var sinceLast = now - recent[0];
             if (sinceLast < TimeSpan.FromSeconds(settings.OtpResendSeconds))
             {
-                throw new RetryLaterException(IdentityErrors.OtpResendTooSoon, "A code was sent moments ago; wait before asking for another.", (int)Math.Ceiling(settings.OtpResendSeconds - sinceLast.TotalSeconds));
+                throw new TooManyRequestsException(IdentityErrors.OtpResendTooSoon, "A code was sent moments ago; wait before asking for another.", (int)Math.Ceiling(settings.OtpResendSeconds - sinceLast.TotalSeconds));
             }
         }
 
@@ -187,6 +187,6 @@ public sealed class OtpService(
         }
     }
 
-    private static RetryLaterException RateLimited(TimeSpan wait)
+    private static TooManyRequestsException RateLimited(TimeSpan wait)
         => new(IdentityErrors.RateLimited, "Too many codes were requested; wait before trying again.", (int)Math.Ceiling(wait.TotalSeconds));
 }

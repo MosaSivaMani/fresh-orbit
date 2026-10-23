@@ -84,6 +84,10 @@ public sealed class WidgetTestModule : IModule
             "conflict" => throw new ConflictException("ORDER_ALREADY_PACKED", "The order is already packed."),
             "stale" => throw new ConcurrencyException(1, 2),
             "race" => throw new ConcurrentSaveException(null),
+            "unauthorized" => throw new UnauthorizedException("INVALID_CREDENTIALS", "The email or password is wrong."),
+            "forbidden" => throw new ForbiddenException("LOCATION_ACCESS_DENIED", "You do not have access to this location.", "fulfillmentLocationId"),
+            "too-many" => throw new TooManyRequestsException("OTP_RESEND_TOO_SOON", "Wait before asking for another code.", 42),
+            "unavailable" => throw new ServiceUnavailableException("PAYMENT_PROVIDER_UNAVAILABLE", "The payment provider cannot be reached."),
             _ => throw new InvalidOperationException("Boom with internal details."),
         });
 

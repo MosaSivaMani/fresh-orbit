@@ -52,7 +52,7 @@ public sealed class TokenService(
 
             token.ReportReuse(now);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new DomainException(IdentityErrors.RefreshTokenReused, "This refresh token was already used; sign in again.");
+            throw new UnauthorizedException(IdentityErrors.RefreshTokenReused, "This refresh token was already used; sign in again.");
         }
 
         if (!token.IsActive(now))
@@ -106,5 +106,5 @@ public sealed class TokenService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    private static DomainException Invalid() => new(IdentityErrors.RefreshTokenInvalid, "The refresh token is not valid; sign in again.");
+    private static UnauthorizedException Invalid() => new(IdentityErrors.RefreshTokenInvalid, "The refresh token is not valid; sign in again.");
 }

@@ -48,7 +48,7 @@ public sealed class Customer : AggregateRoot
     {
         if (Status == CustomerStatus.Deleted)
         {
-            throw new DomainException(CustomersErrors.CustomerDeleted, "This account was deleted.");
+            throw new ForbiddenException(CustomersErrors.CustomerDeleted, "This account was deleted.");
         }
     }
 

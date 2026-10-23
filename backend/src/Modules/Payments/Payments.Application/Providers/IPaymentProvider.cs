@@ -94,10 +94,10 @@ public sealed record ProviderRefundResult(string? ProviderRefundId, ProviderRefu
 public sealed record ProviderRefundState(string ProviderRefundId, ProviderRefundStatus Status, string? FailureReason);
 
 /// <summary>The adapter is disabled or the provider cannot be reached (HTTP 503 in requests, retry in jobs).</summary>
-public sealed class PaymentProviderUnavailableException : DomainException
+public sealed class PaymentProviderUnavailableException : ServiceUnavailableException
 {
     public PaymentProviderUnavailableException(string message, Exception? innerException = null)
-        : base(PaymentsErrors.PaymentProviderUnavailable, message, null, innerException)
+        : base(PaymentsErrors.PaymentProviderUnavailable, message, innerException)
     {
     }
 }

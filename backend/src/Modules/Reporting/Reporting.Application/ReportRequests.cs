@@ -6,7 +6,7 @@ namespace FreshOrbit.Reporting.Application;
 
 /// <summary>A <c>fulfillmentLocationId</c> outside the caller's access (HTTP 403 <c>LOCATION_ACCESS_DENIED</c>, REP-R11).</summary>
 public sealed class LocationAccessDeniedException()
-    : DomainException(ReportingErrors.LocationAccessDenied, "You do not have access to this fulfillment location.");
+    : ForbiddenException(ReportingErrors.LocationAccessDenied, "You do not have access to this fulfillment location.");
 
 /// <summary>Common report query parameters (REP-R10, R11, R12).</summary>
 public sealed record ReportQuery(

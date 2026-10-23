@@ -1,5 +1,4 @@
 using System.Globalization;
-using FreshOrbit.Inventory.Application.Common;
 using FreshOrbit.Inventory.Application.Stock;
 using FreshOrbit.Inventory.Domain.Shared;
 using FreshOrbit.Inventory.Domain.Stock;
@@ -8,7 +7,6 @@ using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
-using FreshOrbit.SharedKernel.Web.Errors;
 using FreshOrbit.SharedKernel.Web.Idempotency;
 using FreshOrbit.SharedKernel.Web.Paging;
 using FreshOrbit.SharedKernel.Web.Validation;
@@ -31,7 +29,7 @@ internal static class InventoryEndpoints
 {
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        var admin = endpoints.MapGroup("/admin/inventory").AddEndpointFilter<LocationAccessFilter>().WithTags("Admin inventory");
+        var admin = endpoints.MapGroup("/admin/inventory").WithTags("Admin inventory");
 
         admin.MapGet("/stock", async (Guid? fulfillmentLocationId, Guid? variantId, bool? lowStockOnly, int? page, int? pageSize, InventoryReads reads, CancellationToken ct)
                 => TypedResults.Ok(await reads.ListStockAsync(new StockListQuery(fulfillmentLocationId, variantId, lowStockOnly ?? false), Paging(page, pageSize), ct)))
@@ -154,33 +152,5 @@ internal static class InventoryEndpoints
         }
 
         return values;
-    }
-}
-
-/// <summary>
-/// Turns <see cref="LocationAccessDeniedException"/> into 403 Problem Details with code LOCATION_ACCESS_DENIED
-/// (the shared exception handler maps domain exceptions to 422 only).
-/// </summary>
-internal sealed class LocationAccessFilter : IEndpointFilter
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        ArgumentNullException.ThrowIfNull(next);
-        try
-        {
-            return await next(context);
-        }
-        catch (LocationAccessDeniedException denied)
-        {
-            return TypedResults.Problem(
-                detail: denied.Message,
-                statusCode: StatusCodes.Status403Forbidden,
-                title: "Forbidden.",
-                extensions: new Dictionary<string, object?>
-                {
-                    ["code"] = denied.Code,
-                    ["errors"] = new Dictionary<string, ProblemError[]> { [denied.Field ?? "fulfillmentLocationId"] = [new ProblemError(denied.Code, denied.Message)] },
-                });
-        }
     }
 }

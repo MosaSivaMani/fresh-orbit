@@ -112,7 +112,7 @@ public sealed class ComplaintService(
         ArgumentNullException.ThrowIfNull(actor);
         if (fulfillmentLocationId is { } locationId && !actor.CanAccessLocation(locationId))
         {
-            throw OrderingAccessException.LocationDenied();
+            throw OrderingAccess.LocationDenied();
         }
 
         return reads.ListComplaintsAsync(
@@ -129,7 +129,7 @@ public sealed class ComplaintService(
     {
         ArgumentNullException.ThrowIfNull(actor);
         var complaint = await complaints.GetAsync(complaintId, cancellationToken) ?? throw new NotFoundException("The complaint does not exist.");
-        return actor.CanAccessLocation(complaint.FulfillmentLocationId) ? complaint : throw OrderingAccessException.LocationDenied();
+        return actor.CanAccessLocation(complaint.FulfillmentLocationId) ? complaint : throw OrderingAccess.LocationDenied();
     }
 
     /// <summary>ORD-R57: decide an OPEN complaint; refund bounded by the line's (or order's, LATE) final total.</summary>

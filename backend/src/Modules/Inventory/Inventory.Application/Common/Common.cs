@@ -16,7 +16,7 @@ public interface IInventoryUnitOfWork : IUnitOfWork
 }
 
 /// <summary>Staff without access to the location (HTTP 403 LOCATION_ACCESS_DENIED).</summary>
-public sealed class LocationAccessDeniedException : DomainException
+public sealed class LocationAccessDeniedException : ForbiddenException
 {
     public LocationAccessDeniedException()
         : base(InventoryErrors.LocationAccessDenied, "You do not have access to this fulfillment location.", "fulfillmentLocationId")
