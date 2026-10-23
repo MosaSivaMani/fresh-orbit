@@ -112,9 +112,12 @@ main() {
   local current tag
   current=$(cat "$FO_STATE_DIR/current-tag" 2>/dev/null || true)
 
+  local skip_pull=${SKIP_PULL:-false}
   if [[ $1 == --rollback ]]; then
     tag=$(cat "$FO_STATE_DIR/previous-tag" 2>/dev/null || true)
     [[ -n $tag ]] || die "No previous tag recorded; nothing to roll back to."
+    # The previous release's images are kept on the host (prune_images), so no registry login is needed.
+    skip_pull=${SKIP_PULL:-true}
   else
     tag=$1
   fi
@@ -123,7 +126,7 @@ main() {
   log "Deploying $tag (running now: ${current:-nothing})."
   export IMAGE_TAG=$tag
 
-  if [[ ${SKIP_PULL:-false} == true ]]; then
+  if [[ $skip_pull == true ]]; then
     log "SKIP_PULL=true: using images already on this host."
   else
     log "Pulling images."
