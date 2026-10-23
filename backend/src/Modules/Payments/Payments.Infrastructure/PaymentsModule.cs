@@ -1,9 +1,29 @@
+using FreshOrbit.Payments.Application.Common;
+using FreshOrbit.Payments.Application.Handlers;
+using FreshOrbit.Payments.Application.Payments;
+using FreshOrbit.Payments.Application.Providers;
+using FreshOrbit.Payments.Application.Reconciliation;
+using FreshOrbit.Payments.Application.Refunds;
+using FreshOrbit.Payments.Application.Settlements;
+using FreshOrbit.Payments.Application.Webhooks;
+using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Infrastructure.Endpoints;
+using FreshOrbit.Payments.Infrastructure.Jobs;
 using FreshOrbit.Payments.Infrastructure.Persistence;
+using FreshOrbit.Payments.Infrastructure.Persistence.Repositories;
+using FreshOrbit.Payments.Infrastructure.Providers;
+using FreshOrbit.Payments.Infrastructure.Public;
+using FreshOrbit.Payments.Infrastructure.Reads;
+using FreshOrbit.Payments.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace FreshOrbit.Payments.Infrastructure;
 
@@ -16,12 +36,61 @@ public sealed class PaymentsModule : IModule
     {
         services.AddModuleModel<PaymentsModuleModel>();
 
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        // Options are bound when first read, so hosts and tests can override configuration.
+        services.AddOptions<PaymentsOptions>().BindConfiguration(PaymentsOptions.SectionName);
+        services.AddOptions<PaymentProvidersOptions>()
+            .Configure<IConfiguration>((options, config) => config.GetSection(PaymentProvidersOptions.SectionName).Bind(options.Adapters))
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<PaymentProvidersOptions>, PaymentProvidersOptionsValidator>());
+        services.TryAddTransient(provider => provider.GetRequiredService<IOptionsMonitor<PaymentsOptions>>().CurrentValue);
+
+        // Provider adapters (PAY-R1, R2).
+        services.TryAddSingleton<FakeGateway>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IPaymentProvider, CashOnDeliveryProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IPaymentProvider, UpiOnDeliveryProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IPaymentProvider, FakePaymentProvider>());
+        services.TryAddSingleton<IPaymentProviderCatalog, PaymentProviderCatalog>();
+
+        // Persistence.
+        services.TryAddScoped<IPaymentsSession, PaymentsSession>();
+        services.TryAddScoped<IPaymentRepository, PaymentRepository>();
+        services.TryAddScoped<IWebhookEventRepository, WebhookEventRepository>();
+        services.TryAddScoped<ICashSettlementRepository, CashSettlementRepository>();
+        services.TryAddScoped<IReconciliationIssueRepository, ReconciliationIssueRepository>();
+        services.TryAddScoped<PaymentsReads>();
+
+        // Ports to other modules. Replaced at merge by an adapter over Delivery.Public (see the Phase 2 report).
+        services.TryAddScoped<IShipmentFacts, UnavailableShipmentFacts>();
+
+        // Application services.
+        services.TryAddScoped<IssueRecorder>();
+        services.TryAddScoped<OnlinePaymentService>();
+        services.TryAddScoped<PaymentEventApplier>();
+        services.TryAddScoped<WebhookService>();
+        services.TryAddScoped<RefundService>();
+        services.TryAddScoped<RefundProcessor>();
+        services.TryAddScoped<CashCollectionService>();
+        services.TryAddScoped<CashSettlementService>();
+        services.TryAddScoped<PaymentIssueService>();
+        services.TryAddScoped<ReconciliationService>();
+        services.TryAddScoped<OrderPaymentHandlers>();
+
+        // Public API, own event handlers and jobs.
+        services.TryAddScoped<IPaymentsApi, PaymentsApi>();
+        services.AddEventHandler<RefundApproved, RefundApprovedHandler>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PaymentsJobRegistration>());
+        services.TryAddScoped<ReconciliationJob>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
+        ArgumentNullException.ThrowIfNull(endpoints);
+        PaymentsEndpoints.MapCustomer(endpoints);
+        PaymentsEndpoints.MapAdmin(endpoints);
+        var environment = endpoints.ServiceProvider.GetService<IHostEnvironment>();
+        if (environment is not null && (environment.IsDevelopment() || environment.IsEnvironment("Testing")))
+        {
+            PaymentsEndpoints.MapDevelopment(endpoints);
+        }
     }
 }
