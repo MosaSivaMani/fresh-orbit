@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | 9 | E5 infrastructure on branch `worktree-agent-a1b161ee0821c6cd4`: multi-arch Dockerfiles (api, worker, migrations, web, admin), `docker-compose.prod.yml` (+ optional `monitoring` profile: Grafana, Loki, Alloy), Caddyfile, server-setup/deploy/backup/restore/logs scripts, `deploy.yml` (GHCR + SSH), fixed compose subnet + DLT SMS settings (coordinator request), runbooks in `docs/runbooks/`, analysis in `docs/research/infrastructure.md` | E5: api/worker/migrations images built (arm64; api also amd64) and smoke-tested against Postgres; local stack through Caddy (headers, `/media` rule, 413 limit, SPA fallback); deploy with automatic rollback, backup, drill and live restore tested in a Linux container; monitoring shipped logs and loaded alert rules; shellcheck, hadolint, actionlint, `caddy validate`, `docker compose config` clean. Web image and real servers not verified |
 | 2026-10-23 | 5 | Merged E3 frontend packages; frontend CI job added; D32 | `pnpm build/typecheck/lint/test` all pass; 129 tests (tokens 66, core 29, ui 32, api-client 2) |
 | 2026-10-23 | 3 | Merged E2 into `main`; architecture tests updated for D30 | `dotnet test` 575/575 passed (adds Locations 42, Catalog 45, Pricing 26) |
 | 2026-10-23 | 3 | Merged E1 into `main`; rulings D30 (events in Public), D31 (shared 401/403/429/503) | `dotnet test` 462/462 passed (adds Identity 22, Customers 14, Settings 18, Audit 6, Notifications 18) |
