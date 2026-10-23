@@ -1,0 +1,38 @@
+{
+  "name": "@fresh/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fresh Orbit front-end core (no UI): HTTP client with auth refresh and Problem Details errors, TanStack Query setup, display formatting.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.104.1"
+  },
+  "devDependencies": {
+    "@fresh/config": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
+    "@types/node": "26.6.5",
+    "eslint": "9.39.5",
+    "react": "19.3.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
