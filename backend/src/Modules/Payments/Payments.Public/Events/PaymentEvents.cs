@@ -24,7 +24,11 @@ public sealed record PaymentCancelled(Guid PaymentId, Guid OrderId) : DomainEven
 public sealed record RefundRequested(Guid RefundId, Guid OrderId, long AmountPaise, string ReasonCode) : DomainEvent;
 
 /// <summary>Handled by the Payments Worker (provider refund for method ORIGINAL) and Notifications.</summary>
-public sealed record RefundApproved(Guid RefundId, Guid OrderId, string Method) : DomainEvent;
+public sealed record RefundApproved(Guid RefundId, Guid OrderId, string Method) : DomainEvent
+{
+    /// <summary>Amount being refunded (for the customer notification).</summary>
+    public long AmountPaise { get; init; }
+}
 
 public sealed record RefundSucceeded(Guid RefundId, Guid OrderId, long AmountPaise, string Method) : DomainEvent;
 

@@ -1,3 +1,4 @@
+using FreshOrbit.Ordering.Public.Events;
 using FluentValidation;
 using FreshOrbit.Inventory.Application.ColdChain;
 using FreshOrbit.Inventory.Application.Common;
@@ -42,6 +43,10 @@ public sealed class InventoryModule : IModule
         services.AddScoped<StockCommandService>();
         services.AddScoped<StockReservationService>();
         services.AddScoped<OrderStockHandlers>();
+        services.AddEventHandler<OrderConfirmed, InventoryOrderConfirmedHandler>();
+        services.AddEventHandler<OrderPaymentFailed, InventoryOrderPaymentFailedHandler>();
+        services.AddEventHandler<OrderCancelled, InventoryOrderCancelledHandler>();
+        services.AddEventHandler<OrderPacked, InventoryOrderPackedHandler>();
         services.AddScoped<BatchExpiryService>();
         services.AddScoped<LowStockDigestService>();
         services.AddScoped<InventoryReads>();

@@ -377,7 +377,7 @@ public sealed class Payment : AggregateRoot
 
         var refund = AddRefund(draft, amount, RefundStatus.Approved, now);
         refund.Approve(null, now);
-        Raise(new RefundApproved(refund.Id, OrderId, refund.Method.ToCode()));
+        Raise(new RefundApproved(refund.Id, OrderId, refund.Method.ToCode()) { AmountPaise = refund.AmountPaise });
         return new SystemRefundResult(refund, amountPaise, amount);
     }
 
@@ -387,7 +387,7 @@ public sealed class Payment : AggregateRoot
         var refund = GetRequestedRefund(refundId, approverId);
         refund.Approve(approverId, now);
         Touch();
-        Raise(new RefundApproved(refund.Id, OrderId, refund.Method.ToCode()));
+        Raise(new RefundApproved(refund.Id, OrderId, refund.Method.ToCode()) { AmountPaise = refund.AmountPaise });
         return refund;
     }
 

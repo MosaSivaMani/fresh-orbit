@@ -1,3 +1,4 @@
+using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Promotions.Application.Abstractions;
 using FreshOrbit.Promotions.Application.Banners;
 using FreshOrbit.Promotions.Application.Coupons;
@@ -37,6 +38,8 @@ public sealed class PromotionsModule : IModule
         services.AddScoped<CouponAdminService>();
         services.AddScoped<BannerService>();
         services.AddScoped<RedemptionReversalService>();
+        services.AddEventHandler<OrderCancelled, PromotionsOrderCancelledHandler>();
+        services.AddEventHandler<OrderPaymentFailed, PromotionsOrderPaymentFailedHandler>();
         services.AddScoped<IPromotionsApi, PromotionsApi>();
 
         services.AddScoped<ExpireCouponsJob>();

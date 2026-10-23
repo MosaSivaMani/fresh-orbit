@@ -1,3 +1,5 @@
+using FreshOrbit.Delivery.Public.Events;
+using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Payments.Application.Common;
 using FreshOrbit.Payments.Application.Handlers;
 using FreshOrbit.Payments.Application.Payments;
@@ -74,6 +76,15 @@ public sealed class PaymentsModule : IModule
         services.TryAddScoped<PaymentIssueService>();
         services.TryAddScoped<ReconciliationService>();
         services.TryAddScoped<OrderPaymentHandlers>();
+        services.AddEventHandler<OrderPlaced, PaymentsOrderPlacedHandler>();
+        services.AddEventHandler<OrderPacked, PaymentsOrderPackedHandler>();
+        services.AddEventHandler<OrderAdjusted, PaymentsOrderAdjustedHandler>();
+        services.AddEventHandler<OrderCancelled, PaymentsOrderCancelledHandler>();
+        services.AddEventHandler<OrderPaymentFailed, PaymentsOrderPaymentFailedHandler>();
+        services.AddEventHandler<OrderReturned, PaymentsOrderReturnedHandler>();
+        services.AddEventHandler<ShipmentDelivered, PaymentsShipmentDeliveredHandler>();
+        services.AddEventHandler<PaymentReceivedForClosedOrder, PaymentsReceivedForClosedOrderHandler>();
+        services.AddEventHandler<ComplaintDecided, PaymentsComplaintDecidedHandler>();
 
         // Public API, own event handlers and jobs.
         services.TryAddScoped<IPaymentsApi, PaymentsApi>();

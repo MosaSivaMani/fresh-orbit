@@ -55,7 +55,7 @@ public sealed class TemplateAdminService(
     {
         var template = await FindAsync(code, channel, cancellationToken);
         var user = actor.UserId is { } userId ? await identity.GetUserAsync(userId, cancellationToken) : null;
-        var values = composer.Values(TemplateText.SampleData(template.Variables));
+        var values = await composer.ValuesAsync(TemplateText.SampleData(template.Variables), cancellationToken);
         var subject = template.Subject is null ? null : TemplateText.Render(template.Subject, values);
         var body = TemplateText.Render(template.Body, values);
         var channelCode = template.Channel.ToCode();

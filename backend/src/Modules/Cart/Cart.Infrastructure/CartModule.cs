@@ -1,3 +1,5 @@
+using FreshOrbit.Cart.Application.Handlers;
+using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.Cart.Application.Abstractions;
 using FreshOrbit.Cart.Application.Carts;
 using FreshOrbit.Cart.Application.Pricing;
@@ -30,6 +32,7 @@ public sealed class CartModule : IModule
         services.TryAddScoped<IDeliveryFeeTaxRate, PricingDeliveryFeeTaxRate>();
         services.AddScoped<CartPricer>();
         services.AddScoped<CartService>();
+        services.AddEventHandler<CustomerSignedIn, CartCustomerSignedInHandler>();
         services.AddScoped<ICartApi, CartApi>();
 
         services.AddScoped<AbandonCartsJob>();

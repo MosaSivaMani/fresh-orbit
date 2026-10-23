@@ -1,3 +1,6 @@
+using FreshOrbit.Ordering.Application.Handlers;
+using FreshOrbit.Delivery.Public.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Customers.Public;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.Ordering.Application.Abstractions;
@@ -50,6 +53,13 @@ public sealed class OrderingModule : IModule
         services.AddScoped<OrderCommandService>();
         services.AddScoped<ComplaintService>();
         services.AddScoped<OrderEventService>();
+        services.AddEventHandler<PaymentCaptured, OrderingPaymentCapturedHandler>();
+        services.AddEventHandler<PaymentFailed, OrderingPaymentFailedHandler>();
+        services.AddEventHandler<ShipmentDispatched, OrderingShipmentDispatchedHandler>();
+        services.AddEventHandler<ShipmentDelivered, OrderingShipmentDeliveredHandler>();
+        services.AddEventHandler<DeliveryAttemptFailed, OrderingDeliveryAttemptFailedHandler>();
+        services.AddEventHandler<ShipmentReattempted, OrderingShipmentReattemptedHandler>();
+        services.AddEventHandler<ShipmentReturned, OrderingShipmentReturnedHandler>();
         services.AddScoped<OrderExpiryService>();
 
         services.AddScoped<IOrderingApi, OrderingApi>();
