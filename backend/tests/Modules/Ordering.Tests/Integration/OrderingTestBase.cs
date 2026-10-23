@@ -41,6 +41,7 @@ public abstract class OrderingTestBase : IAsyncLifetime
     {
         await using var db = Database.CreateDbContext();
         await World.EnsureProbeAsync(db);
+        await SettingsSeed.EnsureAsync(db, Ct);
     }
 
     public async ValueTask DisposeAsync()

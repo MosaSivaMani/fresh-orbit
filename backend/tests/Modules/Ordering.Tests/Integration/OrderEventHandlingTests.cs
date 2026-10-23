@@ -43,8 +43,7 @@ public sealed class OrderEventHandlingTests(OrderingDatabase database) : Orderin
         var numbers = invoices.Select(i => int.Parse(i.InvoiceNumber[(i.InvoiceNumber.LastIndexOf('/') + 1)..], CultureInfo.InvariantCulture)).Order().ToList();
         numbers.Should().OnlyHaveUniqueItems();
         (numbers[^1] - numbers[0]).Should().Be(19, "numbers are contiguous: the rolled back attempt did not consume one");
-        var period = invoices[0].InvoiceNumber.Split('/')[1];
-        (await NumberSeries.PeekAsync(db, "INVOICE", period, Ct)).Should().Be(numbers[^1] + 1);
+        (await NumberSeries.PeekAsync(db, "INVOICE", SettingsSeed.Period, Ct)).Should().Be(numbers[^1] + 1);
         var orders = await db.Set<Order>().AsNoTracking().Where(o => orderIds.Contains(o.Id)).ToListAsync(Ct);
         orders.Should().OnlyContain(o => o.Status == OrderStatus.Delivered);
     }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using FreshOrbit.Cart.Public;
 using FreshOrbit.Customers.Public;
 using FreshOrbit.Delivery.Public;
@@ -128,8 +127,8 @@ public sealed class CheckoutService(
             discountByLine = [.. itemIds.Select(id => allocated.GetValueOrDefault(id))];
         }
 
-        var period = YearPeriod(now, quote.TimeZone);
-        var orderNumber = await settings.NextNumberAsync(OrderSeries, period, cancellationToken);
+        // Settings owns the series: period (financial year in the business time zone), prefix and gapless counter.
+        var orderNumber = await settings.NextNumberAsync(OrderSeries, now, cancellationToken);
         var totals = quote.View.Totals;
         var address = decision.Address!;
         var order = Order.Place(new OrderPlacement(
@@ -159,10 +158,6 @@ public sealed class CheckoutService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return new PlacedResult(order.Id, null, false);
     }
-
-    /// <summary>Order number period: two-digit calendar year at the fulfillment location (Q13).</summary>
-    public static string YearPeriod(DateTimeOffset at, string? timeZone)
-        => (TimeZoneInfo.ConvertTime(at, TimeZones.Find(timeZone)).Year % 100).ToString("00", CultureInfo.InvariantCulture);
 
     /// <summary>Order item snapshot from a quote line (ORD-R17).</summary>
     public static OrderItemSnapshot Snapshot(Guid itemId, QuoteLine line, long discountPaise)

@@ -156,10 +156,10 @@ public sealed class CheckoutTests(OrderingDatabase database) : OrderingTestBase(
     [Fact]
     public async Task Lost_races_are_retried_and_only_one_order_number_is_consumed()
     {
-        int before;
+        long before;
         await using (var db = Database.CreateDbContext())
         {
-            before = await NumberSeries.PeekAsync(db, "ORDER", "26", Ct);
+            before = await NumberSeries.PeekAsync(db, "ORDER", SettingsSeed.Period, Ct);
         }
 
         World.RacesToLose = 2;
@@ -172,16 +172,16 @@ public sealed class CheckoutTests(OrderingDatabase database) : OrderingTestBase(
         var number = (await ReadJsonAsync(response)).GetProperty("orderNumber").GetString();
         number.Should().Be($"FO-26{before:0000}");
         await using var check = Database.CreateDbContext();
-        (await NumberSeries.PeekAsync(check, "ORDER", "26", Ct)).Should().Be(before + 1);
+        (await NumberSeries.PeekAsync(check, "ORDER", SettingsSeed.Period, Ct)).Should().Be(before + 1);
     }
 
     [Fact]
     public async Task Losing_every_attempt_is_a_concurrent_save_conflict_and_persists_nothing()
     {
-        int before;
+        long before;
         await using (var db = Database.CreateDbContext())
         {
-            before = await NumberSeries.PeekAsync(db, "ORDER", "26", Ct);
+            before = await NumberSeries.PeekAsync(db, "ORDER", SettingsSeed.Period, Ct);
         }
 
         World.RacesToLose = 4;
@@ -193,7 +193,7 @@ public sealed class CheckoutTests(OrderingDatabase database) : OrderingTestBase(
         World.MarkConvertedCalls.Should().Be(4);
         await using var check = Database.CreateDbContext();
         (await check.Set<Order>().CountAsync(o => o.CustomerId == CustomerId, Ct)).Should().Be(0);
-        (await NumberSeries.PeekAsync(check, "ORDER", "26", Ct)).Should().Be(before);
+        (await NumberSeries.PeekAsync(check, "ORDER", SettingsSeed.Period, Ct)).Should().Be(before);
     }
 
     [Fact]

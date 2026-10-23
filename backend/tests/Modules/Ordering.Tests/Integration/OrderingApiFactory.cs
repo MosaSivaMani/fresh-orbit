@@ -1,10 +1,15 @@
 using FreshOrbit.Cart.Public;
+using FreshOrbit.Settings.Application.Numbering;
+using FreshOrbit.Settings.Domain.BusinessProfiles;
 using FreshOrbit.Settings.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using BusinessProfile = FreshOrbit.Settings.Public.BusinessProfile;
+using DomainBusinessProfile = FreshOrbit.Settings.Domain.BusinessProfiles.BusinessProfile;
+using DomainNumberSeries = FreshOrbit.Settings.Domain.Numbering.NumberSeries;
 
 namespace FreshOrbit.Ordering.Tests.Integration;
 
@@ -26,7 +31,7 @@ public sealed class OrderingApiFactory(OrderingDatabase database, CheckoutWorld 
         services.Replace(ServiceDescriptor.Singleton(world.Catalog));
         services.Replace(ServiceDescriptor.Singleton(world.Pricing));
         services.Replace(ServiceDescriptor.Scoped<ICartApi, FakeCartApi>());
-        services.Replace(ServiceDescriptor.Scoped<ISettingsApi, DbNumberSeriesSettings>());
+        services.Replace(ServiceDescriptor.Scoped<ISettingsApi, WorldPolicySettings>());
     }
 }
 
@@ -66,37 +71,63 @@ public sealed class FakeCartApi(CheckoutWorld world, FreshOrbitDbContext db, Ord
 }
 
 /// <summary>
-/// Settings as seen by Ordering: policy and business profile from the world; number series as a row-locked counter
-/// incremented in the caller's transaction (rolled back with it, so numbers stay gapless).
+/// Settings as seen by Ordering: policy and business profile from the world (tests change them per case); numbers from
+/// the real Settings number series service, which locks the series row in the caller's transaction (rolled back with
+/// it, so numbers stay gapless). The series and business profile rows are seeded by <see cref="SettingsSeed"/>.
 /// </summary>
-public sealed class DbNumberSeriesSettings(CheckoutWorld world, FreshOrbitDbContext db) : ISettingsApi
+public sealed class WorldPolicySettings(CheckoutWorld world, INumberSeriesService numberSeries) : ISettingsApi
 {
     public Task<OrderPolicy> GetOrderPolicyAsync(Guid? cityId, CancellationToken cancellationToken = default) => Task.FromResult(world.Policy);
 
     public Task<BusinessProfile> GetBusinessProfileAsync(CancellationToken cancellationToken = default) => Task.FromResult(world.Profile);
 
-    public async Task<string> NextNumberAsync(string seriesCode, string period, CancellationToken cancellationToken = default)
+    public Task<string> NextNumberAsync(string seriesCode, string period, CancellationToken cancellationToken = default)
+        => numberSeries.NextNumberAsync(seriesCode, period, cancellationToken);
+
+    public async Task<string> NextNumberAsync(string seriesCode, DateTimeOffset at, CancellationToken cancellationToken = default)
+        => await numberSeries.NextNumberAsync(seriesCode, await numberSeries.PeriodForAsync(at, cancellationToken), cancellationToken);
+
+    public Task<string> GetFinancialPeriodAsync(DateTimeOffset at, CancellationToken cancellationToken = default)
+        => numberSeries.PeriodForAsync(at, cancellationToken);
+}
+
+/// <summary>Seeds the Settings rows the real number series needs (business profile time zone, ORDER and INVOICE series).</summary>
+public static class SettingsSeed
+{
+    public const string Period = "2026-27";
+
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+
+    public static async Task EnsureAsync(FreshOrbitDbContext db, CancellationToken cancellationToken)
     {
-        var value = await NumberSeries.NextAsync(db, seriesCode, period, cancellationToken);
-        return seriesCode == "INVOICE" ? $"INV/{period}/{value:000000}" : $"FO-{period}{value:0000}";
+        ArgumentNullException.ThrowIfNull(db);
+        await Gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!await db.Set<DomainBusinessProfile>().AnyAsync(cancellationToken))
+            {
+                db.Add(DomainBusinessProfile.Create(new BusinessProfileData(
+                    "Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", null, null, "Chennai", "+914400000000", "care@example.com", "Asia/Kolkata")));
+            }
+
+            if (!await db.Set<DomainNumberSeries>().AnyAsync(cancellationToken))
+            {
+                db.Add(DomainNumberSeries.Create("ORDER", Period, "FO-26", 4, 1));
+                db.Add(DomainNumberSeries.Create("INVOICE", Period, "INV/26-27/", 6, 1));
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        finally
+        {
+            Gate.Release();
+        }
     }
 }
 
 public static class NumberSeries
 {
-    public static async Task<int> NextAsync(FreshOrbitDbContext db, string code, string period, CancellationToken cancellationToken)
-    {
-        var values = await db.Database.SqlQuery<int>($"""
-            INSERT INTO ordering_test.number_series (code, period, next_value) VALUES ({code}, {period}, 2)
-            ON CONFLICT (code, period) DO UPDATE SET next_value = ordering_test.number_series.next_value + 1
-            RETURNING next_value - 1 AS "Value"
-            """).ToListAsync(cancellationToken);
-        return values[0];
-    }
-
-    public static async Task<int> PeekAsync(FreshOrbitDbContext db, string code, string period, CancellationToken cancellationToken)
-    {
-        var values = await db.Database.SqlQuery<int>($"""SELECT next_value AS "Value" FROM ordering_test.number_series WHERE code = {code} AND period = {period}""").ToListAsync(cancellationToken);
-        return values.Count == 0 ? 1 : values[0];
-    }
+    /// <summary>The next value the Settings series will issue.</summary>
+    public static async Task<long> PeekAsync(FreshOrbitDbContext db, string code, string period, CancellationToken cancellationToken)
+        => await db.Set<DomainNumberSeries>().AsNoTracking().Where(s => s.Code == code && s.Period == period).Select(s => s.NextValue).SingleAsync(cancellationToken);
 }

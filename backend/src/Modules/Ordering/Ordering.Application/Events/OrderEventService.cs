@@ -1,5 +1,4 @@
 using FreshOrbit.Ordering.Application.Abstractions;
-using FreshOrbit.Ordering.Application.Shared;
 using FreshOrbit.Ordering.Domain.Invoices;
 using FreshOrbit.Ordering.Domain.Orders;
 using FreshOrbit.Ordering.Domain.Shared;
@@ -88,8 +87,7 @@ public sealed partial class OrderEventService(
             throw new DomainException(OrderingErrors.ConfigurationMissing, "The business GSTIN is not configured; invoices cannot be issued.");
         }
 
-        var period = Invoice.FinancialYearPeriod(deliveredAt, TimeZones.Find(order.TimeZone));
-        var number = await settings.NextNumberAsync(InvoiceSeries, period, cancellationToken);
+        var number = await settings.NextNumberAsync(InvoiceSeries, deliveredAt, cancellationToken);
         var invoice = Invoice.Issue(order, number, new InvoiceSeller(profile.LegalName, profile.Gstin), options.DeliveryServiceCode, clock.UtcNow);
         invoices.Add(invoice);
         return order.Deliver(shipmentId, invoice.Id, invoice.InvoiceNumber, deliveredAt);
