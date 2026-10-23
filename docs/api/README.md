@@ -312,6 +312,9 @@ Webhooks use the provider event id instead (§7).
 | NO_CAPTURED_PAYMENT | 422 | Nothing paid or collected to refund |
 | CASH_ALREADY_COLLECTED | 409 | Shipment cash already recorded |
 | SETTLEMENT_EXISTS | 409 | Settlement for rider + date exists |
+| SETTLEMENT_SELF_RESOLUTION | 422 | The staff who recorded a settlement with a difference cannot settle it |
+| LOCATION_ACCESS_DENIED | 403 | Payment, refund, shipment, settlement or `fulfillmentLocationId` outside the caller's locations (also Reports) |
+| Field codes (in `errors`, with 422 `VALIDATION_FAILED`) | 422 | `CASH_AMOUNT_MISMATCH` (`amountPaise` ≠ amount due), `REFUND_METHOD_NOT_ALLOWED` (`ORIGINAL` for a provider without refunds), `UPI_ID_REQUIRED`, `UPI_REFERENCE_REQUIRED`, `COMPLAINT_REQUIRED`, `REASON_REQUIRED`, `REFERENCE_INVALID` (mark-paid reference 4–64 chars), `AMOUNT_INVALID`, `DATE_IN_FUTURE` |
 
 ### Delivery
 | Code | HTTP | Meaning |
@@ -735,12 +738,14 @@ Response: order detail (shape below) with `status: CONFIRMED` (COD / UPI_ON_DELI
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| POST | `/api/v1/orders/{orderId}/payments` | customer | IK, rate `checkout` | Initiate online payment; returns provider checkout params (`provider`, `providerOrderId`, `amountPaise`, `keyId`, `expiresAt`); 422 `PAYMENT_NOT_REQUIRED` for COD |
-| GET | `/api/v1/orders/{orderId}/payments` | customer | | Payment attempts and status (`PENDING`, `CAPTURED`, `COLLECTED`, `FAILED`, …) |
-| GET | `/api/v1/orders/{orderId}/refunds` | customer | | Refunds (`amountPaise`, `reasonCode`, `status`, `method`) |
+| POST | `/api/v1/orders/{orderId}/payments` | customer | IK, rate `checkout` | Initiate online payment; returns provider checkout params (`paymentId`, `provider`, `providerOrderId`, `amountPaise`, `keyId`, `expiresAt`); 201 new attempt, 200 when a `PENDING` attempt for the same amount is still valid for > 2 min (reused); 422 `PAYMENT_NOT_REQUIRED` for COD / already paid; 409 `INVALID_STATUS_TRANSITION` unless the order is `PENDING_PAYMENT`; 404 `ORDER_NOT_FOUND` for another customer's order |
+| GET | `/api/v1/orders/{orderId}/payments` | customer | | Array of attempts (`id`, `method`, `provider`, `status` `PENDING`/`AUTHORIZED`/`CAPTURED`/`COLLECTED`/`FAILED`/`CANCELLED`, `amountPaise`, `providerOrderId`, `expiresAt`, `capturedAt`, `collectedAt`) |
+| GET | `/api/v1/orders/{orderId}/refunds` | customer | | Array of refunds (`id`, `amountPaise`, `reasonCode`, `method`, `status`, `requestedAt`, `succeededAt`); no staff fields |
 | POST | `/api/v1/payments/webhooks/{provider}` | public (signature) | §7 | Provider callback |
+| POST | `/api/v1/dev/payments/fake/{providerOrderId}/simulate` | public, Development/Testing only | | Fake gateway: `{ "outcome": "CAPTURED"/"AUTHORIZED"/"FAILED", "amountPaise"? }` → sends a signed webhook through the normal path |
 
 Client return from the gateway never changes status; the client polls `GET /orders/{orderId}` (status comes from the webhook).
+An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation until Ordering exposes the order's payment deadline.
 
 ### 4.10 Notifications (customer)
 
@@ -924,18 +929,24 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/admin/payments` | payments.view | | List: `status`, `method`, `provider`, `fromDate`, `toDate` |
-| GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | Payments + refunds for order |
-| GET | `/api/v1/admin/webhook-events` | payments.view | | Received events: `provider`, `signatureValid`, `processed` |
-| POST | `/api/v1/admin/webhook-events/{id}/reprocess` | settings.manage | | Retry a failed, valid event |
-| POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK | Create refund request (`REQUESTED`) |
-| GET | `/api/v1/admin/refunds` | payments.view | | List: `status`, `reasonCode` |
+| GET | `/api/v1/admin/payments` | payments.view | | List: `status`, `method`, `provider`, `fromDate`, `toDate`, `fulfillmentLocationId`, `page`, `pageSize` (location-scoped) |
+| GET | `/api/v1/admin/payments/{paymentId}` | payments.view | | One payment with `summary` (`paidPaise`, `refundedPaise`, `pendingRefundPaise`, `refundablePaise`); ETag |
+| GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | `{ orderId, payments[], refunds[] }` |
+| GET | `/api/v1/admin/webhook-events` | payments.view | all-locations staff only | Received events: `provider`, `signatureValid`, `status` `RECEIVED`/`PROCESSED`/`IGNORED`/`ERROR`/`REJECTED`, `fromDate`, `toDate` |
+| POST | `/api/v1/admin/webhook-events/{id}/reprocess` | payments.manage (D15) | | Retry a valid event in `ERROR` |
+| POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK | Create refund request (`REQUESTED`); ETag = payment version |
+| GET | `/api/v1/admin/refunds` | payments.view | | List: `status`, `reasonCode`, `fromDate`, `toDate`, `fulfillmentLocationId` |
+| GET | `/api/v1/admin/refunds/{refundId}` | payments.view | | One refund; ETag = version of its payment (refunds change through the payment row) |
 | POST | `/api/v1/admin/refunds/{refundId}/approve` | refunds.approve | IM | `REQUESTED` → `APPROVED`; Worker calls provider → `PROCESSING` → `SUCCEEDED`/`FAILED` |
 | POST | `/api/v1/admin/refunds/{refundId}/reject` | refunds.approve | IM | → `FAILED` with `reason` |
 | POST | `/api/v1/admin/refunds/{refundId}/mark-paid` | refunds.approve | IM | Manual UPI/bank/cash refund done (`reference`) → `SUCCEEDED` |
-| GET | `/api/v1/admin/cash-settlements` | cash.settle | | List: `riderId`, `date`, `status` |
-| POST | `/api/v1/admin/cash-settlements` | cash.settle | IK | Settle rider cash for a date (`receivedPaise`); server computes expected and difference |
-| POST | `/api/v1/admin/cash-settlements/{id}/dispute` | cash.settle | IM | → `DISPUTED` |
+| GET | `/api/v1/admin/cash-settlements` | cash.settle | | List: `riderId`, `date`, `status`, `fromDate`, `toDate`, `fulfillmentLocationId` |
+| GET | `/api/v1/admin/cash-settlements/{id}` | cash.settle | | One settlement; ETag |
+| POST | `/api/v1/admin/cash-settlements` | cash.settle | IK | Settle rider cash for a date (`riderId`, `date` local, `receivedPaise`, `note`); server computes expected and difference; difference 0 → `SETTLED`, else `OPEN` + `CASH_DIFFERENCE` issue; future date 422 `DATE_IN_FUTURE` |
+| POST | `/api/v1/admin/cash-settlements/{id}/dispute` | cash.settle | IM | → `DISPUTED` (`reason`) |
+| POST | `/api/v1/admin/cash-settlements/{id}/settle` | cash.settle | IM | `OPEN`/`DISPUTED` → `SETTLED` (`note`); with a difference another staff than the recorder (`SETTLEMENT_SELF_RESOLUTION`) |
+| GET | `/api/v1/admin/payment-issues` | payments.view | | Reconciliation issues: `kind`, `status` (`OPEN`/`AUTO_RESOLVED`/`RESOLVED`), location-scoped (issues without a location only for all-locations staff) |
+| POST | `/api/v1/admin/payment-issues/{id}/resolve` | payments.manage | IM | `OPEN` → `RESOLVED` (`note`) |
 
 **POST /api/v1/admin/orders/{orderId}/refunds** (`Idempotency-Key: 9c0d…`) → 201
 ```json
@@ -972,7 +983,7 @@ Rules: `amountPaise` ≤ paid/collected − refunded − pending → else 422 `R
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/attempts` | delivery.manage | IM | Failed attempt (`outcome`, `notes`) → `DELIVERY_FAILED` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/reattempt` | delivery.manage | IM | `DELIVERY_FAILED` → `OUT_FOR_DELIVERY` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/return` | delivery.manage | IM | `DELIVERY_FAILED` → `RETURNED` |
-| POST | `/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected` | delivery.manage | IK | Record COD / UPI-on-delivery collection (`amountPaise`, `mode` `CASH`/`UPI`, `upiReference`) when not given at deliver |
+| POST | `/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected` | delivery.manage | IK | Record COD / UPI-on-delivery collection (`amountPaise`, `mode` `CASH`/`UPI`, `upiReference`) when not given at deliver. Implemented by Payments (D14): order must be `OUT_FOR_DELIVERY`/`DELIVERED` (else 409), `amountPaise` must equal the amount due (422 `CASH_AMOUNT_MISMATCH`), second record 409 `CASH_ALREADY_COLLECTED`; returns the payment |
 
 ### 4.18 Admin cities, locations, pincodes, schedules
 
@@ -1040,6 +1051,22 @@ All `GET`, permission `reports.view`, params `fulfillmentLocationId`, `cityId`, 
 | `/api/v1/admin/reports/waste` | Waste quantity and cost by reason |
 | `/api/v1/admin/reports/repeat-customers` | Repeat rate, cohorts |
 | `/api/v1/admin/reports/dashboard` | Today's tiles: orders by status, slot fill, low stock, open complaints |
+
+Report-specific filters: product-performance `variantId`, `categoryId`, `preparationCode`; waste `reasonCode`, `variantId`; repeat-customers `cohortMonths` (1–12, default 6). Also `page`, `pageSize` (≤ 100), `sort` (a column, `-` for descending; default `-businessDate`).
+
+Response (daily-sales, product-performance, contribution-margin, waste; repeat-customers uses the same envelope with cohort rows):
+```json
+{
+  "asOf": "2026-10-23T12:15:03Z", "fromDate": "2026-10-23", "toDate": "2026-10-23",
+  "filters": { "fromDate": "2026-10-23", "toDate": "2026-10-23", "fulfillmentLocationId": "0192b000-0001-7000-8000-000000000101" },
+  "totals": { "ordersPlaced": 4, "ordersDelivered": 2, "grossPaise": 315306, "netRevenuePaise": 305306, "avgOrderValuePaise": 152653 },
+  "items": [ { "businessDate": "2026-10-23", "cityId": "…", "fulfillmentLocationId": "…", "ordersPlaced": 4, "netRevenuePaise": 305306 } ],
+  "page": 1, "pageSize": 20, "totalCount": 1
+}
+```
+`asOf` = oldest refresh of the views used (null before the first refresh); `totals` cover all matching rows. Defaults `toDate` = today at the locations in scope, `fromDate` = `toDate − 29`; range > 366 days or `fromDate > toDate` → 422 `VALIDATION_FAILED`. Scoped staff see their locations only; `fulfillmentLocationId` outside access → 403 `LOCATION_ACCESS_DENIED`; `cityId` narrows to that city's locations; inconsistent `cityId` + `fulfillmentLocationId` → 422.
+`format=csv`: UTF-8 with BOM, `Content-Disposition: attachment; filename="<view>_<from>_<to>.csv"`, snake_case header, money as `_paise` plus `_inr` (`1234.50`), text starting `= + - @` prefixed with `'`, last row `TOTAL`, header `X-Report-As-Of`; > 100 000 rows → 422 on `toDate`; dashboard has no CSV (422). All report responses `Cache-Control: private, max-age=60`.
+Dashboard: `{ asOf, date, filters, ordersByStatus[{status,count}], slots[{slotId, fulfillmentLocationId, startAt, endAt, bookedCount, capacity, fillBp}], lowStock[{stockItemId, variantId, sku, variantName, available, lowStockThreshold}], openComplaints, refundsRequested, refundsRequestedPaise, openPaymentIssues }`.
 
 ### 4.21 Settings, staff, roles, audit, notifications
 
@@ -1161,6 +1188,10 @@ needs that is not here is a missing API field, not a client calculation.
 | Processing failure (bug, DB down) | 500 so the provider retries; event row rolled back |
 | Status mapping | `captured` → `CAPTURED`, order `CONFIRMED`; `authorized` → `AUTHORIZED`; `failed` → `FAILED`, order `PAYMENT_FAILED` only if no other active attempt and reservation expired |
 | Refund events | `refund.processed` / `refund.failed` → refund `SUCCEEDED` / `FAILED` by `provider_refund_id` |
+| Unique event id | Enforced for valid signatures only (`signature_valid = true`), so a forged request with a real event id cannot block the genuine event |
+| Same state, new event id | Stored and processed; the payment is already in that state, so no second domain event is raised |
+| Stored headers | Only the signature and event-id headers are kept with the payload |
+| Missed webhooks | Hourly reconciliation asks the provider about attempts 15 min–72 h old and applies captures (event id `recon:{providerPaymentId}:CAPTURED`) |
 
 **POST /api/v1/payments/webhooks/fake** (`X-Fake-Signature: 5d41402abc4b2a76b9719d911017c592…`)
 ```json

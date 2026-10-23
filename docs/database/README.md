@@ -144,10 +144,11 @@ Weight rule (decided): charge actual packed net weight up to `max_chargeable_qua
 ### payments
 | Table | Columns | Constraints |
 |---|---|---|
-| payments | id, order_id, method, provider CASH/FAKE/RAZORPAY/..., amount_paise, status PENDING/AUTHORIZED/CAPTURED/COLLECTED/FAILED/CANCELLED, provider_order_id, provider_payment_id, collected_by_rider_id, collected_at, failure_code, failure_message | unique (order_id) where status in (CAPTURED, COLLECTED); unique provider_payment_id |
-| refunds | id, payment_id, order_id, amount_paise, reason_code WEIGHT_SHORTFALL/CANCELLATION/COMPLAINT/SHORT_SUPPLY, method ORIGINAL/UPI/BANK_TRANSFER/CASH, status REQUESTED/APPROVED/PROCESSING/SUCCEEDED/FAILED, provider_refund_id, idempotency_key, requested_by, approved_by | unique idempotency_key; total refunded <= paid (checked in Payment aggregate) |
-| webhook_events | id, provider, provider_event_id, event_type, payload jsonb, signature_valid, received_at, processed_at, error | unique (provider, provider_event_id) |
-| cash_settlements | id, rider_id, settlement_date, expected_paise, received_paise, difference_paise, status OPEN/SETTLED/DISPUTED, settled_by | unique (rider_id, settlement_date) |
+| payments | id, order_id, customer_id, fulfillment_location_id, method COD/UPI_ON_DELIVERY/ONLINE, provider CASH/UPI_ON_DELIVERY/FAKE/RAZORPAY/..., amount_paise (amount due; follows the order for delivery payments), currency, status PENDING/AUTHORIZED/CAPTURED/COLLECTED/FAILED/CANCELLED, provider_order_id, provider_payment_id, expires_at, authorized_at, captured_at, cancelled_at, collected_paise, collected_at, collected_by_rider_id, collection_mode CASH/UPI, collection_reference, cash_settlement_id, order_delivered_at, is_excess (second capture for an already paid order), failure_code, failure_message, refunded_paise, refund_pending_paise, refund_revision (summary columns; every refund change bumps the payment row version) | unique (order_id) where status in (CAPTURED, COLLECTED) and not is_excess; unique (order_id) where provider in (CASH, UPI_ON_DELIVERY); unique provider_payment_id; unique provider_order_id; index unsettled cash (collected_by_rider_id, collected_at) where COLLECTED and CASH and cash_settlement_id is null |
+| refunds | id, payment_id, order_id, fulfillment_location_id, amount_paise, reason_code WEIGHT_SHORTFALL/CANCELLATION/COMPLAINT/SHORT_SUPPLY/GOODWILL/RETURN, method ORIGINAL/UPI/BANK_TRANSFER/CASH, status REQUESTED/APPROVED/PROCESSING/SUCCEEDED/FAILED, provider_refund_id, idempotency_key (`refund:{id}`), requested_by (null = system), requested_at, approved_by, approved_at, complaint_id, source_reference (event that created a system refund), payee_upi_id, notes, failure_reason, manual_reference, succeeded_at, succeeded_by, attempt_count | unique idempotency_key; unique source_reference; unique provider_refund_id; total refunded + pending <= paid (Payment aggregate, protected by the payment row version) |
+| webhook_events | id, provider, provider_event_id, event_type, payload jsonb, headers jsonb (signature / event-id only), signature_valid, status RECEIVED/PROCESSED/IGNORED/ERROR/REJECTED, received_at, processed_at, error | unique (provider, provider_event_id) where signature_valid |
+| cash_settlements | id, rider_id, fulfillment_location_id, settlement_date (rider's local date), expected_paise, received_paise, difference_paise, status OPEN/SETTLED/DISPUTED, collections_count, recorded_by, settled_by, settled_at, note, dispute_reason | unique (rider_id, settlement_date) |
+| reconciliation_issues | id, kind AMOUNT_MISMATCH/MISSED_WEBHOOK/COLLECTION_DIFFERENCE/REFUND_CAPPED/REFUND_STUCK/DELIVERED_NOT_COLLECTED/UNSETTLED_CASH/SETTLEMENT_AGED/CASH_DIFFERENCE/WEBHOOK_ERROR/REFUND_METHOD_REQUIRED, subject_type PAYMENT/REFUND/SETTLEMENT/WEBHOOK_EVENT/ORDER, subject_id, order_id, fulfillment_location_id, details jsonb, status OPEN/AUTO_RESOLVED/RESOLVED, detected_at, resolved_at, resolved_by, note | unique (kind, subject_id) where status = OPEN |
 
 ### delivery
 | Table | Columns | Constraints |
@@ -181,7 +182,11 @@ A job generates slots from templates 7 days ahead, skipping closures.
 `catalog.storefront_offers` (SQL view, created in a migration): active product + active variant + current price + preparation charges + available stock per fulfillment location. Catalog's storefront reads query this view; it is the only cross-schema read outside Reporting.
 
 ### reporting (views only)
-`daily_sales`, `product_performance`, `contribution_margin` (revenue − SALE movement cost − refunds), `waste_summary`, `repeat_customers`; materialized, refreshed by a Worker job every 15 minutes.
+`daily_sales`, `product_performance`, `contribution_margin` (revenue − SALE movement cost − refunds), `waste_summary`, `customer_daily_orders` (backs the repeat-customers report); materialized, refreshed `CONCURRENTLY` by a Worker job every 15 minutes when the source watermark moved. SQL in `Reporting.Infrastructure/Persistence/Sql/*.sql`, exposed as `ReportingModuleModel.DatabaseObjectsSql` (D22); each view is created only when its source tables exist. Columns and grains: docs/product/reporting.md §1, §3.
+
+| Table | Columns | Constraints |
+|---|---|---|
+| refresh_state | view_name, refreshed_at, source_watermark, duration_ms, last_error | PK view_name |
 
 ## 4. Transaction boundaries
 
