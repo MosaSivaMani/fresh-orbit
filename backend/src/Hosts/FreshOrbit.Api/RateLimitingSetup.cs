@@ -16,6 +16,10 @@ public sealed class RateLimitingOptions
     public RateLimitRule Login { get; set; } = new() { PermitLimit = 10, WindowSeconds = 300 };
 
     public RateLimitRule Checkout { get; set; } = new() { PermitLimit = 10, WindowSeconds = 60 };
+
+    public RateLimitRule Refresh { get; set; } = new() { PermitLimit = 30, WindowSeconds = 60 };
+
+    public RateLimitRule Search { get; set; } = new() { PermitLimit = 60, WindowSeconds = 60 };
 }
 
 public sealed class RateLimitRule
@@ -28,7 +32,7 @@ public sealed class RateLimitRule
 internal static class RateLimitingSetup
 {
     /// <summary>
-    /// <c>otp</c> and <c>login</c>: fixed window per client IP; <c>checkout</c>: sliding window per user (IP when
+    /// <c>otp</c>, <c>login</c>, <c>refresh</c> and <c>search</c>: fixed window per client IP; <c>checkout</c>: sliding window per user (IP when
     /// anonymous). Rejections are 429 Problem Details with code RATE_LIMITED.
     /// </summary>
     public static IServiceCollection AddFreshOrbitRateLimiting(this IServiceCollection services)
@@ -58,6 +62,8 @@ internal static class RateLimitingSetup
 
             options.AddPolicy(RateLimitPolicies.Otp, http => FixedWindowByIp(http, Rules(http).Otp, RateLimitPolicies.Otp));
             options.AddPolicy(RateLimitPolicies.Login, http => FixedWindowByIp(http, Rules(http).Login, RateLimitPolicies.Login));
+            options.AddPolicy(RateLimitPolicies.Refresh, http => FixedWindowByIp(http, Rules(http).Refresh, RateLimitPolicies.Refresh));
+            options.AddPolicy(RateLimitPolicies.Search, http => FixedWindowByIp(http, Rules(http).Search, RateLimitPolicies.Search));
             options.AddPolicy(RateLimitPolicies.Checkout, http =>
             {
                 var rule = Rules(http).Checkout;

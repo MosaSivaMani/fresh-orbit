@@ -44,6 +44,7 @@ internal static class IdentityEndpoints
         group.MapPost("/refresh", async (RefreshRequest request, ITokenService service, CancellationToken ct)
                 => TypedResults.Ok(await service.RefreshAsync(request, ct)))
             .WithValidation<RefreshRequest>()
+            .RequireRateLimiting(RateLimitPolicies.Refresh)
             .AllowAnonymous();
 
         group.MapPost("/logout", async (LogoutRequest request, ITokenService service, ICurrentActor actor, CancellationToken ct) =>

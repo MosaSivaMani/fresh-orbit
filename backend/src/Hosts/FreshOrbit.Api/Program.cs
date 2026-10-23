@@ -4,6 +4,7 @@ using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Web;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Modules;
+using FreshOrbit.SharedKernel.Web.Storage;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -27,6 +28,7 @@ var app = builder.Build();
 
 app.UseSerilogRequestLogging();
 app.UseFreshOrbitWeb();
+app.UseFreshOrbitMedia();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

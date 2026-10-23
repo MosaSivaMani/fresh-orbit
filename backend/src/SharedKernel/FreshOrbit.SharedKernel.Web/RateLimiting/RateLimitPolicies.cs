@@ -11,4 +11,10 @@ public static class RateLimitPolicies
 
     /// <summary>Checkout / place order: moderate, per user.</summary>
     public const string Checkout = "checkout";
+
+    /// <summary>Token refresh: per client IP.</summary>
+    public const string Refresh = "refresh";
+
+    /// <summary>Storefront product listing and search: per client IP.</summary>
+    public const string Search = "search";
 }
