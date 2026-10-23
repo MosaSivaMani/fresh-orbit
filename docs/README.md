@@ -11,6 +11,7 @@
 | API | `api/README.md` |
 | Module rules | `product/*.md` |
 | Research: hosting, payments, mobile framework, reference ERP | `research/*.md` |
+| **Where we stopped / what next** | `team/next-steps.md` |
 | Design system (Phase 5) | `design/` |
 | Security review and pre-release checklist | `security/` |
 | Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
