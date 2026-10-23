@@ -6,7 +6,7 @@ using FreshOrbit.Payments.Application.Reconciliation;
 using FreshOrbit.Payments.Application.Refunds;
 using FreshOrbit.Payments.Application.Settlements;
 using FreshOrbit.Payments.Application.Webhooks;
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Payments.Infrastructure.Endpoints;
 using FreshOrbit.Payments.Infrastructure.Jobs;
 using FreshOrbit.Payments.Infrastructure.Persistence;

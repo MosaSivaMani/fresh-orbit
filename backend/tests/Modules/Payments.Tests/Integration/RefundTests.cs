@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using AwesomeAssertions;
 using FreshOrbit.Payments.Application.Handlers;
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Payments.Domain.Payments;
 using FreshOrbit.SharedKernel.Events;
 using Microsoft.Extensions.DependencyInjection;

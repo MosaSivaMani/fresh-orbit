@@ -2,7 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shared;
-using FreshOrbit.Delivery.Domain.Shipments.Events;
+using FreshOrbit.Delivery.Public.Events;
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;
 
@@ -266,7 +267,7 @@ public sealed class Shipment : AggregateRoot
             CashCollectedAt = now;
         }
 
-        Raise(new ShipmentDelivered(Id, OrderId, FulfillmentLocationId, riderId, now, cash?.AmountPaise, cash?.Mode, cash?.UpiReference));
+        Raise(new ShipmentDelivered(Id, OrderId, FulfillmentLocationId, riderId, now, cash?.AmountPaise, cash?.Mode.ToCode(), cash?.UpiReference));
         return DeliverOutcome.Delivered;
     }
 
@@ -297,7 +298,7 @@ public sealed class Shipment : AggregateRoot
         var attemptNo = NextAttemptNo;
         _attempts.Add(new DeliveryAttempt(Id, attemptNo, outcome, trimmed, now));
         Status = ShipmentStatus.Failed;
-        Raise(new DeliveryAttemptFailed(Id, OrderId, FulfillmentLocationId, attemptNo, outcome, trimmed, now));
+        Raise(new DeliveryAttemptFailed(Id, OrderId, FulfillmentLocationId, attemptNo, outcome.ToCode(), trimmed, now));
     }
 
     /// <summary>

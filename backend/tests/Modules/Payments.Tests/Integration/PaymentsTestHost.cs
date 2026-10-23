@@ -166,7 +166,7 @@ public abstract class PaymentsTestBase(PaymentsDatabase database) : IAsyncLifeti
     protected async Task<int> CountOutboxAsync(string eventName, Guid id)
     {
         await using var db = Database.CreateDbContext();
-        var type = $"%.{eventName}, FreshOrbit.Payments.Domain";
+        var type = $"%.{eventName}, FreshOrbit.Payments.Public";
         var idText = $"%{id}%";
         return await db.Database
             .SqlQuery<int>($"SELECT count(*)::int AS \"Value\" FROM platform.outbox WHERE event_type LIKE {type} AND payload::text LIKE {idText}")

@@ -1,6 +1,6 @@
 using FreshOrbit.SharedKernel.Events;
 
-namespace FreshOrbit.Delivery.Domain.Shipments.Events;
+namespace FreshOrbit.Delivery.Public.Events;
 
 public sealed record RiderAssigned(Guid ShipmentId, Guid OrderId, Guid FulfillmentLocationId, Guid RiderId, Guid? PreviousRiderId) : DomainEvent;
 
@@ -23,7 +23,7 @@ public sealed record ShipmentDelivered(
     Guid RiderId,
     DateTimeOffset DeliveredAt,
     long? CashCollectedPaise,
-    CashMode? CashMode,
+    string? CashMode,
     string? UpiReference) : DomainEvent;
 
 /// <summary>Ordering moves the order to DELIVERY_FAILED.</summary>
@@ -32,7 +32,7 @@ public sealed record DeliveryAttemptFailed(
     Guid OrderId,
     Guid FulfillmentLocationId,
     int AttemptNo,
-    AttemptOutcome Outcome,
+    string Outcome,
     string? Notes,
     DateTimeOffset AttemptedAt) : DomainEvent;
 

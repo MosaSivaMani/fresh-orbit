@@ -1,7 +1,7 @@
 using AwesomeAssertions;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
-using FreshOrbit.Delivery.Domain.Shipments.Events;
+using FreshOrbit.Delivery.Public.Events;
 using FreshOrbit.SharedKernel.Errors;
 
 namespace FreshOrbit.Delivery.Tests.Unit;
@@ -68,7 +68,7 @@ public sealed class ShipmentTests
         var delivered = shipment.DomainEvents.OfType<ShipmentDelivered>().Single();
         delivered.RiderId.Should().Be(rider.Id);
         delivered.CashCollectedPaise.Should().Be(66950);
-        delivered.CashMode.Should().Be(CashMode.Upi);
+        delivered.CashMode.Should().Be("UPI");
         delivered.UpiReference.Should().Be("UPI123");
     }
 

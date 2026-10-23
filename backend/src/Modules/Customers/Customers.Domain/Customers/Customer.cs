@@ -1,4 +1,4 @@
-using FreshOrbit.Customers.Domain.Events;
+using FreshOrbit.Customers.Public.Events;
 using FreshOrbit.Customers.Domain.Shared;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;

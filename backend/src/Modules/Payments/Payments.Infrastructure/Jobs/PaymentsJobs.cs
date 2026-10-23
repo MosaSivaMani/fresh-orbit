@@ -1,6 +1,6 @@
 using FreshOrbit.Payments.Application.Reconciliation;
 using FreshOrbit.Payments.Application.Refunds;
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Events;
 using FreshOrbit.SharedKernel.Jobs;

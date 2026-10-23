@@ -1,6 +1,6 @@
 using FreshOrbit.SharedKernel.Events;
 
-namespace FreshOrbit.Payments.Domain.Events;
+namespace FreshOrbit.Payments.Public.Events;
 
 // Payloads use plain strings for codes so other modules can consume them without Payments enums
 // (docs/product/payments.md §4 "Raised").

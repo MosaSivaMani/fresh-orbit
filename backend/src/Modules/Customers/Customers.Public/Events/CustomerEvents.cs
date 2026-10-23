@@ -1,6 +1,6 @@
 using FreshOrbit.SharedKernel.Events;
 
-namespace FreshOrbit.Customers.Domain.Events;
+namespace FreshOrbit.Customers.Public.Events;
 
 public sealed record CustomerRegistered(Guid CustomerId, Guid UserId) : DomainEvent;
 

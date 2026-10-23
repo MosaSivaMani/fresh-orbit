@@ -1,6 +1,6 @@
 using FreshOrbit.SharedKernel.Events;
 
-namespace FreshOrbit.Identity.Domain.Events;
+namespace FreshOrbit.Identity.Public.Events;
 
 /// <summary>
 /// A customer signed in with an OTP. Cart merges the guest cart identified by <paramref name="GuestCartToken"/>

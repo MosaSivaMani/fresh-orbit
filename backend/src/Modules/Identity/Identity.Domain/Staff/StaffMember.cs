@@ -1,4 +1,4 @@
-using FreshOrbit.Identity.Domain.Events;
+using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;
 
