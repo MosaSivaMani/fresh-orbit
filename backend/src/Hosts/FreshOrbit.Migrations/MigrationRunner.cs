@@ -27,7 +27,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         {
             foreach (var loader in scope.ServiceProvider.GetServices<IReferenceDataLoader>().OrderBy(l => l.Order))
             {
-                LogStep($"Reference data: {loader.GetType().Name}");
+                LogReferenceLoader(loader.GetType().Name);
                 await loader.LoadAsync(new ReferenceDataContext(referencePath), cancellationToken);
             }
         }
@@ -36,7 +36,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         {
             await using var scope = scopeFactory.CreateAsyncScope();
             var deleted = await scope.ServiceProvider.GetRequiredService<SampleDataPurger>().PurgeAsync(cancellationToken);
-            LogStep($"Purged {deleted} sample rows");
+            LogPurged(deleted);
         }
 
         if (command.LoadSample)
@@ -46,7 +46,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
             var tracker = scope.ServiceProvider.GetRequiredService<ISampleRecordTracker>();
             foreach (var loader in scope.ServiceProvider.GetServices<ISampleDataLoader>().OrderBy(l => l.Order))
             {
-                LogStep($"Sample data: {loader.GetType().Name}");
+                LogSampleLoader(loader.GetType().Name);
                 await loader.LoadAsync(new SampleDataContext(samplePath, tracker), cancellationToken);
             }
         }
@@ -57,6 +57,15 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
 
     [LoggerMessage(Level = LogLevel.Information, Message = "{Step}")]
     private partial void LogStep(string step);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Reference data: {Loader}")]
+    private partial void LogReferenceLoader(string loader);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Purged {Count} sample rows")]
+    private partial void LogPurged(int count);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Sample data: {Loader}")]
+    private partial void LogSampleLoader(string loader);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Sample data is refused in the {Environment} environment")]
     private partial void LogSampleRefused(string environment);
