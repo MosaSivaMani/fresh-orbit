@@ -1,0 +1,102 @@
+# Fresh Orbit edge: HTTPS (Let's Encrypt, automatic), routing, security headers, compression, /media.
+#   https://{$DOMAIN}         customer website (web:3000, Next.js)
+#   https://admin.{$DOMAIN}   admin dashboard   (admin:8080, static SPA)
+#   https://api.{$DOMAIN}     REST API          (api:8080); /media/* served from the file-storage volume (D21)
+# Environment (from .env.prod through compose): DOMAIN, ACME_EMAIL, TRUSTED_PROXIES.
+# Validate: docker compose ... exec caddy caddy validate --config /etc/caddy/Caddyfile
+{
+	email {$ACME_EMAIL}
+	servers {
+		# Real client IP for logs and the API's rate limits. Behind Cloudflare, TRUSTED_PROXIES lists its ranges and
+		# CF-Connecting-IP carries the visitor's address.
+		trusted_proxies static {$TRUSTED_PROXIES:private_ranges}
+		client_ip_headers CF-Connecting-IP X-Forwarded-For
+	}
+	# The admin API stays on localhost:2019 inside the container (compose healthcheck); it is never published.
+}
+
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Cross-Origin-Opener-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(self), usb=(), interest-cohort=()"
+		-Server
+		-X-Powered-By
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+# ---- Customer website ------------------------------------------------------------------------------------------
+{$DOMAIN} {
+	import common
+	# Next.js App Router injects inline bootstrap scripts, hence 'unsafe-inline' for scripts (no nonce support in a
+	# static header). Product images come from api.{$DOMAIN}/media. Add a payment gateway's origins here when online
+	# payments go live (Phase 11).
+	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self' https://api.{$DOMAIN}; manifest-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+	request_body {
+		max_size 1MB
+	}
+	reverse_proxy web:3000
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# ---- Admin dashboard (static SPA) ------------------------------------------------------------------------------
+admin.{$DOMAIN} {
+	import common
+	# Vite emits external scripts only; Radix/Tailwind need inline styles.
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self' https://api.{$DOMAIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+	header X-Robots-Tag "noindex, nofollow"
+	request_body {
+		max_size 1MB
+	}
+	reverse_proxy admin:8080
+}
+
+# ---- API and media ---------------------------------------------------------------------------------------------
+api.{$DOMAIN} {
+	import common
+	header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+
+	# Public product images straight from the volume. Same rule as the Api's UseFreshOrbitMedia: only .webp/.jpg/.png
+	# are public (originals and anything else stay private); keys never change content, so cache for a year.
+	@publicMedia path_regexp publicMedia (?i)^/media/[^.][^?]*\.(webp|jpg|png)$
+	handle @publicMedia {
+		uri strip_prefix /media
+		root * /srv/media
+		header Cache-Control "public, max-age=31536000, immutable"
+		header Cross-Origin-Resource-Policy "cross-origin"
+		file_server
+	}
+	handle /media/* {
+		respond 404
+	}
+
+	# Product image upload: Catalog accepts up to 5 MB per image (ImageFormats.MaxBytes) plus multipart overhead.
+	@imageUpload {
+		method POST
+		path_regexp ^/api/v1/admin/products/[^/]+/images$
+	}
+	handle @imageUpload {
+		request_body {
+			max_size 6MB
+		}
+		reverse_proxy api:8080
+	}
+
+	handle {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy api:8080
+	}
+}
