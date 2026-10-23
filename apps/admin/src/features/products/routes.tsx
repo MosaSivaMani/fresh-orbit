@@ -1,4 +1,26 @@
 import { type RouteObject } from "react-router";
-import { notBuilt } from "../../app/route-helpers";
+import { screen } from "../../app/route-helpers";
 
-export const productsRoutes: RouteObject[] = [notBuilt("products", "catalog.manage", "Products")];
+// Static segments before ":productId" so "new" and "categories" are not read as ids.
+export const productsRoutes: RouteObject[] = [
+  screen(
+    "products",
+    "catalog.manage",
+    async () => (await import("./ProductsListPage")).ProductsListPage,
+  ),
+  screen(
+    "products/new",
+    "catalog.manage",
+    async () => (await import("./ProductCreatePage")).ProductCreatePage,
+  ),
+  screen(
+    "products/categories",
+    "catalog.manage",
+    async () => (await import("./CategoriesPage")).CategoriesPage,
+  ),
+  screen(
+    "products/:productId",
+    "catalog.manage",
+    async () => (await import("./ProductEditorPage")).ProductEditorPage,
+  ),
+];
