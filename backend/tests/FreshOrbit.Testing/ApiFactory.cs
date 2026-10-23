@@ -49,7 +49,7 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
         builder.UseSetting($"ConnectionStrings:{FreshOrbitDbContextOptions.ConnectionStringName}", database.ConnectionString);
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
-        foreach (var policy in new[] { "Otp", "Login", "Checkout", "Refresh", "Search" })
+        foreach (var policy in new[] { "Checkout", "Refresh", "Search" })
         {
             builder.UseSetting($"RateLimiting:{policy}:PermitLimit", "100000");
         }
