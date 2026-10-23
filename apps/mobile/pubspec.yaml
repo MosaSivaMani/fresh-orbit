@@ -1,0 +1,32 @@
+name: fresh_orbit_app
+description: "Fresh Orbit customer app (Android and iOS). Business values come from the API; the app renders them."
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.5
+  flutter: ">=3.47.0"
+
+# Versions are pinned exactly (no caret). Licences are listed in docs/design/mobile.md.
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: 5.11.1
+  flutter_riverpod: 3.4.3
+  flutter_secure_storage: 11.2.0
+  fresh_theme:
+    path: ../../packages/flutter/fresh_theme
+  go_router: 18.1.1
+  intl: 0.20.3
+  shared_preferences: 2.5.6
+  uuid: 4.6.0
+  url_launcher: 6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 6.0.0
+
+flutter:
+  uses-material-design: true
