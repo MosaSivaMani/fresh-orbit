@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | 4 | E4 sample data and content drafts: `backend/data/sample/*.json` (Visakhapatnam demo store: 1 city, 1 location, 3 service areas / 20 pincodes, 26 products / 28 variants, 28 prices, 67 preparation charges, 29 batches, 21 slot templates, 3 riders, 2 coupons, 2 banners, 3 customers, 2 staff), `images.json` placeholders, validator `backend/data/sample/tools/validate.py`, `docs/product/sample-data.md` (natural keys, load order, purge, loader work, open decisions S-D1–S-D8), `docs/content/*.md` drafts. No C# changed | E4: validator OK; a mutated copy produced the 7 expected errors. Loaders not written yet |
 | 2026-10-23 | 5 | Merged E3 frontend packages; frontend CI job added; D32 | `pnpm build/typecheck/lint/test` all pass; 129 tests (tokens 66, core 29, ui 32, api-client 2) |
 | 2026-10-23 | 3 | Merged E2 into `main`; architecture tests updated for D30 | `dotnet test` 575/575 passed (adds Locations 42, Catalog 45, Pricing 26) |
 | 2026-10-23 | 3 | Merged E1 into `main`; rulings D30 (events in Public), D31 (shared 401/403/429/503) | `dotnet test` 462/462 passed (adds Identity 22, Customers 14, Settings 18, Audit 6, Notifications 18) |
