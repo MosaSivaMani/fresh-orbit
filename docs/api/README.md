@@ -211,6 +211,10 @@ Webhooks use the provider event id instead (§7).
 | ROLE_IN_USE | 409 | Role still assigned to staff |
 | SYSTEM_ROLE_READ_ONLY | 422 | Default roles cannot be deleted or renamed |
 | LAST_ADMIN | 422 | Cannot remove the last active ADMIN |
+| ROLE_NOT_FOUND | 422 | A `roleIds` entry does not exist |
+| PERMISSION_UNKNOWN | 422 | A role lists a permission code that does not exist |
+| ADMIN_ALREADY_EXISTS | 422 | `--create-admin` refused: an active ADMIN exists |
+| PURPOSE_NOT_SUPPORTED | 422 | OTP `purpose` other than `LOGIN` (VERIFY_PHONE not offered yet) |
 
 ### Customers
 | Code | HTTP | Meaning |
@@ -339,6 +343,7 @@ Webhooks use the provider event id instead (§7).
 | TEMPLATE_PLACEHOLDER_UNKNOWN | 422 | Template uses an unknown `{{placeholder}}` |
 | NUMBER_SERIES_IN_USE | 409 | Series period already issued numbers; prefix/next value locked |
 | GSTIN_INVALID | 422 | GSTIN format/checksum invalid |
+| PREFERENCE_REQUIRED | 422 | `ORDER_UPDATES` SMS cannot be disabled |
 
 ## 3. Permissions and roles
 
@@ -415,6 +420,8 @@ Always 202 for a well-formed phone (no account enumeration).
 }
 ```
 Errors: `OTP_INVALID`, `OTP_EXPIRED`, `OTP_TOO_MANY_ATTEMPTS`, `ACCOUNT_DISABLED`.
+Implementation note: `cart` is `null` for now; Cart merges the guest cart asynchronously on the `CustomerSignedIn`
+event (which carries the guest token), so the client re-reads the cart after login.
 
 **POST /api/v1/auth/refresh** → 200
 ```json
@@ -766,7 +773,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | GET | `/api/v1/me/notifications` | customer | | In-app messages, `unreadOnly` filter |
 | POST | `/api/v1/me/notifications/{messageId}/read` | customer | | Mark read |
 | POST | `/api/v1/me/notifications/read-all` | customer | | Mark all read |
-| PUT | `/api/v1/me/device-tokens` | customer | | Register push token (`pushToken`, `provider` FCM, `platform` ANDROID/IOS) |
+| PUT | `/api/v1/me/device-tokens` | customer | | Register a push token `{ pushToken, provider: "FCM", platform: ANDROID/IOS/WEB }` (Ruling D28); re-registering moves the token to the caller |
 | DELETE | `/api/v1/me/device-tokens/{token}` | customer | | Unregister |
 | GET | `/api/v1/me/notification-preferences` | customer | | Preferences per category × channel |
 | PUT | `/api/v1/me/notification-preferences` | customer | | Replace preferences (`ORDER_UPDATES` SMS cannot be disabled) |
@@ -1128,14 +1135,14 @@ Dashboard: `{ asOf, date, filters, ordersByStatus[{status,count}], slots[{slotId
 | PUT | `/api/v1/admin/roles/{roleId}` | staff.manage | IM | Name, permissions |
 | DELETE | `/api/v1/admin/roles/{roleId}` | staff.manage | IM | Delete custom role (`ROLE_IN_USE`) |
 | GET | `/api/v1/admin/permissions` | staff.manage | | Permission catalogue |
-| GET/PUT | `/api/v1/admin/settings/business-profile` | settings.manage | ETag / IM | Legal name, GSTIN, FSSAI, address, support contacts |
+| GET/PUT | `/api/v1/admin/settings/business-profile` | settings.manage | ETag / IM (If-None-Match: * to create) | Legal name, GSTIN, FSSAI, address, support contacts, `timeZone` (IANA) |
 | GET | `/api/v1/admin/settings/order-policies` | settings.manage | | Default + per-city policies |
-| PUT | `/api/v1/admin/settings/order-policies/{cityId\|default}` | settings.manage | IM / If-None-Match | `reservationMinutes`, `maxOverweightBp`, `cancelAllowedUntilStatus`, `codMaxOrderPaise` |
+| PUT | `/api/v1/admin/settings/order-policies/{cityId\|default}` | settings.manage | IM / If-None-Match | `reservationMinutes`, `maxOverweightBp`, `cancelAllowedUntilStatus`, `codMaxOrderPaise`, `enabledPaymentMethods`, `substitutionResponseMinutes`, `complaintWindowHours`, `maxDeliveryAttempts` |
 | GET | `/api/v1/admin/settings/number-series` | settings.manage | | Series per code × period |
-| PUT | `/api/v1/admin/settings/number-series/{code}/{period}` | settings.manage | IM | Prefix / next value (`NUMBER_SERIES_IN_USE` once issued) |
+| PUT | `/api/v1/admin/settings/number-series/{code}/{period}` | settings.manage | IM / If-None-Match | `prefix`, `padWidth`, `nextValue` (`NUMBER_SERIES_IN_USE` once issued) |
 | GET | `/api/v1/admin/audit` | audit.view | | `entityType`, `entityId`, `actorId`, `action`, `fromDate`, `toDate` |
 | GET | `/api/v1/admin/notification-templates` | notifications.manage | | Templates |
-| PUT | `/api/v1/admin/notification-templates/{code}/{channel}` | notifications.manage | IM | Edit subject/body |
+| PUT | `/api/v1/admin/notification-templates/{code}/{channel}` | notifications.manage | IM | `subject`, `body`, `isActive` (`TEMPLATE_PLACEHOLDER_UNKNOWN`) |
 | POST | `/api/v1/admin/notification-templates/{code}/{channel}/test` | notifications.manage | | Send test to own contact |
 
 ## 5. Cart and checkout pricing contract

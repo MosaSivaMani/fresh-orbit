@@ -1,4 +1,16 @@
+using FluentValidation;
+using FreshOrbit.Customers.Application.Addresses;
+using FreshOrbit.Customers.Application.Admin;
+using FreshOrbit.Customers.Application.Profiles;
+using FreshOrbit.Customers.Application.Shared;
+using FreshOrbit.Customers.Application.Wishlist;
+using FreshOrbit.Customers.Domain.Shared;
+using FreshOrbit.Customers.Infrastructure.Endpoints;
 using FreshOrbit.Customers.Infrastructure.Persistence;
+using FreshOrbit.Customers.Infrastructure.Persistence.Repositories;
+using FreshOrbit.Customers.Infrastructure.Public;
+using FreshOrbit.Customers.Public;
+using FreshOrbit.Identity.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
@@ -15,13 +27,17 @@ public sealed class CustomersModule : IModule
     public void Register(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleModel<CustomersModuleModel>();
-
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        services.AddScoped<ICustomersRepository, CustomersRepository>();
+        services.AddScoped<CustomerContext>();
+        services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<IAddressService, AddressService>();
+        services.AddScoped<IWishlistService, WishlistService>();
+        services.AddScoped<IAdminCustomerService, AdminCustomerService>();
+        services.AddScoped<ICustomersApi, CustomersApi>();
+        services.AddScoped<ICustomerAccountDirectory, CustomerAccountDirectory>();
+        services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
+        services.AddScoped<IValidator<CustomerListRequest>, CustomerListRequestValidator>();
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
-    }
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) => CustomersEndpoints.Map(endpoints);
 }

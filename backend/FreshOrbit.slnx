@@ -112,5 +112,10 @@
     <Project Path="tests/Modules/Inventory.Tests/Inventory.Tests.csproj" />
     <Project Path="tests/Modules/Payments.Tests/Payments.Tests.csproj" />
     <Project Path="tests/Modules/Reporting.Tests/Reporting.Tests.csproj" />
+    <Project Path="tests/Modules/Audit.Tests/Audit.Tests.csproj" />
+    <Project Path="tests/Modules/Customers.Tests/Customers.Tests.csproj" />
+    <Project Path="tests/Modules/Identity.Tests/Identity.Tests.csproj" />
+    <Project Path="tests/Modules/Notifications.Tests/Notifications.Tests.csproj" />
+    <Project Path="tests/Modules/Settings.Tests/Settings.Tests.csproj" />
   </Folder>
 </Solution>
