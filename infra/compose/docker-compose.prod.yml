@@ -215,9 +215,11 @@ services:
       api:
         condition: service_healthy
     environment:
-      # Server-side rendering calls the API over the internal network; the browser uses NEXT_PUBLIC_API_BASE_URL
-      # baked in at build time.
-      API_INTERNAL_URL: http://api:8080
+      # Server-side only: pages, the /api/v1 proxy and the /bff/auth handlers call the API over the internal network
+      # (docs/design/web.md). The browser never calls the API directly.
+      FRESH_API_ORIGIN: http://api:8080
+      # Inlined at build time (deploy.yml build argument); repeated here for server code read at runtime.
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?DOMAIN is required}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
       interval: 15s

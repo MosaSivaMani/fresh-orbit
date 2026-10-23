@@ -33,40 +33,8 @@
 	}
 }
 
-# ---- Customer website ------------------------------------------------------------------------------------------
-{$DOMAIN} {
-	import common
-	# Next.js App Router injects inline bootstrap scripts, hence 'unsafe-inline' for scripts (no nonce support in a
-	# static header). Product images come from api.{$DOMAIN}/media. Add a payment gateway's origins here when online
-	# payments go live (Phase 11).
-	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self' https://api.{$DOMAIN}; manifest-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
-	request_body {
-		max_size 1MB
-	}
-	reverse_proxy web:3000
-}
-
-www.{$DOMAIN} {
-	redir https://{$DOMAIN}{uri} permanent
-}
-
-# ---- Admin dashboard (static SPA) ------------------------------------------------------------------------------
-admin.{$DOMAIN} {
-	import common
-	# Vite emits external scripts only; Radix/Tailwind need inline styles.
-	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self' https://api.{$DOMAIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
-	header X-Robots-Tag "noindex, nofollow"
-	request_body {
-		max_size 1MB
-	}
-	reverse_proxy admin:8080
-}
-
-# ---- API and media ---------------------------------------------------------------------------------------------
-api.{$DOMAIN} {
-	import common
-	header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
-
+# API routes shared by api.{$DOMAIN} (mobile app, public images) and admin.{$DOMAIN} (same-origin admin calls).
+(api_routes) {
 	# Public product images straight from the volume. Same rule as the Api's UseFreshOrbitMedia: only .webp/.jpg/.png
 	# are public (originals and anything else stay private); keys never change content, so cache for a year.
 	@publicMedia path_regexp publicMedia (?i)^/media/[^.][^?]*\.(webp|jpg|png)$
@@ -81,7 +49,8 @@ api.{$DOMAIN} {
 		respond 404
 	}
 
-	# Product image upload: Catalog accepts up to 5 MB per image (ImageFormats.MaxBytes) plus multipart overhead.
+	# Uploads. Product image: Catalog accepts up to 5 MB (ImageFormats.MaxBytes) plus multipart overhead.
+	# Complaint: up to 4 photos (docs/api); 4 x 5 MB assumed until Ordering states its own limit.
 	@imageUpload {
 		method POST
 		path_regexp ^/api/v1/admin/products/[^/]+/images$
@@ -92,6 +61,82 @@ api.{$DOMAIN} {
 		}
 		reverse_proxy api:8080
 	}
+	@complaintUpload {
+		method POST
+		path_regexp ^/api/v1/orders/[^/]+/complaints$
+	}
+	handle @complaintUpload {
+		request_body {
+			max_size 21MB
+		}
+		reverse_proxy api:8080
+	}
+
+	handle /api/* {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy api:8080
+	}
+}
+
+# ---- Customer website (Next.js) --------------------------------------------------------------------------------
+{$DOMAIN} {
+	import common
+	# The browser talks only to this origin: pages, the /api/v1/* proxy and the /bff/auth/* handlers all live in the
+	# Next.js server (docs/design/web.md). Next.js App Router injects inline bootstrap scripts, hence 'unsafe-inline'
+	# for scripts (a nonce would need Next.js middleware). Product images come from api.{$DOMAIN}/media. Add a payment
+	# gateway's origins here when online payments go live (Phase 11).
+	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+
+	# Complaint photos pass through the website's /api/v1 proxy.
+	@complaintUpload {
+		method POST
+		path_regexp ^/api/v1/orders/[^/]+/complaints$
+	}
+	handle @complaintUpload {
+		request_body {
+			max_size 21MB
+		}
+		reverse_proxy web:3000
+	}
+	handle {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy web:3000
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# ---- Admin dashboard (static SPA; /api and /media go to the API on the same origin) ---------------------------
+admin.{$DOMAIN} {
+	import common
+	# Strict (D40): staff tokens live in sessionStorage, so only this origin's own script files may run. No inline
+	# scripts, no third-party origins, no eval, and Trusted Types enforced for DOM script sinks. Styles from files;
+	# React/Radix set inline styles through the CSSOM, which CSP does not restrict.
+	header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self'; connect-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'; require-trusted-types-for 'script'; upgrade-insecure-requests"
+	header X-Robots-Tag "noindex, nofollow"
+
+	import api_routes
+
+	handle {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy admin:8080
+	}
+}
+
+# ---- API and media (mobile app, image URLs) --------------------------------------------------------------------
+api.{$DOMAIN} {
+	import common
+	header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+
+	import api_routes
 
 	handle {
 		request_body {

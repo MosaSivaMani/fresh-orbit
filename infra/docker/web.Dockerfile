@@ -2,13 +2,14 @@
 # Fresh Orbit customer website (Next.js, standalone output) from the pnpm + Turborepo monorepo.
 # Build context: repository root.
 #   docker build -f infra/docker/web.Dockerfile \
-#     --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.in -t fresh-orbit-web .
+#     --build-arg NEXT_PUBLIC_SITE_URL=https://example.in -t fresh-orbit-web .
 #
-# Requirements on apps/web (owned by the web team):
-#   - next.config: `output: "standalone"` and `outputFileTracingRoot` set to the repository root
-#     (so the server lands at .next/standalone/apps/web/server.js).
-#   - Public values the browser needs come from NEXT_PUBLIC_* build arguments (they are inlined at build time).
-#     Server-side code reaches the API over the internal network through API_INTERNAL_URL (runtime env).
+# How apps/web fits (docs/design/web.md):
+#   - next.config switches to `output: "standalone"` (traced from the repository root) when NEXT_OUTPUT=standalone,
+#     so the server lands at .next/standalone/apps/web/server.js.
+#   - NEXT_PUBLIC_SITE_URL (canonical URLs, sitemap, robots) is inlined at build time: build argument.
+#   - FRESH_API_ORIGIN (server-side only; the browser uses this site's /api/v1 proxy and /bff/auth handlers) is read
+#     at runtime: set by docker-compose.prod.yml to http://api:8080.
 #
 # The build stage runs on the TARGET platform (QEMU in CI for arm64) because Next's standalone output can carry
 # platform-specific native modules (e.g. sharp). Pruning runs on the build platform.
@@ -27,10 +28,11 @@ RUN pnpm dlx "turbo@${TURBO_VERSION}" prune "${WEB_PACKAGE}" --docker
 FROM ${NODE_IMAGE} AS build
 ARG WEB_PACKAGE=@fresh/web
 ARG WEB_DIR=apps/web
-ARG NEXT_PUBLIC_API_BASE_URL=
+ARG NEXT_PUBLIC_SITE_URL=
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     NEXT_TELEMETRY_DISABLED=1 \
-    NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+    NEXT_OUTPUT=standalone \
+    NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 WORKDIR /repo
 RUN corepack enable
 # Dependency layer: only package manifests and the pruned lockfile, so source edits keep the install cached.
@@ -39,7 +41,10 @@ COPY --from=prune /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN --mount=type=cache,id=freshorbit-pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --store-dir /pnpm/store
 COPY --from=prune /repo/out/full/ ./
-RUN pnpm turbo run build --filter="${WEB_PACKAGE}" \
+# Workspace dependencies through turbo, then the app itself directly: turbo's strict env mode would hide
+# NEXT_OUTPUT from `next build`.
+RUN pnpm turbo run build --filter="${WEB_PACKAGE}^..." \
+    && pnpm --filter "${WEB_PACKAGE}" run build \
     && mkdir -p "${WEB_DIR}/public" \
     && mkdir -p /out \
     && cp -R "${WEB_DIR}/.next/standalone/." /out/ \

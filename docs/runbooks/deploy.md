@@ -22,8 +22,12 @@ forwarded-headers subnet): `security-configuration.md`.
    | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <host>` (recommended; without it the first connection is trusted blindly) |
    | `DEPLOY_SSH_PORT` | optional, default 22 |
 
-   and **variables**: `DOMAIN` (e.g. `freshorbit.in`), `PUBLIC_API_BASE_URL` (e.g. `https://api.freshorbit.in`,
-   baked into the web and admin bundles at build time), optional `DEPLOY_PATH` (default `/opt/freshorbit`).
+   and **variables**: `DOMAIN` (e.g. `freshorbit.in`), optional `DEPLOY_PATH` (default `/opt/freshorbit`).
+
+   **Repository** variables (Settings → Secrets and variables → Actions → Variables): `SITE_URL_STAGING` and
+   `SITE_URL_PRODUCTION` (e.g. `https://staging.freshorbit.in`, `https://freshorbit.in`). The website inlines its
+   public URL (`NEXT_PUBLIC_SITE_URL`: canonical links, sitemap, robots) at build time, so the build job needs it
+   before any environment is chosen. The admin image needs no URL (see §7).
 3. Application secrets (database password, JWT key, SMTP, SMS) never go to GitHub: they live only in
    `/opt/freshorbit/infra/compose/.env.prod` on the server (template: `infra/compose/.env.prod.example`).
 4. GHCR packages are private with the repository. The workflow logs the server in with its short-lived token for each
@@ -34,9 +38,13 @@ forwarded-headers subnet): `security-configuration.md`.
 
 | How | What happens |
 |---|---|
-| `git tag v1.4.0 && git push origin v1.4.0` | Builds all five images as `v1.4.0`, deploys to `staging` |
-| Actions → Deploy → Run workflow (tag empty) | Builds this commit as `sha-<7 chars>`, deploys to the chosen environment |
-| Actions → Deploy → Run workflow (tag `v1.3.2`) | No build; redeploys an existing tag (e.g. promote to `production`) |
+| `git tag v1.4.0 && git push origin v1.4.0` | Builds all five images as `v1.4.0` (site URL: staging), deploys to `staging` |
+| Actions → Deploy → Run workflow on ref `v1.4.0`, environment `production`, tag empty | Builds that ref as `v1.4.0-prod` (site URL: production), deploys to `production` |
+| Actions → Deploy → Run workflow on a branch, tag empty | Builds the commit as `sha-<7 chars>` (`-prod` for production), deploys to the chosen environment |
+| Actions → Deploy → Run workflow, tag `v1.3.2` / `v1.3.2-prod` | No build; redeploys an existing tag (rollback to an older release) |
+
+Because the web image carries its site URL, only `-prod` tags can go to production and only non-`-prod` tags to
+staging; the workflow refuses the other combinations. The .NET and admin images are identical in both builds.
 
 The deploy job copies `infra/` (compose, Caddy, scripts, monitoring) to the server, then runs
 `infra/scripts/deploy.sh <tag>`, which:
@@ -122,16 +130,27 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 | Rate limits hit everyone at once | `DOCKER_SUBNET` / forwarded-headers settings (`security-configuration.md`) |
 | Disk full | `docker system df`; old backups in `BACKUP_DIR`; `docker image prune` |
 
-## 7. Requirements on the apps (for the web and admin teams)
+## 7. How the web and admin apps are served
 
-The Dockerfiles in `infra/docker/` expect:
+| | Website `apps/web` (`@fresh/web`, Next.js) | Admin `apps/admin` (`@fresh/admin`, Vite SPA) |
+|---|---|---|
+| Image | Next.js standalone server, Node 22, UID 1000 | static files in a non-root Caddy (UID 65534) on :8080 |
+| Build switch | `NEXT_OUTPUT=standalone` (set by the Dockerfile) turns on `output: "standalone"` traced from the repository root in `next.config.ts`; local `next dev`/`next start` unchanged | none |
+| Build-time values | `NEXT_PUBLIC_SITE_URL` (build arg from `SITE_URL_*`) | none (`VITE_API_ORIGIN` stays empty) |
+| Runtime values | `FRESH_API_ORIGIN=http://api:8080` (compose) | none |
+| How the browser reaches the API | Same origin only: the Next.js `/api/v1/*` proxy and `/bff/auth/*` handlers call the API inside the compose network (`docs/design/web.md` §4) | Same origin: Caddy routes `admin.<domain>/api/*` and `/media/*` to the API (shared `api_routes` snippet), so no CORS and one image for every environment |
+| CSP (Caddyfile) | `script-src 'self' 'unsafe-inline'` (Next.js inline bootstrap), `connect-src 'self'`, images also from `api.<domain>` | Strict (D40): `default-src 'none'`, `script-src 'self'` (no inline, no third-party, no eval), `style-src 'self'`, `connect-src 'self'`, `require-trusted-types-for 'script'` |
+| Health | `GET /` | `GET /` |
 
-| App | Requirement |
-|---|---|
-| `apps/web` (package `@fresh/web`) | `next.config`: `output: "standalone"` and `outputFileTracingRoot` = repository root; browser API URL from `NEXT_PUBLIC_API_BASE_URL`; server-side calls use `API_INTERNAL_URL` (`http://api:8080`); `/` answers 200 without login (healthcheck) |
-| `apps/admin` (package `@fresh/admin`) | `vite build` → `apps/admin/dist` with hashed files in `dist/assets/`; API URL from `VITE_API_BASE_URL` |
-| Both | Built with `turbo prune <package> --docker` and `pnpm install --frozen-lockfile`; keep `pnpm-lock.yaml` current |
+Verified on 2026-10-24 with the real apps through Caddy in headless Chromium: both pages render with no CSP
+violations, except one harmless report on the admin: zod's start-up probe `Function("")` (in a try/catch; zod then
+runs without JIT). The admin team can silence it with `z.config({ jitless: true })`.
 
-Different package names can be passed as build args (`WEB_PACKAGE`/`WEB_DIR`, `ADMIN_PACKAGE`/`ADMIN_DIR`). The CSP
-in `infra/caddy/Caddyfile` allows scripts from the site itself (plus inline scripts for Next.js), images and API
-calls to `api.<domain>`; any new third-party origin (fonts, analytics, payment gateway) must be added there.
+Rules for app changes:
+- Any new third-party origin (fonts, analytics, maps, payment gateway) must be added to the site's CSP in
+  `infra/caddy/Caddyfile` and agreed with the manager; the admin's CSP should stay without third-party scripts.
+- Upload paths with bigger bodies need a matching `request_body` rule in the Caddyfile (product images 6 MB, complaint
+  photos 21 MB, everything else 1 MB).
+- Both images are built with `turbo prune <package> --docker` and `pnpm install --frozen-lockfile`; keep
+  `pnpm-lock.yaml` current. Package names/folders can be overridden with build args (`WEB_PACKAGE`/`WEB_DIR`,
+  `ADMIN_PACKAGE`/`ADMIN_DIR`).
