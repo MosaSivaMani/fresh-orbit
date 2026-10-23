@@ -1,0 +1,752 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "code": "OTP_LOGIN",
+      "channel": "SMS",
+      "category": null,
+      "variables": [
+        "code",
+        "expiresInMinutes"
+      ],
+      "subject": null,
+      "body": "{{code}} is your {{businessName}} login code. It expires in {{expiresInMinutes}} minutes. Do not share it with anyone.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "OTP_VERIFY_PHONE",
+      "channel": "SMS",
+      "category": null,
+      "variables": [
+        "code",
+        "expiresInMinutes"
+      ],
+      "subject": null,
+      "body": "{{code}} is your {{businessName}} code to verify this phone number. It expires in {{expiresInMinutes}} minutes.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CONFIRMED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "slotDateText",
+        "slotWindowText",
+        "estimatedTotalText",
+        "paymentMethodText",
+        "orderUrl"
+      ],
+      "subject": null,
+      "body": "Order {{orderNumber}} confirmed. Delivery {{slotDateText}}, {{slotWindowText}}. Est. total {{estimatedTotalText}} ({{paymentMethodText}}). - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CONFIRMED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "slotDateText",
+        "slotWindowText",
+        "estimatedTotalText",
+        "paymentMethodText",
+        "orderUrl"
+      ],
+      "subject": "Your order {{orderNumber}} is confirmed",
+      "body": "Hello {{recipientName}},\n\nThank you for your order {{orderNumber}}.\n\nDelivery: {{slotDateText}}, {{slotWindowText}}\nEstimated total: {{estimatedTotalText}} ({{paymentMethodText}})\n\nThe final amount may change slightly for items sold by weight.\n\nView your order: {{orderUrl}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CONFIRMED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "slotDateText",
+        "slotWindowText",
+        "estimatedTotalText",
+        "paymentMethodText",
+        "orderUrl"
+      ],
+      "subject": "Order confirmed",
+      "body": "Order {{orderNumber}} arrives {{slotDateText}}, {{slotWindowText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CONFIRMED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "slotDateText",
+        "slotWindowText",
+        "estimatedTotalText",
+        "paymentMethodText",
+        "orderUrl"
+      ],
+      "subject": "Order confirmed",
+      "body": "Order {{orderNumber}} is confirmed for {{slotDateText}}, {{slotWindowText}}. Estimated total {{estimatedTotalText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_RECEIVED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "paymentMethodText"
+      ],
+      "subject": null,
+      "body": "Payment of {{amountText}} received for order {{orderNumber}} ({{paymentMethodText}}). - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_RECEIVED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "paymentMethodText"
+      ],
+      "subject": "Payment received for order {{orderNumber}}",
+      "body": "Hello {{recipientName}},\n\nWe received {{amountText}} by {{paymentMethodText}} for order {{orderNumber}}.\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_RECEIVED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "paymentMethodText"
+      ],
+      "subject": "Payment received",
+      "body": "{{amountText}} received for order {{orderNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_RECEIVED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "paymentMethodText"
+      ],
+      "subject": "Payment received",
+      "body": "{{amountText}} received by {{paymentMethodText}} for order {{orderNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_FAILED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "retryUrl"
+      ],
+      "subject": null,
+      "body": "Payment of {{amountText}} for order {{orderNumber}} failed. Retry: {{retryUrl}} - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_FAILED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "retryUrl"
+      ],
+      "subject": "Payment failed",
+      "body": "Payment for order {{orderNumber}} failed. Tap to retry.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "PAYMENT_FAILED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "retryUrl"
+      ],
+      "subject": "Payment failed",
+      "body": "Payment of {{amountText}} for order {{orderNumber}} failed. Retry: {{retryUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_PREPARING",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber"
+      ],
+      "subject": "Preparing your order",
+      "body": "We are picking and packing order {{orderNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_PREPARING",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber"
+      ],
+      "subject": "Preparing your order",
+      "body": "We are picking and packing order {{orderNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "SUBSTITUTION_PROPOSED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "itemName",
+        "proposedItemName",
+        "proposedQuantityText",
+        "priceDifferenceText",
+        "respondByText",
+        "orderUrl"
+      ],
+      "subject": null,
+      "body": "Order {{orderNumber}}: {{itemName}} is unavailable. Accept {{proposedItemName}} ({{priceDifferenceText}}) by {{respondByText}}: {{orderUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "SUBSTITUTION_PROPOSED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "itemName",
+        "proposedItemName",
+        "proposedQuantityText",
+        "priceDifferenceText",
+        "respondByText",
+        "orderUrl"
+      ],
+      "subject": "Substitute suggested",
+      "body": "{{itemName}} is unavailable. Accept {{proposedItemName}} by {{respondByText}}?",
+      "dltTemplateId": null
+    },
+    {
+      "code": "SUBSTITUTION_PROPOSED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "itemName",
+        "proposedItemName",
+        "proposedQuantityText",
+        "priceDifferenceText",
+        "respondByText",
+        "orderUrl"
+      ],
+      "subject": "Substitute suggested",
+      "body": "Order {{orderNumber}}: {{itemName}} is unavailable. We suggest {{proposedQuantityText}} {{proposedItemName}} ({{priceDifferenceText}}). Please respond by {{respondByText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_PACKED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "finalTotalText",
+        "amountDueText",
+        "weightNoteText"
+      ],
+      "subject": "Order packed",
+      "body": "Order {{orderNumber}} is packed. Final total {{finalTotalText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_PACKED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "finalTotalText",
+        "amountDueText",
+        "weightNoteText"
+      ],
+      "subject": "Order packed",
+      "body": "Order {{orderNumber}} is packed. Final total {{finalTotalText}}, due on delivery {{amountDueText}}. {{weightNoteText}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_OUT_FOR_DELIVERY",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "riderName",
+        "riderPhone",
+        "deliveryCode",
+        "amountDueText",
+        "slotWindowText",
+        "trackUrl"
+      ],
+      "subject": null,
+      "body": "Order {{orderNumber}} is out for delivery with {{riderName}} ({{riderPhone}}). Code {{deliveryCode}}. Due {{amountDueText}}. - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_OUT_FOR_DELIVERY",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "riderName",
+        "riderPhone",
+        "deliveryCode",
+        "amountDueText",
+        "slotWindowText",
+        "trackUrl"
+      ],
+      "subject": "Out for delivery",
+      "body": "{{riderName}} is bringing order {{orderNumber}}. Delivery code {{deliveryCode}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_OUT_FOR_DELIVERY",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "riderName",
+        "riderPhone",
+        "deliveryCode",
+        "amountDueText",
+        "slotWindowText",
+        "trackUrl"
+      ],
+      "subject": "Out for delivery",
+      "body": "Order {{orderNumber}} is on the way ({{slotWindowText}}). Rider {{riderName}}, {{riderPhone}}. Share code {{deliveryCode}} at the door. Amount due {{amountDueText}}. Track: {{trackUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_DELIVERED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "invoiceNumber",
+        "finalTotalText",
+        "orderUrl"
+      ],
+      "subject": null,
+      "body": "Order {{orderNumber}} delivered. Total {{finalTotalText}}, invoice {{invoiceNumber}}. Thank you! - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_DELIVERED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "invoiceNumber",
+        "finalTotalText",
+        "orderUrl"
+      ],
+      "subject": "Order {{orderNumber}} delivered",
+      "body": "Hello {{recipientName}},\n\nYour order {{orderNumber}} was delivered.\nFinal total: {{finalTotalText}}\nInvoice: {{invoiceNumber}}\n\nView the order and invoice: {{orderUrl}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_DELIVERED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "invoiceNumber",
+        "finalTotalText",
+        "orderUrl"
+      ],
+      "subject": "Delivered",
+      "body": "Order {{orderNumber}} was delivered. Enjoy!",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_DELIVERED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "invoiceNumber",
+        "finalTotalText",
+        "orderUrl"
+      ],
+      "subject": "Delivered",
+      "body": "Order {{orderNumber}} was delivered. Final total {{finalTotalText}}. Invoice {{invoiceNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "DELIVERY_FAILED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText"
+      ],
+      "subject": null,
+      "body": "We could not deliver order {{orderNumber}}: {{reasonText}}. We will contact you. - {{businessName}} {{supportPhone}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "DELIVERY_FAILED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText"
+      ],
+      "subject": "Delivery attempt failed",
+      "body": "We could not deliver order {{orderNumber}}: {{reasonText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "DELIVERY_FAILED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText"
+      ],
+      "subject": "Delivery attempt failed",
+      "body": "We could not deliver order {{orderNumber}}: {{reasonText}}. Our team will contact you.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CANCELLED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText",
+        "refundAmountText"
+      ],
+      "subject": null,
+      "body": "Order {{orderNumber}} was cancelled: {{reasonText}}. {{refundAmountText}} - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CANCELLED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText",
+        "refundAmountText"
+      ],
+      "subject": "Order {{orderNumber}} cancelled",
+      "body": "Hello {{recipientName}},\n\nYour order {{orderNumber}} was cancelled: {{reasonText}}.\n{{refundAmountText}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CANCELLED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText",
+        "refundAmountText"
+      ],
+      "subject": "Order cancelled",
+      "body": "Order {{orderNumber}} was cancelled.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "ORDER_CANCELLED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "reasonText",
+        "refundAmountText"
+      ],
+      "subject": "Order cancelled",
+      "body": "Order {{orderNumber}} was cancelled: {{reasonText}}. {{refundAmountText}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_INITIATED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText"
+      ],
+      "subject": null,
+      "body": "Refund of {{amountText}} for order {{orderNumber}} started to {{refundMethodText}}. - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_INITIATED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText"
+      ],
+      "subject": "Refund started for order {{orderNumber}}",
+      "body": "Hello {{recipientName}},\n\nWe started a refund of {{amountText}} to {{refundMethodText}} for order {{orderNumber}}.\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_INITIATED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText"
+      ],
+      "subject": "Refund started",
+      "body": "Refund of {{amountText}} for order {{orderNumber}} started.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_INITIATED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText"
+      ],
+      "subject": "Refund started",
+      "body": "Refund of {{amountText}} to {{refundMethodText}} for order {{orderNumber}} started.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_SUCCEEDED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText",
+        "referenceText"
+      ],
+      "subject": null,
+      "body": "Refund of {{amountText}} for order {{orderNumber}} completed to {{refundMethodText}}. Ref {{referenceText}}. - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_SUCCEEDED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText",
+        "referenceText"
+      ],
+      "subject": "Refund completed for order {{orderNumber}}",
+      "body": "Hello {{recipientName}},\n\nYour refund of {{amountText}} to {{refundMethodText}} for order {{orderNumber}} is complete.\nReference: {{referenceText}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_SUCCEEDED",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText",
+        "referenceText"
+      ],
+      "subject": "Refund completed",
+      "body": "Refund of {{amountText}} for order {{orderNumber}} completed.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "REFUND_SUCCEEDED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "refundMethodText",
+        "referenceText"
+      ],
+      "subject": "Refund completed",
+      "body": "Refund of {{amountText}} to {{refundMethodText}} for order {{orderNumber}} completed. Ref {{referenceText}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "COMPLAINT_RECEIVED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "itemName",
+        "complaintKindText"
+      ],
+      "subject": "We received your complaint about order {{orderNumber}}",
+      "body": "Hello {{recipientName}},\n\nWe received your complaint ({{complaintKindText}}) about {{itemName}} in order {{orderNumber}}. We will review it shortly.\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "COMPLAINT_RECEIVED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "itemName",
+        "complaintKindText"
+      ],
+      "subject": "Complaint received",
+      "body": "We received your complaint ({{complaintKindText}}) about {{itemName}} in order {{orderNumber}}.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "COMPLAINT_RESOLVED",
+      "channel": "SMS",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "resolutionText",
+        "refundAmountText"
+      ],
+      "subject": null,
+      "body": "Your complaint on order {{orderNumber}} is resolved: {{resolutionText}}. {{refundAmountText}} - {{businessName}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "COMPLAINT_RESOLVED",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "resolutionText",
+        "refundAmountText"
+      ],
+      "subject": "Your complaint about order {{orderNumber}} is resolved",
+      "body": "Hello {{recipientName}},\n\nYour complaint about order {{orderNumber}} is resolved: {{resolutionText}}.\n{{refundAmountText}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "COMPLAINT_RESOLVED",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "orderNumber",
+        "resolutionText",
+        "refundAmountText"
+      ],
+      "subject": "Complaint resolved",
+      "body": "Your complaint about order {{orderNumber}} is resolved: {{resolutionText}}. {{refundAmountText}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_ACCOUNT_CREATED",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "staffName",
+        "email",
+        "loginUrl"
+      ],
+      "subject": "Your {{businessName}} staff account",
+      "body": "Hello {{staffName}},\n\nA staff account was created for {{email}}. Your administrator will give you the first password.\n\nSign in: {{loginUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_PASSWORD_RESET",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "staffName",
+        "loginUrl"
+      ],
+      "subject": "Your {{businessName}} password was reset",
+      "body": "Hello {{staffName}},\n\nAn administrator reset your password. Ask them for the new one and change it after you sign in.\n\nSign in: {{loginUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_PAYMENT_ALERT",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "alertKindText",
+        "orderNumber",
+        "locationName",
+        "detailsText",
+        "adminUrl"
+      ],
+      "subject": "Payment alert: {{alertKindText}} ({{orderNumber}})",
+      "body": "{{alertKindText}} for order {{orderNumber}} at {{locationName}}.\n\n{{detailsText}}\n\nOpen: {{adminUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_REFUND_APPROVAL_NEEDED",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "reasonText",
+        "requestedBy",
+        "adminUrl"
+      ],
+      "subject": "Refund approval needed: {{orderNumber}}",
+      "body": "{{requestedBy}} requested a refund of {{amountText}} for order {{orderNumber}}.\nReason: {{reasonText}}\n\nReview: {{adminUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_REFUND_FAILED",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "orderNumber",
+        "amountText",
+        "failureReasonText",
+        "adminUrl"
+      ],
+      "subject": "Refund failed: {{orderNumber}}",
+      "body": "The refund of {{amountText}} for order {{orderNumber}} failed: {{failureReasonText}}.\n\nReview: {{adminUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_CASH_DIFFERENCE",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "riderName",
+        "settlementDateText",
+        "expectedText",
+        "receivedText",
+        "differenceText",
+        "adminUrl"
+      ],
+      "subject": "Cash difference: {{riderName}} {{settlementDateText}}",
+      "body": "Cash settlement of {{riderName}} on {{settlementDateText}}: expected {{expectedText}}, received {{receivedText}}, difference {{differenceText}}.\n\nReview: {{adminUrl}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_COLD_CHAIN_ALERT",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "locationName",
+        "storageUnit",
+        "temperatureText",
+        "recordedAtText"
+      ],
+      "subject": "Cold-chain alert: {{locationName}} {{storageUnit}}",
+      "body": "{{storageUnit}} at {{locationName}} recorded {{temperatureText}} at {{recordedAtText}}, outside the allowed range. Check the stock now.",
+      "dltTemplateId": null
+    }
+  ]
+}

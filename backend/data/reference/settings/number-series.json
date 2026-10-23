@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "series": [
+    { "code": "ORDER", "period": "2026-27", "prefix": "FO-26", "padWidth": 4, "nextValue": 1 },
+    { "code": "ORDER", "period": "2027-28", "prefix": "FO-27", "padWidth": 4, "nextValue": 1 },
+    { "code": "INVOICE", "period": "2026-27", "prefix": "INV/26-27/", "padWidth": 6, "nextValue": 1 },
+    { "code": "INVOICE", "period": "2027-28", "prefix": "INV/27-28/", "padWidth": 6, "nextValue": 1 }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "policies": [
+    {
+      "cityId": null,
+      "reservationMinutes": 15,
+      "maxOverweightBp": 1000,
+      "cancelAllowedUntilStatus": "CONFIRMED",
+      "codMaxOrderPaise": 500000,
+      "enabledPaymentMethods": ["COD", "UPI_ON_DELIVERY"],
+      "substitutionResponseMinutes": 15,
+      "complaintWindowHours": 24,
+      "maxDeliveryAttempts": 3
+    }
+  ]
+}

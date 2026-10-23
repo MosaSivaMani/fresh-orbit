@@ -8,4 +8,8 @@
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.EntityFramework\FreshOrbit.SharedKernel.EntityFramework.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.Web\FreshOrbit.SharedKernel.Web.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
 </Project>

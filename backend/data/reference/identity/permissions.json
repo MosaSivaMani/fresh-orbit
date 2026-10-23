@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "permissions": [
+    { "code": "catalog.manage", "description": "Categories, products, variants, preparations, images, home promotion banners" },
+    { "code": "pricing.manage", "description": "Variant prices, preparation charges, tax rules" },
+    { "code": "promotions.manage", "description": "Coupons" },
+    { "code": "inventory.view", "description": "Stock, batches, movements, cold-chain logs" },
+    { "code": "inventory.receive", "description": "Receive stock (batches)" },
+    { "code": "inventory.adjust", "description": "Waste, adjustments, counts, batch discard, cold-chain entries" },
+    { "code": "orders.view", "description": "Order lists, detail, history" },
+    { "code": "orders.pack", "description": "Start preparing, weigh and pack, propose substitutions" },
+    { "code": "orders.cancel", "description": "Cancel orders" },
+    { "code": "complaints.manage", "description": "Decide complaints" },
+    { "code": "refunds.request", "description": "Create refund requests" },
+    { "code": "refunds.approve", "description": "Approve / reject refunds" },
+    { "code": "payments.view", "description": "Payments, webhook events" },
+    { "code": "payments.manage", "description": "Webhook reprocess, payment reconciliation issues (D15)" },
+    { "code": "cash.settle", "description": "Rider cash settlements" },
+    { "code": "delivery.manage", "description": "Slots, templates, riders, shipments, dispatch, delivery attempts, cash collected" },
+    { "code": "locations.manage", "description": "Cities, fulfillment locations, service areas, pincodes, hours, closures" },
+    { "code": "cities.activate", "description": "Activate / pause / retire a city" },
+    { "code": "customers.view", "description": "Customer list and detail" },
+    { "code": "customers.manage", "description": "Block / unblock, edit customer contact" },
+    { "code": "notifications.manage", "description": "Templates, test sends" },
+    { "code": "reports.view", "description": "Reports" },
+    { "code": "settings.manage", "description": "Business profile, order policies, number series" },
+    { "code": "staff.manage", "description": "Staff, roles, location access" },
+    { "code": "audit.view", "description": "Audit log" }
+  ]
+}

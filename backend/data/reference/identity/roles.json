@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "roles": [
+    { "code": "ADMIN", "name": "Administrator", "permissions": ["*"] },
+    {
+      "code": "STORE_MANAGER",
+      "name": "Store manager",
+      "permissions": [
+        "pricing.manage", "inventory.view", "inventory.receive", "inventory.adjust", "orders.view", "orders.pack", "orders.cancel",
+        "complaints.manage", "refunds.request", "payments.view", "cash.settle", "delivery.manage", "customers.view", "reports.view"
+      ]
+    },
+    { "code": "PACKER", "name": "Packer", "permissions": ["inventory.view", "orders.view", "orders.pack"] },
+    { "code": "DISPATCHER", "name": "Dispatcher", "permissions": ["orders.view", "delivery.manage"] },
+    {
+      "code": "SUPPORT",
+      "name": "Customer support",
+      "permissions": ["orders.view", "orders.cancel", "complaints.manage", "refunds.request", "payments.view", "customers.view", "customers.manage"]
+    },
+    {
+      "code": "FINANCE",
+      "name": "Finance",
+      "permissions": ["inventory.view", "orders.view", "refunds.approve", "payments.view", "payments.manage", "cash.settle", "customers.view", "reports.view", "audit.view"]
+    }
+  ]
+}
