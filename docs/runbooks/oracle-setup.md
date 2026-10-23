@@ -145,7 +145,7 @@ Oracle's `ubuntu` user keeps working (it has sudo); the `deploy` user is for dep
 3. GitHub (`deploy.md` §1): environment `staging` with secrets `DEPLOY_HOST`, `DEPLOY_USER=deploy`,
    `DEPLOY_SSH_KEY` (a **separate** key pair for CI: `ssh-keygen -t ed25519 -f freshorbit-ci -C ci`, add the `.pub`
    to `/home/deploy/.ssh/authorized_keys`), `DEPLOY_KNOWN_HOSTS` (`ssh-keyscan -t ed25519 <ip>`), and variables
-   `DOMAIN`, `PUBLIC_API_BASE_URL`.
+   `DOMAIN`, plus the repository variable `SITE_URL_STAGING` (`deploy.md` §1).
 4. Deploy: push a tag (`git tag v0.1.0 && git push origin v0.1.0`) or run the **Deploy** workflow manually.
 5. Check: `https://<domain>`, `https://admin.<domain>`, `https://api.<domain>/health` → `Healthy`;
    on the server `infra/scripts/logs.sh --status`.

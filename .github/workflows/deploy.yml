@@ -12,8 +12,10 @@
 #   Environment secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key of the deploy user),
 #                        DEPLOY_KNOWN_HOSTS (output of `ssh-keyscan -t ed25519 <host>`; recommended),
 #                        DEPLOY_SSH_PORT (optional, default 22)
-#   Environment variables: DOMAIN (e.g. freshorbit.in), PUBLIC_API_BASE_URL (e.g. https://api.freshorbit.in),
-#                          DEPLOY_PATH (optional, default /opt/freshorbit)
+#   Environment variables: DOMAIN (e.g. freshorbit.in), DEPLOY_PATH (optional, default /opt/freshorbit)
+#   Repository variables: SITE_URL_STAGING, SITE_URL_PRODUCTION (e.g. https://freshorbit.in). The website image inlines
+#                         its public URL (NEXT_PUBLIC_SITE_URL) at build time, so images are built per environment:
+#                         production builds get a `-prod` suffix and only `-prod` tags may go to production.
 # Images: ghcr.io/mosasivamani/fresh-orbit-{api,worker,migrations,web,admin}:<tag>
 
 name: Deploy
@@ -29,7 +31,9 @@ on:
         options: [staging, production]
         default: staging
       tag:
-        description: Existing image tag to redeploy (e.g. v1.2.0). Leave empty to build this commit.
+        description: >-
+          Existing image tag to redeploy (e.g. v1.2.0, or v1.2.0-prod for production). Leave empty to build the
+          selected ref for the chosen environment.
         type: string
         required: false
         default: ""
@@ -51,6 +55,7 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
       build: ${{ steps.tag.outputs.build }}
+      site_url: ${{ steps.tag.outputs.site_url }}
     steps:
       - id: tag
         env:
@@ -58,6 +63,9 @@ jobs:
           REF_TYPE: ${{ github.ref_type }}
           REF_NAME: ${{ github.ref_name }}
           SHA: ${{ github.sha }}
+          TARGET: ${{ inputs.environment || 'staging' }}
+          SITE_URL_STAGING: ${{ vars.SITE_URL_STAGING }}
+          SITE_URL_PRODUCTION: ${{ vars.SITE_URL_PRODUCTION }}
         run: |
           set -euo pipefail
           if [[ -n "${INPUT_TAG:-}" ]]; then
@@ -67,12 +75,33 @@ jobs:
           else
             tag="sha-${SHA:0:7}"; build=true
           fi
+          if [[ "$TARGET" == production ]]; then
+            site_url="$SITE_URL_PRODUCTION"
+            [[ $build == false || "$tag" == *-prod ]] || tag="$tag-prod"
+            if [[ "$tag" != *-prod ]]; then
+              echo "::error::Only -prod images (built with the production site URL) can be deployed to production."
+              exit 1
+            fi
+          else
+            site_url="$SITE_URL_STAGING"
+            if [[ "$tag" == *-prod ]]; then
+              echo "::error::A -prod image carries the production site URL; build the ref for staging instead."
+              exit 1
+            fi
+          fi
           if [[ ! "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]; then
             echo "::error::Invalid image tag '$tag'."
             exit 1
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "build=$build" >> "$GITHUB_OUTPUT"
+          if [[ $build == true && ! "$site_url" =~ ^https://[A-Za-z0-9.-]+$ ]]; then
+            echo "::error::Repository variable SITE_URL_${TARGET^^} must be set to https://<host> (no path)."
+            exit 1
+          fi
+          {
+            echo "tag=$tag"
+            echo "build=$build"
+            echo "site_url=$site_url"
+          } >> "$GITHUB_OUTPUT"
           echo "Release tag: $tag (build: $build)" >> "$GITHUB_STEP_SUMMARY"
 
   images:
@@ -113,10 +142,10 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ needs.release.outputs.tag }}
-          # Browser-visible API address, inlined at build time by Next.js and Vite (ignored by the .NET images).
+          # The website's public URL, inlined at build time by Next.js (ignored by the other images). The admin needs
+          # none: it calls the API on its own origin through Caddy.
           build-args: |
-            NEXT_PUBLIC_API_BASE_URL=${{ vars.PUBLIC_API_BASE_URL }}
-            VITE_API_BASE_URL=${{ vars.PUBLIC_API_BASE_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ needs.release.outputs.site_url }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
