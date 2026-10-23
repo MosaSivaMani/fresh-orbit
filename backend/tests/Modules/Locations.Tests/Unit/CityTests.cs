@@ -1,6 +1,6 @@
 using AwesomeAssertions;
 using FreshOrbit.Locations.Domain.Cities;
-using FreshOrbit.Locations.Domain.Cities.Events;
+using FreshOrbit.Locations.Public.Events;
 using FreshOrbit.SharedKernel.Errors;
 
 namespace FreshOrbit.Locations.Tests.Unit;

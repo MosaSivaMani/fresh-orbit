@@ -1,4 +1,4 @@
-using FreshOrbit.Locations.Domain.FulfillmentLocations.Events;
+using FreshOrbit.Locations.Public.Events;
 using FreshOrbit.Locations.Domain.Shared;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;

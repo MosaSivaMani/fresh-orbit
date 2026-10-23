@@ -1,6 +1,6 @@
 using AwesomeAssertions;
 using FreshOrbit.Locations.Domain.FulfillmentLocations;
-using FreshOrbit.Locations.Domain.FulfillmentLocations.Events;
+using FreshOrbit.Locations.Public.Events;
 using FreshOrbit.Locations.Domain.ServiceAreas;
 using FreshOrbit.SharedKernel.Errors;
 

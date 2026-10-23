@@ -164,3 +164,5 @@ Consumed: none.
 | Q4 | Closure added on a date with booked orders. | Allowed; Delivery closes slots and raises a support task listing affected orders; orders are not auto-cancelled. |
 | Q5 | Polygon / radius service areas instead of pincodes? | Not in v1; pincode lists only. `latitude/longitude` kept for later. |
 | Q6 | Can one pincode be served by two locations (overflow)? | No (LOC-R3). Revisit when a city has two stores. |
+
+**Implementation notes (Phase 2).** D30: events other modules consume (city activated/paused/retired, fulfillment-location status and closure added/removed, service-area and pincode changes) live in `Locations.Public/Events`; `Locations.Domain` references `Locations.Public` to raise them. `ILocationsApi.GetClosuresAsync(fulfillmentLocationId, from, to)` returns closed dates for Delivery. Retiring a city is refused with `CITY_RETIREMENT_BLOCKED` when any `ICityRetirementCheck` (in `Locations.Public`; e.g. Ordering for open orders) reports blocking items, listed in `blocking`; only a `PAUSED` city can be retired.
