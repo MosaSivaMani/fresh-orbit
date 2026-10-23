@@ -19,6 +19,8 @@ import 'features/checkout/order_success_screen.dart';
 import 'features/onboarding/location_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/splash_screen.dart';
+import 'features/orders/order_tracking_screen.dart';
+import 'features/orders/orders_screen.dart';
 import 'state/cart_state.dart';
 import 'state/session.dart';
 
@@ -71,7 +73,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(routes: [GoRoute(path: '/cart', builder: (_, _) => const CartScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/orders', builder: (_, _) => const _Pending('/orders'))]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/orders',
+                builder: (_, _) => const OrdersScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':orderId',
+                    builder: (_, state) => OrderTrackingScreen(orderId: state.pathParameters['orderId']!),
+                  ),
+                ],
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(

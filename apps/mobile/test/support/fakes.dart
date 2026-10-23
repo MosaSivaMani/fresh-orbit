@@ -183,6 +183,9 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   Future<List<Complaint>> complaints(String orderId) async => const [];
+
+  @override
+  Future<InvoiceLink> invoice(String orderId) async => const InvoiceLink();
 }
 
 class FakeAccountRepository implements AccountRepository {

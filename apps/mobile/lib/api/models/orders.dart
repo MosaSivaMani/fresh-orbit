@@ -338,3 +338,15 @@ class Complaint {
   final String status;
   final String? description;
 }
+
+/// `GET /orders/{id}/invoice`: invoice JSON plus a signed `pdfUrl` (10 minutes). 404 INVOICE_NOT_ISSUED before
+/// delivery. Only the fields the app shows are read.
+class InvoiceLink {
+  const InvoiceLink({this.invoiceNumber, this.pdfUrl});
+
+  factory InvoiceLink.fromJson(Json j) =>
+      InvoiceLink(invoiceNumber: optString(j, 'invoiceNumber'), pdfUrl: optString(j, 'pdfUrl'));
+
+  final String? invoiceNumber;
+  final String? pdfUrl;
+}

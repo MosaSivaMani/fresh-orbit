@@ -204,6 +204,7 @@ abstract class OrderRepository {
     required String idempotencyKey,
   });
   Future<List<Complaint>> complaints(String orderId);
+  Future<InvoiceLink> invoice(String orderId);
 }
 
 class HttpOrderRepository implements OrderRepository {
@@ -268,6 +269,10 @@ class HttpOrderRepository implements OrderRepository {
   @override
   Future<List<Complaint>> complaints(String orderId) async =>
       parseArray(await _api.get('orders/${_seg(orderId)}/complaints'), Complaint.fromJson);
+
+  @override
+  Future<InvoiceLink> invoice(String orderId) async =>
+      parseObject(await _api.get('orders/${_seg(orderId)}/invoice'), InvoiceLink.fromJson);
 
   static FormData _multipart(Map<String, String?> fields) =>
       FormData.fromMap({for (final e in fields.entries) if (e.value != null) e.key: e.value!});
