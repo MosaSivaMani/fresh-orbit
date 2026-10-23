@@ -1,0 +1,686 @@
+{
+  "version": 1,
+  "module": "inventory",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "stockItems": [
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SEER-WHOLE-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "POMFRET-MED-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "POMFRET-LARGE-PC",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "ROHU-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "KATLA-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "TUNA-YF-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "MACKEREL-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SARDINE-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SNAPPER-RED-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "BARRAMUNDI-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-TIGER-L-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-TIGER-J-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-WHITE-M-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SCAMPI-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CRAB-MUD-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CRAB-BLUE-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SQUID-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "MUSSEL-GREEN-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CLAM-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "LOBSTER-SPINY-PC",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "BASA-FILLET-500G",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SALMON-FILLET-250G",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "ANCHOVY-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "RIBBONFISH-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "HALIBUT-IN-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SOLE-KG",
+      "lowStockThreshold": 3000,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SEER-STEAK-500G",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-MARINATED-250G",
+      "lowStockThreshold": 4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ],
+  "receipts": [
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SEER-WHOLE-KG",
+      "batchCode": "SMP-SEER-WHOLE-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 18500,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 1572500,
+      "bestBeforeOffsetHours": 42,
+      "receiptTemperatureC": 1.5,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SEER-WHOLE-KG",
+      "batchCode": "SMP-SEER-WHOLE-KG-02",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -2,
+      "receivedQuantity": {
+        "value": 9000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 765000,
+      "bestBeforeOffsetHours": 46,
+      "receiptTemperatureC": 1.2,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "POMFRET-MED-KG",
+      "batchCode": "SMP-POMFRET-MED-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 12000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 864000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.8,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "POMFRET-LARGE-PC",
+      "batchCode": "SMP-POMFRET-LARGE-PC-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 24,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 1080000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.8,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "ROHU-KG",
+      "batchCode": "SMP-ROHU-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 25000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 400000,
+      "bestBeforeOffsetHours": 42,
+      "receiptTemperatureC": 2.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "KATLA-KG",
+      "batchCode": "SMP-KATLA-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 20000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 350000,
+      "bestBeforeOffsetHours": 42,
+      "receiptTemperatureC": 2.2,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "TUNA-YF-KG",
+      "batchCode": "SMP-TUNA-YF-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 15000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 375000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "MACKEREL-KG",
+      "batchCode": "SMP-MACKEREL-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 15000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 270000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.6,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SARDINE-KG",
+      "batchCode": "SMP-SARDINE-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 10000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 110000,
+      "bestBeforeOffsetHours": 30,
+      "receiptTemperatureC": 4.5,
+      "sampleNote": "[SAMPLE] Receipt temperature deliberately above 4.0 °C to demonstrate the cold-chain warning (writes an out-of-range RECEIPT log)."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SNAPPER-RED-KG",
+      "batchCode": "SMP-SNAPPER-RED-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 8000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 360000,
+      "bestBeforeOffsetHours": 42,
+      "receiptTemperatureC": 1.4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "BARRAMUNDI-KG",
+      "batchCode": "SMP-BARRAMUNDI-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 10000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 520000,
+      "bestBeforeOffsetHours": 44,
+      "receiptTemperatureC": 1.9,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-TIGER-L-KG",
+      "batchCode": "SMP-PRAWN-TIGER-L-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 14000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 910000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 0.8,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-TIGER-J-KG",
+      "batchCode": "SMP-PRAWN-TIGER-J-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 6000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 552000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 0.8,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-WHITE-M-KG",
+      "batchCode": "SMP-PRAWN-WHITE-M-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 12000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 456000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.1,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SCAMPI-KG",
+      "batchCode": "SMP-SCAMPI-KG-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -5,
+      "receivedQuantity": {
+        "value": 6000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 372000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.7,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CRAB-MUD-KG",
+      "batchCode": "SMP-CRAB-MUD-KG-01",
+      "supplierName": "Sample Supplier D (crab collector)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -4,
+      "receivedQuantity": {
+        "value": 8000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 440000,
+      "bestBeforeOffsetHours": 24,
+      "receiptTemperatureC": 3.5,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CRAB-BLUE-KG",
+      "batchCode": "SMP-CRAB-BLUE-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 7000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 217000,
+      "bestBeforeOffsetHours": 30,
+      "receiptTemperatureC": 1.9,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SQUID-KG",
+      "batchCode": "SMP-SQUID-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 9000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 252000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.3,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "MUSSEL-GREEN-KG",
+      "batchCode": "SMP-MUSSEL-GREEN-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 10000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 170000,
+      "bestBeforeOffsetHours": 30,
+      "receiptTemperatureC": 3.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "CLAM-KG",
+      "batchCode": "SMP-CLAM-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 10000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 110000,
+      "bestBeforeOffsetHours": 30,
+      "receiptTemperatureC": 3.2,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "LOBSTER-SPINY-PC",
+      "batchCode": "SMP-LOBSTER-SPINY-PC-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 10,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 600000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "BASA-FILLET-500G",
+      "batchCode": "SMP-BASA-FILLET-500G-01",
+      "supplierName": "Sample Supplier C (frozen seafood distributor)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": -60,
+      "receivedAtOffsetHours": -48,
+      "receivedQuantity": {
+        "value": 40,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 680000,
+      "bestBeforeOffsetHours": 2880,
+      "receiptTemperatureC": -19.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SALMON-FILLET-250G",
+      "batchCode": "SMP-SALMON-FILLET-250G-01",
+      "supplierName": "Sample Supplier C (frozen seafood distributor)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": -45,
+      "receivedAtOffsetHours": -48,
+      "receivedQuantity": {
+        "value": 30,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 2040000,
+      "bestBeforeOffsetHours": 3600,
+      "receiptTemperatureC": -20.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "ANCHOVY-KG",
+      "batchCode": "SMP-ANCHOVY-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 8000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 136000,
+      "bestBeforeOffsetHours": 30,
+      "receiptTemperatureC": 1.5,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "RIBBONFISH-KG",
+      "batchCode": "SMP-RIBBONFISH-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 10000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 145000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.6,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "HALIBUT-IN-KG",
+      "batchCode": "SMP-HALIBUT-IN-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 9000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 252000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.4,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SOLE-KG",
+      "batchCode": "SMP-SOLE-KG-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -6,
+      "receivedQuantity": {
+        "value": 7000,
+        "unit": "GRAM"
+      },
+      "totalCostPaise": 147000,
+      "bestBeforeOffsetHours": 36,
+      "receiptTemperatureC": 1.5,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "SEER-STEAK-500G",
+      "batchCode": "SMP-SEER-STEAK-500G-01",
+      "supplierName": "Sample Supplier A (harbour auction agent)",
+      "sourceLandingCenter": "Visakhapatnam Fishing Harbour",
+      "caughtOrHarvestedOnOffsetDays": -1,
+      "receivedAtOffsetHours": -4,
+      "receivedQuantity": {
+        "value": 20,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 1040000,
+      "bestBeforeOffsetHours": 40,
+      "receiptTemperatureC": 1.2,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "sku": "PRAWN-MARINATED-250G",
+      "batchCode": "SMP-PRAWN-MARINATED-250G-01",
+      "supplierName": "Sample Supplier B (aqua farm aggregator)",
+      "sourceLandingCenter": null,
+      "caughtOrHarvestedOnOffsetDays": 0,
+      "receivedAtOffsetHours": -3,
+      "receivedQuantity": {
+        "value": 24,
+        "unit": "PIECE"
+      },
+      "totalCostPaise": 504000,
+      "bestBeforeOffsetHours": 44,
+      "receiptTemperatureC": 2.0,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ],
+  "coldChainLogs": [
+    {
+      "locationCode": "VSKP-MVP",
+      "storageUnit": "CHILLER",
+      "temperatureC": 2.1,
+      "recordedAtOffsetHours": -3,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "storageUnit": "FREEZER",
+      "temperatureC": -20.5,
+      "recordedAtOffsetHours": -3,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ]
+}
