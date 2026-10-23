@@ -271,8 +271,78 @@ services:
           memory: 256M
     logging: *logging
 
+  # ---- Optional: logs and alerts (profile "monitoring"; docs/runbooks/deploy.md, Monitoring) ----------------
+
+  loki:
+    image: grafana/loki:3.7.8
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/config.yml"]
+    volumes:
+      - ../monitoring/loki.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+
+  alloy:
+    image: grafana/alloy:v1.20.1
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    depends_on:
+      - loki
+    volumes:
+      - ../monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:13.2.3
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    depends_on:
+      - loki
+    ports:
+      # Loopback only: ssh -L 3001:127.0.0.1:3001 deploy@server, then open http://localhost:3001
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      # Set GRAFANA_ADMIN_PASSWORD before enabling the profile (`:?` cannot be used: compose checks inactive profiles
+      # too). Empty means Grafana's default admin/admin, reachable only through the SSH tunnel.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SMTP_ENABLED: ${GRAFANA_SMTP_ENABLED:-false}
+      GF_SMTP_HOST: ${SMTP_HOST:-}:${SMTP_PORT:-587}
+      GF_SMTP_USER: ${SMTP_USERNAME:-}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      GF_SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-}
+      GF_SMTP_STARTTLS_POLICY: ${GRAFANA_SMTP_STARTTLS_POLICY:-MandatoryStartTLS}
+      ALERT_EMAIL: ${ALERT_EMAIL:-alerts@example.invalid}
+    volumes:
+      - ../monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ../monitoring/alerting/alerts.yml:/etc/grafana/provisioning/alerting/alerts.yml:ro
+      - grafana-data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging: *logging
+
 volumes:
   postgres-data:
   media:
   caddy-data:
   caddy-config:
+  loki-data:
+  alloy-data:
+  grafana-data:

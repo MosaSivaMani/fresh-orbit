@@ -1,0 +1,55 @@
+// Grafana Alloy: ships the logs of every container in the `freshorbit` compose project to Loki.
+// Labels: service (compose service), container, level (Serilog "@l" for the .NET hosts; absent = Information).
+
+discovery.docker "freshorbit" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "label"
+    values = ["com.docker.compose.project=freshorbit"]
+  }
+}
+
+discovery.relabel "freshorbit" {
+  targets = []
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "freshorbit" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.docker.freshorbit.targets
+  relabel_rules = discovery.relabel.freshorbit.rules
+  forward_to    = [loki.process.serilog.receiver]
+}
+
+loki.process "serilog" {
+  stage.match {
+    selector = "{service=~\"api|worker|migrations\"}"
+
+    stage.json {
+      expressions = { level = "\"@l\"" }
+    }
+
+    stage.labels {
+      values = { level = "" }
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

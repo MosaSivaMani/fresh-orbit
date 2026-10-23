@@ -1,0 +1,107 @@
+# Grafana alerting for the optional monitoring profile: e-mail to ALERT_EMAIL through the SMTP settings in .env.prod
+# (GRAFANA_SMTP_ENABLED=true). Server-down alerts need a checker outside this server (docs/runbooks/deploy.md).
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: ops-email
+    receivers:
+      - uid: fo-ops-email
+        type: email
+        settings:
+          addresses: ${ALERT_EMAIL}
+          singleEmail: true
+
+policies:
+  - orgId: 1
+    receiver: ops-email
+    group_by: ["grafana_folder", "alertname"]
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+
+groups:
+  - orgId: 1
+    name: fresh-orbit
+    folder: Fresh Orbit
+    interval: 1m
+    rules:
+      - uid: fo-backend-errors
+        title: Backend errors
+        condition: C
+        for: 0m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: The Api or Worker logged errors in the last 5 minutes.
+          description: "Run infra/scripts/logs.sh --errors --since 15m on the server, or query {service=~\"api|worker\", level=~\"Error|Fatal\"} in Grafana."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: loki
+            model:
+              refId: A
+              editorMode: code
+              queryType: instant
+              expr: 'sum(count_over_time({service=~"api|worker", level=~"Error|Fatal"}[5m]))'
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
+      - uid: fo-upstream-failures
+        title: Upstream failures at Caddy
+        condition: C
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: Caddy returned 502/503/504 (api, web or admin unreachable or unhealthy).
+          description: "Run infra/scripts/logs.sh --status on the server; see docs/runbooks/deploy.md (Troubleshooting)."
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: loki
+            model:
+              refId: A
+              editorMode: code
+              queryType: instant
+              expr: 'sum(count_over_time({service="caddy"} | json | status >= 502 and status <= 504 [5m]))'
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
