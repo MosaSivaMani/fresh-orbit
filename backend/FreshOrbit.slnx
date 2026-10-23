@@ -107,4 +107,7 @@
     <Project Path="tests/FreshOrbit.SharedKernel.Tests/FreshOrbit.SharedKernel.Tests.csproj" />
     <Project Path="tests/FreshOrbit.Testing/FreshOrbit.Testing.csproj" />
   </Folder>
+  <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/Inventory.Tests/Inventory.Tests.csproj" />
+  </Folder>
 </Solution>

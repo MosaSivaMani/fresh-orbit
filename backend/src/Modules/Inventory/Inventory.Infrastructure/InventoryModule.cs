@@ -1,9 +1,27 @@
+using FluentValidation;
+using FreshOrbit.Inventory.Application.ColdChain;
+using FreshOrbit.Inventory.Application.Common;
+using FreshOrbit.Inventory.Application.Handlers;
+using FreshOrbit.Inventory.Application.Jobs;
+using FreshOrbit.Inventory.Application.Stock;
+using FreshOrbit.Inventory.Domain.Stock;
+using FreshOrbit.Inventory.Infrastructure.Endpoints;
+using FreshOrbit.Inventory.Infrastructure.Jobs;
 using FreshOrbit.Inventory.Infrastructure.Persistence;
+using FreshOrbit.Inventory.Infrastructure.Persistence.Repositories;
+using FreshOrbit.Inventory.Infrastructure.Public;
+using FreshOrbit.Inventory.Infrastructure.Reads;
+using FreshOrbit.Inventory.Infrastructure.Seeding;
+using FreshOrbit.Inventory.Public;
+using FreshOrbit.Locations.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FreshOrbit.Inventory.Infrastructure;
 
@@ -16,12 +34,35 @@ public sealed class InventoryModule : IModule
     {
         services.AddModuleModel<InventoryModuleModel>();
 
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        services.AddScoped<IStockItemRepository, StockItemRepository>();
+        services.AddScoped<IColdChainRepository, ColdChainRepository>();
+        services.AddScoped<IInventoryJobQueries, InventoryJobQueries>();
+        services.AddScoped<IInventoryUnitOfWork, InventoryUnitOfWork>();
+
+        services.AddScoped<StockCommandService>();
+        services.AddScoped<StockReservationService>();
+        services.AddScoped<OrderStockHandlers>();
+        services.AddScoped<BatchExpiryService>();
+        services.AddScoped<LowStockDigestService>();
+        services.AddScoped<InventoryReads>();
+
+        services.AddScoped<IInventoryApi, InventoryApi>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityActivationCheck, InventoryCityActivationCheck>());
+
+        services.AddScoped<IValidator<CreateStockItemRequest>, CreateStockItemRequestValidator>();
+        services.AddScoped<IValidator<SetThresholdRequest>, SetThresholdRequestValidator>();
+        services.AddScoped<IValidator<ReceiveStockRequest>, ReceiveStockRequestValidator>();
+        services.AddScoped<IValidator<DiscardBatchRequest>, DiscardBatchRequestValidator>();
+        services.AddScoped<IValidator<RecordWasteRequest>, RecordWasteRequestValidator>();
+        services.AddScoped<IValidator<AdjustStockRequest>, AdjustStockRequestValidator>();
+        services.AddScoped<IValidator<CountStockRequest>, CountStockRequestValidator>();
+        services.AddScoped<IValidator<RecordTemperatureRequest>, RecordTemperatureRequestValidator>();
+
+        services.AddScoped<BatchExpiryJob>();
+        services.AddScoped<LowStockDigestJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, InventoryJobRegistration>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, StorageUnitsReferenceDataLoader>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
-    }
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) => InventoryEndpoints.Map(endpoints);
 }
