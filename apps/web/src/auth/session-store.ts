@@ -1,5 +1,6 @@
 // Browser session: the access token lives only in this module's memory (never in storage), the refresh token in an
 // httpOnly cookie that only the /bff/auth handlers read. A page reload restores the session through /bff/auth/refresh.
+import { ApiError, apiErrorFromResponse, readBody } from "@fresh/core";
 import { type BrowserSession, type SessionUser } from "@/api/types/auth";
 import { SESSION_HINT_COOKIE, readBrowserCookie } from "@/lib/cookies";
 
@@ -87,6 +88,35 @@ export async function bootstrapSession(): Promise<void> {
     return;
   }
   await refreshSession();
+}
+
+/**
+ * Verify the OTP through the website's BFF, which keeps the refresh token in an httpOnly cookie and hands the guest
+ * cart token to the API for merging. Throws `ApiError` (e.g. `OTP_INVALID`) exactly as the API refused.
+ */
+export async function signInWithOtp(input: {
+  challengeId: string;
+  phone: string;
+  code: string;
+}): Promise<BrowserSession & { cart: { id: string; mergedLineCount: number } | null }> {
+  let response: Response;
+  try {
+    response = await fetch(bffUrl("/bff/auth/verify"), {
+      method: "POST",
+      headers: { ...BFF_HEADERS, "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify(input),
+    });
+  } catch {
+    throw new ApiError({ status: 0, code: "NETWORK_ERROR", message: "Network request failed." });
+  }
+  const body = await readBody(response);
+  if (!response.ok) throw apiErrorFromResponse(response, body);
+  const session = body as BrowserSession & {
+    cart: { id: string; mergedLineCount: number } | null;
+  };
+  startSession(session);
+  return session;
 }
 
 export async function signOut(): Promise<void> {
