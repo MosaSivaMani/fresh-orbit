@@ -23,7 +23,7 @@ Detailed specs live in the files linked from each section. Manager rulings are i
 | Website | Next.js, React, TypeScript, Tailwind | Open-source |
 | Admin | React + Vite, TypeScript, Tailwind, TanStack Query/Table | Open-source |
 | Mobile | Flutter (Dart), Riverpod, go_router, Dart API client generated from OpenAPI, theme generated from design tokens | Open-source (BSD); store fees paid |
-| Shared TS | pnpm + Turborepo; `@fresh/api-client` generated from OpenAPI; `@fresh/design-tokens`, `@fresh/ui-web` | Open-source |
+| Shared packages | In this repo (D29): pnpm + Turborepo workspace with `@fresh/config`, `@fresh/design-tokens`, `@fresh/core`, `@fresh/ui`, `@fresh/api-client`; Dart `fresh_api`, `fresh_theme` | Open-source |
 | Backend | .NET 10, ASP.NET Core minimal APIs, EF Core 10, FluentValidation, Hangfire, Serilog, Scalar | Open-source |
 | Database | PostgreSQL 17 (citext, pg_trgm, btree_gist) | Open-source |
 | Files | Local disk via `IFileStorage`; S3-compatible adapter later | Open-source |
@@ -118,13 +118,17 @@ Accepted: solution builds with 0 warnings; 70 projects; outbox/inbox, idempotenc
 | Performance check | E4 | Catalog list and checkout under load (k6, open-source) within targets: p95 catalog < 300 ms, checkout < 800 ms on KVM 2 sizing |
 | Docs update | E5 | API docs match the implementation; OpenAPI generated and committed |
 
-### Phase 5 — Design system and frontend foundation
+### Phase 5 — Shared packages and design system (same repo, D29)
 | Task | Done when |
 |---|---|
-| pnpm workspace, Turborepo, shared config | `pnpm build` and `pnpm lint` work at the root |
-| `@fresh/design-tokens` | One JSON source: colours (#073B4C, #0E9384, #F4F8F7, #E9AD55), type scale, spacing, radii, shadows; outputs for web (CSS vars, Tailwind preset) and Flutter (`ThemeData` Dart file) |
-| `@fresh/ui-web` | Button, Input, Select, Checkbox, Radio, Card, Badge, Dialog, Drawer, Toast, Tabs, Table, Skeleton, EmptyState, ErrorState, Pagination, QuantityStepper, PriceTag, WeightLabel; accessible (keyboard, labels, contrast) |
-| `@fresh/api-client` (TypeScript) and `fresh_api` (Dart) | Both generated from the same OpenAPI in CI (openapi-typescript, openapi-generator dart-dio, Apache-2.0); CI fails when stale |
+| pnpm 10 workspace + Turborepo at the repo root | `pnpm install`, `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm test` work from the root |
+| `@fresh/config` | Shared tsconfig bases, ESLint flat presets (base, react, next), Prettier, Tailwind preset |
+| `@fresh/design-tokens` | One JSON source: colours (#073B4C, #0E9384, #F4F8F7, #E9AD55), type scale, spacing, radii, shadows; builds CSS variables, Tailwind theme and Flutter `ThemeData` |
+| `@fresh/core` | HTTP client (Bearer, refresh rotation, Problem Details → typed errors, Idempotency-Key and If-Match helpers), TanStack Query setup, display formatting (₹, kg/g, dates in IST); no business calculations |
+| `@fresh/ui` | Accessible React components (Radix + Tailwind): Button, Input, Select, Combobox, Checkbox, Radio, Switch, Card, Badge, Dialog, Drawer, Toast, Tabs, Tooltip, Skeleton, EmptyState, ErrorState, Pagination, QuantityStepper, PriceTag, WeightLabel, FormField; app shell (sidebar, top bar); DataTable and FilterBar for admin |
+| `@fresh/api-client` | Generated from the backend OpenAPI (openapi-typescript + openapi-fetch); CI fails when stale |
+| Flutter packages | `packages/flutter/fresh_api` (openapi-generator dart-dio) and `packages/flutter/fresh_theme` (from tokens) |
+| `apps/playground` | Every component with light/dark themes; Vitest + Testing Library tests; axe accessibility checks |
 | Design doc | `docs/design/README.md`: tokens, components, wireframe specs for primary screens |
 
 ### Phase 6 — Admin dashboard
