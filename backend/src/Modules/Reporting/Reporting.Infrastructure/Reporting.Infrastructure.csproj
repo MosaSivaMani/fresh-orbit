@@ -3,6 +3,9 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Persistence\Sql\*.sql" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Reporting.Application\Reporting.Application.csproj" />
     <ProjectReference Include="..\Reporting.Public\Reporting.Public.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.EntityFramework\FreshOrbit.SharedKernel.EntityFramework.csproj" />

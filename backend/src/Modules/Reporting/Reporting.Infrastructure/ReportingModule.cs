@@ -1,9 +1,14 @@
+using FreshOrbit.Reporting.Infrastructure.Endpoints;
+using FreshOrbit.Reporting.Infrastructure.Jobs;
 using FreshOrbit.Reporting.Infrastructure.Persistence;
+using FreshOrbit.Reporting.Infrastructure.Reports;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FreshOrbit.Reporting.Infrastructure;
 
@@ -15,13 +20,10 @@ public sealed class ReportingModule : IModule
     public void Register(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleModel<ReportingModuleModel>();
-
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        services.TryAddScoped<ReportReader>();
+        services.TryAddScoped<RefreshReportsJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, ReportingJobRegistration>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
-    }
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) => ReportingEndpoints.Map(endpoints);
 }

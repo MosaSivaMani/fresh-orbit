@@ -110,5 +110,7 @@
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/Delivery.Tests/Delivery.Tests.csproj" />
     <Project Path="tests/Modules/Inventory.Tests/Inventory.Tests.csproj" />
+    <Project Path="tests/Modules/Payments.Tests/Payments.Tests.csproj" />
+    <Project Path="tests/Modules/Reporting.Tests/Reporting.Tests.csproj" />
   </Folder>
 </Solution>
