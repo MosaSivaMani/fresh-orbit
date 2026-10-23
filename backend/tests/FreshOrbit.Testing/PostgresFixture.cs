@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using FreshOrbit.Hosting;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.EntityFramework;
@@ -46,6 +47,10 @@ public class PostgresFixture : IAsyncLifetime
 
         await using var db = CreateDbContext();
         await db.Database.EnsureCreatedAsync();
+        foreach (var sql in _moduleModels.SelectMany(model => model.DatabaseObjectsSql))
+        {
+            await db.Database.ExecuteSqlRawAsync(sql);
+        }
     }
 
     /// <summary>A context on the test database (system actor and a fresh <see cref="TestClock"/> by default).</summary>

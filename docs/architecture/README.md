@@ -27,10 +27,10 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Catalog | `catalog` | categories, products, images, variants, preparation methods | — |
 | Pricing | `pricing` | variant prices, preparation charges, tax rules | Catalog, Locations |
 | Inventory | `inventory` | stock items, batches, movements, reservations, cold-chain logs | Catalog, Locations |
-| Cart | `cart` | carts, cart items (no prices) | Catalog, Pricing, Inventory, Locations, Promotions |
-| Promotions | `promotions` | coupons, scopes, redemptions, promotions (home offers) | Catalog |
+| Cart | `cart` | carts, cart items (no prices) | Catalog, Pricing, Inventory, Locations, Promotions, Settings, Customers, Ordering |
+| Promotions | `promotions` | coupons, scopes, redemptions, promotions (home offers) | Catalog, Locations |
 | Ordering | `ordering` | checkout, orders, items, history, adjustments, substitutions, complaints, invoices | Cart, Catalog, Pricing, Inventory, Delivery, Promotions, Locations, Customers, Settings, Payments |
-| Payments | `payments` | payments, refunds, webhook events, cash settlements, provider adapters | — (listens to Ordering events) |
+| Payments | `payments` | payments, refunds, webhook events, cash settlements, reconciliation issues, provider adapters | Ordering, Delivery, Identity |
 | Delivery | `delivery` | slot templates, slots, riders, shipments, attempts | Locations |
 | Notifications | `notifications` | templates, messages, device tokens, preferences | Identity |
 | Reporting | `reporting` | read-only views over other schemas | — |
@@ -63,6 +63,14 @@ backend/
 <Module>.Infrastructure/           <Module>Module.cs (DI + endpoints), Endpoints/, Persistence/ (ModuleModel, Configurations, Repositories), Reads/, Jobs/, Public/ (implementation of the Public API)
 <Module>.Public/                   I<Module>Api + narrow sealed records. Nothing else.
 ```
+
+## Dependency exceptions (decided)
+
+| Need | Solution |
+|---|---|
+| Catalog browse shows price and stock | Read-only SQL view `catalog.storefront_offers` joining pricing and inventory tables; no project reference |
+| City readiness, retirement and next-slot need modules that depend on Locations | Interfaces in `Locations.Public` (`ICityActivationCheck`, `ICityRetirementCheck`, `INextSlotProvider`) implemented by Pricing, Inventory, Delivery, Ordering |
+| Images | SkiaSharp (MIT), WebP at 320/640/1280 px, MinIO first, cleanup job for orphans |
 
 ## Cross-cutting
 

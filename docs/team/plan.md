@@ -23,6 +23,15 @@ Manager: Claude (main session). Employees: five agent sessions (E1–E5). Fronte
 | E4 | Cart, Promotions, Ordering | Cart pricing on read, coupons, checkout transaction, order state machine, weigh and pack, substitutions, cancellations, complaints, invoices |
 | E5 | Payments, Reporting | Payment adapters (COD, Fake), webhooks idempotency, refunds, cash settlements, reconciliation job; reporting views + admin report endpoints; reference data files |
 
+## Shared files owned in Phase 2
+
+| File(s) | Owner |
+|---|---|
+| `FreshOrbit.SharedKernel/Pricing/LinePricing.cs` (+ tests) | E4 |
+| `FreshOrbit.SharedKernel/Storage/*`, `FreshOrbit.SharedKernel.Web/Storage/*`, MinIO removal in dev compose | E2 |
+| Own sections of `docs/api/README.md`, `docs/database/README.md`, own `docs/product/*.md` | each owner |
+| `backend/src/Hosts/*`, other SharedKernel files, `FreshOrbit.Testing`, architecture tests | manager only (ask) |
+
 ## Rules for employees
 
 - Work only inside your modules' folders and their test projects. Shared code changes (SharedKernel, hosts, another module's `.Public`) are requested from the manager, not made.

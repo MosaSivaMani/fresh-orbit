@@ -17,4 +17,11 @@ public interface IModuleModel
     string Schema { get; }
 
     void Configure(ModelBuilder modelBuilder);
+
+    /// <summary>
+    /// SQL for database objects EF does not model (views, materialized views, exclusion constraints, functions),
+    /// run in order after the tables exist. Every statement must be idempotent (<c>CREATE OR REPLACE</c>,
+    /// <c>IF NOT EXISTS</c>). The test fixture runs it after <c>EnsureCreated</c>; migrations embed it.
+    /// </summary>
+    IEnumerable<string> DatabaseObjectsSql => [];
 }

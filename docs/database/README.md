@@ -78,7 +78,7 @@ City activation is refused unless the city has an active fulfillment location, s
 | Table | Columns | Constraints |
 |---|---|---|
 | categories | id, parent_id, slug, name, description, image_key, sort_order, is_active | unique slug |
-| products | id, category_id, slug, name, local_names, species_scientific_name, description, source_type WILD/FARMED, source_region, storage_instructions, handling_notes, hsn_code, tax_category_code, status DRAFT/ACTIVE/ARCHIVED, search_vector (generated tsvector) | unique slug; GIN search_vector; GIN trigram name |
+| products | id, category_id, slug, name, local_names text[], species_scientific_name, description, source_type WILD/FARMED, source_region, storage_instructions, handling_notes, hsn_code, tax_category_code, status DRAFT/ACTIVE/ARCHIVED, featured_rank, published_at, search_vector (generated tsvector) | unique slug; GIN search_vector; GIN trigram on name and on local_names (immutable wrapper function) |
 | product_images | id, product_id, storage_key, alt_text, width, height, sort_order | index (product_id, sort_order) |
 | product_variants | id, product_id, sku, name, sell_unit KG/PIECE/PACK, stock_unit GRAM/PIECE, pack_size_grams, avg_piece_grams, min_order, max_order, order_step, is_weight_variable, is_active | unique sku |
 | preparation_methods | id, code WHOLE/CLEANED/CURRY_CUT/STEAK/FILLET/..., name, description, sort_order | unique code |
@@ -94,16 +94,19 @@ Reserve `ceil(net × 10000 / yield_bp)` grams (500 g curry cut at 6500 bp reserv
 | preparation_charges | id, fulfillment_location_id, variant_id, preparation_method_id, charge_paise, charge_basis PER_KG/PER_ITEM/FLAT, valid_from, valid_to | same no-overlap rule |
 | tax_rules | id, tax_category_code, rate_bp, valid_from, valid_to | no overlap per category |
 
-Price per fulfillment location (decided). No price = not for sale there. A price change closes the current period and opens a new one. GST rates are data to be confirmed by the CA.
+Price per fulfillment location (decided). No price = not for sale there. A price change closes the current period and opens a new one. GST rates are data to be confirmed by the CA. Selling prices are tax-inclusive (B2C retail); `tax_paise` is the tax contained in the total, shown on the invoice.
 
 ### inventory
 | Table | Columns | Constraints |
 |---|---|---|
-| stock_items | id, fulfillment_location_id, variant_id, on_hand, reserved, low_stock_threshold | unique (location, variant); check on_hand >= 0, reserved >= 0, reserved <= on_hand |
-| batches | id, fulfillment_location_id, variant_id, batch_code, supplier_name, source_landing_center, caught_or_harvested_on, received_at, received_quantity, remaining_quantity, best_before_at, receipt_temperature_c numeric(4,1), cost_per_unit_paise, status ACTIVE/DEPLETED/EXPIRED/DISCARDED | unique (location, batch_code); index (variant_id, best_before_at) where ACTIVE |
-| stock_movements | id, stock_item_id, batch_id, kind RECEIPT/SALE/WASTE/ADJUSTMENT_IN/ADJUSTMENT_OUT/RETURN/COUNT_CORRECTION, quantity (signed), unit_cost_paise, reason_code, notes, reference_type, reference_id, occurred_at, recorded_by | index (stock_item_id, occurred_at); append-only |
+| stock_items | id, fulfillment_location_id, variant_id, on_hand, reserved, low_stock_threshold | unique (location, variant); check on_hand >= 0, reserved >= 0 (no reserved <= on_hand check, see decision D7) |
+| batches | id, fulfillment_location_id, variant_id, batch_code, supplier_name, source_landing_center, caught_or_harvested_on, received_at, received_quantity, remaining_quantity, best_before_at, receipt_temperature_c numeric(4,1), total_cost_paise, status ACTIVE/DEPLETED/EXPIRED/DISCARDED | unique (location, batch_code); index (variant_id, best_before_at) where ACTIVE |
+| stock_movements | id, stock_item_id, batch_id, kind RECEIPT/SALE/WASTE/ADJUSTMENT_IN/ADJUSTMENT_OUT/RETURN/COUNT_CORRECTION, quantity (signed), cost_paise (total cost of this movement, from the batch: round(quantity × batch total_cost_paise / received_quantity)), reason_code, notes, reference_type, reference_id, occurred_at, recorded_by | index (stock_item_id, occurred_at); append-only |
 | stock_reservations | id, stock_item_id, order_id, order_item_id, quantity, status ACTIVE/CONSUMED/RELEASED/EXPIRED, expires_at | unique (order_item_id) where ACTIVE; index (expires_at) where ACTIVE |
 | cold_chain_logs | id, fulfillment_location_id, storage_unit, temperature_c numeric(4,1), is_out_of_range, recorded_at, recorded_by | index (location, recorded_at desc) |
+
+Cost is kept as a batch total (₹845/kg is 84.5 paise per gram, so a per-gram integer would lose precision).
+Cart and order quantities are in the variant's stock unit: grams for KG variants, pieces for PIECE, pack count for PACK.
 
 Waste reasons: SPOILED, TEMPERATURE_BREACH, DAMAGED, EXPIRED, QC_REJECTED. Sale and waste pick batches FEFO.
 
@@ -174,6 +177,9 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | platform.idempotency_keys | scope, key, request_hash, status_code, response jsonb, expires_at | PK (scope, key) |
 | platform.sample_records | table_name, record_id | tracks sample data for purge |
 
+### catalog storefront view
+`catalog.storefront_offers` (SQL view, created in a migration): active product + active variant + current price + preparation charges + available stock per fulfillment location. Catalog's storefront reads query this view; it is the only cross-schema read outside Reporting.
+
 ### reporting (views only)
 `daily_sales`, `product_performance`, `contribution_margin` (revenue − SALE movement cost − refunds), `waste_summary`, `repeat_customers`; materialized, refreshed by a Worker job every 15 minutes.
 
@@ -190,7 +196,7 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | Expire reservations (job) | release stock + slot → PAYMENT_FAILED | runs only when expired rows exist |
 | Issue invoice (delivery) | lock number_series → invoice + lines → DELIVERED | gapless numbers |
 
-Isolation: Read Committed.
+Isolation: Read Committed. Decision D6 in `docs/decisions/log.md` moves pack, cancel and invoice follow-ons into event handlers.
 
 ## 5. Seed data
 
