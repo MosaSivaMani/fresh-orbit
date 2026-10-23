@@ -3,6 +3,8 @@
 Our own seafood e-commerce store (India, multi-city): customer website, customer mobile app and admin dashboard,
 all served by ONE ASP.NET Core modular monolith and ONE PostgreSQL database, in ONE repository.
 
+**Resuming work? Start with `docs/team/next-steps.md`** (where we stopped, merge order, what is next, next free decision number). Keep it updated before every pause.
+
 Read before working: `docs/architecture/README.md`, `docs/database/README.md`, `docs/api/README.md`,
 `docs/team/plan.md` (who owns what).
 
