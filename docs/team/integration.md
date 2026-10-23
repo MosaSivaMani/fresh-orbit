@@ -64,3 +64,15 @@ Architecture tests must allow these adapters to reference the source module's `.
 | Catalog `DatabaseObjectsSql` must run after Inventory tables exist (storefront view) | migration ordering |
 | `/home` banners from Promotions; `isWishlisted` from Customers | after E4 merge / Customers wishlist API |
 | Architecture tests updated for D30 (Domain → own Public) | ✅ done at E2 merge |
+
+## From E4 (Cart, Promotions, Ordering, LinePricing)
+
+| Item | Action |
+|---|---|
+| Architecture tests: Ordering.Domain → Ordering.Public allowed (D30) | confirm the generic rule from the E2 merge covers it |
+| `OrderingCustomerDeletionCheck` (Ordering.Infrastructure/Public/OrderingApi.cs) | add `: ICustomerDeletionCheck`; register with `TryAddEnumerable(ServiceDescriptor.Scoped<ICustomerDeletionCheck, OrderingCustomerDeletionCheck>())` |
+| Promotions adapters | `OrderCancelled` → `RedemptionReversalService.ReverseForOrderAsync(e.OrderId, ReversalReason.OrderCancelled)`; `OrderPaymentFailed` → same with `ReversalReason.PaymentFailed` |
+| Ordering adapters (`OrderEventService`) | PaymentCaptured → `OnPaymentCapturedAsync(orderId, paymentId, amountPaise, capturedAt)`; PaymentFailed → `OnPaymentFailedAsync(orderId, paymentId, failureCode, hasOtherActiveAttempt)`; ShipmentDispatched → `OnShipmentDispatchedAsync(orderId, shipmentId, riderId, dispatchedAt)`; ShipmentDelivered → `OnShipmentDeliveredAsync(orderId, shipmentId, deliveredAt)`; DeliveryAttemptFailed → `OnDeliveryAttemptFailedAsync(orderId, attemptNo, outcome, attemptedAt)`; ShipmentReattempted → `OnShipmentReattemptedAsync(orderId)`; ShipmentReturned → `OnShipmentReturnedAsync(orderId, shipmentId, returnedAt)` |
+| Cart adapter | Identity `CustomerSignedIn` → `ICartApi.MergeGuestCartAsync(guestToken, customerId)` |
+| Replace E4 stand-ins with real Public APIs | `IPromotionsCatalog` (Catalog category lineage/existence), `ICityDirectory` (Locations city lookup), `IDeliveryFeeTaxRate` (Pricing tax rate for DELIVERY_SERVICE), `IOrderStockReleaser` (Inventory release of one line's stock) and low-stock threshold, `IShipmentTracking` (Delivery shipment by order), `IPaymentMethodAvailability` (Payments enabled methods / order policy); Settings `substitutionMinutes` and `complaintWindowHours` from order policy instead of `OrderingOptions` defaults |
+| `Ordering.Tests` `DbNumberSeriesSettings` stand-in | no longer implements `ISettingsApi` (`NextNumberAsync(string, DateTimeOffset, ct)`, `GetFinancialPeriodAsync`); use the real Settings implementation (locks the series row `FOR UPDATE` in the caller's transaction) |
