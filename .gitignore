@@ -11,6 +11,8 @@ dist/
 .turbo/
 .expo/
 coverage/
+playwright-report/
+test-results/
 TestResults/
 *.log
 .env
