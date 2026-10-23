@@ -99,11 +99,13 @@ Price per fulfillment location (decided). No price = not for sale there. A price
 ### inventory
 | Table | Columns | Constraints |
 |---|---|---|
-| stock_items | id, fulfillment_location_id, variant_id, on_hand, reserved, low_stock_threshold | unique (location, variant); check on_hand >= 0, reserved >= 0 (no reserved <= on_hand check, see decision D7) |
-| batches | id, fulfillment_location_id, variant_id, batch_code, supplier_name, source_landing_center, caught_or_harvested_on, received_at, received_quantity, remaining_quantity, best_before_at, receipt_temperature_c numeric(4,1), total_cost_paise, status ACTIVE/DEPLETED/EXPIRED/DISCARDED | unique (location, batch_code); index (variant_id, best_before_at) where ACTIVE |
-| stock_movements | id, stock_item_id, batch_id, kind RECEIPT/SALE/WASTE/ADJUSTMENT_IN/ADJUSTMENT_OUT/RETURN/COUNT_CORRECTION, quantity (signed), cost_paise (total cost of this movement, from the batch: round(quantity × batch total_cost_paise / received_quantity)), reason_code, notes, reference_type, reference_id, occurred_at, recorded_by | index (stock_item_id, occurred_at); append-only |
-| stock_reservations | id, stock_item_id, order_id, order_item_id, quantity, status ACTIVE/CONSUMED/RELEASED/EXPIRED, expires_at | unique (order_item_id) where ACTIVE; index (expires_at) where ACTIVE |
-| cold_chain_logs | id, fulfillment_location_id, storage_unit, temperature_c numeric(4,1), is_out_of_range, recorded_at, recorded_by | index (location, recorded_at desc) |
+| stock_items | id, fulfillment_location_id, variant_id, stock_unit GRAM/PIECE, on_hand, reserved, low_stock_threshold | unique (location, variant); check on_hand >= 0, reserved >= 0, low_stock_threshold >= 0 (no reserved <= on_hand check, see decision D7) |
+| batches | id, stock_item_id, fulfillment_location_id, variant_id, batch_code, supplier_name, source_landing_center, caught_or_harvested_on, received_at, received_quantity, remaining_quantity, remaining_cost_paise, best_before_at, receipt_temperature_c numeric(4,1), total_cost_paise, status ACTIVE/DEPLETED/EXPIRED/DISCARDED | unique (location, batch_code); index (variant_id, best_before_at) where ACTIVE; index (best_before_at) where ACTIVE; remaining_cost_paise is the cost still on the shelf, so the draining movement takes exactly the remainder |
+| stock_movements | id, stock_item_id, batch_id (nullable: batchless PACK_SHORTFALL pair), kind RECEIPT/SALE/WASTE/ADJUSTMENT_IN/ADJUSTMENT_OUT/RETURN/COUNT_CORRECTION, quantity (signed), cost_paise (same sign as quantity: round_half_away(quantity × batch total_cost_paise / received_quantity), or minus the batch remaining_cost_paise when the movement drains it), reason_code (adds PACK_SHORTFALL, EXPIRED), notes, reference_type ORDER_ITEM/BATCH/MANUAL, reference_id, occurred_at, recorded_by | index (stock_item_id, occurred_at); index (reference_id) where SALE; append-only |
+| stock_reservations | id, stock_item_id, order_id, order_item_id, quantity, status ACTIVE/CONSUMED/RELEASED/EXPIRED, expires_at | unique (order_item_id) where ACTIVE; index (order_id); index (expires_at) where ACTIVE |
+| low_stock_digests | id, fulfillment_location_id, local_date, item_count | unique (location, local_date): one digest per location per local day |
+| storage_units | code, min_c, max_c (numeric(4,1), nullable = open bound) | PK code; reference data `inventory/storage-units.json` (CHILLER, FREEZER, RECEIPT) |
+| cold_chain_logs | id, fulfillment_location_id, storage_unit, temperature_c numeric(4,1), is_out_of_range, recorded_at, recorded_by | FK storage_unit → storage_units; index (location, recorded_at desc) |
 
 Cost is kept as a batch total (₹845/kg is 84.5 paise per gram, so a per-gram integer would lose precision).
 Cart and order quantities are in the variant's stock unit: grams for KG variants, pieces for PIECE, pack count for PACK.
@@ -152,10 +154,10 @@ Weight rule (decided): charge actual packed net weight up to `max_chargeable_qua
 ### delivery
 | Table | Columns | Constraints |
 |---|---|---|
-| slot_templates | id, fulfillment_location_id, day_of_week, start_time, end_time, capacity, cutoff_minutes, is_active | |
-| delivery_slots | id, fulfillment_location_id, slot_date, start_at, end_at, cutoff_at, capacity, booked_count, status OPEN/CLOSED | unique (location, start_at); check booked_count <= capacity |
-| riders | id, fulfillment_location_id, full_name, phone, is_active | |
-| shipments | id, order_id, delivery_slot_id, rider_id, status PENDING/ASSIGNED/OUT_FOR_DELIVERY/DELIVERED/FAILED/RETURNED, cold_box_used, dispatch_temperature_c, dispatched_at, delivered_at, delivery_code_hash | unique order_id; index (rider_id, status) |
+| slot_templates | id, fulfillment_location_id, day_of_week 1–7 (ISO), start_time, end_time, capacity, cutoff_minutes, is_active, xmin | check day_of_week 1–7, end_time > start_time, capacity 1–500, cutoff_minutes 0–2880; `ex_slot_templates_no_overlap` EXCLUDE USING gist (location =, day_of_week =, tsrange(start,end) &&) WHERE is_active (D22) |
+| delivery_slots | id, fulfillment_location_id, slot_template_id (nullable), slot_date (city-local), start_at, end_at, cutoff_at, capacity, booked_count, status OPEN/CLOSED, closed_reason MANUAL/CLOSURE/TEMPLATE_INACTIVE, xmin | unique (location, start_at); check 0 <= booked_count <= capacity, capacity 0–500; index (location, slot_date) |
+| riders | id, fulfillment_location_id, full_name, phone, is_active, xmin | unique phone where is_active |
+| shipments | id, order_id, fulfillment_location_id, delivery_slot_id, rider_id, status PENDING/ASSIGNED/OUT_FOR_DELIVERY/DELIVERED/FAILED/RETURNED/CANCELLED, placed_at, packed_at, cold_box_used, dispatch_temperature_c numeric(4,1), temperature_warning, dispatched_at, delivered_at, returned_at, cancelled_at, delivery_code character(4), delivery_code_failures, cash_collected_paise, cash_mode CASH/UPI, upi_reference, cash_collected_at, xmin | unique order_id; FK delivery_slot_id, rider_id; check status, cash_mode, delivery_code_failures >= 0, cash_collected_paise >= 0; index (rider_id, status), (location, status); delivery code shown to the customer only while OUT_FOR_DELIVERY |
 | delivery_attempts | id, shipment_id, attempt_no, outcome DELIVERED/CUSTOMER_UNAVAILABLE/ADDRESS_NOT_FOUND/REFUSED/OTHER, notes, attempted_at | unique (shipment_id, attempt_no) |
 
 A job generates slots from templates 7 days ahead, skipping closures.

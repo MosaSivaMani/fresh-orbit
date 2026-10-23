@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "storageUnits": [
+    { "code": "CHILLER", "minC": -1.0, "maxC": 4.0, "description": "Chiller for fresh fish and seafood on ice" },
+    { "code": "FREEZER", "minC": null, "maxC": -18.0, "description": "Deep freezer for frozen stock" },
+    { "code": "RECEIPT", "minC": null, "maxC": 4.0, "description": "Core temperature of goods at receipt" }
+  ]
+}

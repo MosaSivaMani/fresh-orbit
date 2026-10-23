@@ -230,3 +230,19 @@ Reservation expiry is not an Inventory job (Q2).
 | Q6 | Cold-chain ranges per storage unit. | CHILLER −1.0…4.0, FREEZER ≤ −18.0, RECEIPT ≤ 4.0 as reference data (A8). |
 | Q7 | Adjustment reason list. | `DATA_ENTRY_ERROR`, `FOUND`, `LOST`, `THEFT`, `TRANSFER`, `OTHER` (notes required). |
 | Q8 | Movement `cost_paise` sign. | Same sign as `quantity`; Reporting (E5) negates SALE cost for margin. |
+
+## 9. Implementation status (E3)
+
+Implemented with the proposed answers, as ruled in the decision log (D3, D6, D7, D10, D16, D22, D23).
+
+| Item | Resolution |
+|---|---|
+| A1 | `GET /availability` is Catalog's (D3); Inventory exposes `IInventoryApi.GetAvailabilityAsync` with `LowStockThreshold`. |
+| A2, A3, A4, A5 | As proposed; see the notes under docs/api §4.14. `RETURN` is an adjustment kind and needs `batchId`. |
+| A6, A7, Q1 | No `reserved <= on_hand` check; nullable `batch_id`; `PACK_SHORTFALL` pair; `StockOverCommitted` is raised when a physical fact makes the shortfall larger. |
+| A8, Q6 | `storage_units` table loaded from `data/reference/inventory/storage-units.json`; cold-chain `storage_unit` has an FK to it. A missing `RECEIPT` range refuses a receipt with `CONFIGURATION_MISSING`. |
+| A9 | Pack consumption, release and expiry run in event handlers (`OrderStockHandlers`). |
+| Cost | `batches.remaining_cost_paise` holds the cost still on the shelf. A movement that drains a batch takes the exact remainder (instead of summing past movements). |
+| Unit | `stock_items.stock_unit` stores GRAM or PIECE so commands can check the request unit without calling Catalog. |
+| Low-stock | `StockReplenished` is raised when available rises back above the threshold (with threshold 0: back above zero). Digest: one `low_stock_digests` row per location and local day, built at 07:xx local time. |
+| Reservation | `ReserveAsync` is all or nothing; `ReserveStockResult.Refusals` gives the code per order item (`OUT_OF_STOCK` or `STOCK_ITEM_MISSING`). |
