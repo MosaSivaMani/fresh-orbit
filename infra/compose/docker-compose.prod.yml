@@ -1,0 +1,363 @@
+# Fresh Orbit production / staging stack (one server; decision D25). Same file on Oracle Always Free (ARM64) and
+# Hostinger KVM 2 (x86-64): images are multi-arch.
+#
+#   cd /opt/freshorbit/infra/compose
+#   IMAGE_TAG=v1.2.3 docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
+#   (normally run through infra/scripts/deploy.sh, which also runs migrations first and rolls back on failure)
+#
+# Optional log/metrics stack: add `--profile monitoring` (Grafana + Loki + Alloy, ~1 GB RAM).
+#
+# Memory budget for an 8 GB host (limits, not reservations):
+#   postgres 2.5 GB · api 1 GB · worker 768 MB · web 512 MB · caddy 256 MB · admin 64 MB      ≈ 5.1 GB
+#   monitoring profile: loki 512 MB · grafana 256 MB · alloy 256 MB                            ≈ 1.0 GB
+#   OS, Docker, page cache                                                                    ≈ 1.9 GB
+#
+# Security settings (forwarded headers, SMS): docs/runbooks/security-configuration.md.
+# Only Caddy publishes ports (80, 443). Docker-published ports bypass UFW, so nothing else is published except
+# Grafana on 127.0.0.1 (reach it with an SSH tunnel).
+
+name: freshorbit
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-backend-env: &backend-env
+  ConnectionStrings__FreshOrbit: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-freshorbit};Username=${POSTGRES_USER:-freshorbit};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required};Maximum Pool Size=40;Gss Encryption Mode=Disable"
+  Serilog__MinimumLevel__Default: ${LOG_LEVEL:-Information}
+  # Stamped into logs; times in the database are UTC regardless.
+  TZ: UTC
+
+services:
+  postgres:
+    image: postgres:17.10-alpine3.24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-freshorbit}
+      POSTGRES_USER: ${POSTGRES_USER:-freshorbit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8 --data-checksums"
+    # Tuned for ~2.5 GB of an 8 GB host, SSD storage, up to ~100 connections (api pool 40 + worker pool 40 + tools).
+    command:
+      - postgres
+      - -c
+      - shared_buffers=768MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=192MB
+      - -c
+      - max_connections=120
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - min_wal_size=256MB
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
+      - -c
+      - max_worker_processes=4
+      - -c
+      - max_parallel_workers=2
+      - -c
+      - max_parallel_workers_per_gather=1
+      - -c
+      - log_min_duration_statement=500ms
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_temp_files=10MB
+      - -c
+      - idle_in_transaction_session_timeout=60s
+    shm_size: 256mb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    stop_grace_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+    logging: *logging
+
+  # One-shot: applies migrations and reference data, then exits 0. api and worker start only after it succeeds.
+  # deploy.sh also runs it explicitly (with --sample on staging when SEED_SAMPLE_DATA=true) before `up`.
+  migrations:
+    image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-migrations:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *backend-env
+      DOTNET_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+
+  api:
+    image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-api:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      <<: *backend-env
+      ASPNETCORE_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
+      # Trust X-Forwarded-For/-Proto only from the compose network (Caddy). Left empty, every client shares one
+      # rate-limit bucket (docs/runbooks/security-configuration.md).
+      ForwardedHeaders__KnownNetworks__0: ${DOCKER_SUBNET:-172.30.0.0/24}
+      Jwt__Issuer: ${JWT_ISSUER:-freshorbit}
+      Jwt__Audience: ${JWT_AUDIENCE:-freshorbit}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
+      Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required}
+      Cors__AllowedOrigins__1: https://admin.${DOMAIN:?DOMAIN is required}
+      FileStorage__RootPath: /media
+      FileStorage__PublicBaseUrl: https://api.${DOMAIN:?DOMAIN is required}/media
+      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbit}
+      Notifications__SupportPhone: ${SUPPORT_PHONE:-}
+      Notifications__SupportEmail: ${SUPPORT_EMAIL:-}
+      Notifications__Smtp__Host: ${SMTP_HOST:-}
+      Notifications__Smtp__Port: ${SMTP_PORT:-587}
+      Notifications__Smtp__UseTls: ${SMTP_USE_TLS:-true}
+      Notifications__Smtp__UserName: ${SMTP_USERNAME:-}
+      Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
+      Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
+      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
+      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
+      # (docs/runbooks/security-configuration.md).
+      Notifications__Sms__Provider: DLT
+      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
+      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
+      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
+      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
+    volumes:
+      - media:/media
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    logging: *logging
+
+  worker:
+    image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-worker:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      <<: *backend-env
+      DOTNET_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
+      Outbox__BatchSize: ${OUTBOX_BATCH_SIZE:-50}
+      Outbox__MaxAttempts: ${OUTBOX_MAX_ATTEMPTS:-5}
+      Outbox__PollInterval: ${OUTBOX_POLL_INTERVAL:-00:00:05}
+      FileStorage__RootPath: /media
+      FileStorage__PublicBaseUrl: https://api.${DOMAIN:?DOMAIN is required}/media
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
+      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbit}
+      Notifications__SupportPhone: ${SUPPORT_PHONE:-}
+      Notifications__SupportEmail: ${SUPPORT_EMAIL:-}
+      Notifications__Smtp__Host: ${SMTP_HOST:-}
+      Notifications__Smtp__Port: ${SMTP_PORT:-587}
+      Notifications__Smtp__UseTls: ${SMTP_USE_TLS:-true}
+      Notifications__Smtp__UserName: ${SMTP_USERNAME:-}
+      Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
+      Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
+      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
+      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
+      # (docs/runbooks/security-configuration.md).
+      Notifications__Sms__Provider: DLT
+      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
+      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
+      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
+      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
+    volumes:
+      - media:/media
+    # No HTTP endpoint: the restart policy covers crashes; deploy.sh checks it stays running.
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    logging: *logging
+
+  web:
+    image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-web:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      # Server-side rendering calls the API over the internal network; the browser uses NEXT_PUBLIC_API_BASE_URL
+      # baked in at build time.
+      API_INTERNAL_URL: http://api:8080
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+
+  admin:
+    image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-admin:${IMAGE_TAG:?IMAGE_TAG is required}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    logging: *logging
+
+  caddy:
+    image: caddy:2.11.6-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+      admin:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-private_ranges}
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+      # Caddy serves api.<domain>/media/* straight from the file-storage volume (D21).
+      - media:/srv/media:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:2019/config/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging: *logging
+
+  # ---- Optional: logs and alerts (profile "monitoring"; docs/runbooks/deploy.md, Monitoring) ----------------
+
+  loki:
+    image: grafana/loki:3.7.8
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/config.yml"]
+    volumes:
+      - ../monitoring/loki.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+
+  alloy:
+    image: grafana/alloy:v1.20.1
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+    depends_on:
+      - loki
+    volumes:
+      - ../monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging: *logging
+
+  grafana:
+    image: grafana/grafana:13.2.3
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    depends_on:
+      - loki
+    ports:
+      # Loopback only: ssh -L 3001:127.0.0.1:3001 deploy@server, then open http://localhost:3001
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      # Set GRAFANA_ADMIN_PASSWORD before enabling the profile (`:?` cannot be used: compose checks inactive profiles
+      # too). Empty means Grafana's default admin/admin, reachable only through the SSH tunnel.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SMTP_ENABLED: ${GRAFANA_SMTP_ENABLED:-false}
+      GF_SMTP_HOST: ${SMTP_HOST:-}:${SMTP_PORT:-587}
+      GF_SMTP_USER: ${SMTP_USERNAME:-}
+      GF_SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      GF_SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS:-}
+      GF_SMTP_STARTTLS_POLICY: ${GRAFANA_SMTP_STARTTLS_POLICY:-MandatoryStartTLS}
+      ALERT_EMAIL: ${ALERT_EMAIL:-alerts@example.invalid}
+    volumes:
+      - ../monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ../monitoring/alerting/alerts.yml:/etc/grafana/provisioning/alerting/alerts.yml:ro
+      - grafana-data:/var/lib/grafana
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    logging: *logging
+
+networks:
+  default:
+    # Fixed subnet so Caddy's address is predictable for the API's forwarded-headers allow-list.
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.30.0.0/24}
+
+volumes:
+  postgres-data:
+  media:
+  caddy-data:
+  caddy-config:
+  loki-data:
+  alloy-data:
+  grafana-data:
