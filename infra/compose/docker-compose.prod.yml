@@ -12,6 +12,7 @@
 #   monitoring profile: loki 512 MB · grafana 256 MB · alloy 256 MB                            ≈ 1.0 GB
 #   OS, Docker, page cache                                                                    ≈ 1.9 GB
 #
+# Security settings (forwarded headers, SMS): docs/runbooks/security-configuration.md.
 # Only Caddy publishes ports (80, 443). Docker-published ports bypass UFW, so nothing else is published except
 # Grafana on 127.0.0.1 (reach it with an SSH tunnel).
 
@@ -121,8 +122,9 @@ services:
     environment:
       <<: *backend-env
       ASPNETCORE_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
-      # Honour X-Forwarded-For/-Proto from Caddy (real client IP for rate limits and audit).
-      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      # Trust X-Forwarded-For/-Proto only from the compose network (Caddy). Left empty, every client shares one
+      # rate-limit bucket (docs/runbooks/security-configuration.md).
+      ForwardedHeaders__KnownNetworks__0: ${DOCKER_SUBNET:-172.30.0.0/24}
       Jwt__Issuer: ${JWT_ISSUER:-freshorbit}
       Jwt__Audience: ${JWT_AUDIENCE:-freshorbit}
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
@@ -140,10 +142,13 @@ services:
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
       Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
-      Notifications__Sms__Provider: ${SMS_PROVIDER:-}
-      Notifications__Sms__ApiKey: ${SMS_API_KEY:-}
-      Notifications__Sms__SenderId: ${SMS_SENDER_ID:-}
-      Notifications__Sms__DltEntityId: ${SMS_DLT_ENTITY_ID:-}
+      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
+      # (docs/runbooks/security-configuration.md).
+      Notifications__Sms__Provider: DLT
+      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
+      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
+      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
+      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
     volumes:
       - media:/media
     healthcheck:
@@ -186,10 +191,13 @@ services:
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
       Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
-      Notifications__Sms__Provider: ${SMS_PROVIDER:-}
-      Notifications__Sms__ApiKey: ${SMS_API_KEY:-}
-      Notifications__Sms__SenderId: ${SMS_SENDER_ID:-}
-      Notifications__Sms__DltEntityId: ${SMS_DLT_ENTITY_ID:-}
+      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
+      # (docs/runbooks/security-configuration.md).
+      Notifications__Sms__Provider: DLT
+      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
+      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
+      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
+      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
     volumes:
       - media:/media
     # No HTTP endpoint: the restart policy covers crashes; deploy.sh checks it stays running.
@@ -337,6 +345,13 @@ services:
         limits:
           memory: 256M
     logging: *logging
+
+networks:
+  default:
+    # Fixed subnet so Caddy's address is predictable for the API's forwarded-headers allow-list.
+    ipam:
+      config:
+        - subnet: ${DOCKER_SUBNET:-172.30.0.0/24}
 
 volumes:
   postgres-data:
