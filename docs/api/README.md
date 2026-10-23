@@ -749,7 +749,7 @@ Client return from the gateway never changes status; the client polls `GET /orde
 | GET | `/api/v1/me/notifications` | customer | | In-app messages, `unreadOnly` filter |
 | POST | `/api/v1/me/notifications/{messageId}/read` | customer | | Mark read |
 | POST | `/api/v1/me/notifications/read-all` | customer | | Mark all read |
-| PUT | `/api/v1/me/device-tokens` | customer | | Register Expo push token (`expoPushToken`, `platform`) |
+| PUT | `/api/v1/me/device-tokens` | customer | | Register push token (`pushToken`, `provider` FCM, `platform` ANDROID/IOS) |
 | DELETE | `/api/v1/me/device-tokens/{token}` | customer | | Unregister |
 | GET | `/api/v1/me/notification-preferences` | customer | | Preferences per category × channel |
 | PUT | `/api/v1/me/notification-preferences` | customer | | Replace preferences (`ORDER_UPDATES` SMS cannot be disabled) |

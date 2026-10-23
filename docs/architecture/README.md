@@ -3,7 +3,7 @@
 ## Shape
 
 ```
- Website (Next.js)   Mobile (Expo)   Admin (React + Vite)
+ Website (Next.js)   Mobile (Flutter)   Admin (React + Vite)
           \               |               /
            \______ HTTPS / REST JSON ____/
                           |

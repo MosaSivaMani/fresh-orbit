@@ -9,7 +9,7 @@ Detailed specs live in the files linked from each section. Manager rulings are i
 |---|---|
 | Business | Our own seafood store (not a marketplace) selling fresh chilled fish, prawns, crabs, shellfish, cut and cleaned seafood |
 | Market | India; one city at launch, more cities later; pincode-based service areas |
-| Interfaces | Customer website, customer mobile app (Android first, iOS later), admin dashboard |
+| Interfaces | Customer website, customer mobile app (Flutter: one codebase for Android and iOS; Android released first), admin dashboard |
 | Backend | One ASP.NET Core modular monolith, one PostgreSQL database, one repository |
 | Payments at launch | Cash / UPI on delivery; online gateway adapter built and tested in test mode, switched on after business registration |
 | Selling rule | Customers pay for **net** weight after cleaning; actual packed weight charged up to +10%, shortfall refunded or reduced |
@@ -22,7 +22,7 @@ Detailed specs live in the files linked from each section. Manager rulings are i
 |---|---|---|
 | Website | Next.js, React, TypeScript, Tailwind | Open-source |
 | Admin | React + Vite, TypeScript, Tailwind, TanStack Query/Table | Open-source |
-| Mobile | Expo (React Native), TypeScript, Expo Router, NativeWind | Open-source; store fees paid |
+| Mobile | Flutter (Dart), Riverpod, go_router, Dart API client generated from OpenAPI, theme generated from design tokens | Open-source (BSD); store fees paid |
 | Shared TS | pnpm + Turborepo; `@fresh/api-client` generated from OpenAPI; `@fresh/design-tokens`, `@fresh/ui-web` | Open-source |
 | Backend | .NET 10, ASP.NET Core minimal APIs, EF Core 10, FluentValidation, Hangfire, Serilog, Scalar | Open-source |
 | Database | PostgreSQL 17 (citext, pg_trgm, btree_gist) | Open-source |
@@ -69,7 +69,7 @@ Frontend phases reassign the same five engineers (section 6).
 | 5 | Design system and shared frontend packages | ⏳ |
 | 6 | Admin dashboard | ⏳ |
 | 7 | Customer website | ⏳ |
-| 8 | Customer mobile app (Android) | ⏳ |
+| 8 | Customer mobile app (Flutter, Android + iOS) | ⏳ |
 | 9 | Infrastructure, CI/CD, staging on Oracle | ⏳ |
 | 10 | Pilot (soft launch) and production launch | ⏳ |
 | 11 | After launch: online payments, iOS, second city | ⏳ |
@@ -122,9 +122,9 @@ Accepted: solution builds with 0 warnings; 70 projects; outbox/inbox, idempotenc
 | Task | Done when |
 |---|---|
 | pnpm workspace, Turborepo, shared config | `pnpm build` and `pnpm lint` work at the root |
-| `@fresh/design-tokens` | Colours (#073B4C, #0E9384, #F4F8F7, #E9AD55), type scale, spacing, radii, shadows; web (CSS vars/Tailwind preset) and native outputs |
+| `@fresh/design-tokens` | One JSON source: colours (#073B4C, #0E9384, #F4F8F7, #E9AD55), type scale, spacing, radii, shadows; outputs for web (CSS vars, Tailwind preset) and Flutter (`ThemeData` Dart file) |
 | `@fresh/ui-web` | Button, Input, Select, Checkbox, Radio, Card, Badge, Dialog, Drawer, Toast, Tabs, Table, Skeleton, EmptyState, ErrorState, Pagination, QuantityStepper, PriceTag, WeightLabel; accessible (keyboard, labels, contrast) |
-| `@fresh/api-client` | Generated from OpenAPI in CI; fails CI when stale |
+| `@fresh/api-client` (TypeScript) and `fresh_api` (Dart) | Both generated from the same OpenAPI in CI (openapi-typescript, openapi-generator dart-dio, Apache-2.0); CI fails when stale |
 | Design doc | `docs/design/README.md`: tokens, components, wireframe specs for primary screens |
 
 ### Phase 6 — Admin dashboard
@@ -153,14 +153,15 @@ Accepted: solution builds with 0 warnings; 70 projects; outbox/inbox, idempotenc
 | About, support | Policies (delivery, cancellation, refunds), FAQ, contact |
 | Quality | Lighthouse ≥ 90 performance/accessibility on mobile; Playwright browse → checkout |
 
-### Phase 8 — Mobile app (Android first)
+### Phase 8 — Mobile app (Flutter)
 | Screen group | Done when |
 |---|---|
 | Splash, onboarding, location | Pincode stored; unserviceable state handled |
-| Home, shop, search, product, wishlist | Same data and rules as website through `@fresh/api-client` |
-| Cart, checkout, tracking, orders | Same server-side pricing; push notifications for order status |
+| Home, shop, search, product, wishlist | Same data and rules as website through the generated Dart client `fresh_api` |
+| Cart, checkout, tracking, orders | Same server-side pricing; push notifications via Firebase Cloud Messaging (free service, not open-source) |
 | Account, help | Login with OTP, addresses, notifications, support |
-| Release | Internal testing track on Google Play; build locally or EAS free tier |
+| Release | Android: Google Play internal testing track. iOS: TestFlight (needs Apple developer account; builds on your Mac with Xcode) |
+| Quality | `flutter analyze` clean, widget tests, integration test of browse → checkout on an emulator |
 
 ### Phase 9 — Infrastructure and CI/CD
 | Task | Done when |
@@ -195,6 +196,8 @@ Online payment gateway live (after business KYC); iOS app; second city via admin
 | Oracle Cloud account | Phase 9 |
 | SMS provider + DLT registration of OTP and order templates | Phase 10 |
 | Google Play developer account | Phase 8 release |
+| Apple developer account | iOS release (can follow Android) |
+| Firebase project (free) for push notifications | Phase 8 |
 | Product photos, descriptions, local names, sourcing details | Phase 10 |
 | Policies text: delivery, cancellation, refund, privacy, terms | Phase 7 |
 | At least two staff who can approve refunds (ADMIN + FINANCE) | Phase 10 |

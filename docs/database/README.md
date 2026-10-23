@@ -165,7 +165,7 @@ A job generates slots from templates 7 days ahead, skipping closures.
 |---|---|---|
 | notifications.templates | id, code, channel SMS/EMAIL/PUSH/IN_APP, subject, body, is_active | unique (code, channel) |
 | notifications.messages | id, user_id, channel, template_code, payload jsonb, status QUEUED/SENT/FAILED/READ, attempts, provider_message_id, sent_at, read_at | index (user_id, created_at desc) |
-| notifications.device_tokens | id, user_id, expo_push_token, platform, last_seen_at | unique token |
+| notifications.device_tokens | id, user_id, push_token, provider FCM, platform ANDROID/IOS/WEB, last_seen_at | unique push_token |
 | notifications.preferences | user_id, category ORDER_UPDATES/OFFERS, channel, enabled | PK (user_id, category, channel) |
 | audit.entries | id bigint, occurred_at, actor_type, actor_id, actor_name, action, entity_type, entity_id, before jsonb, after jsonb, ip, correlation_id | append-only; index (entity_type, entity_id), (occurred_at) |
 | settings.business_profile | id, legal_name, trade_name, gstin, fssai_license_no, address, support_phone, support_email | single row |
