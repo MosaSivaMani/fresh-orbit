@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | 3 | E1 integration on `integration/phase3` (not merged): D30 events moved to Public, D31 shared 401/403/429/503, every event adapter, stand-ins replaced by Public APIs, audit records for E1 admin writes, address `isServiceable`, hosts (media, `refresh`/`search` limits, Mailpit SMTP, `--create-admin`, database objects after migrations), `InitialCreate` migration with cross-schema FKs, `infra/scripts/smoke.sh`, `docs/runbooks/local-development.md` | E1: `dotnet build` 0 warnings; `dotnet test` 891/891 passed; smoke script 52/52 steps passed against the dev compose stack (not yet verified by manager) |
 | 2026-10-23 | 5 | Merged E3 frontend packages; frontend CI job added; D32 | `pnpm build/typecheck/lint/test` all pass; 129 tests (tokens 66, core 29, ui 32, api-client 2) |
 | 2026-10-23 | 3 | Merged E2 into `main`; architecture tests updated for D30 | `dotnet test` 575/575 passed (adds Locations 42, Catalog 45, Pricing 26) |
 | 2026-10-23 | 3 | Merged E1 into `main`; rulings D30 (events in Public), D31 (shared 401/403/429/503) | `dotnet test` 462/462 passed (adds Identity 22, Customers 14, Settings 18, Audit 6, Notifications 18) |

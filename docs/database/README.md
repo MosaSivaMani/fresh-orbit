@@ -18,7 +18,7 @@ One PostgreSQL 17 database `freshorbit`, one schema per module plus `platform` a
 | Naming | `snake_case`, plural tables (EFCore.NamingConventions) |
 | Deleting | Master data: `is_active` / `status`. Orders, payments, movements, audit: never deleted or edited after the fact |
 | Extensions | `citext`, `pg_trgm`, `btree_gist` |
-| Foreign keys | Allowed across schemas, `ON DELETE RESTRICT`. Code still never navigates into another module's entities |
+| Foreign keys | Allowed across schemas. Code still never navigates into another module's entities. Within a schema EF creates them (`ON DELETE RESTRICT`); across schemas the initial migration adds them as SQL (`CrossSchemaForeignKeys`: references to `ordering.orders`, `locations.fulfillment_locations`, `locations.cities`) as `NO ACTION DEFERRABLE INITIALLY DEFERRED`, because one SaveChanges inserts rows of several modules in an order EF cannot know |
 
 ## 2. Overview
 
@@ -193,7 +193,7 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | platform.sample_records | table_name, record_id | tracks sample data for purge |
 
 ### catalog storefront view
-`catalog.storefront_offers` (SQL view, created by `CatalogModuleModel.DatabaseObjectsSql`): active product + active variant + price periods + available stock per fulfillment location. `catalog.storefront_preparation_charges` exposes charge periods. Periods are filtered by the application clock (`@at`), not `now()`, so tests and scheduled prices agree. If `inventory.stock_items` does not exist yet the offers view is created without stock (every offer out of stock); Catalog's database-objects SQL must run after Inventory's table exists to include stock (open item for the Inventory merge).
+`catalog.storefront_offers` (SQL view, created by `CatalogModuleModel.DatabaseObjectsSql`): active product + active variant + price periods + available stock per fulfillment location. `catalog.storefront_preparation_charges` exposes charge periods. Periods are filtered by the application clock (`@at`), not `now()`, so tests and scheduled prices agree. If `inventory.stock_items` does not exist yet the offers view is created without stock (every offer out of stock); The Migrations host runs every module's database-objects SQL after all migrations, so the view always includes stock.
 `catalog.storefront_locations`: pincode → active service area, fulfillment location and city (used to resolve `X-Pincode` inside the same read). These views are the only cross-schema reads outside Reporting.
 
 ### reporting (views only)
@@ -218,7 +218,16 @@ A job generates slots from templates 7 days ahead, skipping closures.
 
 Isolation: Read Committed. Decision D6 in `docs/decisions/log.md` moves pack, cancel and invoice follow-ons into event handlers.
 
-## 5. Seed data
+## 5. Migrations and database objects
+
+| Step | How |
+|---|---|
+| Schema | EF Core migrations in `backend/src/Hosts/FreshOrbit.Migrations/Persistence/Migrations` (first: `InitialCreate`, all schemas). Add one with `dotnet tool restore` then `dotnet ef migrations add <Name> --project src/Hosts/FreshOrbit.Migrations --output-dir Persistence/Migrations` from `backend/` (`dotnet-ef` 10.0.13 is a local tool in `backend/dotnet-tools.json`) |
+| Database objects | Views, materialized views, functions, triggers and exclusion constraints come from `IModuleModel.DatabaseObjectsSql`. They are not embedded in migrations: the Migrations host runs every module's statements after `MigrateAsync` on every run, in one transaction (each statement is idempotent) |
+| Reference data | Loaded next, every run (§6) |
+| First admin | `--create-admin --email <e> --name <n> --password <p>` after reference data (D18); refused once an active admin exists |
+
+## 6. Seed data
 
 | Kind | Where | Rule |
 |---|---|---|

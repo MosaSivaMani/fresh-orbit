@@ -44,7 +44,7 @@ backend/
   FreshOrbit.slnx  global.json  Directory.Build.props  Directory.Packages.props
   src/Hosts/FreshOrbit.Api            HTTP host: auth, Problem Details, Swagger, maps every module's endpoints
   src/Hosts/FreshOrbit.Worker         Hangfire server, outbox dispatcher, recurring jobs
-  src/Hosts/FreshOrbit.Migrations     EF migrations + reference/sample data loader, then exits
+  src/Hosts/FreshOrbit.Migrations     EF migrations, module database objects, reference data, --create-admin, sample data; then exits
   src/SharedKernel/FreshOrbit.SharedKernel                 Money, Weight, AggregateRoot, DomainEvent, Result, errors, EnumCodes, IClock
   src/SharedKernel/FreshOrbit.SharedKernel.EntityFramework FreshOrbitDbContext, IModuleModel, conventions, outbox/inbox
   src/SharedKernel/FreshOrbit.SharedKernel.Web             Problem Details, exception handler, If-Match, Idempotency-Key, paging, current user
@@ -88,7 +88,7 @@ backend/
 | Files | `IFileStorage` with MinIO (S3 API) implementation |
 | Payments | `IPaymentProvider`: `CashOnDelivery` (launch), `Fake` (tests), gateway adapter later |
 | Logging | Serilog to console (JSON in production) + OpenTelemetry traces |
-| Rate limits | ASP.NET Core rate limiter: OTP and login strict, checkout moderate |
+| Rate limits | ASP.NET Core rate limiter (Api host): OTP and login strict, checkout moderate, `refresh` and `search` per IP (API §1.9) |
 
 ## Key flows
 
