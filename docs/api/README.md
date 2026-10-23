@@ -261,6 +261,7 @@ Webhooks use the provider event id instead (§7).
 | BATCH_CODE_TAKEN | 409 | Batch code already used at the location |
 | BATCH_NOT_ACTIVE | 422 | Batch depleted, expired or discarded |
 | ADJUSTMENT_BELOW_ZERO | 422 | Adjustment would make on hand negative or below reserved |
+| DUPLICATE | 409 | Stock item already exists for the location and variant |
 | REASON_CODE_INVALID | 422 | Waste/adjust reason not allowed |
 
 ### Cart
@@ -836,6 +837,14 @@ Client return from the gateway never changes status; the client polls `GET /orde
 | GET | `/api/v1/admin/inventory/reservations` | inventory.view | | Active reservations |
 | GET | `/api/v1/admin/inventory/cold-chain` | inventory.view | | Logs: `fulfillmentLocationId`, `outOfRangeOnly` |
 | POST | `/api/v1/admin/inventory/cold-chain` | inventory.adjust | | Record temperature |
+
+Notes (E3, implemented):
+- `GET /availability` (§4.5) is served by Catalog (D3), not Inventory. `GET /stock` has no `q` filter yet (Catalog names are not in the inventory schema); filter by `fulfillmentLocationId`, `variantId`, `lowStockOnly`.
+- Quantities in request bodies are `{ "value": int, "unit": "GRAM" | "PIECE" }` and must match the stock item's unit.
+- Bodies: stock-items `{fulfillmentLocationId, variantId, lowStockThreshold}`; threshold `{lowStockThreshold}`; discard `{reasonCode, notes}`; waste `{stockItemId, batchId?, quantity, reasonCode, notes}`; adjustments `{stockItemId, kind: ADJUSTMENT_IN|ADJUSTMENT_OUT|RETURN, batchId?, quantity, reasonCode, notes}` (`RETURN` needs `batchId`); counts `{stockItemId, countedQuantity, batchId?, notes}`; cold-chain `{fulfillmentLocationId, storageUnit, temperatureC, recordedAt?}`.
+- Adjustment reasons: `DATA_ENTRY_ERROR`, `FOUND`, `LOST`, `THEFT`, `TRANSFER`, `OTHER` (notes required for `OTHER`).
+- `GET /batches` items carry `stockItemId` and `stockItemVersion` (the If-Match value for discard/adjust/count) and also accept a `stockItemId` filter. `GET /movements` also accepts `fulfillmentLocationId`; `GET /reservations` accepts `fulfillmentLocationId`, `orderId`, `status`.
+- Storage units and their ranges are reference data (`data/reference/inventory/storage-units.json`); the receipt check uses the `RECEIPT` unit.
 
 **POST /api/v1/admin/inventory/receipts** (`Idempotency-Key: 2b7e…`) → 201
 ```json
