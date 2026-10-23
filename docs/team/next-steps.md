@@ -74,3 +74,11 @@ Slots:
 ## 7. Notes
 - Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**. The next free number is **D54**.
 - Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
+
+## 8. Open items from Phase 3 integration (session `fresh-orbit-3a`)
+- Not built yet: wishlist with prices, `/home` banners from Promotions, `isWishlisted` on products.
+- `QuantityRules` exists in both Catalog and Cart; move to SharedKernel next to `LinePricing` when convenient.
+- Invoices need a saved business profile with GSTIN (D42). CA to confirm whether exempt fresh fish needs a bill of supply instead; until a GSTIN is saved, `ShipmentDelivered` retries and then dead-letters in Ordering.
+- Test hygiene: integration tests share one database per test assembly; list assertions must filter (e.g. `q=orderNumber`), never assume page 1 (fixed in `OrderLifecycleTests` at merge).
+- Old agent worktrees under `.claude/worktrees/` (Phase 2/3/5 branches, all merged) can be removed with `git worktree remove` once nobody needs them.
+- No agents of `fresh-orbit-3a` are running; nothing is in flight.
