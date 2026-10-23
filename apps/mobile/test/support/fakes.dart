@@ -78,9 +78,17 @@ class FakeCartRepository implements CartRepository {
   /// What the "server" returns after a write. Defaults to the current cart.
   Cart Function()? afterWrite;
 
+  /// When set, the next GET throws it (and is cleared).
+  Object? failGet;
+
   @override
   Future<Cart> get() async {
     calls.add('get');
+    final f = failGet;
+    if (f != null) {
+      failGet = null;
+      throw f;
+    }
     return current;
   }
 

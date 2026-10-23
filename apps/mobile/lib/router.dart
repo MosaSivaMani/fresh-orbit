@@ -6,11 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/account/address_screens.dart';
+import 'features/auth/login_screen.dart';
+import 'features/cart/cart_screen.dart';
 import 'features/catalog/home_screen.dart';
 import 'features/catalog/product_screen.dart';
 import 'features/catalog/search_screen.dart';
 import 'features/catalog/shop_screen.dart';
 import 'features/catalog/wishlist_screen.dart';
+import 'features/checkout/checkout_screen.dart';
+import 'features/checkout/order_success_screen.dart';
 import 'features/onboarding/location_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/splash_screen.dart';
@@ -50,6 +55,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/search', builder: (_, state) => SearchScreen(initialQuery: state.uri.queryParameters['q'])),
       GoRoute(path: '/product/:slug', builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!)),
       GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
+      GoRoute(path: '/login', builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from'])),
+      GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
+      GoRoute(
+        path: '/order-success/:orderId',
+        builder: (_, state) => OrderSuccessScreen(orderId: state.pathParameters['orderId']!),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
@@ -59,8 +70,29 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: '/shop', builder: (_, state) => ShopScreen(category: state.uri.queryParameters['category'])),
             ],
           ),
-          for (final tab in const ['/cart', '/orders', '/account'])
-            StatefulShellBranch(routes: [GoRoute(path: tab, builder: (_, _) => _Pending(tab))]),
+          StatefulShellBranch(routes: [GoRoute(path: '/cart', builder: (_, _) => const CartScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/orders', builder: (_, _) => const _Pending('/orders'))]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/account',
+                builder: (_, _) => const _Pending('/account'),
+                routes: [
+                  GoRoute(
+                    path: 'addresses',
+                    builder: (_, _) => const AddressesScreen(),
+                    routes: [
+                      GoRoute(path: 'new', builder: (_, _) => const AddressFormScreen()),
+                      GoRoute(
+                        path: ':addressId',
+                        builder: (_, state) => AddressFormScreen(addressId: state.pathParameters['addressId']),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     ],
