@@ -5,7 +5,7 @@ Last updated: 2026-10-24, when the owner paused work for the night. Everything o
 ## 1. State of `main` (434a8dd and later)
 | Part | Status |
 |---|---|
-| Backend modules | All on `main` except Cart, Promotions and Ordering, which are on `integration/phase3` (see §2) |
+| Backend modules | All on `main`, including Cart, Promotions and Ordering: Phase 3 merged by session `fresh-orbit-3a` at 4c3b36e. Build has 0 warnings; `dotnet test` 891/891; smoke 52/52; initial EF migration `InitialCreate` in `FreshOrbit.Migrations/Persistence/Migrations` |
 | Customer website `apps/web` | Merged (Phase 7). Uses TEMPORARY API types until Phase 3 lands |
 | Admin dashboard `apps/admin` | Merged (Phase 6). Home banners screen not built (needs Promotions) |
 | Mobile app `apps/mobile` (Flutter) | Merged (Phase 8). Not yet run on a device; no Android SDK or full Xcode on the dev Mac |
@@ -16,19 +16,18 @@ Last updated: 2026-10-24, when the owner paused work for the night. Everything o
 ## 2. Branches waiting to merge (in this order)
 | Branch | What | Waiting for |
 |---|---|---|
-| `integration/phase3` | Cart, Promotions, Ordering, plus shared changes | Another manager session (`fresh-orbit-3a`) merges it when build, tests and smoke are green. Do not merge `backend/` changes before it |
-| `fix/security-high` | SEC-1 (no OTP in logs, DLT SMS stub), SEC-2 (forwarded headers, split OTP limits), part of SEC-3; D36; `runbooks/security-configuration.md` | Phase 3 merge. Then: rename `RateLimiting:Otp` to `OtpRequest`/`OtpVerify` in the Phase 3 test factories, and add `.RequireRateLimiting(RateLimitPolicies.Coupon)` to `PUT /cart/coupon` |
-| `worktree-agent-a68eae478be810d8f` | Sample data (`backend/data/sample`), content drafts (`docs/content/`), validator in CI | Phase 3 merge. Log decisions S-D1 to S-D8 from `product/sample-data.md` §7 when merging |
+| `fix/security-high` | SEC-1 (no OTP in logs, DLT SMS stub), SEC-2 (forwarded headers, split OTP limits), part of SEC-3; D36; `runbooks/security-configuration.md` Ready to merge now. On merge, update the old names `RateLimiting:Otp`/`Login` in `Identity.Tests/Support/E1ApiFactory.cs:33-34`, Api `appsettings.json:16-17`, `RateLimitingSetup.cs:14,16,63-64`, `IdentityEndpoints.cs:35,41,62`, SharedKernel.Web `RateLimitPolicies.cs` and `runbooks/local-development.md` §4. Add `.RequireRateLimiting(RateLimitPolicies.Coupon)` to `PUT /cart/coupon` |
+| `worktree-agent-a68eae478be810d8f` | Sample data (`backend/data/sample`), content drafts (`docs/content/`), validator in CI | Ready to merge after `fix/security-high`. Log decisions S-D1 to S-D8 from `product/sample-data.md` §7 when merging |
 
-## 3. After the Phase 3 merge
+## 3. Next, now that Phase 3 is merged
 1. Merge the two branches above and run `dotnet test` (608+ tests expected).
-2. Create the first EF Core migration. Deploys stop at the migration step until it exists.
+2. The initial migration now exists; check that a deploy runs migrations and the reference loader end to end.
 3. Write the sample-data loaders (`product/sample-data.md`), then run the stack with sample data.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
 5. Close the API gaps listed in `design/web.md` §6 (W1–W10), `design/admin.md` §5 (G1–G12) and `design/mobile.md` §8.
 6. Publish clickable demo links for the website and admin running on sample data.
 
-## 4. Illustrated UI redesign (D42), not started
+## 4. Illustrated UI redesign (D53), not started
 The owner asked for a more modern UI with AI-generated 3D cartoon characters on every page and state. They shared screenshots from a friend's food app as reference only; nothing is to be copied. Two engineers were briefed and then stopped before writing any code. Relaunch them from these briefs:
 - **U1, design system** (start first): package `packages/illustrations`.
   - Package contents: `manifest.json` with the 33 slots below, a style prompt and a character sheet, our own placeholder SVGs, a `validate` script and a `sync-mobile` script.
@@ -71,3 +70,7 @@ Slots:
 - Product photos and the AI character images.
 - CA confirmation of GST rates.
 - A check of the fish names, yields and pincode groupings in the sample data.
+
+## 7. Notes
+- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**. The next free number is **D54**.
+- Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
