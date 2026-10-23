@@ -50,3 +50,8 @@ Read before working: `docs/architecture/README.md`, `docs/database/README.md`, `
 | Build backend | `dotnet build backend/FreshOrbit.slnx` |
 | Test backend | `dotnet test backend/FreshOrbit.slnx` (needs Docker running) |
 | Run API | `dotnet run --project backend/src/Hosts/FreshOrbit.Api` |
+| Install front-end workspace (pnpm 10, Node ≥ 22.18) | `pnpm install` |
+| Build / typecheck / lint / test front-end packages | `pnpm build` · `pnpm typecheck` · `pnpm lint` · `pnpm test` |
+| Component playground (http://localhost:5199) | `pnpm dev` |
+| Format front-end code | `pnpm format` (check: `pnpm format:check`) |
+| Regenerate API client types | `pnpm --filter @fresh/api-client fetch-spec` then `pnpm generate:api` |

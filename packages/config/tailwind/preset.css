@@ -1,0 +1,60 @@
+/*
+ * Fresh Orbit Tailwind v4 preset (CSS-first).
+ *
+ * Usage in an app stylesheet, in this order:
+ *   @import "tailwindcss";
+ *   @import "@fresh/config/tailwind.css";
+ *   @import "@fresh/ui/styles.css";      (only when the app uses @fresh/ui)
+ *
+ * Colours, radii, shadows, type scale and motion come from @fresh/design-tokens as CSS variables
+ * (light by default, dark under [data-theme="dark"] or .dark). Tailwind's default colour palette is
+ * removed by the generated theme so only token colours can be used.
+ */
+@import "@fresh/design-tokens/tokens.css";
+@import "@fresh/design-tokens/tailwind-theme.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--fo-color-border);
+  }
+
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html[data-theme="dark"],
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--fo-color-background);
+    color: var(--fo-color-text);
+    font-family: var(--fo-font-sans);
+    font-size: var(--fo-text-base);
+    line-height: var(--fo-text-base-line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--fo-color-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

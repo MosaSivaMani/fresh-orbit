@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@fresh/config/tailwind.css";
+@import "@fresh/ui/styles.css";
+
+/* The playground's own source. */
+@source "./";

@@ -1,0 +1,42 @@
+{
+  "name": "@fresh/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed FreshOrbit.Api client generated from the backend OpenAPI document (openapi-typescript + openapi-fetch).",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "fetch-spec": "node scripts/fetch-openapi.ts",
+    "generate": "openapi-typescript openapi.json --output src/schema.d.ts",
+    "check": "pnpm run generate && git diff --exit-code -- src/schema.d.ts",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fresh/core": "workspace:*",
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "@fresh/config": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
+    "@types/node": "26.6.5",
+    "eslint": "9.39.5",
+    "openapi-typescript": "7.13.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@fresh/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fresh Orbit design tokens: one JSON source generating CSS variables, a Tailwind v4 theme, a TypeScript object and Flutter tokens.",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tokens.css": {
+      "style": "./dist/tokens.css",
+      "default": "./dist/tokens.css"
+    },
+    "./tailwind-theme.css": {
+      "style": "./dist/tailwind-theme.css",
+      "default": "./dist/tailwind-theme.css"
+    },
+    "./tokens.json": "./tokens.json"
+  },
+  "files": [
+    "dist",
+    "tokens.json"
+  ],
+  "scripts": {
+    "build": "node scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}

@@ -1,0 +1,60 @@
+/*
+ * Tells Tailwind (v4) to scan @fresh/ui's built output for class names.
+ * Import after "tailwindcss" and "@fresh/config/tailwind.css" in the app stylesheet.
+ */
+@source "./dist";
+
+@keyframes fo-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fo-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fo-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fo-slide-in-bottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fo-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@theme {
+  --animate-fo-fade-in: fo-fade-in var(--fo-duration-normal) var(--fo-ease-enter);
+  --animate-fo-slide-in-right: fo-slide-in-right var(--fo-duration-slow) var(--fo-ease-enter);
+  --animate-fo-slide-in-left: fo-slide-in-left var(--fo-duration-slow) var(--fo-ease-enter);
+  --animate-fo-slide-in-bottom: fo-slide-in-bottom var(--fo-duration-slow) var(--fo-ease-enter);
+  --animate-fo-pop-in: fo-pop-in var(--fo-duration-normal) var(--fo-ease-enter);
+}
