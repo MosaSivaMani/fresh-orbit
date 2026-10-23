@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | 6 | E3 admin dashboard `apps/admin` on branch `worktree-agent-a2bb7e7afebae2ba6`: login/refresh/expiry, permission-driven shell and location switcher, dashboard, orders (list, detail, weigh and pack, substitutions, cancel, goodwill, pick list, complaints), inventory, products, pricing (bulk dry run), coupons, delivery, cities and locations (launch checklist), customers, reports + CSV, settings, staff and roles, audit log, payments, refunds, cash settlements, payment issues. Left: home banners. Screen inventory and API gaps G1–G12 in `docs/design/admin.md`; types TEMPORARY until Phase 3 | E3: root `pnpm build/typecheck/lint/test/format:check` green; admin 63 tests (15 files, MSW); Playwright smoke 2/2 |
 | 2026-10-23 | 5 | Merged E3 frontend packages; frontend CI job added; D32 | `pnpm build/typecheck/lint/test` all pass; 129 tests (tokens 66, core 29, ui 32, api-client 2) |
 | 2026-10-23 | 3 | Merged E2 into `main`; architecture tests updated for D30 | `dotnet test` 575/575 passed (adds Locations 42, Catalog 45, Pricing 26) |
 | 2026-10-23 | 3 | Merged E1 into `main`; rulings D30 (events in Public), D31 (shared 401/403/429/503) | `dotnet test` 462/462 passed (adds Identity 22, Customers 14, Settings 18, Audit 6, Notifications 18) |

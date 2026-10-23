@@ -32,6 +32,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** Shown only to staff holding this permission (the API enforces it too). */
   perm?: PermissionRequirement;
+  /** Other path prefixes that belong to this entry (for the highlighted item). */
+  also?: readonly string[];
 }
 
 export interface NavGroup {
@@ -117,6 +119,7 @@ export const NAVIGATION: readonly NavGroup[] = [
         href: "/cities",
         icon: <MapPinned aria-hidden="true" />,
         perm: "locations.manage",
+        also: ["/locations", "/service-areas"],
       },
       {
         id: "customers",
@@ -241,7 +244,9 @@ export function activeEntryId(pathname: string): string | undefined {
       const match =
         item.href === "/"
           ? pathname === "/"
-          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+          : [item.href, ...(item.also ?? [])].some(
+              (href) => pathname === href || pathname.startsWith(`${href}/`),
+            );
       if (match && (!best || item.href.length > best.href.length)) best = item;
     }
   }

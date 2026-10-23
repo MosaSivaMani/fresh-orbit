@@ -18,6 +18,10 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | tailwind-merge | 3.7.0 | MIT | ui | Conflict-free class merging |
 | openapi-fetch | 0.17.0 | MIT | api-client | Typed fetch client for generated paths |
 | tailwindcss | 4.3.3 | MIT | apps (CSS build) | Styling engine (output CSS ships) |
+| react-router | 7.18.4 | MIT | admin | Data router (`createBrowserRouter`, lazy routes). 7.x kept over 8.x: 8 was too new at adoption (2026-10-24) |
+| react-hook-form | 7.89.0 | MIT | admin | Forms; server field errors set with `setError` |
+| zod | 4.6.5 | MIT | admin | Form schemas (shape checks only; business rules stay on the server) |
+| @hookform/resolvers | 5.9.1 | MIT | admin | zod ↔ react-hook-form bridge |
 
 ## Development
 
@@ -51,6 +55,8 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | prettier-plugin-tailwindcss | 0.8.1 | MIT | Class sorting |
 | @types/react, @types/react-dom | 19.3.0 | MIT | Types |
 | @types/node | 26.6.5 | MIT | Types |
+| msw | 2.15.0 | MIT | API mocking in admin tests (2.x kept over 3.x, too new at adoption); its postinstall is skipped (`ignoredBuiltDependencies`) |
+| @playwright/test | 1.64.0 | Apache-2.0 | Admin end-to-end smoke test (`pnpm --filter @fresh/admin e2e`; browsers installed with `pnpm exec playwright install chromium`) |
 
 ## Planned (not installed yet)
 

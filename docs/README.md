@@ -12,4 +12,5 @@
 | Module rules | `product/*.md` |
 | Research: hosting, payments, mobile framework, reference ERP | `research/*.md` |
 | Design system (Phase 5) | `design/` |
+| Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
 | Runbooks (Phase 9) | `runbooks/` |
