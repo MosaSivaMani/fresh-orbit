@@ -132,7 +132,8 @@ class _HomeBody extends ConsumerWidget {
                     for (final c in data.featuredCategories)
                       ActionChip(
                         label: Text(c.name),
-                        onPressed: () => context.go(Uri(path: '/shop', queryParameters: {'category': c.slug}).toString()),
+                        onPressed: () =>
+                            context.go(Uri(path: '/shop', queryParameters: {'category': c.slug}).toString()),
                       ),
                   ],
                 ),

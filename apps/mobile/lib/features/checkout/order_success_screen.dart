@@ -59,7 +59,8 @@ class OrderSuccessScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: FreshSpacing.s3),
                 const InfoBanner(
-                  text: 'When your order is out for delivery, a 4-digit delivery code appears in Orders. '
+                  text:
+                      'When your order is out for delivery, a 4-digit delivery code appears in Orders. '
                       'Share it with the delivery partner when you receive your order.',
                 ),
                 const SizedBox(height: FreshSpacing.s5),

@@ -82,11 +82,11 @@ void main() {
 
   testWidgets('preview blockers are listed and placing is disabled', (tester) async {
     deps.orders.onPreview = (_) async => preview(
-          canPlaceOrder: false,
-          blockers: [
-            {'code': 'SLOT_FULL', 'lineId': null, 'message': 'This slot is full. Choose another slot.'},
-          ],
-        );
+      canPlaceOrder: false,
+      blockers: [
+        {'code': 'SLOT_FULL', 'lineId': null, 'message': 'This slot is full. Choose another slot.'},
+      ],
+    );
     await openAndChoose(tester);
 
     expect(find.text('This slot is full. Choose another slot.'), findsOneWidget);

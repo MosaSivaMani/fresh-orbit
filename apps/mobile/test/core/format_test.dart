@@ -70,7 +70,10 @@ void main() {
     });
 
     test('time range and calendar date without zone shift', () {
-      expect(formatTimeRange(DateTime.utc(2026, 10, 23, 8, 30), DateTime.utc(2026, 10, 23, 10, 30)), '2:00 pm – 4:00 pm');
+      expect(
+        formatTimeRange(DateTime.utc(2026, 10, 23, 8, 30), DateTime.utc(2026, 10, 23, 10, 30)),
+        '2:00 pm – 4:00 pm',
+      );
       expect(formatCalendarDate('2026-10-23'), 'Fri, 23 Oct');
     });
   });

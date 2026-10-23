@@ -92,9 +92,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Some cart items will be removed'),
-          content: Text(
-            e.detail ?? 'A few items in your cart are not sold at the store that delivers to $pincode.',
-          ),
+          content: Text(e.detail ?? 'A few items in your cart are not sold at the store that delivers to $pincode.'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep old pincode')),
             FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Change pincode')),
@@ -112,23 +110,14 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
     final theme = Theme.of(context);
     final query = _query;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Delivery location'),
-        automaticallyImplyLeading: widget.changing,
-      ),
+      appBar: AppBar(title: const Text('Delivery location'), automaticallyImplyLeading: widget.changing),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(FreshSpacing.s4),
           children: [
-            Semantics(
-              header: true,
-              child: Text('Where should we deliver?', style: theme.textTheme.headlineSmall),
-            ),
+            Semantics(header: true, child: Text('Where should we deliver?', style: theme.textTheme.headlineSmall)),
             const SizedBox(height: FreshSpacing.s2),
-            Text(
-              'Prices, stock and delivery slots depend on your area.',
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text('Prices, stock and delivery slots depend on your area.', style: theme.textTheme.bodyMedium),
             const SizedBox(height: FreshSpacing.s5),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,18 +136,26 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
                   ),
                 ),
                 const SizedBox(width: FreshSpacing.s3),
-                SizedBox(height: 56, child: FilledButton(onPressed: _check, child: const Text('Check'))),
+                SizedBox(
+                  height: 56,
+                  child: FilledButton(onPressed: _check, child: const Text('Check')),
+                ),
               ],
             ),
             const SizedBox(height: FreshSpacing.s5),
             if (query != null)
-              ref.watch(serviceabilityProvider(query)).when(
+              ref
+                  .watch(serviceabilityProvider(query))
+                  .when(
                     loading: () => const LoadingSemantics(
                       label: 'Checking pincode',
                       child: SkeletonBox(height: 160, radius: FreshRadius.lg),
                     ),
-                    error: (e, _) =>
-                        ErrorState(error: e, compact: true, onRetry: () => ref.invalidate(serviceabilityProvider(query))),
+                    error: (e, _) => ErrorState(
+                      error: e,
+                      compact: true,
+                      onRetry: () => ref.invalidate(serviceabilityProvider(query)),
+                    ),
                     data: (s) => s.serviceable
                         ? _ServiceableCard(s: s, saving: _saving, onConfirm: () => _confirm(s))
                         : _NotServiceable(
@@ -234,12 +231,12 @@ class _NotServiceable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        liveRegion: true,
-        child: EmptyState(
-          icon: Icons.location_off_outlined,
-          title: 'We don\'t deliver to $pincode yet',
-          message: 'We are adding new areas. Try a nearby pincode, such as your office.',
-          action: OutlinedButton(onPressed: onTryAnother, child: const Text('Try another pincode')),
-        ),
-      );
+    liveRegion: true,
+    child: EmptyState(
+      icon: Icons.location_off_outlined,
+      title: 'We don\'t deliver to $pincode yet',
+      message: 'We are adding new areas. Try a nearby pincode, such as your office.',
+      action: OutlinedButton(onPressed: onTryAnother, child: const Text('Try another pincode')),
+    ),
+  );
 }

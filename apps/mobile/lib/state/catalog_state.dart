@@ -26,10 +26,8 @@ class ProductListState {
 }
 
 /// Product list for a query (page is managed here; the query's own page is ignored).
-final productListProvider =
-    AsyncNotifierProvider.autoDispose.family<ProductListController, ProductListState, ProductQuery>(
-  ProductListController.new,
-);
+final productListProvider = AsyncNotifierProvider.autoDispose
+    .family<ProductListController, ProductListState, ProductQuery>(ProductListController.new);
 
 class ProductListController extends AsyncNotifier<ProductListState> {
   ProductListController(this.query);

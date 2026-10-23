@@ -55,7 +55,8 @@ List<T> reqList<T>(Json j, String field, T Function(Json) read) {
 }
 
 /// Lists are never omitted by the API (§1.1), but tolerate null as empty for forward compatibility.
-List<T> listOrEmpty<T>(Json j, String field, T Function(Json) read) => j[field] == null ? <T>[] : reqList(j, field, read);
+List<T> listOrEmpty<T>(Json j, String field, T Function(Json) read) =>
+    j[field] == null ? <T>[] : reqList(j, field, read);
 
 List<String> stringList(Json j, String field) {
   final v = j[field];

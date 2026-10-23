@@ -198,8 +198,12 @@ class FakeAccountRepository implements AccountRepository {
   Future<Profile> profile() async => me ?? _unexpected('profile');
 
   @override
-  Future<Profile> updateProfile({String? fullName, String? email, bool? marketingOptIn, required String version}) async =>
-      me ?? _unexpected('updateProfile');
+  Future<Profile> updateProfile({
+    String? fullName,
+    String? email,
+    bool? marketingOptIn,
+    required String version,
+  }) async => me ?? _unexpected('updateProfile');
 
   @override
   Future<void> deleteAccount({required String version}) async {}
@@ -268,28 +272,27 @@ class FakeAuthRepository implements AuthRepository {
     required String code,
     String? guestCartToken,
     String? deviceLabel,
-  }) =>
-      (onVerify ?? (_, _) => _unexpected('verifyOtp'))(code, guestCartToken);
+  }) => (onVerify ?? (_, _) => _unexpected('verifyOtp'))(code, guestCartToken);
 
   @override
   Future<void> logout(String refreshToken) async {}
 }
 
 Address address({String id = 'a1', String pincode = '600041', bool isDefault = true}) => Address.fromJson({
-      'addressId': id,
-      'label': 'HOME',
-      'recipientName': 'Sample Customer',
-      'phone': '+919876543210',
-      'line1': '12, 3rd Cross Street',
-      'line2': null,
-      'landmark': null,
-      'locality': 'Sample Nagar',
-      'cityName': 'Sample City',
-      'stateCode': 'TN',
-      'pincode': pincode,
-      'latitude': null,
-      'longitude': null,
-      'isDefault': isDefault,
-      'isServiceable': null,
-      'version': '1',
-    });
+  'addressId': id,
+  'label': 'HOME',
+  'recipientName': 'Sample Customer',
+  'phone': '+919876543210',
+  'line1': '12, 3rd Cross Street',
+  'line2': null,
+  'landmark': null,
+  'locality': 'Sample Nagar',
+  'cityName': 'Sample City',
+  'stateCode': 'TN',
+  'pincode': pincode,
+  'latitude': null,
+  'longitude': null,
+  'isDefault': isDefault,
+  'isServiceable': null,
+  'version': '1',
+});

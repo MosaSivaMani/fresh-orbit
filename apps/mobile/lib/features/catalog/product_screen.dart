@@ -43,8 +43,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   String? _quantityError;
   ProductDetail? _last;
 
-  Variant _variant(ProductDetail d) =>
-      d.variants.firstWhere((v) => v.id == _variantId, orElse: () => d.variants.first);
+  Variant _variant(ProductDetail d) => d.variants.firstWhere((v) => v.id == _variantId, orElse: () => d.variants.first);
 
   String? _prep(Variant v) {
     final chosen = v.preparations.where((p) => p.code == _prepCode && p.chargePaise != null);
@@ -82,7 +81,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          SnackBar(content: Text(text), action: SnackBarAction(label: 'View cart', onPressed: () => context.go('/cart'))),
+          SnackBar(
+            content: Text(text),
+            action: SnackBarAction(label: 'View cart', onPressed: () => context.go('/cart')),
+          ),
         );
     } on ApiError catch (e) {
       if (!mounted) return;
@@ -242,10 +244,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     onSelected: p.chargePaise == null
                         ? null
                         : (_) => setState(() {
-                              _prepCode = p.code;
-                              _requestedPrep = p.code;
-                              _quantityError = null;
-                            }),
+                            _prepCode = p.code;
+                            _requestedPrep = p.code;
+                            _quantityError = null;
+                          }),
                   ),
               ],
             ),
@@ -274,7 +276,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           if (_quantityError != null)
             Padding(
               padding: const EdgeInsets.only(top: FreshSpacing.s1),
-              child: Text(_quantityError!, style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).dangerText)),
+              child: Text(
+                _quantityError!,
+                style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).dangerText),
+              ),
             ),
           const SizedBox(height: FreshSpacing.s2),
           Text(
@@ -290,7 +295,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             InfoBanner(
               tone: BannerTone.success,
               title: 'In your cart: ${formatQuantity(line.quantity)}',
-              text: 'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
+              text:
+                  'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
                   '${formatRupees(line.maxLineTotalPaise)} (up to ${formatQuantity(line.maxChargeableQuantity)}).',
             ),
           ],
@@ -409,10 +415,7 @@ class _GalleryState extends State<_Gallery> {
           ),
         ),
         const SizedBox(height: FreshSpacing.s2),
-        Semantics(
-          label: 'Image ${_index + 1} of ${images.length}',
-          child: const SizedBox(height: 4),
-        ),
+        Semantics(label: 'Image ${_index + 1} of ${images.length}', child: const SizedBox(height: 4)),
       ],
     );
   }
@@ -427,9 +430,6 @@ class ProductImageView extends StatelessWidget {
   final double aspectRatio;
 
   @override
-  Widget build(BuildContext context) => ProductPhoto(
-        url: url,
-        semanticLabel: alt == null || alt!.isEmpty ? null : alt,
-        aspectRatio: aspectRatio,
-      );
+  Widget build(BuildContext context) =>
+      ProductPhoto(url: url, semanticLabel: alt == null || alt!.isEmpty ? null : alt, aspectRatio: aspectRatio);
 }

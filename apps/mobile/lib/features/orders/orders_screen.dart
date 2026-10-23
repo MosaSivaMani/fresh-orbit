@@ -70,7 +70,8 @@ class OrdersScreen extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Placed ${formatDateTime(o.placedAt)}'),
-                                    if (o.slot != null) Text('Delivery ${formatSlotWindow(o.slot!.startAt, o.slot!.endAt)}'),
+                                    if (o.slot != null)
+                                      Text('Delivery ${formatSlotWindow(o.slot!.startAt, o.slot!.endAt)}'),
                                     if (o.totalPaise != null) Text(formatRupees(o.totalPaise!)),
                                   ],
                                 ),

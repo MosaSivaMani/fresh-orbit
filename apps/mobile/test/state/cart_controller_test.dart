@@ -36,9 +36,9 @@ void main() {
 
     deps.cart.failNext = const ApiError(status: 422, code: 'OUT_OF_STOCK');
     await expectLater(
-      container.read(cartProvider.notifier).add(
-            const AddCartItem(variantId: 'v1', preparationCode: 'STEAK', quantity: Quantity(5000, 'GRAM')),
-          ),
+      container
+          .read(cartProvider.notifier)
+          .add(const AddCartItem(variantId: 'v1', preparationCode: 'STEAK', quantity: Quantity(5000, 'GRAM'))),
       throwsA(isA<ApiError>().having((e) => e.code, 'code', 'OUT_OF_STOCK')),
     );
 
@@ -52,9 +52,9 @@ void main() {
     await container.read(cartProvider.future);
 
     deps.cart.afterWrite = () => Cart.fromJson({...cartJson(), 'cartToken': 'gct_new'});
-    await container.read(cartProvider.notifier).add(
-          const AddCartItem(variantId: 'v1', preparationCode: 'STEAK', quantity: Quantity(500, 'GRAM')),
-        );
+    await container
+        .read(cartProvider.notifier)
+        .add(const AddCartItem(variantId: 'v1', preparationCode: 'STEAK', quantity: Quantity(500, 'GRAM')));
 
     expect(deps.tokens.guestCartToken, 'gct_new');
   });

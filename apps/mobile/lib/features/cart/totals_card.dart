@@ -17,16 +17,16 @@ class TotalsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget row(String label, String value, {TextStyle? style, Key? key}) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s1),
-          child: MergeSemantics(
-            child: Row(
-              children: [
-                Expanded(child: Text(label, style: style ?? theme.textTheme.bodyMedium)),
-                Text(value, key: key, style: style ?? theme.textTheme.bodyMedium),
-              ],
-            ),
-          ),
-        );
+      padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s1),
+      child: MergeSemantics(
+        child: Row(
+          children: [
+            Expanded(child: Text(label, style: style ?? theme.textTheme.bodyMedium)),
+            Text(value, key: key, style: style ?? theme.textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(FreshSpacing.s4),
@@ -84,7 +84,8 @@ class ShortfallBanners extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
             child: InfoBanner(
               tone: BannerTone.warning,
-              text: 'Add ${formatRupees(min)} more to place an order'
+              text:
+                  'Add ${formatRupees(min)} more to place an order'
                   '${totals.minOrderPaise == null ? '' : ' (minimum ${formatRupees(totals.minOrderPaise!)})'}.',
             ),
           ),

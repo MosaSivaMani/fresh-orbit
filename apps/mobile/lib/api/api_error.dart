@@ -76,7 +76,10 @@ class ApiError implements Exception {
           errors[key.toString()] = [
             for (final e in value)
               if (e is Map)
-                FieldError(code: (e['code'] ?? 'VALIDATION_FAILED').toString(), message: (e['message'] ?? '').toString())
+                FieldError(
+                  code: (e['code'] ?? 'VALIDATION_FAILED').toString(),
+                  message: (e['message'] ?? '').toString(),
+                )
               else
                 FieldError(code: 'VALIDATION_FAILED', message: e.toString()),
           ];
@@ -104,8 +107,7 @@ class ApiError implements Exception {
         code: switch (e.type) {
           DioExceptionType.connectionTimeout ||
           DioExceptionType.sendTimeout ||
-          DioExceptionType.receiveTimeout =>
-            timeout,
+          DioExceptionType.receiveTimeout => timeout,
           DioExceptionType.cancel => cancelled,
           _ => networkError,
         },
@@ -114,8 +116,11 @@ class ApiError implements Exception {
     final status = response.statusCode ?? 0;
     final data = response.data;
     if (data is Map) {
-      return ApiError.fromProblem(status, data.cast<String, dynamic>(),
-          retryAfterHeader: response.headers.value('retry-after'));
+      return ApiError.fromProblem(
+        status,
+        data.cast<String, dynamic>(),
+        retryAfterHeader: response.headers.value('retry-after'),
+      );
     }
     return ApiError(
       status: status,
@@ -126,27 +131,32 @@ class ApiError implements Exception {
 
   /// Any thrown object → ApiError (FormatException from a model means the response did not match the contract).
   factory ApiError.from(Object error) => switch (error) {
-        final ApiError e => e,
-        final DioException e when e.error is ApiError => e.error! as ApiError,
-        final DioException e => ApiError.fromDio(e),
-        final FormatException e => ApiError(status: 0, code: responseInvalid, detail: null, extensions: {'reason': e.message}),
-        _ => const ApiError(status: 0, code: unknown),
-      };
+    final ApiError e => e,
+    final DioException e when e.error is ApiError => e.error! as ApiError,
+    final DioException e => ApiError.fromDio(e),
+    final FormatException e => ApiError(
+      status: 0,
+      code: responseInvalid,
+      detail: null,
+      extensions: {'reason': e.message},
+    ),
+    _ => const ApiError(status: 0, code: unknown),
+  };
 
   static String _fallbackCode(int status) => switch (status) {
-        400 => 'MALFORMED_REQUEST',
-        401 => 'UNAUTHENTICATED',
-        403 => 'FORBIDDEN',
-        404 => 'NOT_FOUND',
-        409 => 'CONFLICT',
-        412 => 'CONCURRENCY_CONFLICT',
-        422 => 'VALIDATION_FAILED',
-        428 => 'VERSION_REQUIRED',
-        429 => 'RATE_LIMITED',
-        503 => 'SERVICE_UNAVAILABLE',
-        >= 500 => 'INTERNAL_ERROR',
-        _ => unknown,
-      };
+    400 => 'MALFORMED_REQUEST',
+    401 => 'UNAUTHENTICATED',
+    403 => 'FORBIDDEN',
+    404 => 'NOT_FOUND',
+    409 => 'CONFLICT',
+    412 => 'CONCURRENCY_CONFLICT',
+    422 => 'VALIDATION_FAILED',
+    428 => 'VERSION_REQUIRED',
+    429 => 'RATE_LIMITED',
+    503 => 'SERVICE_UNAVAILABLE',
+    >= 500 => 'INTERNAL_ERROR',
+    _ => unknown,
+  };
 
   @override
   String toString() => 'ApiError($status $code${traceId == null ? '' : ' trace=$traceId'})';

@@ -40,11 +40,11 @@ class Paged<T> {
   const Paged({required this.items, required this.page, required this.pageSize, required this.totalCount});
 
   factory Paged.fromJson(Json j, T Function(Json) read) => Paged(
-        items: reqList(j, 'items', read),
-        page: reqInt(j, 'page'),
-        pageSize: reqInt(j, 'pageSize'),
-        totalCount: reqInt(j, 'totalCount'),
-      );
+    items: reqList(j, 'items', read),
+    page: reqInt(j, 'page'),
+    pageSize: reqInt(j, 'pageSize'),
+    totalCount: reqInt(j, 'totalCount'),
+  );
 
   final List<T> items;
   final int page;
@@ -58,7 +58,8 @@ class Paged<T> {
 class Availability {
   const Availability({required this.status, this.message});
 
-  factory Availability.fromJson(Json j) => Availability(status: reqString(j, 'status'), message: optString(j, 'message'));
+  factory Availability.fromJson(Json j) =>
+      Availability(status: reqString(j, 'status'), message: optString(j, 'message'));
 
   final String status;
   final String? message;

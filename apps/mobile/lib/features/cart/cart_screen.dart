@@ -44,15 +44,15 @@ class CartScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: switch (cart.value) {
         final Cart c when !c.isEmpty && c.totals != null => SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(FreshSpacing.s4),
-              child: PrimaryButton(
-                key: const Key('checkoutButton'),
-                label: 'Checkout · ${formatRupees(c.totals!.estimatedTotalPaise)}',
-                onPressed: c.canCheckout ? () => context.push('/checkout') : null,
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(FreshSpacing.s4),
+            child: PrimaryButton(
+              key: const Key('checkoutButton'),
+              label: 'Checkout · ${formatRupees(c.totals!.estimatedTotalPaise)}',
+              onPressed: c.canCheckout ? () => context.push('/checkout') : null,
             ),
           ),
+        ),
         _ => null,
       },
     );
@@ -70,12 +70,12 @@ class _CartBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(FreshSpacing.s4),
       children: [
-        Text('${cart.lineCount} ${cart.lineCount == 1 ? 'item' : 'items'}', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          '${cart.lineCount} ${cart.lineCount == 1 ? 'item' : 'items'}',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: FreshSpacing.s3),
-        for (final line in cart.lines) ...[
-          _CartLineTile(line: line),
-          const SizedBox(height: FreshSpacing.s3),
-        ],
+        for (final line in cart.lines) ...[_CartLineTile(line: line), const SizedBox(height: FreshSpacing.s3)],
         const _CouponBox(),
         const SizedBox(height: FreshSpacing.s3),
         for (final b in cart.checkoutBlockers)
@@ -83,12 +83,12 @@ class _CartBody extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
             child: InfoBanner(tone: BannerTone.danger, text: b.message.isEmpty ? humanizeCode(b.code) : b.message),
           ),
-        if (totals != null) ...[
-          ShortfallBanners(totals: totals),
-          TotalsCard(totals: totals),
-        ],
+        if (totals != null) ...[ShortfallBanners(totals: totals), TotalsCard(totals: totals)],
         for (final m in cart.messages)
-          Padding(padding: const EdgeInsets.only(top: FreshSpacing.s2), child: InfoBanner(text: m)),
+          Padding(
+            padding: const EdgeInsets.only(top: FreshSpacing.s2),
+            child: InfoBanner(text: m),
+          ),
       ],
     );
   }
@@ -157,7 +157,10 @@ class _CartLineTileState extends ConsumerState<_CartLineTile> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(width: 72, child: ProductPhoto(url: line.imageUrl, radius: FreshRadius.md)),
+                  SizedBox(
+                    width: 72,
+                    child: ProductPhoto(url: line.imageUrl, radius: FreshRadius.md),
+                  ),
                   const SizedBox(width: FreshSpacing.s3),
                   Expanded(
                     child: Column(
@@ -170,7 +173,11 @@ class _CartLineTileState extends ConsumerState<_CartLineTile> {
                         ),
                         const SizedBox(height: FreshSpacing.s1),
                         Text(formatQuantity(line.quantity), style: theme.textTheme.bodyMedium),
-                        PriceTag(paise: line.estimatedLineTotalPaise, prefix: 'Estimated', style: theme.textTheme.titleSmall),
+                        PriceTag(
+                          paise: line.estimatedLineTotalPaise,
+                          prefix: 'Estimated',
+                          style: theme.textTheme.titleSmall,
+                        ),
                         if (line.maxLineTotalPaise != line.estimatedLineTotalPaise)
                           Text(
                             'At most ${formatRupees(line.maxLineTotalPaise)} for up to ${formatQuantity(line.maxChargeableQuantity)}',
@@ -195,7 +202,10 @@ class _CartLineTileState extends ConsumerState<_CartLineTile> {
               ],
               for (final issue in line.issues) ...[
                 const SizedBox(height: FreshSpacing.s2),
-                InfoBanner(tone: BannerTone.danger, text: issue.message.isEmpty ? humanizeCode(issue.code) : issue.message),
+                InfoBanner(
+                  tone: BannerTone.danger,
+                  text: issue.message.isEmpty ? humanizeCode(issue.code) : issue.message,
+                ),
               ],
               const SizedBox(height: FreshSpacing.s1),
               Align(
@@ -347,11 +357,16 @@ class _CouponBoxState extends ConsumerState<_CouponBox> {
             child: InfoBanner(
               tone: applied ? BannerTone.success : BannerTone.warning,
               title: coupon.code,
-              text: coupon.message ??
+              text:
+                  coupon.message ??
                   (applied ? 'Applied: you save ${formatRupees(coupon.discountPaise)}.' : humanizeCode(coupon.status)),
             ),
           ),
-          IconButton(tooltip: 'Remove coupon ${coupon.code}', onPressed: _busy ? null : _remove, icon: const Icon(Icons.close)),
+          IconButton(
+            tooltip: 'Remove coupon ${coupon.code}',
+            onPressed: _busy ? null : _remove,
+            icon: const Icon(Icons.close),
+          ),
         ],
       );
     }
@@ -368,7 +383,10 @@ class _CouponBoxState extends ConsumerState<_CouponBox> {
           ),
         ),
         const SizedBox(width: FreshSpacing.s2),
-        SizedBox(height: 56, child: OutlinedButton(onPressed: _busy ? null : _apply, child: const Text('Apply'))),
+        SizedBox(
+          height: 56,
+          child: OutlinedButton(onPressed: _busy ? null : _apply, child: const Text('Apply')),
+        ),
       ],
     );
   }

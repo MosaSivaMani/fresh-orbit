@@ -11,14 +11,7 @@ import 'states.dart';
 
 /// Paise in, ₹ out: price, optional struck-through compare-at price ("Original price"), optional unit.
 class PriceTag extends StatelessWidget {
-  const PriceTag({
-    super.key,
-    required this.paise,
-    this.compareAtPaise,
-    this.perUnit,
-    this.prefix,
-    this.style,
-  });
+  const PriceTag({super.key, required this.paise, this.compareAtPaise, this.perUnit, this.prefix, this.style});
 
   final int paise;
   final int? compareAtPaise;
@@ -235,7 +228,13 @@ String paymentMethodLabel(String code) => paymentMethodLabels[code] ?? humanizeC
 
 /// Network image with a calm placeholder; decorative unless [semanticLabel] is given.
 class ProductPhoto extends StatelessWidget {
-  const ProductPhoto({super.key, required this.url, this.semanticLabel, this.aspectRatio = 1, this.radius = FreshRadius.lg});
+  const ProductPhoto({
+    super.key,
+    required this.url,
+    this.semanticLabel,
+    this.aspectRatio = 1,
+    this.radius = FreshRadius.lg,
+  });
 
   final String? url;
   final String? semanticLabel;

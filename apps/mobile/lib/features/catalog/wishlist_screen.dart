@@ -59,9 +59,10 @@ class WishlistScreen extends ConsumerWidget {
                         trailing: IconButton(
                           tooltip: 'Remove from wishlist',
                           icon: const Icon(Icons.delete_outline),
-                          onPressed: () => ref.read(wishlistProvider.notifier).toggle(e.productId).catchError((Object err) {
-                            if (context.mounted) showErrorSnack(context, err);
-                          }),
+                          onPressed: () =>
+                              ref.read(wishlistProvider.notifier).toggle(e.productId).catchError((Object err) {
+                                if (context.mounted) showErrorSnack(context, err);
+                              }),
                         ),
                       ),
                   ],

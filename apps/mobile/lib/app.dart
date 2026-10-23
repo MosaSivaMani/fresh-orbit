@@ -11,10 +11,10 @@ final themeModeProvider = NotifierProvider<ThemeModeController, ThemeMode>(Theme
 class ThemeModeController extends Notifier<ThemeMode> {
   @override
   ThemeMode build() => switch (ref.read(appPrefsProvider).themeMode) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
 
   Future<void> set(ThemeMode mode) async {
     await ref.read(appPrefsProvider).setThemeMode(mode.name);

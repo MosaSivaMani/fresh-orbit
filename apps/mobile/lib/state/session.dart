@@ -23,7 +23,9 @@ class SessionController extends Notifier<SessionState> {
 
   Future<VerifyOtpResult> verifyOtp({required String challengeId, required String phone, required String code}) async {
     final tokens = ref.read(tokenStoreProvider);
-    final result = await ref.read(authRepositoryProvider).verifyOtp(
+    final result = await ref
+        .read(authRepositoryProvider)
+        .verifyOtp(
           challengeId: challengeId,
           phone: phone,
           code: code,

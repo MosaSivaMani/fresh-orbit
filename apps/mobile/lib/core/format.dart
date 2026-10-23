@@ -74,20 +74,20 @@ String formatWeightRange(int minGrams, int maxGrams) {
 
 /// GRAM → weight · PIECE → "6 pieces" · PACK → "1 pack".
 String formatQuantity(Quantity q) => switch (q.unit) {
-      'GRAM' => formatWeight(q.value),
-      'PIECE' => q.value == 1 ? '1 piece' : '${q.value} pieces',
-      'PACK' => q.value == 1 ? '1 pack' : '${q.value} packs',
-      _ => '${q.value} ${q.unit.toLowerCase()}',
-    };
+  'GRAM' => formatWeight(q.value),
+  'PIECE' => q.value == 1 ? '1 piece' : '${q.value} pieces',
+  'PACK' => q.value == 1 ? '1 pack' : '${q.value} packs',
+  _ => '${q.value} ${q.unit.toLowerCase()}',
+};
 
 /// Price unit suffix: KG → "/kg", PIECE → "/piece", PACK → "/pack".
 String formatPerUnit(String unit) => switch (unit) {
-      'KG' => '/kg',
-      'GRAM' => '/g',
-      'PIECE' => '/piece',
-      'PACK' => '/pack',
-      _ => '/${unit.toLowerCase()}',
-    };
+  'KG' => '/kg',
+  'GRAM' => '/g',
+  'PIECE' => '/piece',
+  'PACK' => '/pack',
+  _ => '/${unit.toLowerCase()}',
+};
 
 /// 500 → 5% · 1250 → 12.5% · 7000 → 70%.
 String formatPercentFromBp(int bp) {

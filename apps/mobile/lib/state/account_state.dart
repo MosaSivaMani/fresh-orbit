@@ -19,12 +19,9 @@ class ProfileController extends AsyncNotifier<Profile?> {
   Future<void> save({String? fullName, String? email, bool? marketingOptIn}) async {
     final current = state.value;
     if (current == null) return;
-    final updated = await ref.read(accountRepositoryProvider).updateProfile(
-          fullName: fullName,
-          email: email,
-          marketingOptIn: marketingOptIn,
-          version: current.version,
-        );
+    final updated = await ref
+        .read(accountRepositoryProvider)
+        .updateProfile(fullName: fullName, email: email, marketingOptIn: marketingOptIn, version: current.version);
     state = AsyncData(updated);
   }
 
@@ -53,7 +50,9 @@ class AddressesController extends AsyncNotifier<List<Address>> {
   }
 
   Future<Address> replace(Address existing, AddressInput input) async {
-    final saved = await ref.read(accountRepositoryProvider).replaceAddress(existing.id, input, version: existing.version);
+    final saved = await ref
+        .read(accountRepositoryProvider)
+        .replaceAddress(existing.id, input, version: existing.version);
     await _reload();
     return saved;
   }
@@ -118,8 +117,9 @@ class InboxController extends AsyncNotifier<InboxPage> {
   }
 }
 
-final preferencesProvider =
-    AsyncNotifierProvider<PreferencesController, List<NotificationPreference>>(PreferencesController.new);
+final preferencesProvider = AsyncNotifierProvider<PreferencesController, List<NotificationPreference>>(
+  PreferencesController.new,
+);
 
 class PreferencesController extends AsyncNotifier<List<NotificationPreference>> {
   @override

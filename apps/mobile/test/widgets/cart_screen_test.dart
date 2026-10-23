@@ -11,7 +11,9 @@ void main() {
   testWidgets('renders server line prices, availability, totals and enables checkout', (tester) async {
     final deps = TestDeps(pincode: '600041');
     deps.cart.current = Cart.fromJson(
-      cartJson(lines: [cartLineJson(availability: 'LOW_STOCK', availabilityMessage: 'Only 1.5 kg left today.')]),
+      cartJson(
+        lines: [cartLineJson(availability: 'LOW_STOCK', availabilityMessage: 'Only 1.5 kg left today.')],
+      ),
     );
     await pumpScreen(tester, deps, const CartScreen());
     await tester.pumpAndSettle();
@@ -81,9 +83,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('The code is not valid for this cart.'), findsOneWidget);
 
-    deps.cart.afterWrite = () => cart(
-          coupon: {'code': 'FRESH100', 'status': 'APPLIED', 'discountPaise': 10000, 'message': null},
-        );
+    deps.cart.afterWrite = () =>
+        cart(coupon: {'code': 'FRESH100', 'status': 'APPLIED', 'discountPaise': 10000, 'message': null});
     await tester.enterText(find.widgetWithText(TextField, 'Coupon code'), 'fresh100');
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();

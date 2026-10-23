@@ -26,11 +26,11 @@ class CheckoutSelection {
   final String substitutionPreference;
 
   Json toJson() => {
-        'addressId': addressId,
-        'deliverySlotId': deliverySlotId,
-        'paymentMethod': paymentMethod,
-        'substitutionPreference': substitutionPreference,
-      };
+    'addressId': addressId,
+    'deliverySlotId': deliverySlotId,
+    'paymentMethod': paymentMethod,
+    'substitutionPreference': substitutionPreference,
+  };
 }
 
 class PlaceOrderRequest {
@@ -42,24 +42,20 @@ class PlaceOrderRequest {
   final int expectedTotalPaise;
   final String? customerNotes;
 
-  Json toJson() => {
-        ...selection.toJson(),
-        'customerNotes': customerNotes,
-        'expectedTotalPaise': expectedTotalPaise,
-      };
+  Json toJson() => {...selection.toJson(), 'customerNotes': customerNotes, 'expectedTotalPaise': expectedTotalPaise};
 }
 
 class PreviewAddress {
   const PreviewAddress({required this.id, this.label, this.line1, this.locality, this.pincode, this.isServiceable});
 
   factory PreviewAddress.fromJson(Json j) => PreviewAddress(
-        id: reqString(j, 'id'),
-        label: optString(j, 'label'),
-        line1: optString(j, 'line1'),
-        locality: optString(j, 'locality'),
-        pincode: optString(j, 'pincode'),
-        isServiceable: optBool(j, 'isServiceable'),
-      );
+    id: reqString(j, 'id'),
+    label: optString(j, 'label'),
+    line1: optString(j, 'line1'),
+    locality: optString(j, 'locality'),
+    pincode: optString(j, 'pincode'),
+    isServiceable: optBool(j, 'isServiceable'),
+  );
 
   final String id;
   final String? label;
@@ -73,12 +69,12 @@ class PreviewSlot {
   const PreviewSlot({required this.id, required this.startAt, required this.endAt, this.cutoffAt, this.status});
 
   factory PreviewSlot.fromJson(Json j) => PreviewSlot(
-        id: reqString(j, 'id'),
-        startAt: reqInstant(j, 'startAt'),
-        endAt: reqInstant(j, 'endAt'),
-        cutoffAt: optInstant(j, 'cutoffAt'),
-        status: optString(j, 'status'),
-      );
+    id: reqString(j, 'id'),
+    startAt: reqInstant(j, 'startAt'),
+    endAt: reqInstant(j, 'endAt'),
+    cutoffAt: optInstant(j, 'cutoffAt'),
+    status: optString(j, 'status'),
+  );
 
   final String id;
   final DateTime startAt;
@@ -91,10 +87,10 @@ class PaymentMethodOption {
   const PaymentMethodOption({required this.method, required this.enabled, this.reasonCode});
 
   factory PaymentMethodOption.fromJson(Json j) => PaymentMethodOption(
-        method: reqString(j, 'method'),
-        enabled: reqBool(j, 'enabled'),
-        reasonCode: optString(j, 'reasonCode'),
-      );
+    method: reqString(j, 'method'),
+    enabled: reqBool(j, 'enabled'),
+    reasonCode: optString(j, 'reasonCode'),
+  );
 
   final String method;
   final bool enabled;

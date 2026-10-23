@@ -13,11 +13,11 @@ class OtpChallenge {
   });
 
   factory OtpChallenge.fromJson(Json j) => OtpChallenge(
-        challengeId: reqString(j, 'challengeId'),
-        expiresAt: reqInstant(j, 'expiresAt'),
-        resendAfterSeconds: reqInt(j, 'resendAfterSeconds'),
-        codeLength: reqInt(j, 'codeLength'),
-      );
+    challengeId: reqString(j, 'challengeId'),
+    expiresAt: reqInstant(j, 'expiresAt'),
+    resendAfterSeconds: reqInt(j, 'resendAfterSeconds'),
+    codeLength: reqInt(j, 'codeLength'),
+  );
 
   final String challengeId;
   final DateTime expiresAt;
@@ -35,11 +35,11 @@ class TokenPair {
   });
 
   factory TokenPair.fromJson(Json j) => TokenPair(
-        accessToken: reqString(j, 'accessToken'),
-        accessTokenExpiresAt: reqInstant(j, 'accessTokenExpiresAt'),
-        refreshToken: reqString(j, 'refreshToken'),
-        refreshTokenExpiresAt: reqInstant(j, 'refreshTokenExpiresAt'),
-      );
+    accessToken: reqString(j, 'accessToken'),
+    accessTokenExpiresAt: reqInstant(j, 'accessTokenExpiresAt'),
+    refreshToken: reqString(j, 'refreshToken'),
+    refreshTokenExpiresAt: reqInstant(j, 'refreshTokenExpiresAt'),
+  );
 
   final String accessToken;
   final DateTime accessTokenExpiresAt;
@@ -51,11 +51,11 @@ class AuthUser {
   const AuthUser({required this.id, required this.phone, this.fullName, required this.isNewCustomer});
 
   factory AuthUser.fromJson(Json j) => AuthUser(
-        id: reqString(j, 'id'),
-        phone: optString(j, 'phone'),
-        fullName: optString(j, 'fullName'),
-        isNewCustomer: optBool(j, 'isNewCustomer') ?? false,
-      );
+    id: reqString(j, 'id'),
+    phone: optString(j, 'phone'),
+    fullName: optString(j, 'fullName'),
+    isNewCustomer: optBool(j, 'isNewCustomer') ?? false,
+  );
 
   final String id;
   final String? phone;

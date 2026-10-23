@@ -11,7 +11,11 @@ class FakeAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
     requests.add(options.copyWith(headers: Map.of(options.headers), extra: Map.of(options.extra)));
     final reply = await handler(options);
     if (reply.networkError) {
@@ -36,11 +40,7 @@ class FakeAdapter implements HttpClientAdapter {
 class FakeReply {
   const FakeReply(this.status, [this.body, this.headers = const {}]) : networkError = false;
 
-  const FakeReply.offline()
-      : status = 0,
-        body = null,
-        headers = const {},
-        networkError = true;
+  const FakeReply.offline() : status = 0, body = null, headers = const {}, networkError = true;
 
   final int status;
   final Object? body;
@@ -49,10 +49,10 @@ class FakeReply {
 }
 
 Map<String, Object?> problem(int status, String code, {Map<String, Object?> extra = const {}}) => {
-      'type': 'https://api.freshorbit.in/problems/${code.toLowerCase()}',
-      'title': 'Refused.',
-      'status': status,
-      'code': code,
-      'traceId': '00-trace-$code',
-      ...extra,
-    };
+  'type': 'https://api.freshorbit.in/problems/${code.toLowerCase()}',
+  'title': 'Refused.',
+  'status': status,
+  'code': code,
+  'traceId': '00-trace-$code',
+  ...extra,
+};

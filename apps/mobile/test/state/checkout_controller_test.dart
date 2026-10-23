@@ -110,10 +110,8 @@ void main() {
   });
 
   test('declining a price change keeps the new preview and places nothing', () async {
-    deps.orders.onPlace = (_, _) async => throw ApiError.fromProblem(409, {
-          'code': 'PRICE_CHANGED',
-          'preview': previewJson(expectedTotal: 72000),
-        });
+    deps.orders.onPlace = (_, _) async =>
+        throw ApiError.fromProblem(409, {'code': 'PRICE_CHANGED', 'preview': previewJson(expectedTotal: 72000)});
     await choose();
     await controller().placeOrder();
 
@@ -126,11 +124,11 @@ void main() {
 
   test('blockers in the preview disable placing', () async {
     deps.orders.onPreview = (_) async => preview(
-          canPlaceOrder: false,
-          blockers: [
-            {'code': 'MIN_ORDER_NOT_MET', 'lineId': null, 'message': 'Add ₹100 more to place this order.'},
-          ],
-        );
+      canPlaceOrder: false,
+      blockers: [
+        {'code': 'MIN_ORDER_NOT_MET', 'lineId': null, 'message': 'Add ₹100 more to place this order.'},
+      ],
+    );
     await choose();
 
     expect(state().canPlace, isFalse);

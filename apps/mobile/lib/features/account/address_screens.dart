@@ -72,19 +72,24 @@ class AddressesScreen extends ConsumerWidget {
                               Text(humanizeCode(a.label), style: Theme.of(context).textTheme.titleSmall),
                               const SizedBox(width: FreshSpacing.s2),
                               if (a.isDefault) const FreshBadge(label: 'Default', tone: BannerTone.success),
-                              if (a.isServiceable == false) const FreshBadge(label: 'Not serviceable', tone: BannerTone.danger),
+                              if (a.isServiceable == false)
+                                const FreshBadge(label: 'Not serviceable', tone: BannerTone.danger),
                             ],
                           ),
                           Text('${a.recipientName} · ${formatPhone(a.phone)}'),
                           Text(a.oneLine),
                           Wrap(
                             children: [
-                              TextButton(onPressed: () => context.push('/account/addresses/${a.id}'), child: const Text('Edit')),
+                              TextButton(
+                                onPressed: () => context.push('/account/addresses/${a.id}'),
+                                child: const Text('Edit'),
+                              ),
                               if (!a.isDefault)
                                 TextButton(
-                                  onPressed: () => ref.read(addressesProvider.notifier).makeDefault(a.id).catchError((Object e) {
-                                    if (context.mounted) showErrorSnack(context, e);
-                                  }),
+                                  onPressed: () =>
+                                      ref.read(addressesProvider.notifier).makeDefault(a.id).catchError((Object e) {
+                                        if (context.mounted) showErrorSnack(context, e);
+                                      }),
                                   child: const Text('Make default'),
                                 ),
                               TextButton(onPressed: () => _delete(context, ref, a), child: const Text('Delete')),
@@ -114,7 +119,17 @@ class AddressFormScreen extends ConsumerStatefulWidget {
 class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
   final _form = GlobalKey<FormState>();
   final _c = <String, TextEditingController>{
-    for (final f in ['recipientName', 'phone', 'line1', 'line2', 'landmark', 'locality', 'cityName', 'stateCode', 'pincode'])
+    for (final f in [
+      'recipientName',
+      'phone',
+      'line1',
+      'line2',
+      'landmark',
+      'locality',
+      'cityName',
+      'stateCode',
+      'pincode',
+    ])
       f: TextEditingController(),
   };
   String _label = 'HOME';
@@ -196,24 +211,23 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     String? Function(String)? check,
     String? prefix,
     Iterable<String>? autofill,
-  }) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: FreshSpacing.s3),
-        child: TextFormField(
-          controller: _c[name],
-          keyboardType: keyboard,
-          inputFormatters: formatters,
-          autofillHints: autofill,
-          decoration: InputDecoration(labelText: required ? label : '$label (optional)', prefixText: prefix),
-          validator: (v) {
-            final value = (v ?? '').trim();
-            if (_serverErrors[name] != null) return _serverErrors[name];
-            if (required && value.isEmpty) return 'Enter the ${label.toLowerCase()}.';
-            if (value.isNotEmpty && check != null) return check(value);
-            return null;
-          },
-        ),
-      );
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: FreshSpacing.s3),
+    child: TextFormField(
+      controller: _c[name],
+      keyboardType: keyboard,
+      inputFormatters: formatters,
+      autofillHints: autofill,
+      decoration: InputDecoration(labelText: required ? label : '$label (optional)', prefixText: prefix),
+      validator: (v) {
+        final value = (v ?? '').trim();
+        if (_serverErrors[name] != null) return _serverErrors[name];
+        if (required && value.isEmpty) return 'Enter the ${label.toLowerCase()}.';
+        if (value.isNotEmpty && check != null) return check(value);
+        return null;
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +246,10 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               : const EmptyState(icon: Icons.location_off_outlined, title: 'Address not found'),
         );
       } else {
-        return Scaffold(appBar: AppBar(title: const Text('Edit address')), body: const ListSkeleton(rows: 4));
+        return Scaffold(
+          appBar: AppBar(title: const Text('Edit address')),
+          body: const ListSkeleton(rows: 4),
+        );
       }
     }
     return Scaffold(
@@ -247,7 +264,11 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 spacing: FreshSpacing.s2,
                 children: [
                   for (final l in const ['HOME', 'WORK', 'OTHER'])
-                    ChoiceChip(label: Text(humanizeCode(l)), selected: _label == l, onSelected: (_) => setState(() => _label = l)),
+                    ChoiceChip(
+                      label: Text(humanizeCode(l)),
+                      selected: _label == l,
+                      onSelected: (_) => setState(() => _label = l),
+                    ),
                 ],
               ),
               const SizedBox(height: FreshSpacing.s3),

@@ -19,13 +19,13 @@ class OrderAmounts {
   });
 
   factory OrderAmounts.fromJson(Json j) => OrderAmounts(
-        itemsPaise: optInt(j, 'itemsPaise') ?? 0,
-        preparationPaise: optInt(j, 'preparationPaise') ?? 0,
-        discountPaise: optInt(j, 'discountPaise') ?? 0,
-        deliveryFeePaise: optInt(j, 'deliveryFeePaise') ?? 0,
-        taxPaise: optInt(j, 'taxPaise') ?? 0,
-        totalPaise: reqInt(j, 'totalPaise'),
-      );
+    itemsPaise: optInt(j, 'itemsPaise') ?? 0,
+    preparationPaise: optInt(j, 'preparationPaise') ?? 0,
+    discountPaise: optInt(j, 'discountPaise') ?? 0,
+    deliveryFeePaise: optInt(j, 'deliveryFeePaise') ?? 0,
+    taxPaise: optInt(j, 'taxPaise') ?? 0,
+    totalPaise: reqInt(j, 'totalPaise'),
+  );
 
   final int itemsPaise;
   final int preparationPaise;
@@ -90,15 +90,15 @@ class OrderAddress {
   });
 
   factory OrderAddress.fromJson(Json j) => OrderAddress(
-        recipientName: optString(j, 'recipientName'),
-        phone: optString(j, 'phone'),
-        line1: optString(j, 'line1'),
-        line2: optString(j, 'line2'),
-        landmark: optString(j, 'landmark'),
-        locality: optString(j, 'locality'),
-        cityName: optString(j, 'cityName'),
-        pincode: optString(j, 'pincode'),
-      );
+    recipientName: optString(j, 'recipientName'),
+    phone: optString(j, 'phone'),
+    line1: optString(j, 'line1'),
+    line2: optString(j, 'line2'),
+    landmark: optString(j, 'landmark'),
+    locality: optString(j, 'locality'),
+    cityName: optString(j, 'cityName'),
+    pincode: optString(j, 'pincode'),
+  );
 
   final String? recipientName;
   final String? phone;
@@ -129,18 +129,18 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Json j) => OrderItem(
-        id: reqString(j, 'id'),
-        productName: reqString(j, 'productName'),
-        variantName: optString(j, 'variantName'),
-        preparationName: optString(j, 'preparationName'),
-        orderedQuantity: reqQuantity(j, 'orderedQuantity'),
-        maxChargeableQuantity: optQuantity(j, 'maxChargeableQuantity'),
-        packedQuantity: optQuantity(j, 'packedQuantity'),
-        chargedQuantity: optQuantity(j, 'chargedQuantity'),
-        estimatedTotalPaise: reqInt(j, 'estimatedTotalPaise'),
-        finalTotalPaise: optInt(j, 'finalTotalPaise'),
-        status: optString(j, 'status') ?? 'ACTIVE',
-      );
+    id: reqString(j, 'id'),
+    productName: reqString(j, 'productName'),
+    variantName: optString(j, 'variantName'),
+    preparationName: optString(j, 'preparationName'),
+    orderedQuantity: reqQuantity(j, 'orderedQuantity'),
+    maxChargeableQuantity: optQuantity(j, 'maxChargeableQuantity'),
+    packedQuantity: optQuantity(j, 'packedQuantity'),
+    chargedQuantity: optQuantity(j, 'chargedQuantity'),
+    estimatedTotalPaise: reqInt(j, 'estimatedTotalPaise'),
+    finalTotalPaise: optInt(j, 'finalTotalPaise'),
+    status: optString(j, 'status') ?? 'ACTIVE',
+  );
 
   final String id;
   final String productName;
@@ -164,11 +164,11 @@ class AllowedActions {
   });
 
   factory AllowedActions.fromJson(Json j) => AllowedActions(
-        cancel: optBool(j, 'cancel') ?? false,
-        raiseComplaint: optBool(j, 'raiseComplaint') ?? false,
-        downloadInvoice: optBool(j, 'downloadInvoice') ?? false,
-        reorder: optBool(j, 'reorder') ?? false,
-      );
+    cancel: optBool(j, 'cancel') ?? false,
+    raiseComplaint: optBool(j, 'raiseComplaint') ?? false,
+    downloadInvoice: optBool(j, 'downloadInvoice') ?? false,
+    reorder: optBool(j, 'reorder') ?? false,
+  );
 
   static const none = AllowedActions(cancel: false, raiseComplaint: false, downloadInvoice: false, reorder: false);
 
@@ -269,11 +269,11 @@ class ShipmentInfo {
   const ShipmentInfo({required this.status, this.riderName, this.riderPhone, this.dispatchedAt});
 
   factory ShipmentInfo.fromJson(Json j) => ShipmentInfo(
-        status: reqString(j, 'status'),
-        riderName: optString(j, 'riderName'),
-        riderPhone: optString(j, 'riderPhone'),
-        dispatchedAt: optInstant(j, 'dispatchedAt'),
-      );
+    status: reqString(j, 'status'),
+    riderName: optString(j, 'riderName'),
+    riderPhone: optString(j, 'riderPhone'),
+    dispatchedAt: optInstant(j, 'dispatchedAt'),
+  );
 
   final String status;
   final String? riderName;
@@ -321,12 +321,12 @@ class Complaint {
   const Complaint({required this.id, this.orderItemId, required this.kind, required this.status, this.description});
 
   factory Complaint.fromJson(Json j) => Complaint(
-        id: reqString(j, 'id'),
-        orderItemId: optString(j, 'orderItemId'),
-        kind: reqString(j, 'kind'),
-        status: reqString(j, 'status'),
-        description: optString(j, 'description'),
-      );
+    id: reqString(j, 'id'),
+    orderItemId: optString(j, 'orderItemId'),
+    kind: reqString(j, 'kind'),
+    status: reqString(j, 'status'),
+    description: optString(j, 'description'),
+  );
 
   final String id;
   final String? orderItemId;

@@ -106,11 +106,11 @@ class CartCoupon {
   const CartCoupon({required this.code, required this.status, required this.discountPaise, this.message});
 
   factory CartCoupon.fromJson(Json j) => CartCoupon(
-        code: reqString(j, 'code'),
-        status: reqString(j, 'status'),
-        discountPaise: optInt(j, 'discountPaise') ?? 0,
-        message: optString(j, 'message'),
-      );
+    code: reqString(j, 'code'),
+    status: reqString(j, 'status'),
+    discountPaise: optInt(j, 'discountPaise') ?? 0,
+    message: optString(j, 'message'),
+  );
 
   final String code;
   final String status;
@@ -141,19 +141,19 @@ class CartTotals {
   });
 
   factory CartTotals.fromJson(Json j) => CartTotals(
-        itemsPaise: reqInt(j, 'itemsPaise'),
-        preparationPaise: optInt(j, 'preparationPaise') ?? 0,
-        subtotalPaise: reqInt(j, 'subtotalPaise'),
-        discountPaise: optInt(j, 'discountPaise') ?? 0,
-        deliveryFeePaise: optInt(j, 'deliveryFeePaise') ?? 0,
-        deliveryFeeWaived: optBool(j, 'deliveryFeeWaived') ?? false,
-        taxPaise: optInt(j, 'taxPaise') ?? 0,
-        estimatedTotalPaise: reqInt(j, 'estimatedTotalPaise'),
-        maxTotalPaise: reqInt(j, 'maxTotalPaise'),
-        minOrderPaise: optInt(j, 'minOrderPaise'),
-        minOrderShortfallPaise: optInt(j, 'minOrderShortfallPaise'),
-        freeDeliveryShortfallPaise: optInt(j, 'freeDeliveryShortfallPaise'),
-      );
+    itemsPaise: reqInt(j, 'itemsPaise'),
+    preparationPaise: optInt(j, 'preparationPaise') ?? 0,
+    subtotalPaise: reqInt(j, 'subtotalPaise'),
+    discountPaise: optInt(j, 'discountPaise') ?? 0,
+    deliveryFeePaise: optInt(j, 'deliveryFeePaise') ?? 0,
+    deliveryFeeWaived: optBool(j, 'deliveryFeeWaived') ?? false,
+    taxPaise: optInt(j, 'taxPaise') ?? 0,
+    estimatedTotalPaise: reqInt(j, 'estimatedTotalPaise'),
+    maxTotalPaise: reqInt(j, 'maxTotalPaise'),
+    minOrderPaise: optInt(j, 'minOrderPaise'),
+    minOrderShortfallPaise: optInt(j, 'minOrderShortfallPaise'),
+    freeDeliveryShortfallPaise: optInt(j, 'freeDeliveryShortfallPaise'),
+  );
 
   final int itemsPaise;
   final int preparationPaise;
@@ -223,8 +223,8 @@ class AddCartItem {
   final Quantity quantity;
 
   Map<String, dynamic> toJson() => {
-        'variantId': variantId,
-        'preparationCode': preparationCode,
-        'quantity': quantity.toJson(),
-      };
+    'variantId': variantId,
+    'preparationCode': preparationCode,
+    'quantity': quantity.toJson(),
+  };
 }

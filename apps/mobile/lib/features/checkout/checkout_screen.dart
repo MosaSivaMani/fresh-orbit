@@ -132,11 +132,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           if (state.addressPincode == null)
             Text('Choose an address to see delivery slots.', style: theme.textTheme.bodyMedium)
           else
-            _SlotPicker(
-              pincode: state.addressPincode!,
-              selected: state.slotId,
-              onSelected: _checkout.selectSlot,
-            ),
+            _SlotPicker(pincode: state.addressPincode!, selected: state.slotId, onSelected: _checkout.selectSlot),
           const SizedBox(height: FreshSpacing.s4),
           const _StepTitle(number: 3, title: 'Payment'),
           _PaymentPicker(
@@ -221,12 +217,9 @@ class _StepTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
-        child: Semantics(
-          header: true,
-          child: Text('$number. $title', style: Theme.of(context).textTheme.titleMedium),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
+    child: Semantics(header: true, child: Text('$number. $title', style: Theme.of(context).textTheme.titleMedium)),
+  );
 }
 
 class _SlotPicker extends ConsumerStatefulWidget {
@@ -244,11 +237,11 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
   String? _day;
 
   static String _statusText(String status) => switch (status) {
-        'FULL' => 'Full',
-        'CUTOFF_PASSED' => 'Booking closed',
-        'CLOSED' => 'Closed',
-        _ => humanizeCode(status),
-      };
+    'FULL' => 'Full',
+    'CUTOFF_PASSED' => 'Booking closed',
+    'CLOSED' => 'Closed',
+    _ => humanizeCode(status),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -259,7 +252,10 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
       loading: const LoadingSemantics(child: SkeletonBox(height: 96)),
       data: (slots) {
         if (slots.items.isEmpty) {
-          return const InfoBanner(tone: BannerTone.warning, text: 'No delivery slots are open for this address right now.');
+          return const InfoBanner(
+            tone: BannerTone.warning,
+            text: 'No delivery slots are open for this address right now.',
+          );
         }
         final days = <String>[];
         for (final s in slots.items) {
@@ -275,7 +271,11 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
               spacing: FreshSpacing.s2,
               children: [
                 for (final d in days)
-                  ChoiceChip(label: Text(formatCalendarDate(d)), selected: d == day, onSelected: (_) => setState(() => _day = d)),
+                  ChoiceChip(
+                    label: Text(formatCalendarDate(d)),
+                    selected: d == day,
+                    onSelected: (_) => setState(() => _day = d),
+                  ),
               ],
             ),
             RadioGroup<String>(
@@ -289,9 +289,7 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
                       value: s.id,
                       enabled: s.isBookable,
                       title: Text(formatTimeRange(s.startAt, s.endAt)),
-                      subtitle: s.isBookable
-                          ? Text('Order by ${formatTime(s.cutoffAt)}')
-                          : Text(_statusText(s.status)),
+                      subtitle: s.isBookable ? Text('Order by ${formatTime(s.cutoffAt)}') : Text(_statusText(s.status)),
                     ),
                 ],
               ),
@@ -312,8 +310,7 @@ class _PaymentPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = options ??
-        [for (final m in _fallbackMethods) PaymentMethodOption(method: m, enabled: true)];
+    final list = options ?? [for (final m in _fallbackMethods) PaymentMethodOption(method: m, enabled: true)];
     return RadioGroup<String>(
       groupValue: selected,
       onChanged: (m) => onSelected(m!),
@@ -350,7 +347,10 @@ class _Review extends StatelessWidget {
             child: InfoBanner(tone: BannerTone.danger, text: b.message.isEmpty ? humanizeCode(b.code) : b.message),
           ),
         if (preview.slot != null)
-          Text('Delivery ${formatSlotWindow(preview.slot!.startAt, preview.slot!.endAt)}', style: theme.textTheme.bodyMedium),
+          Text(
+            'Delivery ${formatSlotWindow(preview.slot!.startAt, preview.slot!.endAt)}',
+            style: theme.textTheme.bodyMedium,
+          ),
         const SizedBox(height: FreshSpacing.s2),
         for (final l in preview.lines)
           ListTile(

@@ -55,13 +55,13 @@ Dio createDio({
   DateTime Function()? clock,
 }) {
   BaseOptions options() => BaseOptions(
-        baseUrl: apiV1(baseUrl),
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 20),
-        responseType: ResponseType.json,
-        contentType: Headers.jsonContentType,
-        headers: {'Accept': 'application/json, application/problem+json'},
-      );
+    baseUrl: apiV1(baseUrl),
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 20),
+    responseType: ResponseType.json,
+    contentType: Headers.jsonContentType,
+    headers: {'Accept': 'application/json, application/problem+json'},
+  );
   final refreshDio = Dio(options());
   final dio = Dio(options());
   if (adapter != null) {
@@ -81,8 +81,13 @@ class ApiClient {
 
   final Dio dio;
 
-  Future<Object?> get(String path, {Map<String, dynamic>? query, Map<String, String>? headers}) =>
-      _send(() => dio.get<Object?>(path, queryParameters: query, options: Options(headers: headers)));
+  Future<Object?> get(String path, {Map<String, dynamic>? query, Map<String, String>? headers}) => _send(
+    () => dio.get<Object?>(
+      path,
+      queryParameters: query,
+      options: Options(headers: headers),
+    ),
+  );
 
   Future<Object?> post(
     String path, {
@@ -90,21 +95,31 @@ class ApiClient {
     Map<String, dynamic>? query,
     Map<String, String>? headers,
     bool skipAuth = false,
-  }) =>
-      _send(
-        () => dio.post<Object?>(
-          path,
-          data: body,
-          queryParameters: query,
-          options: Options(headers: headers, extra: {if (skipAuth) RequestFlags.skipAuth: true}),
-        ),
-      );
+  }) => _send(
+    () => dio.post<Object?>(
+      path,
+      data: body,
+      queryParameters: query,
+      options: Options(headers: headers, extra: {if (skipAuth) RequestFlags.skipAuth: true}),
+    ),
+  );
 
-  Future<Object?> put(String path, {Object? body, Map<String, dynamic>? query, Map<String, String>? headers}) =>
-      _send(() => dio.put<Object?>(path, data: body, queryParameters: query, options: Options(headers: headers)));
+  Future<Object?> put(String path, {Object? body, Map<String, dynamic>? query, Map<String, String>? headers}) => _send(
+    () => dio.put<Object?>(
+      path,
+      data: body,
+      queryParameters: query,
+      options: Options(headers: headers),
+    ),
+  );
 
-  Future<Object?> patch(String path, {Object? body, Map<String, String>? headers}) =>
-      _send(() => dio.patch<Object?>(path, data: body, options: Options(headers: headers)));
+  Future<Object?> patch(String path, {Object? body, Map<String, String>? headers}) => _send(
+    () => dio.patch<Object?>(
+      path,
+      data: body,
+      options: Options(headers: headers),
+    ),
+  );
 
   Future<Object?> delete(String path, {Map<String, String>? headers}) =>
       _send(() => dio.delete<Object?>(path, options: Options(headers: headers)));

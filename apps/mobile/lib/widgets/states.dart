@@ -83,7 +83,9 @@ class ErrorState extends StatelessWidget {
     return Semantics(
       liveRegion: true,
       container: true,
-      child: Center(child: SingleChildScrollView(padding: const EdgeInsets.all(FreshSpacing.s6), child: body)),
+      child: Center(
+        child: SingleChildScrollView(padding: const EdgeInsets.all(FreshSpacing.s6), child: body),
+      ),
     );
   }
 }
@@ -98,10 +100,10 @@ class SkeletonBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(color: freshColors(context).muted, borderRadius: BorderRadius.circular(radius)),
-      );
+    width: width,
+    height: height,
+    decoration: BoxDecoration(color: freshColors(context).muted, borderRadius: BorderRadius.circular(radius)),
+  );
 }
 
 class LoadingSemantics extends StatelessWidget {
@@ -111,8 +113,12 @@ class LoadingSemantics extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) =>
-      Semantics(label: label, liveRegion: true, container: true, child: ExcludeSemantics(child: child));
+  Widget build(BuildContext context) => Semantics(
+    label: label,
+    liveRegion: true,
+    container: true,
+    child: ExcludeSemantics(child: child),
+  );
 }
 
 class ListSkeleton extends StatelessWidget {
@@ -123,29 +129,29 @@ class ListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LoadingSemantics(
-        child: ListView.separated(
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          itemCount: rows,
-          separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
-          itemBuilder: (_, _) => Row(
-            children: [
-              SkeletonBox(width: rowHeight, height: rowHeight),
-              const SizedBox(width: FreshSpacing.s3),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SkeletonBox(height: 16),
-                    SizedBox(height: FreshSpacing.s2),
-                    SkeletonBox(width: 120, height: 14),
-                  ],
-                ),
-              ),
-            ],
+    child: ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(FreshSpacing.s4),
+      itemCount: rows,
+      separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
+      itemBuilder: (_, _) => Row(
+        children: [
+          SkeletonBox(width: rowHeight, height: rowHeight),
+          const SizedBox(width: FreshSpacing.s3),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(height: 16),
+                SizedBox(height: FreshSpacing.s2),
+                SkeletonBox(width: 120, height: 14),
+              ],
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class GridSkeleton extends StatelessWidget {
@@ -156,24 +162,26 @@ class GridSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LoadingSemantics(
-        child: GridView.builder(
-          shrinkWrap: shrinkWrap,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          gridDelegate: productGridDelegate,
-          itemCount: items,
-          itemBuilder: (_, _) => const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: SkeletonBox(height: double.infinity, radius: FreshRadius.lg)),
-              SizedBox(height: FreshSpacing.s2),
-              SkeletonBox(height: 16),
-              SizedBox(height: FreshSpacing.s1),
-              SkeletonBox(width: 80, height: 14),
-            ],
+    child: GridView.builder(
+      shrinkWrap: shrinkWrap,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(FreshSpacing.s4),
+      gridDelegate: productGridDelegate,
+      itemCount: items,
+      itemBuilder: (_, _) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: SkeletonBox(height: double.infinity, radius: FreshRadius.lg),
           ),
-        ),
-      );
+          SizedBox(height: FreshSpacing.s2),
+          SkeletonBox(height: 16),
+          SizedBox(height: FreshSpacing.s1),
+          SkeletonBox(width: 80, height: 14),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Two columns on phones; more on wide screens. Tall enough for text scaling.
@@ -187,13 +195,7 @@ const productGridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
 /// Renders an AsyncValue with the standard loading, error (with retry) and data states. While refreshing with
 /// data present, the data stays on screen.
 class AsyncValueView<T> extends StatelessWidget {
-  const AsyncValueView({
-    super.key,
-    required this.value,
-    required this.data,
-    this.loading,
-    this.onRetry,
-  });
+  const AsyncValueView({super.key, required this.value, required this.data, this.loading, this.onRetry});
 
   final AsyncValue<T> value;
   final Widget Function(T data) data;

@@ -110,9 +110,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       isExpanded: true,
                       value: _query.sort,
                       alignment: AlignmentDirectional.centerEnd,
-                      items: [
-                        for (final e in _sorts.entries) DropdownMenuItem(value: e.key, child: Text(e.value)),
-                      ],
+                      items: [for (final e in _sorts.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
                       onChanged: (v) => setState(() => _query = _query.copyWith(sort: v)),
                     ),
                   ),

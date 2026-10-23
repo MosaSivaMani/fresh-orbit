@@ -11,10 +11,10 @@ class FromPrice {
   const FromPrice({required this.unitPricePaise, this.compareAtPaise, required this.perUnit});
 
   factory FromPrice.fromJson(Json j) => FromPrice(
-        unitPricePaise: reqInt(j, 'unitPricePaise'),
-        compareAtPaise: optInt(j, 'compareAtPaise'),
-        perUnit: reqString(j, 'perUnit'),
-      );
+    unitPricePaise: reqInt(j, 'unitPricePaise'),
+    compareAtPaise: optInt(j, 'compareAtPaise'),
+    perUnit: reqString(j, 'perUnit'),
+  );
 
   final int unitPricePaise;
   final int? compareAtPaise;
@@ -71,13 +71,13 @@ class Category {
   });
 
   factory Category.fromJson(Json j) => Category(
-        id: reqString(j, 'id'),
-        slug: reqString(j, 'slug'),
-        name: reqString(j, 'name'),
-        description: optString(j, 'description'),
-        imageUrl: optString(j, 'imageUrl'),
-        children: listOrEmpty(j, 'children', Category.fromJson),
-      );
+    id: reqString(j, 'id'),
+    slug: reqString(j, 'slug'),
+    name: reqString(j, 'name'),
+    description: optString(j, 'description'),
+    imageUrl: optString(j, 'imageUrl'),
+    children: listOrEmpty(j, 'children', Category.fromJson),
+  );
 
   final String id;
   final String slug;
@@ -92,11 +92,11 @@ class HomeBanner {
   const HomeBanner({required this.title, this.subtitle, this.imageUrl, this.badge});
 
   factory HomeBanner.fromJson(Json j) => HomeBanner(
-        title: optString(j, 'title') ?? '',
-        subtitle: optString(j, 'subtitle') ?? optString(j, 'description'),
-        imageUrl: optString(j, 'imageUrl'),
-        badge: optString(j, 'badge'),
-      );
+    title: optString(j, 'title') ?? '',
+    subtitle: optString(j, 'subtitle') ?? optString(j, 'description'),
+    imageUrl: optString(j, 'imageUrl'),
+    badge: optString(j, 'badge'),
+  );
 
   final String title;
   final String? subtitle;
@@ -113,11 +113,11 @@ class HomeData {
   });
 
   factory HomeData.fromJson(Json j) => HomeData(
-        banners: listOrEmpty(j, 'banners', HomeBanner.fromJson),
-        featuredCategories: listOrEmpty(j, 'featuredCategories', Category.fromJson),
-        featuredProducts: listOrEmpty(j, 'featuredProducts', ProductSummary.fromJson),
-        locationRequired: optBool(j, 'locationRequired') ?? false,
-      );
+    banners: listOrEmpty(j, 'banners', HomeBanner.fromJson),
+    featuredCategories: listOrEmpty(j, 'featuredCategories', Category.fromJson),
+    featuredProducts: listOrEmpty(j, 'featuredProducts', ProductSummary.fromJson),
+    locationRequired: optBool(j, 'locationRequired') ?? false,
+  );
 
   final List<HomeBanner> banners;
   final List<Category> featuredCategories;
@@ -128,7 +128,8 @@ class HomeData {
 class ProductImage {
   const ProductImage({required this.url, required this.altText});
 
-  factory ProductImage.fromJson(Json j) => ProductImage(url: reqString(j, 'url'), altText: optString(j, 'altText') ?? '');
+  factory ProductImage.fromJson(Json j) =>
+      ProductImage(url: reqString(j, 'url'), altText: optString(j, 'altText') ?? '');
 
   final String url;
   final String altText;
@@ -146,13 +147,13 @@ class Preparation {
   });
 
   factory Preparation.fromJson(Json j) => Preparation(
-        code: reqString(j, 'code'),
-        name: reqString(j, 'name'),
-        yieldBp: reqInt(j, 'yieldBp'),
-        isDefault: optBool(j, 'isDefault') ?? false,
-        chargePaise: optInt(j, 'chargePaise'),
-        chargeBasis: optString(j, 'chargeBasis'),
-      );
+    code: reqString(j, 'code'),
+    name: reqString(j, 'name'),
+    yieldBp: reqInt(j, 'yieldBp'),
+    isDefault: optBool(j, 'isDefault') ?? false,
+    chargePaise: optInt(j, 'chargePaise'),
+    chargeBasis: optString(j, 'chargeBasis'),
+  );
 
   final String code;
   final String name;
@@ -168,10 +169,10 @@ class VariantAvailability {
   const VariantAvailability({required this.status, this.maxOrderableNow, this.message});
 
   factory VariantAvailability.fromJson(Json j) => VariantAvailability(
-        status: reqString(j, 'status'),
-        maxOrderableNow: optQuantity(j, 'maxOrderableNow'),
-        message: optString(j, 'message'),
-      );
+    status: reqString(j, 'status'),
+    maxOrderableNow: optQuantity(j, 'maxOrderableNow'),
+    message: optString(j, 'message'),
+  );
 
   final String status;
   final Quantity? maxOrderableNow;
@@ -292,11 +293,11 @@ class SearchSuggestion {
   const SearchSuggestion({required this.name, this.matchedLocalName, required this.slug, this.imageUrl});
 
   factory SearchSuggestion.fromJson(Json j) => SearchSuggestion(
-        name: reqString(j, 'name'),
-        matchedLocalName: optString(j, 'matchedLocalName'),
-        slug: reqString(j, 'slug'),
-        imageUrl: optString(j, 'imageUrl'),
-      );
+    name: reqString(j, 'name'),
+    matchedLocalName: optString(j, 'matchedLocalName'),
+    slug: reqString(j, 'slug'),
+    imageUrl: optString(j, 'imageUrl'),
+  );
 
   final String name;
   final String? matchedLocalName;
@@ -316,13 +317,13 @@ class AvailabilityItem {
   });
 
   factory AvailabilityItem.fromJson(Json j) => AvailabilityItem(
-        variantId: reqString(j, 'variantId'),
-        status: reqString(j, 'status'),
-        preparationCode: optString(j, 'preparationCode'),
-        maxOrderableNow: optQuantity(j, 'maxOrderableNow'),
-        unitPricePaise: optInt(j, 'unitPricePaise'),
-        message: optString(j, 'message'),
-      );
+    variantId: reqString(j, 'variantId'),
+    status: reqString(j, 'status'),
+    preparationCode: optString(j, 'preparationCode'),
+    maxOrderableNow: optQuantity(j, 'maxOrderableNow'),
+    unitPricePaise: optInt(j, 'unitPricePaise'),
+    message: optString(j, 'message'),
+  );
 
   final String variantId;
   final String status;
@@ -357,15 +358,15 @@ class ProductQuery {
   final int pageSize;
 
   Map<String, dynamic> toQuery() => {
-        if (category != null) 'category': category,
-        if (q != null && q!.isNotEmpty) 'q': q,
-        if (sourceType != null) 'sourceType': sourceType,
-        if (preparation != null) 'preparation': preparation,
-        if (inStock != null) 'inStock': inStock,
-        'sort': sort,
-        'page': page,
-        'pageSize': pageSize,
-      };
+    if (category != null) 'category': category,
+    if (q != null && q!.isNotEmpty) 'q': q,
+    if (sourceType != null) 'sourceType': sourceType,
+    if (preparation != null) 'preparation': preparation,
+    if (inStock != null) 'inStock': inStock,
+    'sort': sort,
+    'page': page,
+    'pageSize': pageSize,
+  };
 
   ProductQuery copyWith({
     String? category,
@@ -378,17 +379,16 @@ class ProductQuery {
     bool clearCategory = false,
     bool clearSourceType = false,
     bool clearInStock = false,
-  }) =>
-      ProductQuery(
-        category: clearCategory ? null : (category ?? this.category),
-        q: q ?? this.q,
-        sourceType: clearSourceType ? null : (sourceType ?? this.sourceType),
-        preparation: preparation ?? this.preparation,
-        inStock: clearInStock ? null : (inStock ?? this.inStock),
-        sort: sort ?? this.sort,
-        page: page ?? this.page,
-        pageSize: pageSize,
-      );
+  }) => ProductQuery(
+    category: clearCategory ? null : (category ?? this.category),
+    q: q ?? this.q,
+    sourceType: clearSourceType ? null : (sourceType ?? this.sourceType),
+    preparation: preparation ?? this.preparation,
+    inStock: clearInStock ? null : (inStock ?? this.inStock),
+    sort: sort ?? this.sort,
+    page: page ?? this.page,
+    pageSize: pageSize,
+  );
 
   @override
   bool operator ==(Object other) =>

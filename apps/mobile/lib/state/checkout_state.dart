@@ -81,20 +81,19 @@ class CheckoutState {
     CheckoutPreview? priceChanged,
     bool clearPriceChanged = false,
     OrderDetail? placedOrder,
-  }) =>
-      CheckoutState(
-        addressId: addressId ?? this.addressId,
-        addressPincode: addressPincode ?? this.addressPincode,
-        slotId: clearSlot ? null : (slotId ?? this.slotId),
-        paymentMethod: paymentMethod ?? this.paymentMethod,
-        substitutionPreference: substitutionPreference ?? this.substitutionPreference,
-        notes: notes ?? this.notes,
-        preview: clearPreview ? null : (preview ?? this.preview),
-        placing: placing ?? this.placing,
-        placeError: clearPlaceError ? null : (placeError ?? this.placeError),
-        priceChanged: clearPriceChanged ? null : (priceChanged ?? this.priceChanged),
-        placedOrder: placedOrder ?? this.placedOrder,
-      );
+  }) => CheckoutState(
+    addressId: addressId ?? this.addressId,
+    addressPincode: addressPincode ?? this.addressPincode,
+    slotId: clearSlot ? null : (slotId ?? this.slotId),
+    paymentMethod: paymentMethod ?? this.paymentMethod,
+    substitutionPreference: substitutionPreference ?? this.substitutionPreference,
+    notes: notes ?? this.notes,
+    preview: clearPreview ? null : (preview ?? this.preview),
+    placing: placing ?? this.placing,
+    placeError: clearPlaceError ? null : (placeError ?? this.placeError),
+    priceChanged: clearPriceChanged ? null : (priceChanged ?? this.priceChanged),
+    placedOrder: placedOrder ?? this.placedOrder,
+  );
 }
 
 final checkoutProvider = NotifierProvider.autoDispose<CheckoutController, CheckoutState>(CheckoutController.new);
@@ -195,7 +194,9 @@ class CheckoutController extends Notifier<CheckoutState> {
     _idempotencyKey ??= newIdempotencyKey();
     state = state.copyWith(placing: true, clearPlaceError: true);
     try {
-      final order = await ref.read(orderRepositoryProvider).placeOrder(
+      final order = await ref
+          .read(orderRepositoryProvider)
+          .placeOrder(
             PlaceOrderRequest(
               selection: selection,
               expectedTotalPaise: expectedTotalPaise,

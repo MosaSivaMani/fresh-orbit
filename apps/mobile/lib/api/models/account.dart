@@ -19,14 +19,14 @@ class Profile {
   });
 
   factory Profile.fromJson(Json j) => Profile(
-        customerId: optString(j, 'customerId') ?? reqString(j, 'id'),
-        phone: optString(j, 'phone'),
-        fullName: optString(j, 'fullName'),
-        email: optString(j, 'email'),
-        marketingOptIn: optBool(j, 'marketingOptIn') ?? false,
-        status: optString(j, 'status') ?? 'ACTIVE',
-        version: reqString(j, 'version'),
-      );
+    customerId: optString(j, 'customerId') ?? reqString(j, 'id'),
+    phone: optString(j, 'phone'),
+    fullName: optString(j, 'fullName'),
+    email: optString(j, 'email'),
+    marketingOptIn: optBool(j, 'marketingOptIn') ?? false,
+    status: optString(j, 'status') ?? 'ACTIVE',
+    version: reqString(j, 'version'),
+  );
 
   final String customerId;
   final String? phone;
@@ -58,21 +58,21 @@ class Address {
   });
 
   factory Address.fromJson(Json j) => Address(
-        id: optString(j, 'addressId') ?? reqString(j, 'id'),
-        label: reqString(j, 'label'),
-        recipientName: reqString(j, 'recipientName'),
-        phone: reqString(j, 'phone'),
-        line1: reqString(j, 'line1'),
-        line2: optString(j, 'line2'),
-        landmark: optString(j, 'landmark'),
-        locality: reqString(j, 'locality'),
-        cityName: reqString(j, 'cityName'),
-        stateCode: reqString(j, 'stateCode'),
-        pincode: reqString(j, 'pincode'),
-        isDefault: optBool(j, 'isDefault') ?? false,
-        isServiceable: optBool(j, 'isServiceable'),
-        version: optString(j, 'version') ?? '',
-      );
+    id: optString(j, 'addressId') ?? reqString(j, 'id'),
+    label: reqString(j, 'label'),
+    recipientName: reqString(j, 'recipientName'),
+    phone: reqString(j, 'phone'),
+    line1: reqString(j, 'line1'),
+    line2: optString(j, 'line2'),
+    landmark: optString(j, 'landmark'),
+    locality: reqString(j, 'locality'),
+    cityName: reqString(j, 'cityName'),
+    stateCode: reqString(j, 'stateCode'),
+    pincode: reqString(j, 'pincode'),
+    isDefault: optBool(j, 'isDefault') ?? false,
+    isServiceable: optBool(j, 'isServiceable'),
+    version: optString(j, 'version') ?? '',
+  );
 
   final String id;
 
@@ -114,18 +114,18 @@ class AddressInput {
   });
 
   factory AddressInput.from(Address a) => AddressInput(
-        label: a.label,
-        recipientName: a.recipientName,
-        phone: a.phone,
-        line1: a.line1,
-        line2: a.line2,
-        landmark: a.landmark,
-        locality: a.locality,
-        cityName: a.cityName,
-        stateCode: a.stateCode,
-        pincode: a.pincode,
-        isDefault: a.isDefault,
-      );
+    label: a.label,
+    recipientName: a.recipientName,
+    phone: a.phone,
+    line1: a.line1,
+    line2: a.line2,
+    landmark: a.landmark,
+    locality: a.locality,
+    cityName: a.cityName,
+    stateCode: a.stateCode,
+    pincode: a.pincode,
+    isDefault: a.isDefault,
+  );
 
   final String label;
   final String recipientName;
@@ -140,20 +140,20 @@ class AddressInput {
   final bool? isDefault;
 
   Json toJson() => {
-        'label': label,
-        'recipientName': recipientName,
-        'phone': phone,
-        'line1': line1,
-        'line2': line2,
-        'landmark': landmark,
-        'locality': locality,
-        'cityName': cityName,
-        'stateCode': stateCode,
-        'pincode': pincode,
-        'latitude': null,
-        'longitude': null,
-        'isDefault': isDefault,
-      };
+    'label': label,
+    'recipientName': recipientName,
+    'phone': phone,
+    'line1': line1,
+    'line2': line2,
+    'landmark': landmark,
+    'locality': locality,
+    'cityName': cityName,
+    'stateCode': stateCode,
+    'pincode': pincode,
+    'latitude': null,
+    'longitude': null,
+    'isDefault': isDefault,
+  };
 }
 
 /// Wishlist entry. docs/api says the list returns products (priced with a pincode); the Customers module on
@@ -183,12 +183,12 @@ class InboxMessage {
   });
 
   factory InboxMessage.fromJson(Json j) => InboxMessage(
-        messageId: reqString(j, 'messageId'),
-        title: optString(j, 'title'),
-        body: reqString(j, 'body'),
-        isRead: reqBool(j, 'isRead'),
-        createdAt: reqInstant(j, 'createdAt'),
-      );
+    messageId: reqString(j, 'messageId'),
+    title: optString(j, 'title'),
+    body: reqString(j, 'body'),
+    isRead: reqBool(j, 'isRead'),
+    createdAt: reqInstant(j, 'createdAt'),
+  );
 
   final String messageId;
   final String? title;
@@ -201,10 +201,10 @@ class InboxPage {
   const InboxPage({required this.items, required this.unreadCount, required this.totalCount});
 
   factory InboxPage.fromJson(Json j) => InboxPage(
-        items: reqList(j, 'items', InboxMessage.fromJson),
-        unreadCount: optInt(j, 'unreadCount') ?? 0,
-        totalCount: optInt(j, 'totalCount') ?? 0,
-      );
+    items: reqList(j, 'items', InboxMessage.fromJson),
+    unreadCount: optInt(j, 'unreadCount') ?? 0,
+    totalCount: optInt(j, 'totalCount') ?? 0,
+  );
 
   final List<InboxMessage> items;
   final int unreadCount;
@@ -216,10 +216,10 @@ class NotificationPreference {
   const NotificationPreference({required this.category, required this.channel, required this.enabled});
 
   factory NotificationPreference.fromJson(Json j) => NotificationPreference(
-        category: reqString(j, 'category'),
-        channel: reqString(j, 'channel'),
-        enabled: reqBool(j, 'enabled'),
-      );
+    category: reqString(j, 'category'),
+    channel: reqString(j, 'channel'),
+    enabled: reqBool(j, 'enabled'),
+  );
 
   final String category;
   final String channel;

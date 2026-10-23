@@ -12,11 +12,11 @@ import '../support/fake_adapter.dart';
 final _now = DateTime.utc(2026, 10, 23, 5, 30);
 
 Map<String, Object?> _pair(String access, String refresh) => {
-      'accessToken': access,
-      'accessTokenExpiresAt': '2026-10-23T05:45:00Z',
-      'refreshToken': refresh,
-      'refreshTokenExpiresAt': '2026-11-22T05:30:00Z',
-    };
+  'accessToken': access,
+  'accessTokenExpiresAt': '2026-10-23T05:45:00Z',
+  'refreshToken': refresh,
+  'refreshTokenExpiresAt': '2026-11-22T05:30:00Z',
+};
 
 Future<TokenStore> _signedIn({String access = 'a1', String refresh = 'r1'}) async {
   final store = TokenStore(MemorySecretStore());
@@ -41,7 +41,9 @@ void main() {
       final bearer = o.headers['Authorization'];
       return bearer == 'Bearer a2' ? const FakeReply(200, {'ok': true}) : FakeReply(401, problem(401, 'TOKEN_EXPIRED'));
     });
-    final api = ApiClient(createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
 
     final data = await api.get('me');
 
@@ -65,7 +67,9 @@ void main() {
           ? const FakeReply(200, {'ok': true})
           : FakeReply(401, problem(401, 'TOKEN_EXPIRED'));
     });
-    final api = ApiClient(createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
 
     final calls = [api.get('me'), api.get('cart'), api.get('orders')];
     await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -84,7 +88,9 @@ void main() {
       if (o.path.endsWith('auth/refresh')) return FakeReply(200, _pair('a2', 'r2'));
       return const FakeReply(200, {'ok': true});
     });
-    final api = ApiClient(createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
 
     await api.get('me');
 
@@ -147,7 +153,9 @@ void main() {
   test('other 401 codes and auth endpoints are not refreshed', () async {
     final tokens = await _signedIn();
     final adapter = FakeAdapter((o) async => FakeReply(401, problem(401, 'UNAUTHENTICATED')));
-    final api = ApiClient(createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
 
     await expectLater(api.get('me'), throwsA(isA<ApiError>()));
     await expectLater(api.post('auth/otp/verify', skipAuth: true), throwsA(isA<ApiError>()));
@@ -163,7 +171,9 @@ void main() {
       if (o.path.endsWith('auth/refresh')) return const FakeReply.offline();
       return FakeReply(401, problem(401, 'TOKEN_EXPIRED'));
     });
-    final api = ApiClient(createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
 
     await expectLater(api.get('me'), throwsA(isA<ApiError>()));
 

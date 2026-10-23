@@ -8,13 +8,13 @@ import '../support/fake_adapter.dart';
 
 void main() {
   ApiClient clientWith(FakeAdapter adapter) => ApiClient(
-        createDio(
-          baseUrl: 'https://api.test',
-          tokens: TokenStore(MemorySecretStore()),
-          pincode: () => null,
-          adapter: adapter,
-        ),
-      );
+    createDio(
+      baseUrl: 'https://api.test',
+      tokens: TokenStore(MemorySecretStore()),
+      pincode: () => null,
+      adapter: adapter,
+    ),
+  );
 
   test('maps a Problem Details body to code, field errors and trace id', () async {
     final api = clientWith(
@@ -37,7 +37,9 @@ void main() {
       ),
     );
 
-    final error = await api.post('cart/items', body: {}).then<ApiError?>((_) => null, onError: (Object e) => e as ApiError);
+    final error = await api
+        .post('cart/items', body: {})
+        .then<ApiError?>((_) => null, onError: (Object e) => e as ApiError);
 
     expect(error, isNotNull);
     expect(error!.status, 422);
@@ -50,7 +52,18 @@ void main() {
 
   test('keeps extension members such as preview on PRICE_CHANGED', () async {
     final api = clientWith(
-      FakeAdapter((_) async => FakeReply(409, problem(409, 'PRICE_CHANGED', extra: {'preview': {'expectedTotalPaise': 1}}))),
+      FakeAdapter(
+        (_) async => FakeReply(
+          409,
+          problem(
+            409,
+            'PRICE_CHANGED',
+            extra: {
+              'preview': {'expectedTotalPaise': 1},
+            },
+          ),
+        ),
+      ),
     );
 
     final error = await api.post('orders').then<ApiError?>((_) => null, onError: (Object e) => e as ApiError);
@@ -85,7 +98,11 @@ void main() {
       DioException.badResponse(
         statusCode: 503,
         requestOptions: RequestOptions(path: 'x'),
-        response: Response<Object?>(requestOptions: RequestOptions(path: 'x'), statusCode: 503, data: 'down'),
+        response: Response<Object?>(
+          requestOptions: RequestOptions(path: 'x'),
+          statusCode: 503,
+          data: 'down',
+        ),
       ),
     );
 
@@ -103,7 +120,9 @@ void main() {
     final tokens = TokenStore(MemorySecretStore({'fo.guestCartToken': 'gct_1'}));
     await tokens.load();
     final adapter = FakeAdapter((_) async => const FakeReply(200, {}, {'X-Cart-Token': 'gct_2'}));
-    final api = ApiClient(createDio(baseUrl: 'https://api.test/', tokens: tokens, pincode: () => '600041', adapter: adapter));
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test/', tokens: tokens, pincode: () => '600041', adapter: adapter),
+    );
 
     await api.get('home');
     await api.get('serviceability', query: {'pincode': '600042'});

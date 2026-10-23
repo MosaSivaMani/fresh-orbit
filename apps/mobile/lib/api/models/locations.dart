@@ -73,13 +73,13 @@ class DeliverySlot {
   });
 
   factory DeliverySlot.fromJson(Json j) => DeliverySlot(
-        id: reqString(j, 'id'),
-        slotDate: reqString(j, 'slotDate'),
-        startAt: reqInstant(j, 'startAt'),
-        endAt: reqInstant(j, 'endAt'),
-        cutoffAt: reqInstant(j, 'cutoffAt'),
-        status: reqString(j, 'status'),
-      );
+    id: reqString(j, 'id'),
+    slotDate: reqString(j, 'slotDate'),
+    startAt: reqInstant(j, 'startAt'),
+    endAt: reqInstant(j, 'endAt'),
+    cutoffAt: reqInstant(j, 'cutoffAt'),
+    status: reqString(j, 'status'),
+  );
 
   final String id;
 
@@ -97,9 +97,9 @@ class DeliverySlots {
   const DeliverySlots({required this.fulfillmentLocationId, required this.items});
 
   factory DeliverySlots.fromJson(Json j) => DeliverySlots(
-        fulfillmentLocationId: optString(j, 'fulfillmentLocationId'),
-        items: reqList(j, 'items', DeliverySlot.fromJson),
-      );
+    fulfillmentLocationId: optString(j, 'fulfillmentLocationId'),
+    items: reqList(j, 'items', DeliverySlot.fromJson),
+  );
 
   final String? fulfillmentLocationId;
   final List<DeliverySlot> items;

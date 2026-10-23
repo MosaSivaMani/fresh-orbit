@@ -36,9 +36,9 @@ class HttpAuthRepository implements AuthRepository {
 
   @override
   Future<OtpChallenge> requestOtp(String phone) async => parseObject(
-        await _api.post('auth/otp/request', body: {'phone': phone, 'purpose': 'LOGIN'}, skipAuth: true),
-        OtpChallenge.fromJson,
-      );
+    await _api.post('auth/otp/request', body: {'phone': phone, 'purpose': 'LOGIN'}, skipAuth: true),
+    OtpChallenge.fromJson,
+  );
 
   @override
   Future<VerifyOtpResult> verifyOtp({
@@ -47,21 +47,20 @@ class HttpAuthRepository implements AuthRepository {
     required String code,
     String? guestCartToken,
     String? deviceLabel,
-  }) async =>
-      parseObject(
-        await _api.post(
-          'auth/otp/verify',
-          body: {
-            'challengeId': challengeId,
-            'phone': phone,
-            'code': code,
-            'deviceLabel': deviceLabel,
-            'guestCartToken': guestCartToken,
-          },
-          skipAuth: true,
-        ),
-        VerifyOtpResult.fromJson,
-      );
+  }) async => parseObject(
+    await _api.post(
+      'auth/otp/verify',
+      body: {
+        'challengeId': challengeId,
+        'phone': phone,
+        'code': code,
+        'deviceLabel': deviceLabel,
+        'guestCartToken': guestCartToken,
+      },
+      skipAuth: true,
+    ),
+    VerifyOtpResult.fromJson,
+  );
 
   @override
   Future<void> logout(String refreshToken) async {
@@ -87,10 +86,8 @@ class HttpLocationRepository implements LocationRepository {
       parseObject(await _api.get('serviceability', query: {'pincode': pincode}), Serviceability.fromJson);
 
   @override
-  Future<DeliverySlots> deliverySlots({required String pincode, String? date}) async => parseObject(
-        await _api.get('delivery-slots', query: {'pincode': pincode, 'date': ?date}),
-        DeliverySlots.fromJson,
-      );
+  Future<DeliverySlots> deliverySlots({required String pincode, String? date}) async =>
+      parseObject(await _api.get('delivery-slots', query: {'pincode': pincode, 'date': ?date}), DeliverySlots.fromJson);
 }
 
 // ---------------------------------------------------------------- catalog
@@ -115,15 +112,15 @@ class HttpCatalogRepository implements CatalogRepository {
 
   @override
   Future<Paged<ProductSummary>> products(ProductQuery query) async => parseObject(
-        await _api.get('products', query: query.toQuery()),
-        (j) => Paged.fromJson(j, ProductSummary.fromJson),
-      );
+    await _api.get('products', query: query.toQuery()),
+    (j) => Paged.fromJson(j, ProductSummary.fromJson),
+  );
 
   @override
   Future<ProductDetail> product(String slug, {String? preparation}) async => parseObject(
-        await _api.get('products/${_seg(slug)}', query: {'preparation': ?preparation}),
-        ProductDetail.fromJson,
-      );
+    await _api.get('products/${_seg(slug)}', query: {'preparation': ?preparation}),
+    ProductDetail.fromJson,
+  );
 
   @override
   Future<List<SearchSuggestion>> suggest(String q) async =>
@@ -217,15 +214,15 @@ class HttpOrderRepository implements OrderRepository {
 
   @override
   Future<OrderDetail> placeOrder(PlaceOrderRequest request, {required String idempotencyKey}) async => parseObject(
-        await _api.post('orders', body: request.toJson(), headers: {'Idempotency-Key': idempotencyKey}),
-        OrderDetail.fromJson,
-      );
+    await _api.post('orders', body: request.toJson(), headers: {'Idempotency-Key': idempotencyKey}),
+    OrderDetail.fromJson,
+  );
 
   @override
   Future<Paged<OrderSummary>> orders({int page = 1, int pageSize = 20}) async => parseObject(
-        await _api.get('orders', query: {'page': page, 'pageSize': pageSize, 'sort': '-placedAt'}),
-        (j) => Paged.fromJson(j, OrderSummary.fromJson),
-      );
+    await _api.get('orders', query: {'page': page, 'pageSize': pageSize, 'sort': '-placedAt'}),
+    (j) => Paged.fromJson(j, OrderSummary.fromJson),
+  );
 
   @override
   Future<OrderDetail> order(String orderId) async =>
@@ -274,8 +271,10 @@ class HttpOrderRepository implements OrderRepository {
   Future<InvoiceLink> invoice(String orderId) async =>
       parseObject(await _api.get('orders/${_seg(orderId)}/invoice'), InvoiceLink.fromJson);
 
-  static FormData _multipart(Map<String, String?> fields) =>
-      FormData.fromMap({for (final e in fields.entries) if (e.value != null) e.key: e.value!});
+  static FormData _multipart(Map<String, String?> fields) => FormData.fromMap({
+    for (final e in fields.entries)
+      if (e.value != null) e.key: e.value!,
+  });
 }
 
 // ---------------------------------------------------------------- account
@@ -313,15 +312,19 @@ class HttpAccountRepository implements AccountRepository {
   Future<Profile> profile() async => parseObject(await _api.get('me'), Profile.fromJson);
 
   @override
-  Future<Profile> updateProfile({String? fullName, String? email, bool? marketingOptIn, required String version}) async =>
-      parseObject(
-        await _api.patch(
-          'me',
-          body: {'fullName': fullName, 'email': email, 'marketingOptIn': marketingOptIn},
-          headers: ifMatch(version),
-        ),
-        Profile.fromJson,
-      );
+  Future<Profile> updateProfile({
+    String? fullName,
+    String? email,
+    bool? marketingOptIn,
+    required String version,
+  }) async => parseObject(
+    await _api.patch(
+      'me',
+      body: {'fullName': fullName, 'email': email, 'marketingOptIn': marketingOptIn},
+      headers: ifMatch(version),
+    ),
+    Profile.fromJson,
+  );
 
   @override
   Future<void> deleteAccount({required String version}) async {
@@ -337,9 +340,9 @@ class HttpAccountRepository implements AccountRepository {
 
   @override
   Future<Address> replaceAddress(String addressId, AddressInput input, {required String version}) async => parseObject(
-        await _api.put('me/addresses/${_seg(addressId)}', body: input.toJson(), headers: ifMatch(version)),
-        Address.fromJson,
-      );
+    await _api.put('me/addresses/${_seg(addressId)}', body: input.toJson(), headers: ifMatch(version)),
+    Address.fromJson,
+  );
 
   @override
   Future<void> deleteAddress(String addressId) async {
@@ -365,9 +368,9 @@ class HttpAccountRepository implements AccountRepository {
 
   @override
   Future<InboxPage> notifications({bool unreadOnly = false, int page = 1}) async => parseObject(
-        await _api.get('me/notifications', query: {'unreadOnly': unreadOnly, 'page': page}),
-        InboxPage.fromJson,
-      );
+    await _api.get('me/notifications', query: {'unreadOnly': unreadOnly, 'page': page}),
+    InboxPage.fromJson,
+  );
 
   @override
   Future<void> markRead(String messageId) async {
@@ -388,7 +391,9 @@ class HttpAccountRepository implements AccountRepository {
       _readPreferences(
         await _api.put(
           'me/notification-preferences',
-          body: {'preferences': [for (final p in preferences) p.toJson()]},
+          body: {
+            'preferences': [for (final p in preferences) p.toJson()],
+          },
         ),
       );
 

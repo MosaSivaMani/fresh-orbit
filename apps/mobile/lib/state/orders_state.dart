@@ -34,10 +34,14 @@ class OrdersController extends AsyncNotifier<OrdersState> {
   Future<void> loadMore() async {
     final current = state.value;
     if (current == null || current.loadingMore || !current.hasMore) return;
-    state = AsyncData(OrdersState(items: current.items, totalCount: current.totalCount, page: current.page, loadingMore: true));
+    state = AsyncData(
+      OrdersState(items: current.items, totalCount: current.totalCount, page: current.page, loadingMore: true),
+    );
     try {
       final next = await ref.read(orderRepositoryProvider).orders(page: current.page + 1);
-      state = AsyncData(OrdersState(items: [...current.items, ...next.items], totalCount: next.totalCount, page: current.page + 1));
+      state = AsyncData(
+        OrdersState(items: [...current.items, ...next.items], totalCount: next.totalCount, page: current.page + 1),
+      );
     } catch (_) {
       state = AsyncData(current);
       rethrow;
@@ -77,7 +81,9 @@ class OrderActions {
     required String description,
     required String idempotencyKey,
   }) async {
-    await _ref.read(orderRepositoryProvider).raiseComplaint(
+    await _ref
+        .read(orderRepositoryProvider)
+        .raiseComplaint(
           orderId,
           orderItemId: orderItemId,
           kind: kind,

@@ -145,7 +145,10 @@ class _TrackingBody extends ConsumerWidget {
         if (t != null)
           _Timeline(entries: t.timeline)
         else if (trackingError != null)
-          const InfoBanner(tone: BannerTone.warning, text: 'Live status is not available right now. Pull down to refresh.')
+          const InfoBanner(
+            tone: BannerTone.warning,
+            text: 'Live status is not available right now. Pull down to refresh.',
+          )
         else
           const LoadingSemantics(child: SkeletonBox(height: 80)),
         const SizedBox(height: FreshSpacing.s5),
@@ -170,7 +173,10 @@ class _TrackingBody extends ConsumerWidget {
                   style: theme.textTheme.titleSmall,
                 ),
                 if (order.finalAmounts == null)
-                  Text('The final total is set when your order is weighed and packed.', style: theme.textTheme.bodySmall),
+                  Text(
+                    'The final total is set when your order is weighed and packed.',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 if (order.amountDuePaise > 0) Text('To pay on delivery: ${formatRupees(order.amountDuePaise)}'),
                 if (order.amountPaidPaise > 0) Text('Paid: ${formatRupees(order.amountPaidPaise)}'),
                 if (order.amountRefundedPaise > 0) Text('Refunded: ${formatRupees(order.amountRefundedPaise)}'),
@@ -512,7 +518,11 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                 runSpacing: FreshSpacing.s2,
                 children: [
                   for (final e in _complaintKinds.entries)
-                    ChoiceChip(label: Text(e.value), selected: _kind == e.key, onSelected: (_) => setState(() => _kind = e.key)),
+                    ChoiceChip(
+                      label: Text(e.value),
+                      selected: _kind == e.key,
+                      onSelected: (_) => setState(() => _kind = e.key),
+                    ),
                 ],
               ),
               if (needsItem) ...[
@@ -554,7 +564,9 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                   }
                   setState(() => _fieldError = null);
                   final ok = await submit(
-                    (key) => ref.read(orderActionsProvider).raiseComplaint(
+                    (key) => ref
+                        .read(orderActionsProvider)
+                        .raiseComplaint(
                           widget.order.id,
                           orderItemId: needsItem ? _itemId : null,
                           kind: _kind,

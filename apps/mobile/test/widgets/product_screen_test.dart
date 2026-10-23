@@ -38,7 +38,9 @@ void main() {
     expect(find.text('500 g'), findsOneWidget); // starts at the server minOrder
   });
 
-  testWidgets('stepper proposes quantities in server steps and add sends them; estimate comes from the server line', (tester) async {
+  testWidgets('stepper proposes quantities in server steps and add sends them; estimate comes from the server line', (
+    tester,
+  ) async {
     deps.cart.afterWrite = () => cart(lines: [cartLineJson(quantity: 750, estimated: 100425, max: 110467)]);
     await pump(tester);
 
@@ -77,7 +79,9 @@ void main() {
       status: 422,
       code: 'VALIDATION_FAILED',
       errors: {
-        'quantity.value': [FieldError(code: 'QUANTITY_STEP_INVALID', message: 'Quantity must be a multiple of 250 grams.')],
+        'quantity.value': [
+          FieldError(code: 'QUANTITY_STEP_INVALID', message: 'Quantity must be a multiple of 250 grams.'),
+        ],
       },
     );
     await pump(tester);
@@ -95,10 +99,10 @@ void main() {
     variant['compareAtPaise'] = null;
     variant['availability'] = null;
     deps.catalog.onProduct = (_, _) async => ProductDetail.fromJson({
-          ...json,
-          'variants': [variant],
-          'locationRequired': true,
-        });
+      ...json,
+      'variants': [variant],
+      'locationRequired': true,
+    });
     await pump(tester);
 
     expect(find.text('Set pincode to buy'), findsOneWidget);

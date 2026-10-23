@@ -13,10 +13,7 @@ Future<void> main() async {
   await tokens.load();
   runApp(
     ProviderScope(
-      overrides: [
-        appPrefsProvider.overrideWithValue(prefs),
-        tokenStoreProvider.overrideWithValue(tokens),
-      ],
+      overrides: [appPrefsProvider.overrideWithValue(prefs), tokenStoreProvider.overrideWithValue(tokens)],
       // Screens show an error with a "Try again" button instead of silent automatic retries.
       retry: (_, _) => null,
       child: const FreshOrbitApp(),

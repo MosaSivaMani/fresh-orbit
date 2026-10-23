@@ -34,17 +34,20 @@ final dioProvider = Provider<Dio>((ref) {
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(dioProvider)));
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) => HttpAuthRepository(ref.watch(apiClientProvider)));
-final locationRepositoryProvider =
-    Provider<LocationRepository>((ref) => HttpLocationRepository(ref.watch(apiClientProvider)));
-final catalogRepositoryProvider =
-    Provider<CatalogRepository>((ref) => HttpCatalogRepository(ref.watch(apiClientProvider)));
+final locationRepositoryProvider = Provider<LocationRepository>(
+  (ref) => HttpLocationRepository(ref.watch(apiClientProvider)),
+);
+final catalogRepositoryProvider = Provider<CatalogRepository>(
+  (ref) => HttpCatalogRepository(ref.watch(apiClientProvider)),
+);
 final cartRepositoryProvider = Provider<CartRepository>((ref) => HttpCartRepository(ref.watch(apiClientProvider)));
 final orderRepositoryProvider = Provider<OrderRepository>((ref) => HttpOrderRepository(ref.watch(apiClientProvider)));
-final accountRepositoryProvider =
-    Provider<AccountRepository>((ref) => HttpAccountRepository(ref.watch(apiClientProvider)));
+final accountRepositoryProvider = Provider<AccountRepository>(
+  (ref) => HttpAccountRepository(ref.watch(apiClientProvider)),
+);
 
 /// `platform` for `PUT /me/device-tokens`.
 String devicePlatform() => switch (defaultTargetPlatform) {
-      TargetPlatform.iOS => 'IOS',
-      _ => 'ANDROID',
-    };
+  TargetPlatform.iOS => 'IOS',
+  _ => 'ANDROID',
+};

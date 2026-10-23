@@ -28,8 +28,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final target = !prefs.onboardingDone
         ? '/onboarding'
         : ref.read(pincodeProvider) == null
-            ? '/location'
-            : '/home';
+        ? '/location'
+        : '/home';
     context.go(target);
   }
 

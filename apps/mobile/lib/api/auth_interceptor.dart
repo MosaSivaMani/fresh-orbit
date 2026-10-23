@@ -30,8 +30,8 @@ class AuthInterceptor extends Interceptor {
     required this.refreshDio,
     this.onSessionEnded,
     DateTime Function()? clock,
-  })  : _dio = dio, // ignore: prefer_initializing_formals
-        _clock = clock ?? DateTime.now;
+  }) : _dio = dio, // ignore: prefer_initializing_formals
+       _clock = clock ?? DateTime.now;
 
   final Dio _dio;
   final TokenStore tokens;

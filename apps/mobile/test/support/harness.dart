@@ -13,8 +13,8 @@ import 'fakes.dart';
 /// Fakes for every repository, shared by a test and the widget under test.
 class TestDeps {
   TestDeps({String? pincode, bool signedIn = false})
-      : prefs = MemoryAppPrefs(pincode: pincode, onboardingDone: true),
-        tokens = TokenStore(MemorySecretStore(signedIn ? {'fo.refreshToken': 'r1'} : null));
+    : prefs = MemoryAppPrefs(pincode: pincode, onboardingDone: true),
+      tokens = TokenStore(MemorySecretStore(signedIn ? {'fo.refreshToken': 'r1'} : null));
 
   final MemoryAppPrefs prefs;
   final TokenStore tokens;
@@ -26,16 +26,16 @@ class TestDeps {
   final auth = FakeAuthRepository();
 
   List<Override> get overrides => [
-        appPrefsProvider.overrideWithValue(prefs),
-        tokenStoreProvider.overrideWithValue(tokens),
-        apiBaseUrlProvider.overrideWithValue('https://api.test'),
-        locationRepositoryProvider.overrideWithValue(location),
-        catalogRepositoryProvider.overrideWithValue(catalog),
-        cartRepositoryProvider.overrideWithValue(cart),
-        orderRepositoryProvider.overrideWithValue(orders),
-        accountRepositoryProvider.overrideWithValue(account),
-        authRepositoryProvider.overrideWithValue(auth),
-      ];
+    appPrefsProvider.overrideWithValue(prefs),
+    tokenStoreProvider.overrideWithValue(tokens),
+    apiBaseUrlProvider.overrideWithValue('https://api.test'),
+    locationRepositoryProvider.overrideWithValue(location),
+    catalogRepositoryProvider.overrideWithValue(catalog),
+    cartRepositoryProvider.overrideWithValue(cart),
+    orderRepositoryProvider.overrideWithValue(orders),
+    accountRepositoryProvider.overrideWithValue(account),
+    authRepositoryProvider.overrideWithValue(auth),
+  ];
 
   Future<void> load() => tokens.load();
 
@@ -44,7 +44,12 @@ class TestDeps {
 
 /// Pumps [screen] at '/' inside a router whose other paths render a marker text ("route:/home"), so tests can
 /// assert navigation without building the real destination.
-Future<GoRouter> pumpScreen(WidgetTester tester, TestDeps deps, Widget screen, {List<String> otherPaths = const []}) async {
+Future<GoRouter> pumpScreen(
+  WidgetTester tester,
+  TestDeps deps,
+  Widget screen, {
+  List<String> otherPaths = const [],
+}) async {
   // Phone width, tall enough that lazy lists build their content without scrolling in most tests.
   tester.view.devicePixelRatio = 3;
   tester.view.physicalSize = const Size(400 * 3, 2400 * 3);
@@ -54,9 +59,18 @@ Future<GoRouter> pumpScreen(WidgetTester tester, TestDeps deps, Widget screen, {
     routes: [
       GoRoute(path: '/', builder: (_, _) => screen),
       for (final p in {'/home', '/cart', '/checkout', '/login', '/location', ...otherPaths})
-        GoRoute(path: p, builder: (_, state) => Scaffold(body: Text('route:${state.uri}'))),
-      GoRoute(path: '/order-success/:id', builder: (_, state) => Scaffold(body: Text('route:${state.uri}'))),
-      GoRoute(path: '/product/:slug', builder: (_, state) => Scaffold(body: Text('route:${state.uri}'))),
+        GoRoute(
+          path: p,
+          builder: (_, state) => Scaffold(body: Text('route:${state.uri}')),
+        ),
+      GoRoute(
+        path: '/order-success/:id',
+        builder: (_, state) => Scaffold(body: Text('route:${state.uri}')),
+      ),
+      GoRoute(
+        path: '/product/:slug',
+        builder: (_, state) => Scaffold(body: Text('route:${state.uri}')),
+      ),
     ],
   );
   await tester.pumpWidget(
