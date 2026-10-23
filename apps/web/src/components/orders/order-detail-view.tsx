@@ -192,7 +192,9 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
           <KeyRound aria-hidden="true" className="size-8 shrink-0" />
           <div>
             <p className="text-sm opacity-90">Share this code with the delivery partner</p>
-            <p className="[font-family:var(--fo-font-display)] text-3xl font-bold tracking-[0.3em]">{t.deliveryCode}</p>
+            <p className="[font-family:var(--fo-font-display)] text-3xl font-bold tracking-[0.3em]">
+              {t.deliveryCode}
+            </p>
           </div>
         </div>
       )}
