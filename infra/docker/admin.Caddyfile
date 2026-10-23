@@ -1,0 +1,26 @@
+# Static file server inside the admin image (infra/docker/admin.Dockerfile). Plain HTTP on :8080 behind the edge
+# Caddy, which terminates TLS and sets security headers. Single-page app: unknown paths fall back to index.html.
+{
+	admin off
+	auto_https off
+	persist_config off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	# Vite fingerprints everything under /assets: cache for a year.
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# Everything else (index.html and the SPA routes that fall back to it) is revalidated, so a deploy shows at once.
+	@notAssets not path /assets/*
+	header @notAssets Cache-Control "no-cache"
+
+	try_files {path} /index.html
+	file_server
+}
