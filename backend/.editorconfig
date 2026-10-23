@@ -63,3 +63,7 @@ dotnet_code_quality.CA1716.analyzed_symbol_kinds = NamedType, Method, Property, 
 dotnet_diagnostic.CA1707.severity = none
 # Test classes must be public for xUnit.
 dotnet_diagnostic.CA1515.severity = none
+
+[src/Hosts/FreshOrbit.Migrations/Persistence/Migrations/**.cs]
+# EF Core generated migrations and snapshot: not hand-written, not analyzed.
+generated_code = true
