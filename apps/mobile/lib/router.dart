@@ -6,6 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/catalog/home_screen.dart';
+import 'features/catalog/product_screen.dart';
+import 'features/catalog/search_screen.dart';
+import 'features/catalog/shop_screen.dart';
+import 'features/catalog/wishlist_screen.dart';
 import 'features/onboarding/location_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/onboarding/splash_screen.dart';
@@ -42,10 +47,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/location',
         builder: (_, state) => LocationScreen(changing: state.uri.queryParameters['change'] == '1'),
       ),
+      GoRoute(path: '/search', builder: (_, state) => SearchScreen(initialQuery: state.uri.queryParameters['q'])),
+      GoRoute(path: '/product/:slug', builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!)),
+      GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
-          for (final tab in const ['/home', '/shop', '/cart', '/orders', '/account'])
+          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/shop', builder: (_, state) => ShopScreen(category: state.uri.queryParameters['category'])),
+            ],
+          ),
+          for (final tab in const ['/cart', '/orders', '/account'])
             StatefulShellBranch(routes: [GoRoute(path: tab, builder: (_, _) => _Pending(tab))]),
         ],
       ),

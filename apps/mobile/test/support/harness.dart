@@ -45,6 +45,10 @@ class TestDeps {
 /// Pumps [screen] at '/' inside a router whose other paths render a marker text ("route:/home"), so tests can
 /// assert navigation without building the real destination.
 Future<GoRouter> pumpScreen(WidgetTester tester, TestDeps deps, Widget screen, {List<String> otherPaths = const []}) async {
+  // Phone width, tall enough that lazy lists build their content without scrolling in most tests.
+  tester.view.devicePixelRatio = 3;
+  tester.view.physicalSize = const Size(400 * 3, 2400 * 3);
+  addTearDown(tester.view.reset);
   await deps.load();
   final router = GoRouter(
     routes: [

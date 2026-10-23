@@ -234,8 +234,8 @@ const paymentMethodLabels = <String, String>{
 String paymentMethodLabel(String code) => paymentMethodLabels[code] ?? humanizeCode(code);
 
 /// Network image with a calm placeholder; decorative unless [semanticLabel] is given.
-class ProductImage extends StatelessWidget {
-  const ProductImage({super.key, required this.url, this.semanticLabel, this.aspectRatio = 1, this.radius = FreshRadius.lg});
+class ProductPhoto extends StatelessWidget {
+  const ProductPhoto({super.key, required this.url, this.semanticLabel, this.aspectRatio = 1, this.radius = FreshRadius.lg});
 
   final String? url;
   final String? semanticLabel;
@@ -292,7 +292,7 @@ class ProductCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProductImage(url: product.imageUrl, aspectRatio: 1.1),
+                ProductPhoto(url: product.imageUrl, aspectRatio: 1.1),
                 const SizedBox(height: FreshSpacing.s2),
                 Text(product.name, style: theme.textTheme.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
                 if (product.localNames.isNotEmpty)
