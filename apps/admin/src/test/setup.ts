@@ -1,10 +1,16 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
+import { dismissConflict } from "../lib/conflict";
 import { server } from "./server";
+
+// Screens are lazy routes; the first import of a screen in a test file is transformed on demand and can take
+// longer than Testing Library's 1 s default.
+configure({ asyncUtilTimeout: 5000 });
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
+  dismissConflict();
   cleanup();
   server.resetHandlers();
   window.sessionStorage.clear();

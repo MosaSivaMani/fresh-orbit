@@ -95,6 +95,42 @@ export function useStartPreparing(orderId: Id) {
   );
 }
 
+/** Thrown by {@link useStartPreparingMany}: which order failed, with the ApiError as `cause`. */
+export class BulkOrderError extends Error {
+  constructor(
+    readonly orderId: Id,
+    cause: unknown,
+  ) {
+    super("Start preparing failed.", { cause });
+  }
+}
+
+/**
+ * Start preparing several orders (orders list bulk action). One request per order, each quoting its own
+ * version; stops at the first refusal. Resolves with the number started.
+ */
+export function useStartPreparingMany() {
+  const http = useHttp();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (orders: { orderId: Id; version: Version }[]) => {
+      let started = 0;
+      for (const { orderId, version } of orders) {
+        try {
+          await http.post(`/admin/orders/${orderId}/start-preparing`, undefined, {
+            ifMatch: version,
+          });
+        } catch (error) {
+          throw new BulkOrderError(orderId, error);
+        }
+        started += 1;
+      }
+      return started;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: orderKeys.all }),
+  });
+}
+
 /** Weigh and pack the whole order: every ACTIVE line once; 0 = short supplied (docs/api §4.15). */
 export function usePackOrder(orderId: Id) {
   return useOrderWrite(

@@ -24,6 +24,11 @@ function close() {
   emit();
 }
 
+/** Close any open prompt (sign-out, and between tests). */
+export function dismissConflict(): void {
+  close();
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);
