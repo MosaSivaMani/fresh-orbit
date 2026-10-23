@@ -53,3 +53,14 @@ Architecture tests must allow these adapters to reference the source module's `.
 | Migrations host `--create-admin` → `IFirstAdminService.CreateFirstAdminAsync(new CreateFirstAdminCommand(email, fullName, password))` after reference data | Migrations host |
 | Ordering implements `ICustomerDeletionCheck` (`ACTIVE_ORDERS_EXIST`) | E4 / manager |
 | Wishlist priced products; address `isServiceable` | after Catalog/Locations Public lookups exist |
+
+## From E2 (Locations, Catalog, Pricing, storage)
+
+| Item | Action |
+|---|---|
+| Api host: `app.UseFreshOrbitMedia();` after `app.UseFreshOrbitWeb();` | host |
+| `search` rate-limit policy for `/products` and `/search/suggest` | host + attach in Catalog |
+| `QuantityRules` from Catalog.Domain to SharedKernel so Cart/Ordering share it | decide with E4's LinePricing |
+| Catalog `DatabaseObjectsSql` must run after Inventory tables exist (storefront view) | migration ordering |
+| `/home` banners from Promotions; `isWishlisted` from Customers | after E4 merge / Customers wishlist API |
+| Architecture tests updated for D30 (Domain → own Public) | ✅ done at E2 merge |
