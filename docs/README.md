@@ -13,4 +13,5 @@
 | Research: hosting, payments, mobile framework, reference ERP | `research/*.md` |
 | Design system (Phase 5) | `design/` |
 | Security review and pre-release checklist | `security/` |
+| Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
 | Runbooks (Phase 9) | `runbooks/` |

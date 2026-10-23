@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["FRESH_API_ORIGIN", "NEXT_PUBLIC_SITE_URL"]
+    }
+  }
+}
