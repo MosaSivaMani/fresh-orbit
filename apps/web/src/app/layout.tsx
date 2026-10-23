@@ -17,6 +17,10 @@ const jakarta = Plus_Jakarta_Sans({
 
 const siteUrl = getSiteUrl();
 
+// Static pages (about, support, policies, account shells) are regenerated at most hourly so the footer's city list,
+// read from the API, catches up even when the build ran without the API.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: {
