@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace FreshOrbit.Notifications.Infrastructure;
 
@@ -49,7 +50,8 @@ public sealed class NotificationsModule : IModule
         services.AddScoped<IValidator<ReplacePreferencesRequest>, ReplacePreferencesRequestValidator>();
 
         // Adapters (NOT-R11): TryAdd so a host or test can register a real provider first.
-        services.TryAddSingleton<ISmsSender, LoggingSmsSender>();
+        // SMS: Notifications:Sms:Provider; the development sender is refused outside Development/Testing (SEC-1).
+        services.AddFreshOrbitSms();
         services.TryAddSingleton<IPushSender, LoggingPushSender>();
         if (string.IsNullOrWhiteSpace(configuration[$"{SmtpOptions.SectionName}:Host"]))
         {
@@ -65,5 +67,14 @@ public sealed class NotificationsModule : IModule
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, NotificationsReferenceDataLoader>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints) => NotificationsEndpoints.Map(endpoints);
+    public void MapEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        NotificationsEndpoints.Map(endpoints);
+        var environment = endpoints.ServiceProvider.GetService<IHostEnvironment>();
+        if (environment is not null && (environment.IsDevelopment() || environment.IsEnvironment("Testing")))
+        {
+            NotificationsEndpoints.MapDevelopment(endpoints);
+        }
+    }
 }

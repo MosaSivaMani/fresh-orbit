@@ -7,6 +7,7 @@ using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Paging;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -41,9 +42,10 @@ internal static class CatalogEndpoints
             var query = new ProductListQuery([], null, [], [], null, null, null, ProductSort.Featured, 0, 12) { FeaturedOnly = true };
             var (products, _) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
             return TypedResults.Ok(new HomeResponse([], categories, products, location is null));
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Public);
 
-        group.MapGet("/categories", async (IStorefrontReads reads, CancellationToken ct) => TypedResults.Ok(await reads.GetCategoryTreeAsync(ct)));
+        group.MapGet("/categories", async (IStorefrontReads reads, CancellationToken ct) => TypedResults.Ok(await reads.GetCategoryTreeAsync(ct)))
+            .RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/categories/{slug}", async (string slug, IStorefrontReads reads, CancellationToken ct) =>
         {
@@ -59,7 +61,7 @@ internal static class CatalogEndpoints
                 category.ImageUrl,
                 parent is null ? null : new CategoryRef(parent.Slug, parent.Name),
                 category.Children));
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/products", async (
                 HttpContext http,
@@ -82,7 +84,8 @@ internal static class CatalogEndpoints
                 var (items, total) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
                 return TypedResults.Ok(new PagedResponse<ProductListItem>(items, paging.Page, paging.PageSize, total));
             })
-            .WithValidation<PagedRequest>();
+            .WithValidation<PagedRequest>()
+            .RequireRateLimiting(RateLimitPolicies.Search);
 
         group.MapGet("/products/{slug}", async (string slug, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {
@@ -90,14 +93,14 @@ internal static class CatalogEndpoints
             var product = await reads.GetProductAsync(slug, location, preparation?.Trim().ToUpperInvariant(), clock.UtcNow, ct)
                 ?? throw new NotFoundException(CatalogErrors.ProductNotFound, "No product has this slug.");
             return TypedResults.Ok(product);
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/search/suggest", async (string? q, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {
             var query = StorefrontService.BuildSuggestQuery(q);
             var location = await ResolveAsync(http, service, required: false, ct);
             return TypedResults.Ok(await reads.SuggestAsync(query, location, clock.UtcNow, ct));
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Search);
 
         group.MapGet("/availability", async ([FromQuery(Name = "variantId")] Guid[]? variantId, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {
@@ -109,7 +112,7 @@ internal static class CatalogEndpoints
             var location = (await ResolveAsync(http, service, required: true, ct))!;
             var items = await reads.GetAvailabilityAsync(location, variantId, preparation?.Trim().ToUpperInvariant(), clock.UtcNow, ct);
             return TypedResults.Ok(new AvailabilityResponse(new LocationRef(location.FulfillmentLocationCode, location.Pincode), items));
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Public);
     }
 
     private static void MapAdminCategories(RouteGroupBuilder admin)

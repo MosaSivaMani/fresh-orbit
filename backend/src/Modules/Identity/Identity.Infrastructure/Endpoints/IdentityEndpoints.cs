@@ -32,18 +32,19 @@ internal static class IdentityEndpoints
         group.MapPost("/otp/request", async (OtpRequestRequest request, IOtpService service, CancellationToken ct)
                 => TypedResults.Accepted((string?)null, await service.RequestAsync(request, ct)))
             .WithValidation<OtpRequestRequest>()
-            .RequireRateLimiting(RateLimitPolicies.Otp)
+            .RequireRateLimiting(RateLimitPolicies.OtpRequest)
             .AllowAnonymous();
 
         group.MapPost("/otp/verify", async (OtpVerifyRequest request, IOtpService service, CancellationToken ct)
                 => TypedResults.Ok(await service.VerifyAsync(request, ct)))
             .WithValidation<OtpVerifyRequest>()
-            .RequireRateLimiting(RateLimitPolicies.Otp)
+            .RequireRateLimiting(RateLimitPolicies.OtpVerify)
             .AllowAnonymous();
 
         group.MapPost("/refresh", async (RefreshRequest request, ITokenService service, CancellationToken ct)
                 => TypedResults.Ok(await service.RefreshAsync(request, ct)))
             .WithValidation<RefreshRequest>()
+            .RequireRateLimiting(RateLimitPolicies.Refresh)
             .AllowAnonymous();
 
         group.MapPost("/logout", async (LogoutRequest request, ITokenService service, ICurrentActor actor, CancellationToken ct) =>

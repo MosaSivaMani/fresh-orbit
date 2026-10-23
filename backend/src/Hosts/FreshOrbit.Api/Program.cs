@@ -14,6 +14,7 @@ builder.Services.AddFreshOrbitWeb();
 builder.Services.AddFreshOrbitAuthentication();
 builder.Services.AddFreshOrbitPersistence();
 builder.Services.AddFreshOrbitModules(builder.Configuration, Modules.All);
+builder.Services.AddFreshOrbitForwardedHeaders();
 builder.Services.AddFreshOrbitRateLimiting();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks().AddDbContextCheck<FreshOrbitDbContext>("database");
@@ -25,6 +26,8 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
 
 var app = builder.Build();
 
+// First: the client IP and scheme from trusted proxies only (SEC-2); everything after sees the real client.
+app.UseForwardedHeaders();
 app.UseSerilogRequestLogging();
 app.UseFreshOrbitWeb();
 app.UseCors();

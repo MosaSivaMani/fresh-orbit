@@ -13,4 +13,4 @@
 | Research: hosting, payments, mobile framework, reference ERP | `research/*.md` |
 | Design system (Phase 5) | `design/` |
 | Security review and pre-release checklist | `security/` |
-| Runbooks (Phase 9) | `runbooks/` |
+| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`) |

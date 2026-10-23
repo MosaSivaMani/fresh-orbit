@@ -16,6 +16,7 @@ using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Paging;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,7 @@ internal static class DeliveryEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).AllowAnonymous();
+        endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous();
 
         var admin = endpoints.MapGroup("/admin/delivery").RequirePermission(Permission);
         admin.AddEndpointFilter<LocationAccessFilter>();

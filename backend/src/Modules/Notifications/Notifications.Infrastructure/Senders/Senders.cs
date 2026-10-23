@@ -28,23 +28,6 @@ public sealed class SmtpOptions
     public string FromName { get; set; } = "Fresh Orbit";
 }
 
-/// <summary>
-/// Development SMS sender: logs the text (OTP codes included, so it must never run in production). A DLT-registered
-/// provider adapter replaces it before go-live.
-/// </summary>
-public sealed partial class LoggingSmsSender(ILogger<LoggingSmsSender> logger) : ISmsSender
-{
-    public Task<string?> SendAsync(SmsMessage message, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        LogSms(message.Phone, message.DltTemplateId ?? "-", message.Text);
-        return Task.FromResult<string?>(null);
-    }
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "DEV SMS to {Phone} (DLT {DltTemplateId}): {Text}")]
-    private partial void LogSms(string phone, string dltTemplateId, string text);
-}
-
 /// <summary>Used when no SMTP host is configured.</summary>
 public sealed partial class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender
 {
