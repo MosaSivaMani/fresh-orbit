@@ -7,10 +7,11 @@ using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Paging;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
@@ -82,7 +83,8 @@ internal static class CatalogEndpoints
                 var (items, total) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
                 return TypedResults.Ok(new PagedResponse<ProductListItem>(items, paging.Page, paging.PageSize, total));
             })
-            .WithValidation<PagedRequest>();
+            .WithValidation<PagedRequest>()
+            .RequireRateLimiting(RateLimitPolicies.Search);
 
         group.MapGet("/products/{slug}", async (string slug, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {
@@ -97,7 +99,8 @@ internal static class CatalogEndpoints
             var query = StorefrontService.BuildSuggestQuery(q);
             var location = await ResolveAsync(http, service, required: false, ct);
             return TypedResults.Ok(await reads.SuggestAsync(query, location, clock.UtcNow, ct));
-        });
+        })
+        .RequireRateLimiting(RateLimitPolicies.Search);
 
         group.MapGet("/availability", async ([FromQuery(Name = "variantId")] Guid[]? variantId, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {

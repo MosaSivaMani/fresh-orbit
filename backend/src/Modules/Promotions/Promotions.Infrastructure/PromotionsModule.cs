@@ -1,9 +1,20 @@
+using FreshOrbit.Ordering.Public.Events;
+using FreshOrbit.Promotions.Application.Abstractions;
+using FreshOrbit.Promotions.Application.Banners;
+using FreshOrbit.Promotions.Application.Coupons;
+using FreshOrbit.Promotions.Application.Handlers;
+using FreshOrbit.Promotions.Infrastructure.Endpoints;
+using FreshOrbit.Promotions.Infrastructure.Jobs;
 using FreshOrbit.Promotions.Infrastructure.Persistence;
+using FreshOrbit.Promotions.Infrastructure.Public;
+using FreshOrbit.Promotions.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FreshOrbit.Promotions.Infrastructure;
 
@@ -16,12 +27,24 @@ public sealed class PromotionsModule : IModule
     {
         services.AddModuleModel<PromotionsModuleModel>();
 
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        services.AddScoped<ICouponRepository, CouponRepository>();
+        services.AddScoped<IRedemptionRepository, RedemptionRepository>();
+        services.AddScoped<IPromotionRepository, PromotionRepository>();
+        services.AddScoped<IPromotionsReads, PromotionsReads>();
+        services.TryAddScoped<IPromotionsCatalog, CatalogPromotionsCatalog>();
+        services.TryAddScoped<ICityDirectory, LocationsCityDirectory>();
+
+        services.AddScoped<CouponRedemptionService>();
+        services.AddScoped<CouponAdminService>();
+        services.AddScoped<BannerService>();
+        services.AddScoped<RedemptionReversalService>();
+        services.AddEventHandler<OrderCancelled, PromotionsOrderCancelledHandler>();
+        services.AddEventHandler<OrderPaymentFailed, PromotionsOrderPaymentFailedHandler>();
+        services.AddScoped<IPromotionsApi, PromotionsApi>();
+
+        services.AddScoped<ExpireCouponsJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PromotionsJobs>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
-    }
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) => PromotionsEndpoints.Map(endpoints);
 }

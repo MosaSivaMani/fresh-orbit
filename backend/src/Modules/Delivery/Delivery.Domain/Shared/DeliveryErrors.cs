@@ -10,6 +10,7 @@ public static class DeliveryErrors
     public const string Duplicate = "DUPLICATE";
     public const string LocationAccessDenied = "LOCATION_ACCESS_DENIED";
     public const string LocationRequired = "LOCATION_REQUIRED";
+    public const string ConfigurationMissing = "CONFIGURATION_MISSING";
     public const string PincodeNotServiceable = "PINCODE_NOT_SERVICEABLE";
 
     public const string SlotNotAvailable = "SLOT_NOT_AVAILABLE";
@@ -34,7 +35,7 @@ public static class DeliveryErrors
 }
 
 /// <summary>A staff member acted on a fulfillment location outside their scope (HTTP 403 LOCATION_ACCESS_DENIED).</summary>
-public sealed class LocationAccessDeniedException : DomainException
+public sealed class LocationAccessDeniedException : ForbiddenException
 {
     public LocationAccessDeniedException()
         : base(DeliveryErrors.LocationAccessDenied, "You may not act on this fulfillment location; ask for access to it.", "fulfillmentLocationId")

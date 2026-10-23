@@ -1,6 +1,6 @@
 using System.Text;
 using AwesomeAssertions;
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Payments.Domain.Payments;
 using FreshOrbit.Payments.Domain.Settlements;
 using FreshOrbit.Payments.Domain.Shared;

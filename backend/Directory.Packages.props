@@ -19,6 +19,7 @@
     <PackageVersion Include="FluentValidation" Version="12.2.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.13" />
   </ItemGroup>
   <ItemGroup Label="Media">
     <!-- Product image re-encoding (CAT-R16, catalog.md Q6): SkiaSharp is MIT; the Linux asset needs no system libraries. -->

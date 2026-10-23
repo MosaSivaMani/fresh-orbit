@@ -92,7 +92,7 @@ internal static class PricingEndpoints
 }
 
 /// <summary>
-/// Problem Details the shared handler cannot produce: 403 LOCATION_ACCESS_DENIED, 428 VERSION_REQUIRED from the
+/// Problem Details the shared handler cannot produce: 428 VERSION_REQUIRED from the
 /// schedule check, and an EXCLUDE violation (a concurrent writer on the same key, PRC-R16) as 409 CONCURRENT_SAVE.
 /// </summary>
 public sealed class PricingProblemFilter : IEndpointFilter
@@ -106,10 +106,6 @@ public sealed class PricingProblemFilter : IEndpointFilter
         try
         {
             return await next(context);
-        }
-        catch (PricingLocationAccessDeniedException exception)
-        {
-            return Problem(StatusCodes.Status403Forbidden, "Forbidden.", exception.Code, exception.Message, null);
         }
         catch (PricingVersionRequiredException exception)
         {

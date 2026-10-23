@@ -14,6 +14,10 @@ public sealed class ProblemDetailsTests(SharedKernelDatabase database) : ApiTest
     [InlineData("conflict", HttpStatusCode.Conflict, "ORDER_ALREADY_PACKED")]
     [InlineData("stale", HttpStatusCode.PreconditionFailed, "CONCURRENCY_CONFLICT")]
     [InlineData("race", HttpStatusCode.Conflict, "CONCURRENT_SAVE")]
+    [InlineData("unauthorized", HttpStatusCode.Unauthorized, "INVALID_CREDENTIALS")]
+    [InlineData("forbidden", HttpStatusCode.Forbidden, "LOCATION_ACCESS_DENIED")]
+    [InlineData("too-many", HttpStatusCode.TooManyRequests, "OTP_RESEND_TOO_SOON")]
+    [InlineData("unavailable", HttpStatusCode.ServiceUnavailable, "PAYMENT_PROVIDER_UNAVAILABLE")]
     [InlineData("unexpected", HttpStatusCode.InternalServerError, "INTERNAL_ERROR")]
     public async Task Exceptions_map_to_problem_details_with_code_and_trace_id(string kind, HttpStatusCode status, string code)
     {
@@ -43,6 +47,23 @@ public sealed class ProblemDetailsTests(SharedKernelDatabase database) : ApiTest
         var problem = await ReadJsonAsync(await Factory.CreateClient().GetAsync("/api/v1/test/errors/domain", Ct));
 
         problem.GetProperty("errors").GetProperty("couponCode")[0].GetProperty("code").GetString().Should().Be("COUPON_EXPIRED");
+    }
+
+    [Fact]
+    public async Task Too_many_requests_carries_retry_after()
+    {
+        var response = await Factory.CreateClient().GetAsync("/api/v1/test/errors/too-many", Ct);
+
+        response.Headers.RetryAfter!.Delta.Should().Be(TimeSpan.FromSeconds(42));
+        (await ReadJsonAsync(response)).GetProperty("retryAfterSeconds").GetInt32().Should().Be(42);
+    }
+
+    [Fact]
+    public async Task Forbidden_with_a_field_is_keyed_by_that_field()
+    {
+        var problem = await ReadJsonAsync(await Factory.CreateClient().GetAsync("/api/v1/test/errors/forbidden", Ct));
+
+        problem.GetProperty("errors").GetProperty("fulfillmentLocationId")[0].GetProperty("code").GetString().Should().Be("LOCATION_ACCESS_DENIED");
     }
 
     [Fact]

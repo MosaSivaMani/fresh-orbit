@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FreshOrbit.Delivery.Infrastructure.Public;
 
 /// <summary><see cref="IDeliveryApi"/> over the shared DbContext. <see cref="BookSlotAsync"/> only tracks.</summary>
-internal sealed class DeliveryApi(FreshOrbitDbContext db, IClock clock) : IDeliveryApi
+internal sealed class DeliveryApi(FreshOrbitDbContext db, ILocationCalendar calendar, IClock clock) : IDeliveryApi
 {
     public async Task<IReadOnlyList<SlotInfo>> GetOpenSlotsAsync(Guid fulfillmentLocationId, DateTimeOffset from, DateTimeOffset until, CancellationToken cancellationToken = default)
     {
@@ -74,13 +74,28 @@ internal sealed class DeliveryApi(FreshOrbitDbContext db, IClock clock) : IDeliv
             shipment.DispatchedAt,
             shipment.DeliveredAt,
             shipment.Status == ShipmentStatus.OutForDelivery ? shipment.DeliveryCode : null,
-            [.. shipment.Attempts.OrderBy(a => a.AttemptNo).Select(a => new ShipmentAttemptInfo(a.AttemptNo, a.Outcome.ToCode(), a.AttemptedAt))]);
+            [.. shipment.Attempts.OrderBy(a => a.AttemptNo).Select(a => new ShipmentAttemptInfo(a.AttemptNo, a.Outcome.ToCode(), a.AttemptedAt))])
+        {
+            ColdBoxUsed = shipment.ColdBoxUsed,
+        };
     }
 
     public async Task<ShipmentInfo?> GetShipmentAsync(Guid shipmentId, CancellationToken cancellationToken = default)
     {
         var s = await db.Set<Shipment>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == shipmentId, cancellationToken);
         return s is null ? null : new ShipmentInfo(s.Id, s.OrderId, s.FulfillmentLocationId, s.DeliverySlotId, s.RiderId, s.Status.ToCode(), s.DeliveredAt, s.CashCollectedPaise);
+    }
+
+    public async Task<RiderInfo?> GetRiderAsync(Guid riderId, CancellationToken cancellationToken = default)
+    {
+        var rider = await db.Set<Rider>().AsNoTracking().FirstOrDefaultAsync(r => r.Id == riderId, cancellationToken);
+        if (rider is null)
+        {
+            return null;
+        }
+
+        var locations = await calendar.GetLocationsAsync([rider.FulfillmentLocationId], cancellationToken);
+        return new RiderInfo(rider.Id, rider.FulfillmentLocationId, rider.FullName, rider.Phone, rider.IsActive, locations.Count > 0 ? locations[0].TimeZone : string.Empty);
     }
 
     public Task<bool> HasActiveSlotTemplateAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken = default)

@@ -43,10 +43,8 @@ messages are stored SENT; SENT → READ when the customer reads them.
 
 ## 4. Event → template mapping (customer)
 
-Not wired yet: the Ordering / Payments event classes do not exist, and `ProjectReferenceRuleTests` forbids
-Notifications from referencing another module's Domain project (where events live). Until that rule changes, the
-owning module calls `INotificationsApi.QueueForCustomerAsync(...)` from its own handler (or in its transaction) with
-the event id as `DedupeKey`, using the template and data below.
+Wired (D30): the events live in the owners' `.Public/Events`; `Notifications.Application/Handlers/CustomerNotificationHandlers.cs`
+handles each one and queues the template below for the order's customer, with the event id as `DedupeKey`.
 
 | Event (owner) | Template | Data |
 |---|---|---|

@@ -40,7 +40,7 @@ internal static class PaymentsEndpoints
 {
     public static void MapCustomer(IEndpointRouteBuilder endpoints)
     {
-        var orders = endpoints.MapGroup("/orders/{orderId:guid}").RequireAuthorization().AddEndpointFilter<PaymentsProblemFilter>();
+        var orders = endpoints.MapGroup("/orders/{orderId:guid}").RequireAuthorization();
 
         orders.MapPost("/payments", async (Guid orderId, OnlinePaymentService service, CancellationToken ct) =>
             {
@@ -65,8 +65,7 @@ internal static class PaymentsEndpoints
                 var headers = request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString(), StringComparer.OrdinalIgnoreCase);
                 return TypedResults.Ok(await service.ReceiveAsync(provider, headers, buffer.ToArray(), ct));
             })
-            .AllowAnonymous()
-            .AddEndpointFilter<PaymentsProblemFilter>();
+            .AllowAnonymous();
     }
 
     /// <summary>G9: Development/Testing only — makes the Fake gateway send a signed webhook for an order.</summary>
@@ -104,13 +103,12 @@ internal static class PaymentsEndpoints
                 var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { [FakePaymentProvider.SignatureHeader] = FakePaymentProvider.Sign(secret, body) };
                 return TypedResults.Ok(await service.ReceiveAsync(PaymentProviders.Fake, headers, body, ct));
             })
-            .AllowAnonymous()
-            .AddEndpointFilter<PaymentsProblemFilter>();
+            .AllowAnonymous();
     }
 
     public static void MapAdmin(IEndpointRouteBuilder endpoints)
     {
-        var admin = endpoints.MapGroup("/admin").AddEndpointFilter<PaymentsProblemFilter>();
+        var admin = endpoints.MapGroup("/admin");
 
         // Payments
         admin.MapGet("/payments", async (

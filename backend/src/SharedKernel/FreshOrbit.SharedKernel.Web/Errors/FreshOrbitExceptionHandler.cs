@@ -1,3 +1,4 @@
+using System.Globalization;
 using FreshOrbit.SharedKernel.Errors;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,9 @@ namespace FreshOrbit.SharedKernel.Web.Errors;
 /// (field → [{code, message}]) and <c>traceId</c>:
 /// <see cref="RefusalException"/>/<see cref="DomainException"/> → 422, <see cref="NotFoundException"/> → 404,
 /// <see cref="ConflictException"/>/<see cref="ConcurrentSaveException"/> → 409, <see cref="ConcurrencyException"/> → 412,
-/// <see cref="VersionRequiredException"/> → 428, <see cref="BadHttpRequestException"/> → 400, anything else → 500.
+/// <see cref="VersionRequiredException"/> → 428, <see cref="UnauthorizedException"/> → 401, <see cref="ForbiddenException"/> → 403,
+/// <see cref="TooManyRequestsException"/> → 429 (+ <c>Retry-After</c>), <see cref="ServiceUnavailableException"/> → 503 (D31),
+/// <see cref="BadHttpRequestException"/> → 400, anything else → 500.
 /// </summary>
 public sealed partial class FreshOrbitExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<FreshOrbitExceptionHandler> logger) : IExceptionHandler
 {
@@ -25,6 +28,11 @@ public sealed partial class FreshOrbitExceptionHandler(IProblemDetailsService pr
         }
 
         httpContext.Response.StatusCode = problem.Status!.Value;
+        if (exception is TooManyRequestsException { RetryAfterSeconds: { } retryAfter })
+        {
+            httpContext.Response.Headers.RetryAfter = retryAfter.ToString(CultureInfo.InvariantCulture);
+        }
+
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
@@ -43,6 +51,10 @@ public sealed partial class FreshOrbitExceptionHandler(IProblemDetailsService pr
             ConcurrencyException stale => Create(StatusCodes.Status412PreconditionFailed, "The version is stale.", stale.Code, stale.Message, FieldErrors(stale)),
             ConcurrentSaveException race => Create(StatusCodes.Status409Conflict, "Concurrent save.", race.Code, race.Message, null),
             ConflictException conflict => Create(StatusCodes.Status409Conflict, "Conflict.", conflict.Code, conflict.Message, FieldErrors(conflict)),
+            UnauthorizedException unauthorized => Create(StatusCodes.Status401Unauthorized, "Unauthenticated.", unauthorized.Code, unauthorized.Message, FieldErrors(unauthorized)),
+            ForbiddenException forbidden => Create(StatusCodes.Status403Forbidden, "Forbidden.", forbidden.Code, forbidden.Message, FieldErrors(forbidden)),
+            TooManyRequestsException tooMany => WithRetryAfter(Create(StatusCodes.Status429TooManyRequests, "Too many requests.", tooMany.Code, tooMany.Message, null), tooMany.RetryAfterSeconds),
+            ServiceUnavailableException unavailable => Create(StatusCodes.Status503ServiceUnavailable, "Service unavailable.", unavailable.Code, unavailable.Message, null),
             VersionRequiredException missing => Create(StatusCodes.Status428PreconditionRequired, "Version required.", missing.Code, missing.Message, FieldErrors(missing)),
             DomainException domain => Create(StatusCodes.Status422UnprocessableEntity, "The request was refused.", domain.Code, domain.Message, FieldErrors(domain)),
             BadHttpRequestException bad => Create(bad.StatusCode, "The request could not be read.", ProblemCodes.ForStatus(bad.StatusCode), bad.Message, null),
@@ -57,6 +69,16 @@ public sealed partial class FreshOrbitExceptionHandler(IProblemDetailsService pr
         if (errors is { Count: > 0 })
         {
             problem.Extensions["errors"] = errors;
+        }
+
+        return problem;
+    }
+
+    private static ProblemDetails WithRetryAfter(ProblemDetails problem, int? retryAfterSeconds)
+    {
+        if (retryAfterSeconds is { } seconds)
+        {
+            problem.Extensions["retryAfterSeconds"] = seconds;
         }
 
         return problem;

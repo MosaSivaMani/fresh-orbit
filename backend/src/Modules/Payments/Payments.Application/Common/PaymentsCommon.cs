@@ -10,11 +10,11 @@ namespace FreshOrbit.Payments.Application.Common;
 
 /// <summary>Staff not allowed at this fulfillment location (HTTP 403 <c>LOCATION_ACCESS_DENIED</c>).</summary>
 public sealed class LocationAccessDeniedException()
-    : DomainException(PaymentsErrors.LocationAccessDenied, "You do not have access to this fulfillment location.");
+    : ForbiddenException(PaymentsErrors.LocationAccessDenied, "You do not have access to this fulfillment location.");
 
 /// <summary>Webhook signature check failed (HTTP 401 <c>WEBHOOK_SIGNATURE_INVALID</c>); the event is stored REJECTED.</summary>
 public sealed class WebhookSignatureInvalidException()
-    : DomainException(PaymentsErrors.WebhookSignatureInvalid, "The webhook signature is invalid.");
+    : UnauthorizedException(PaymentsErrors.WebhookSignatureInvalid, "The webhook signature is invalid.");
 
 /// <summary>Configuration section <c>Payments</c>.</summary>
 public sealed class PaymentsOptions

@@ -2,6 +2,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Settings.Domain\Settings.Domain.csproj" />
     <ProjectReference Include="..\Settings.Public\Settings.Public.csproj" />
+    <ProjectReference Include="..\..\Audit\Audit.Public\Audit.Public.csproj" />
+    <ProjectReference Include="..\..\Delivery\Delivery.Public\Delivery.Public.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

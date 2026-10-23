@@ -13,7 +13,7 @@ public interface IPincodeResolutionCache
 
 /// <summary>403 LOCATION_ACCESS_DENIED: a location-scoped staff member addressed another location.</summary>
 public sealed class LocationAccessDeniedException()
-    : DomainException(LocationsErrors.LocationAccessDenied, "You do not have access to this fulfillment location.")
+    : ForbiddenException(LocationsErrors.LocationAccessDenied, "You do not have access to this fulfillment location.")
 {
 }
 

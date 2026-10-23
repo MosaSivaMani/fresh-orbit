@@ -21,6 +21,13 @@ public interface ICatalogApi
     /// <summary>Name, slug, primary image and status of the requested products (missing ids are absent).</summary>
     Task<IReadOnlyList<ProductSummary>> GetProductSummariesAsync(IReadOnlyCollection<Guid> productIds, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>
+    /// For each existing category id (active or not): the category itself followed by its ancestors, nearest first.
+    /// Missing ids are absent.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetCategoryLineagesAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
 
 /// <summary>How a variant is sold. Stored as KG / PIECE / PACK.</summary>

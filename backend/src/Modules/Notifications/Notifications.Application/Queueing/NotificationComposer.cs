@@ -1,3 +1,4 @@
+using FreshOrbit.Customers.Public;
 using FreshOrbit.Identity.Public;
 using FreshOrbit.Notifications.Application.Shared;
 using FreshOrbit.Notifications.Domain.Messages;
@@ -5,6 +6,7 @@ using FreshOrbit.Notifications.Domain.Preferences;
 using FreshOrbit.Notifications.Domain.Shared;
 using FreshOrbit.Notifications.Domain.Templates;
 using FreshOrbit.Notifications.Public;
+using FreshOrbit.Settings.Public;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Time;
 
@@ -13,7 +15,9 @@ namespace FreshOrbit.Notifications.Application.Queueing;
 /// <summary>Renders templates into messages (NOT-R2–R5). Tracks them on the unit of work; the caller saves.</summary>
 public sealed class NotificationComposer(
     INotificationsRepository repository,
-    ICustomerAccountDirectory customers,
+    ICustomerAccountDirectory accounts,
+    ICustomersApi customers,
+    ISettingsApi businessSettings,
     NotificationsOptions settings,
     IClock clock) : INotificationsApi
 {
@@ -26,10 +30,16 @@ public sealed class NotificationComposer(
     public async Task QueueForCustomerAsync(QueueCustomerNotificationRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var userId = await customers.FindUserIdAsync(request.CustomerId, cancellationToken);
+        var userId = await accounts.FindUserIdAsync(request.CustomerId, cancellationToken);
         if (userId is { } id)
         {
-            await QueueCoreAsync(id, request.TemplateCode, request.Data, request.Channels, request.DedupeKey, cancellationToken);
+            var data = request.Data;
+            if (!data.ContainsKey("recipientName") && await customers.GetCustomerAsync(request.CustomerId, cancellationToken) is { } customer)
+            {
+                data = new Dictionary<string, string>(data, StringComparer.Ordinal) { ["recipientName"] = customer.FullName };
+            }
+
+            await QueueCoreAsync(id, request.TemplateCode, data, request.Channels, request.DedupeKey, cancellationToken);
         }
     }
 
@@ -51,7 +61,7 @@ public sealed class NotificationComposer(
 
         var requested = channels?.Select(ToChannel).ToHashSet();
         var preferences = await repository.GetPreferencesAsync(userId, cancellationToken);
-        var values = Values(data);
+        var values = await ValuesAsync(data, cancellationToken);
         var queued = new List<Message>();
         foreach (var template in templates.Where(t => requested is null || requested.Contains(t.Channel)))
         {
@@ -74,15 +84,29 @@ public sealed class NotificationComposer(
         return queued;
     }
 
-    /// <summary>Common variables first, so the caller's data can override them (e.g. recipientName).</summary>
-    public IReadOnlyDictionary<string, string> Values(IReadOnlyDictionary<string, string> data)
+    /// <summary>
+    /// Common variables first, so the caller's data can override them (e.g. recipientName). Business name and support
+    /// contacts come from the Settings business profile (NOT-R1); until an admin saves the profile, the configured
+    /// <c>Notifications</c> values are used so OTP messages still go out.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, string>> ValuesAsync(IReadOnlyDictionary<string, string> data, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(data);
+        BusinessProfile? profile;
+        try
+        {
+            profile = await businessSettings.GetBusinessProfileAsync(cancellationToken);
+        }
+        catch (DomainException)
+        {
+            profile = null;
+        }
+
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["businessName"] = settings.BusinessName,
-            ["supportPhone"] = settings.SupportPhone,
-            ["supportEmail"] = settings.SupportEmail,
+            ["businessName"] = NonEmpty(profile?.TradeName) ?? settings.BusinessName,
+            ["supportPhone"] = NonEmpty(profile?.SupportPhone) ?? settings.SupportPhone,
+            ["supportEmail"] = NonEmpty(profile?.SupportEmail) ?? settings.SupportEmail,
             ["recipientName"] = string.Empty,
         };
         foreach (var (key, value) in data)
@@ -92,6 +116,8 @@ public sealed class NotificationComposer(
 
         return values;
     }
+
+    private static string? NonEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
     /// <summary>NOT-R2.</summary>
     public static bool IsAllowed(Template template, IReadOnlyList<Preference> preferences)

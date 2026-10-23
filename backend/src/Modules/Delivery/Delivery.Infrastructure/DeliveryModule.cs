@@ -1,3 +1,5 @@
+using FreshOrbit.Locations.Public.Events;
+using FreshOrbit.Ordering.Public.Events;
 using FluentValidation;
 using FreshOrbit.Delivery.Application.Common;
 using FreshOrbit.Delivery.Application.Handlers;
@@ -46,7 +48,7 @@ public sealed class DeliveryModule : IModule
         services.AddScoped<IDeliveryReads, DeliveryReads>();
 
         services.TryAddScoped<ILocationCalendar, LocationsPublicCalendar>();
-        services.TryAddSingleton<IDeliveryPolicyProvider, DefaultDeliveryPolicyProvider>();
+        services.TryAddScoped<IDeliveryPolicyProvider, OrderPolicyDeliveryPolicyProvider>();
 
         services.AddScoped<SlotTemplateService>();
         services.AddScoped<SlotService>();
@@ -58,6 +60,13 @@ public sealed class DeliveryModule : IModule
         services.AddValidatorsFromAssemblyContaining<CreateSlotTemplateRequestValidator>(ServiceLifetime.Scoped);
 
         services.AddEventHandler<SlotTemplateChanged, SlotTemplateChangedHandler>();
+        services.AddEventHandler<OrderPlaced, DeliveryOrderPlacedHandler>();
+        services.AddEventHandler<OrderCancelled, DeliveryOrderCancelledHandler>();
+        services.AddEventHandler<OrderPaymentFailed, DeliveryOrderPaymentFailedHandler>();
+        services.AddEventHandler<OrderPacked, DeliveryOrderPackedHandler>();
+        services.AddEventHandler<LocationClosureAdded, DeliveryClosureAddedHandler>();
+        services.AddEventHandler<LocationClosureRemoved, DeliveryClosureRemovedHandler>();
+        services.AddEventHandler<FulfillmentLocationStatusChanged, DeliveryLocationStatusChangedHandler>();
 
         services.AddScoped<IDeliveryApi, DeliveryApi>();
         services.AddScoped<INextSlotProvider, DeliveryNextSlotProvider>();

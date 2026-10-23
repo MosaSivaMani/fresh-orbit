@@ -1,4 +1,4 @@
-using FreshOrbit.Customers.Domain.Events;
+using FreshOrbit.Customers.Public.Events;
 using FreshOrbit.Customers.Domain.Shared;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;
@@ -48,7 +48,7 @@ public sealed class Customer : AggregateRoot
     {
         if (Status == CustomerStatus.Deleted)
         {
-            throw new DomainException(CustomersErrors.CustomerDeleted, "This account was deleted.");
+            throw new ForbiddenException(CustomersErrors.CustomerDeleted, "This account was deleted.");
         }
     }
 

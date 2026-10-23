@@ -6,8 +6,8 @@ public sealed class NotificationsOptions
     public const string SectionName = "Notifications";
 
     /// <summary>
-    /// Common template variables (NOT-R1). Read from configuration because Notifications may not use Settings.Public
-    /// yet (see report); they should come from the business profile.
+    /// Common template variables (NOT-R1) used only while the Settings business profile has not been saved; the
+    /// profile's trade name and support contacts win once it exists.
     /// </summary>
     public string BusinessName { get; set; } = "Fresh Orbit";
 

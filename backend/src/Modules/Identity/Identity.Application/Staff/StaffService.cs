@@ -1,3 +1,4 @@
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Identity.Application.Auth;
 using FreshOrbit.Identity.Application.Shared;
 using FreshOrbit.Identity.Domain.Shared;
@@ -26,7 +27,8 @@ public sealed class StaffService(
     IPasswordHashing passwords,
     SessionRevoker revoker,
     IStaffReads reads,
-    IUnitOfWork unitOfWork) : IStaffService
+    IUnitOfWork unitOfWork,
+    IAuditApi audit) : IStaffService
 {
     public async Task<StaffResponse> CreateAsync(CreateStaffRequest request, CancellationToken cancellationToken)
     {
@@ -43,6 +45,7 @@ public sealed class StaffService(
         var member = StaffMember.Create(user.Id, email, new StaffData(request.FullName, [.. request.RoleIds], request.AllLocations, [.. request.LocationIds ?? []], true));
         users.Add(user);
         staff.Add(member);
+        audit.Record(new AuditRecord("STAFF_CREATED", "STAFF_MEMBER", member.Id.ToString(), null, Snapshot(member)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return (await reads.GetAsync(member.Id, cancellationToken))!;
     }
@@ -55,6 +58,7 @@ public sealed class StaffService(
         await EnsureRolesExistAsync(request.RoleIds, cancellationToken);
         var admin = await roles.FindByCodeAsync(IdentityErrors.AdminRoleCode, cancellationToken);
         var wasActiveAdmin = admin is not null && member.IsActive && member.HasRole(admin.Id);
+        var before = Snapshot(member);
 
         member.Update(new StaffData(request.FullName, [.. request.RoleIds], request.AllLocations, [.. request.LocationIds ?? []], request.IsActive));
 
@@ -75,6 +79,7 @@ public sealed class StaffService(
             user.Enable();
         }
 
+        audit.Record(new AuditRecord("STAFF_UPDATED", "STAFF_MEMBER", member.Id.ToString(), before, Snapshot(member)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return (await reads.GetAsync(member.Id, cancellationToken))!;
     }
@@ -89,6 +94,7 @@ public sealed class StaffService(
         user.ResetPassword(passwords.Hash(request.TemporaryPassword));
         await revoker.RevokeAllAsync(user.Id, RevokeReason.SessionsRevoked, cancellationToken);
         member.RecordPasswordReset();
+        audit.Record(new AuditRecord("STAFF_PASSWORD_RESET", "STAFF_MEMBER", member.Id.ToString(), null, null));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return (await reads.GetAsync(member.Id, cancellationToken))!;
     }
@@ -102,6 +108,15 @@ public sealed class StaffService(
             throw new DomainException(IdentityErrors.RoleNotFound, "The roleIds name a role that does not exist.", "roleIds");
         }
     }
+
+    private static object Snapshot(StaffMember member) => new
+    {
+        member.FullName,
+        member.IsActive,
+        member.AllLocations,
+        RoleIds = member.Roles.Select(r => r.RoleId).Order().ToArray(),
+        LocationIds = member.Locations.Select(l => l.FulfillmentLocationId).Order().ToArray(),
+    };
 
     private static NotFoundException NotFound() => new("No staff member has this id.");
 }

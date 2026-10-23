@@ -7,11 +7,11 @@ using FreshOrbit.SharedKernel.Web.Modules;
 var command = MigrationCommand.Parse(args);
 if (command is null)
 {
-    await Console.Error.WriteLineAsync("Usage: FreshOrbit.Migrations [--sample] [--purge-sample]");
+    await Console.Error.WriteLineAsync(MigrationCommand.Usage);
     return 1;
 }
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(MigrationCommand.ConfigurationArgs(args));
 builder.Services.AddFreshOrbitSerilog(builder.Configuration, builder.Environment);
 builder.Services.AddSingleton<ICurrentActor>(SystemActor.Instance);
 builder.Services.AddFreshOrbitPersistence();

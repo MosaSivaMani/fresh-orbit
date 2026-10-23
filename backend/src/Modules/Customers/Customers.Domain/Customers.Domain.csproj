@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel\FreshOrbit.SharedKernel.csproj" />
+    <ProjectReference Include="..\Customers.Public\Customers.Public.csproj" />
   </ItemGroup>
 </Project>

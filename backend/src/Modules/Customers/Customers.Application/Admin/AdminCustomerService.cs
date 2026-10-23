@@ -1,4 +1,5 @@
 using FluentValidation;
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Customers.Application.Addresses;
 using FreshOrbit.Customers.Application.Shared;
 using FreshOrbit.Customers.Domain.Customers;
@@ -52,7 +53,7 @@ public interface IAdminCustomerService
     Task<CustomerDetailResponse> SetBlockedAsync(Guid customerId, bool blocked, uint expectedVersion, CancellationToken cancellationToken);
 }
 
-public sealed class AdminCustomerService(ICustomersRepository repository, IIdentityApi identity, IUnitOfWork unitOfWork) : IAdminCustomerService
+public sealed class AdminCustomerService(ICustomersRepository repository, IIdentityApi identity, IUnitOfWork unitOfWork, IAuditApi audit) : IAdminCustomerService
 {
     public async Task<CustomerListResponse> ListAsync(CustomerListRequest request, CancellationToken cancellationToken)
     {
@@ -110,6 +111,7 @@ public sealed class AdminCustomerService(ICustomersRepository repository, IIdent
             await identity.SetUserBlockedAsync(customer.UserId, blocked, cancellationToken);
         }
 
+        audit.Record(new AuditRecord(blocked ? "CUSTOMER_BLOCKED" : "CUSTOMER_UNBLOCKED", "CUSTOMER", customer.Id.ToString(), null, new { Status = EnumCodes.ToCode(customer.Status) }));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return await ToDetailAsync(customer, cancellationToken);
     }
@@ -131,7 +133,7 @@ public sealed class AdminCustomerService(ICustomersRepository repository, IIdent
             customer.Status.ToCode(),
             customer.IsBlocked,
             customer.DeletedAt,
-            [.. addresses.Select(AddressService.ToResponse)],
+            [.. addresses.Select(a => AddressService.ToResponse(a))],
             Versions.Format(customer.Version));
     }
 }

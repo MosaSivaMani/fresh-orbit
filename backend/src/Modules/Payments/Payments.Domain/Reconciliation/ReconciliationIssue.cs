@@ -1,4 +1,4 @@
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Payments.Domain.Shared;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Domain;

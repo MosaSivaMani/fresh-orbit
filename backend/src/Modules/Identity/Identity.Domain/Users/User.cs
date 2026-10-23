@@ -1,4 +1,4 @@
-using FreshOrbit.Identity.Domain.Events;
+using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.Identity.Domain.Shared;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;
@@ -66,9 +66,9 @@ public sealed class User : AggregateRoot
         switch (Status)
         {
             case UserStatus.Locked:
-                throw new DomainException(IdentityErrors.AccountLocked, "This account is locked; ask an administrator to reset the password.");
+                throw new ForbiddenException(IdentityErrors.AccountLocked, "This account is locked; ask an administrator to reset the password.");
             case UserStatus.Disabled:
-                throw new DomainException(IdentityErrors.AccountDisabled, "This account is disabled.");
+                throw new ForbiddenException(IdentityErrors.AccountDisabled, "This account is disabled.");
         }
     }
 

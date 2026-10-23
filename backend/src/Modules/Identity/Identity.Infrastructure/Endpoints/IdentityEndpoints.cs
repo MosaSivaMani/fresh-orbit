@@ -21,9 +21,9 @@ internal static class IdentityEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        MapCustomerAuth(endpoints.MapGroup("/auth").WithTags("Auth").WithIdentityProblems());
-        MapStaffAuth(endpoints.MapGroup("/admin/auth").WithTags("Staff auth").WithIdentityProblems());
-        MapStaff(endpoints.MapGroup("/admin/staff").WithTags("Staff").RequirePermission(StaffManage).WithIdentityProblems());
+        MapCustomerAuth(endpoints.MapGroup("/auth").WithTags("Auth"));
+        MapStaffAuth(endpoints.MapGroup("/admin/auth").WithTags("Staff auth"));
+        MapStaff(endpoints.MapGroup("/admin/staff").WithTags("Staff").RequirePermission(StaffManage));
         MapRoles(endpoints.MapGroup("/admin").WithTags("Roles").RequirePermission(StaffManage));
     }
 
@@ -44,6 +44,7 @@ internal static class IdentityEndpoints
         group.MapPost("/refresh", async (RefreshRequest request, ITokenService service, CancellationToken ct)
                 => TypedResults.Ok(await service.RefreshAsync(request, ct)))
             .WithValidation<RefreshRequest>()
+            .RequireRateLimiting(RateLimitPolicies.Refresh)
             .AllowAnonymous();
 
         group.MapPost("/logout", async (LogoutRequest request, ITokenService service, ICurrentActor actor, CancellationToken ct) =>

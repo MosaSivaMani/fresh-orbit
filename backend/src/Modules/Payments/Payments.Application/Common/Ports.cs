@@ -95,10 +95,7 @@ public interface IReconciliationIssueRepository
     Task<IReadOnlyList<ReconciliationIssue>> ListOpenAsync(IReadOnlyCollection<IssueKind> kinds, CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Shipment and rider facts owned by Delivery. <c>Delivery.Public</c> does not expose them yet; the manager wires
-/// this port to <c>IDeliveryApi</c> at merge (see the Phase 2 report).
-/// </summary>
+/// <summary>Shipment and rider facts owned by Delivery (adapter <see cref="DeliveryShipmentFacts"/> over <c>IDeliveryApi</c>).</summary>
 public interface IShipmentFacts
 {
     Task<ShipmentFacts?> GetShipmentAsync(Guid shipmentId, CancellationToken cancellationToken);

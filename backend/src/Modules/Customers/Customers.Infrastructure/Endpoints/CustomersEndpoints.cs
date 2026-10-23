@@ -3,14 +3,11 @@ using FreshOrbit.Customers.Application.Addresses;
 using FreshOrbit.Customers.Application.Admin;
 using FreshOrbit.Customers.Application.Profiles;
 using FreshOrbit.Customers.Application.Wishlist;
-using FreshOrbit.Customers.Domain.Shared;
-using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace FreshOrbit.Customers.Infrastructure.Endpoints;
@@ -26,7 +23,6 @@ internal static class CustomersEndpoints
     {
         var me = endpoints.MapGroup("/me")
             .RequireAuthorization(policy => policy.RequireAuthenticatedUser().RequireClaim(FreshOrbitClaimTypes.ActorType, CustomerActorCode))
-            .AddEndpointFilter<CustomerDeletedFilter>()
             .WithTags("Customers");
 
         me.MapGet(string.Empty, async (IProfileService service, HttpResponse response, CancellationToken ct) =>
@@ -116,24 +112,4 @@ internal static class CustomersEndpoints
     }
 
     private static uint Parse(string version) => uint.Parse(version, CultureInfo.InvariantCulture);
-}
-
-/// <summary>CUS-R1: CUSTOMER_DELETED is a 403 (the shared handler would answer 422). Workaround, see report.</summary>
-internal sealed class CustomerDeletedFilter : IEndpointFilter
-{
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(next);
-        try
-        {
-            return await next(context);
-        }
-        catch (DomainException exception) when (exception.Code == CustomersErrors.CustomerDeleted)
-        {
-            var problem = new ProblemDetails { Status = StatusCodes.Status403Forbidden, Title = "Forbidden.", Detail = exception.Message };
-            problem.Extensions["code"] = exception.Code;
-            return Results.Problem(problem);
-        }
-    }
 }

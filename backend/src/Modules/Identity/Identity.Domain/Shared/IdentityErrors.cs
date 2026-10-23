@@ -1,4 +1,3 @@
-using FreshOrbit.SharedKernel.Errors;
 
 namespace FreshOrbit.Identity.Domain.Shared;
 
@@ -28,16 +27,4 @@ public static class IdentityErrors
 
     /// <summary>The ADMIN role code (holds every permission).</summary>
     public const string AdminRoleCode = "ADMIN";
-}
-
-/// <summary>A refusal the client may retry after <see cref="RetryAfterSeconds"/> (HTTP 429).</summary>
-public sealed class RetryLaterException : DomainException
-{
-    public RetryLaterException(string code, string message, int retryAfterSeconds)
-        : base(code, message)
-    {
-        RetryAfterSeconds = Math.Max(1, retryAfterSeconds);
-    }
-
-    public int RetryAfterSeconds { get; }
 }

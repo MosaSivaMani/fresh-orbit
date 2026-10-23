@@ -18,7 +18,7 @@ One PostgreSQL 17 database `freshorbit`, one schema per module plus `platform` a
 | Naming | `snake_case`, plural tables (EFCore.NamingConventions) |
 | Deleting | Master data: `is_active` / `status`. Orders, payments, movements, audit: never deleted or edited after the fact |
 | Extensions | `citext`, `pg_trgm`, `btree_gist` |
-| Foreign keys | Allowed across schemas, `ON DELETE RESTRICT`. Code still never navigates into another module's entities |
+| Foreign keys | Allowed across schemas. Code still never navigates into another module's entities. Within a schema EF creates them (`ON DELETE RESTRICT`); across schemas the initial migration adds them as SQL (`CrossSchemaForeignKeys`: references to `ordering.orders`, `locations.fulfillment_locations`, `locations.cities`) as `NO ACTION DEFERRABLE INITIALLY DEFERRED`, because one SaveChanges inserts rows of several modules in an order EF cannot know |
 
 ## 2. Overview
 
@@ -146,6 +146,15 @@ No prices are stored; the cart is priced on every read. Guest carts are allowed;
 
 Weight rule (decided): charge actual packed net weight up to `max_chargeable_quantity` = ordered × (1 + `order_policies.max_overweight_bp`, default +10%); any shortfall reduces the amount due (COD) or creates a refund (prepaid). GST invoice is issued at delivery from final amounts (decided).
 
+Implementation notes (Phase 2; columns are snake_case of the entity properties, row version `xmin` on `orders`, `complaints`, `invoices`):
+- `orders` also has: `cart_id`, `address_id`, `time_zone` (location IANA zone, for order-number year, slot dates and invoice FY), `delivery_fee_tax_rate_bp`, `max_total_paise`, `final_items_paise`, `final_preparation_paise`, `final_discount_paise`, `final_tax_paise`, `refund_due_paise`, `refund_due_weight_shortfall_paise`, `refund_due_short_supply_paise`, `cold_box_used`, `payment_id`, `captured_paise`, `payment_due_at`, `preparing_at`, `dispatched_at`, `closed_at`, `shipment_id`, `changed_at`. Index (status, payment_due_at) serves the unpaid-expiry sweep.
+- `order_items` also has: `category_id`, `preparation_method_id`, `stock_unit`, `gross_quantity`, `is_weight_variable`, `estimated_item_paise`, `estimated_preparation_paise`, `max_line_total_paise`, `discount_paise`, `estimated_tax_paise`, `charged_quantity`, `final_item_paise`, `final_preparation_paise`, `final_discount_paise`, `final_tax_paise`, `substituted_from_item_id`. `preparation_charge_paise` holds the charge rate (per kg or per unit by `charge_basis`).
+- `order_status_history` stores `reason_code`; `order_adjustments` stores `created_by_actor_id` and `at`.
+- `substitutions` also has: `order_id`, `proposed_preparation_method_id`, `proposed_preparation_code`, `quantity_unit`, `stock_unit`, `proposed_max_total_paise`, `proposed_at`, `response_actor_type`, `new_order_item_id`. Index (status, expires_at) serves the expiry sweep.
+- `complaints` is denormalized for staff lists: `order_number`, `customer_id`, `fulfillment_location_id`, plus `refund_amount_paise`, `decision_note`, `decided_by`, `decided_at`, `raised_at`; one OPEN/APPROVED complaint per order item (partial unique). `complaint_attachments` is not built yet (no image upload in Phase 2).
+- `invoices` also has `seller_legal_name`; `invoice_lines` also has `unit` (KG/PIECE/PACK), `cgst_paise`, `sgst_paise` (intra-state split, CGST = floor(tax / 2)).
+- Order and invoice numbers come from Settings' number series in the same transaction (gapless): order `FO-{yy}{seq}` per location-time-zone year, invoice per Indian financial year.
+
 ### payments
 | Table | Columns | Constraints |
 |---|---|---|
@@ -184,7 +193,7 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | platform.sample_records | table_name, record_id | tracks sample data for purge |
 
 ### catalog storefront view
-`catalog.storefront_offers` (SQL view, created by `CatalogModuleModel.DatabaseObjectsSql`): active product + active variant + price periods + available stock per fulfillment location. `catalog.storefront_preparation_charges` exposes charge periods. Periods are filtered by the application clock (`@at`), not `now()`, so tests and scheduled prices agree. If `inventory.stock_items` does not exist yet the offers view is created without stock (every offer out of stock); Catalog's database-objects SQL must run after Inventory's table exists to include stock (open item for the Inventory merge).
+`catalog.storefront_offers` (SQL view, created by `CatalogModuleModel.DatabaseObjectsSql`): active product + active variant + price periods + available stock per fulfillment location. `catalog.storefront_preparation_charges` exposes charge periods. Periods are filtered by the application clock (`@at`), not `now()`, so tests and scheduled prices agree. If `inventory.stock_items` does not exist yet the offers view is created without stock (every offer out of stock); The Migrations host runs every module's database-objects SQL after all migrations, so the view always includes stock.
 `catalog.storefront_locations`: pincode → active service area, fulfillment location and city (used to resolve `X-Pincode` inside the same read). These views are the only cross-schema reads outside Reporting.
 
 ### reporting (views only)
@@ -209,7 +218,16 @@ A job generates slots from templates 7 days ahead, skipping closures.
 
 Isolation: Read Committed. Decision D6 in `docs/decisions/log.md` moves pack, cancel and invoice follow-ons into event handlers.
 
-## 5. Seed data
+## 5. Migrations and database objects
+
+| Step | How |
+|---|---|
+| Schema | EF Core migrations in `backend/src/Hosts/FreshOrbit.Migrations/Persistence/Migrations` (first: `InitialCreate`, all schemas). Add one with `dotnet tool restore` then `dotnet ef migrations add <Name> --project src/Hosts/FreshOrbit.Migrations --output-dir Persistence/Migrations` from `backend/` (`dotnet-ef` 10.0.13 is a local tool in `backend/dotnet-tools.json`) |
+| Database objects | Views, materialized views, functions, triggers and exclusion constraints come from `IModuleModel.DatabaseObjectsSql`. They are not embedded in migrations: the Migrations host runs every module's statements after `MigrateAsync` on every run, in one transaction (each statement is idempotent) |
+| Reference data | Loaded next, every run (§6) |
+| First admin | `--create-admin --email <e> --name <n> --password <p>` after reference data (D18); refused once an active admin exists |
+
+## 6. Seed data
 
 | Kind | Where | Rule |
 |---|---|---|

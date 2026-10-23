@@ -1,3 +1,4 @@
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.Locations.Application.Common;
 using FreshOrbit.Locations.Application.Serviceability;
 using FreshOrbit.Locations.Domain.Cities;
@@ -95,6 +96,14 @@ public sealed class LocationsApi(FreshOrbitDbContext db, ILocationsReads reads, 
             .OrderBy(c => c.ClosedOn)
             .Select(c => c.ClosedOn)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<CitySummary>> GetCitiesAsync(IReadOnlyCollection<Guid> cityIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(cityIds);
+        var ids = cityIds.Distinct().ToList();
+        var rows = await db.Set<City>().AsNoTracking().Where(c => ids.Contains(c.Id)).ToListAsync(cancellationToken);
+        return [.. rows.Select(c => new CitySummary(c.Id, c.Code, c.Name, c.StateCode, c.Status.ToCode(), c.TimeZone))];
+    }
 
     public async Task<IReadOnlyList<OperatingHoursEntry>> GetOperatingHoursAsync(IReadOnlyCollection<Guid> fulfillmentLocationIds, CancellationToken cancellationToken = default)
     {

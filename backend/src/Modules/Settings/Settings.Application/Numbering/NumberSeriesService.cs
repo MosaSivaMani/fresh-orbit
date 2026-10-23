@@ -1,10 +1,11 @@
-using System.Globalization;
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Settings.Application.Shared;
 using FreshOrbit.Settings.Domain.Numbering;
 using FreshOrbit.Settings.Domain.Shared;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Persistence;
 using FreshOrbit.SharedKernel.Time;
+using System.Globalization;
 
 namespace FreshOrbit.Settings.Application.Numbering;
 
@@ -36,7 +37,7 @@ public interface INumberSeriesService
     Task<string> PeriodForAsync(DateTimeOffset at, CancellationToken cancellationToken);
 }
 
-public sealed class NumberSeriesService(ISettingsRepository repository, IUnitOfWork unitOfWork, IClock clock) : INumberSeriesService
+public sealed class NumberSeriesService(ISettingsRepository repository, IUnitOfWork unitOfWork, IClock clock, IAuditApi audit) : INumberSeriesService
 {
     public async Task<NumberSeriesListResponse> ListAsync(CancellationToken cancellationToken)
     {
@@ -50,6 +51,7 @@ public sealed class NumberSeriesService(ISettingsRepository repository, IUnitOfW
         ArgumentNullException.ThrowIfNull(condition);
         NumberSeries.EnsureKey(code, period);
         var existing = await repository.GetNumberSeriesAsync(code, period, cancellationToken);
+        var before = existing is null ? null : ToResponse(existing);
         NumberSeries series;
         if (condition.ShouldCreate(existing, unitOfWork, "number series"))
         {
@@ -62,6 +64,7 @@ public sealed class NumberSeriesService(ISettingsRepository repository, IUnitOfW
             series.Change(request.Prefix ?? string.Empty, request.PadWidth, request.NextValue);
         }
 
+        audit.Record(new AuditRecord("NUMBER_SERIES_CHANGED", "NUMBER_SERIES", $"{code}/{period}", before, ToResponse(series)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToResponse(series);
     }

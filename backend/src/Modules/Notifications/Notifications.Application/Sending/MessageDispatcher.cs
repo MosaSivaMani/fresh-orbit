@@ -94,11 +94,13 @@ public sealed class OtpSender(INotificationsRepository repository, NotificationC
         var code = message.Purpose == OtpPurpose.VerifyPhone ? "OTP_VERIFY_PHONE" : "OTP_LOGIN";
         var template = (await repository.GetTemplatesAsync(code, cancellationToken)).FirstOrDefault(t => t.Channel == Channel.Sms && t.IsActive)
             ?? throw new DomainException(NotificationsErrors.ConfigurationMissing, $"No active SMS template for {code}.");
-        var values = composer.Values(new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["code"] = message.Code,
-            ["expiresInMinutes"] = message.ExpiresInMinutes.ToString(System.Globalization.CultureInfo.InvariantCulture),
-        });
+        var values = await composer.ValuesAsync(
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["code"] = message.Code,
+                ["expiresInMinutes"] = message.ExpiresInMinutes.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            },
+            cancellationToken);
         await sms.SendAsync(new SmsMessage(message.Phone, TemplateText.Render(template.Body, values), template.DltTemplateId), cancellationToken);
     }
 }

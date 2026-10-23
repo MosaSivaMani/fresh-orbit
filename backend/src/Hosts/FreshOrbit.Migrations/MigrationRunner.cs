@@ -1,10 +1,16 @@
+using FreshOrbit.Identity.Application.Bootstrap;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.SharedKernel.Errors;
 using Microsoft.EntityFrameworkCore;
 
 namespace FreshOrbit.Migrations;
 
-/// <summary>Applies migrations, loads reference data, then optionally purges and/or loads sample data.</summary>
+/// <summary>
+/// Applies migrations, then every module's <see cref="IModuleModel.DatabaseObjectsSql"/> (views, functions, exclusion
+/// constraints; idempotent, after all tables exist), loads reference data, optionally creates the first admin, then
+/// optionally purges and/or loads sample data.
+/// </summary>
 internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory, IConfiguration configuration, IHostEnvironment environment, ILogger<MigrationRunner> logger)
 {
     public async Task<int> RunAsync(MigrationCommand command, CancellationToken cancellationToken)
@@ -20,6 +26,14 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
             var db = scope.ServiceProvider.GetRequiredService<FreshOrbitDbContext>();
             LogStep("Applying migrations");
             await db.Database.MigrateAsync(cancellationToken);
+            LogStep("Creating database objects");
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            foreach (var sql in db.ModuleModels.SelectMany(model => model.DatabaseObjectsSql))
+            {
+                await db.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
         }
 
         var referencePath = DataDirectories.Resolve(configuration, "Seeding:ReferenceDataPath", "reference");
@@ -29,6 +43,25 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
             {
                 LogReferenceLoader(loader.GetType().Name);
                 await loader.LoadAsync(new ReferenceDataContext(referencePath), cancellationToken);
+            }
+        }
+
+        if (command.CreateAdmin is { } admin)
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            try
+            {
+                var staffMemberId = await scope.ServiceProvider.GetRequiredService<IFirstAdminService>()
+                    .CreateFirstAdminAsync(new CreateFirstAdminCommand(admin.Email, admin.FullName, admin.Password), cancellationToken);
+                LogAdminCreated(admin.Email, staffMemberId);
+            }
+            catch (DomainException exception)
+            {
+                var detail = exception is RefusalException refusal
+                    ? string.Join("; ", refusal.Errors.Select(e => $"{e.Field}: {e.Message}"))
+                    : exception.Message;
+                LogAdminRefused(exception.Code, detail);
+                return 3;
             }
         }
 
@@ -67,19 +100,77 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
     [LoggerMessage(Level = LogLevel.Information, Message = "Sample data: {Loader}")]
     private partial void LogSampleLoader(string loader);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "First admin {Email} created (staff member {StaffMemberId})")]
+    private partial void LogAdminCreated(string email, Guid staffMemberId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "First admin refused: {Code} {Detail}")]
+    private partial void LogAdminRefused(string code, string detail);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Sample data is refused in the {Environment} environment")]
     private partial void LogSampleRefused(string environment);
 }
 
-/// <summary>Command line: <c>[--sample] [--purge-sample]</c>.</summary>
-internal sealed record MigrationCommand(bool LoadSample, bool PurgeSample)
+/// <summary>Command line: <c>[--sample] [--purge-sample] [--create-admin --email E --name N --password P]</c>.</summary>
+internal sealed record MigrationCommand(bool LoadSample, bool PurgeSample, FirstAdmin? CreateAdmin)
 {
-    public static MigrationCommand? Parse(IReadOnlyCollection<string> args)
+    public const string Usage = "Usage: FreshOrbit.Migrations [--sample] [--purge-sample] [--create-admin --email <email> --name <full name> --password <password>]";
+
+    private static readonly HashSet<string> Flags = new(StringComparer.Ordinal) { "--sample", "--purge-sample", "--create-admin" };
+
+    private static readonly HashSet<string> Values = new(StringComparer.Ordinal) { "--email", "--name", "--password" };
+
+    /// <summary>Returns null when an option is unknown, a value is missing, or <c>--create-admin</c> lacks a value.</summary>
+    public static MigrationCommand? Parse(IReadOnlyList<string> args)
     {
-        var known = new HashSet<string>(StringComparer.Ordinal) { "--sample", "--purge-sample" };
-        var flags = args.Where(a => a.StartsWith("--", StringComparison.Ordinal) && !a.Contains('=', StringComparison.Ordinal)).ToList();
-        return flags.Any(f => !known.Contains(f))
-            ? null
-            : new MigrationCommand(flags.Contains("--sample"), flags.Contains("--purge-sample"));
+        ArgumentNullException.ThrowIfNull(args);
+        var flags = new HashSet<string>(StringComparer.Ordinal);
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (var i = 0; i < args.Count; i++)
+        {
+            var arg = args[i];
+            if (!arg.StartsWith("--", StringComparison.Ordinal) || arg.Contains('=', StringComparison.Ordinal))
+            {
+                continue; // configuration overrides (--Key=Value) are for the host builder
+            }
+
+            if (Flags.Contains(arg))
+            {
+                flags.Add(arg);
+            }
+            else if (Values.Contains(arg) && i + 1 < args.Count)
+            {
+                values[arg] = args[++i];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        FirstAdmin? admin = null;
+        if (flags.Contains("--create-admin"))
+        {
+            if (!values.TryGetValue("--email", out var email) || !values.TryGetValue("--name", out var name) || !values.TryGetValue("--password", out var password))
+            {
+                return null;
+            }
+
+            admin = new FirstAdmin(email, name, password);
+        }
+        else if (values.Count > 0)
+        {
+            return null;
+        }
+
+        return new MigrationCommand(flags.Contains("--sample"), flags.Contains("--purge-sample"), admin);
     }
+
+    /// <summary>Configuration overrides (<c>--Key=Value</c>) only; the command's own options never reach configuration.</summary>
+    public static string[] ConfigurationArgs(IEnumerable<string> args)
+        => [.. args.Where(a => a.StartsWith("--", StringComparison.Ordinal) && a.Contains('=', StringComparison.Ordinal))];
+}
+
+internal sealed record FirstAdmin(string Email, string FullName, string Password)
+{
+    public override string ToString() => $"FirstAdmin {{ Email = {Email}, FullName = {FullName} }}";
 }

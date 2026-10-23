@@ -1,3 +1,5 @@
+using FreshOrbit.Delivery.Public.Events;
+using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Payments.Application.Common;
 using FreshOrbit.Payments.Application.Handlers;
 using FreshOrbit.Payments.Application.Payments;
@@ -6,7 +8,7 @@ using FreshOrbit.Payments.Application.Reconciliation;
 using FreshOrbit.Payments.Application.Refunds;
 using FreshOrbit.Payments.Application.Settlements;
 using FreshOrbit.Payments.Application.Webhooks;
-using FreshOrbit.Payments.Domain.Events;
+using FreshOrbit.Payments.Public.Events;
 using FreshOrbit.Payments.Infrastructure.Endpoints;
 using FreshOrbit.Payments.Infrastructure.Jobs;
 using FreshOrbit.Payments.Infrastructure.Persistence;
@@ -59,8 +61,8 @@ public sealed class PaymentsModule : IModule
         services.TryAddScoped<IReconciliationIssueRepository, ReconciliationIssueRepository>();
         services.TryAddScoped<PaymentsReads>();
 
-        // Ports to other modules. Replaced at merge by an adapter over Delivery.Public (see the Phase 2 report).
-        services.TryAddScoped<IShipmentFacts, UnavailableShipmentFacts>();
+        // Ports to other modules.
+        services.TryAddScoped<IShipmentFacts, DeliveryShipmentFacts>();
 
         // Application services.
         services.TryAddScoped<IssueRecorder>();
@@ -74,6 +76,15 @@ public sealed class PaymentsModule : IModule
         services.TryAddScoped<PaymentIssueService>();
         services.TryAddScoped<ReconciliationService>();
         services.TryAddScoped<OrderPaymentHandlers>();
+        services.AddEventHandler<OrderPlaced, PaymentsOrderPlacedHandler>();
+        services.AddEventHandler<OrderPacked, PaymentsOrderPackedHandler>();
+        services.AddEventHandler<OrderAdjusted, PaymentsOrderAdjustedHandler>();
+        services.AddEventHandler<OrderCancelled, PaymentsOrderCancelledHandler>();
+        services.AddEventHandler<OrderPaymentFailed, PaymentsOrderPaymentFailedHandler>();
+        services.AddEventHandler<OrderReturned, PaymentsOrderReturnedHandler>();
+        services.AddEventHandler<ShipmentDelivered, PaymentsShipmentDeliveredHandler>();
+        services.AddEventHandler<PaymentReceivedForClosedOrder, PaymentsReceivedForClosedOrderHandler>();
+        services.AddEventHandler<ComplaintDecided, PaymentsComplaintDecidedHandler>();
 
         // Public API, own event handlers and jobs.
         services.TryAddScoped<IPaymentsApi, PaymentsApi>();
