@@ -228,6 +228,9 @@ Webhooks use the provider event id instead (§7).
 | CITY_NOT_ACTIVE | 422 | City is `DRAFT`, `PAUSED` or `RETIRED` |
 | LOCATION_CLOSED | 422 | Fulfillment location closed on that date |
 | PINCODE_ALREADY_ASSIGNED | 409 | Pincode active in another service area |
+| CITY_RETIREMENT_BLOCKED | 422 | Retire refused; `blocking` lists what every `ICityRetirementCheck` reports (e.g. open orders) |
+| CODE_TAKEN | 409 | City or fulfillment-location code already used |
+| CITY_NOT_FOUND, FULFILLMENT_LOCATION_NOT_FOUND, SERVICE_AREA_NOT_FOUND, CLOSURE_NOT_FOUND, PINCODE_NOT_FOUND | 404 | Specific `NOT_FOUND` codes for admin locations |
 
 ### Catalog
 | Code | HTTP | Meaning |
@@ -242,7 +245,8 @@ Webhooks use the provider event id instead (§7).
 | SKU_TAKEN | 409 | SKU already used |
 | DEFAULT_PREPARATION_REQUIRED | 422 | Variant needs exactly one default preparation |
 | YIELD_INVALID | 422 | `yieldBp` outside 1–10000 |
-| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP or over 5 MB |
+| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP (checked by content, not extension), over 5 MB, or shortest side under 800 px |
+| CATEGORY_NOT_FOUND, PRODUCT_NOT_FOUND, VARIANT_NOT_FOUND, IMAGE_NOT_FOUND | 404 | Specific `NOT_FOUND` codes for admin catalog |
 
 ### Pricing
 | Code | HTTP | Meaning |
@@ -251,7 +255,7 @@ Webhooks use the provider event id instead (§7).
 | PREPARATION_CHARGE_NOT_AVAILABLE | 422 | Prep method enabled but no charge row (0 must be explicit) |
 | TAX_RULE_MISSING | 422 | No tax rule for the product's tax category |
 | PRICE_PERIOD_OVERLAP | 409 | New period overlaps an existing one |
-| PRICE_IN_PAST | 422 | `validFrom` earlier than now |
+| PRICE_IN_PAST | 422 | `validFrom` more than 60 s before now (within 60 s it is treated as now); more than 90 days ahead → `VALIDATION_FAILED` |
 
 ### Inventory
 | Code | HTTP | Meaning |
@@ -759,6 +763,7 @@ Client return from the gateway never changes status; the client polls `GET /orde
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
 | GET | `/api/v1/admin/categories` | catalog.manage | | Category tree incl. inactive |
+| GET | `/api/v1/admin/categories/{id}` | catalog.manage | ETag | Category detail |
 | POST | `/api/v1/admin/categories` | catalog.manage | | Create |
 | PUT | `/api/v1/admin/categories/{id}` | catalog.manage | IM | Update / activate / deactivate |
 | GET | `/api/v1/admin/products` | catalog.manage | | List: `q`, `categoryId`, `status` |
@@ -767,26 +772,27 @@ Client return from the gateway never changes status; the client polls `GET /orde
 | PUT | `/api/v1/admin/products/{id}` | catalog.manage | IM | Update product fields |
 | POST | `/api/v1/admin/products/{id}/publish` | catalog.manage | IM | `DRAFT` → `ACTIVE` (needs ≥1 active variant with default preparation and image) |
 | POST | `/api/v1/admin/products/{id}/archive` | catalog.manage | IM | → `ARCHIVED` |
+| POST | `/api/v1/admin/products/{id}/restore` | catalog.manage | IM | `ARCHIVED` → `DRAFT` |
 | POST | `/api/v1/admin/products/{id}/variants` | catalog.manage | IM (product) | Add variant |
 | PUT | `/api/v1/admin/products/{id}/variants/{variantId}` | catalog.manage | IM (product) | Update variant, preparations with `yieldBp` and `isDefault` |
-| POST | `/api/v1/admin/products/{id}/images` | catalog.manage | multipart | Upload image (MinIO) |
+| POST | `/api/v1/admin/products/{id}/images` | catalog.manage | IM (product), multipart `file` | Upload image (D21: local disk via `IFileStorage`, served at `/media/{key}`); stores 320/640/1280 px WebP + original under `products/{productId}/{imageId}/` |
 | PUT | `/api/v1/admin/products/{id}/images/order` | catalog.manage | IM | Reorder images |
 | DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | catalog.manage | IM | Remove image |
 | GET | `/api/v1/admin/preparation-methods` | catalog.manage | | Reference list |
-| GET/POST/PUT | `/api/v1/admin/promotions[/{id}]` | catalog.manage | IM on PUT | Home banners |
+| GET/POST/PUT | `/api/v1/admin/promotions[/{id}]` | catalog.manage | IM on PUT | Home banners (Promotions module; `/home` returns `banners: []` until it ships) |
 
 ### 4.12 Admin pricing
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/admin/pricing/prices` | pricing.manage | | Current + future prices: `fulfillmentLocationId`, `variantId`, `q`, `missingOnly=true` |
+| GET | `/api/v1/admin/pricing/prices` | pricing.manage | | Current + future prices: `fulfillmentLocationId` (required), `variantId`, `q`, `missingOnly=true` |
 | GET | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | ETag | Current price and history |
 | PUT | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | IM, or `If-None-Match: *` when none | Set price: closes current period at `validFrom`, opens new one |
 | DELETE | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | IM | End the current period now (stop selling) |
 | GET/PUT | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/preparations/{code}/charge` | pricing.manage | IM / If-None-Match | Preparation charge, same period rules |
 | GET | `/api/v1/admin/pricing/tax-rules` | pricing.manage | | Tax rules by category |
-| POST | `/api/v1/admin/pricing/tax-rules` | pricing.manage | | New period for a tax category |
-| POST | `/api/v1/admin/pricing/prices/bulk` | pricing.manage | IK | CSV/JSON bulk set; all-or-nothing, returns per-row errors |
+| POST | `/api/v1/admin/pricing/tax-rules` | pricing.manage | | New period for a tax category (`taxCategoryCode`, `rateBp` 0–2800, `validFrom`, `replaceFuture`); no `If-Match`: tax rules are global and periods do not overlap |
+| POST | `/api/v1/admin/pricing/prices/bulk` | pricing.manage | IK | CSV/JSON bulk set; all-or-nothing, returns per-row errors; `?dryRun=true` validates only; max 5000 rows. JSON `{ validFrom?, replaceFuture?, rows: [{ kind: PRICE\|PREP_CHARGE, locationCode, sku, unitPricePaise, compareAtPaise, preparationCode, chargePaise, chargeBasis, validFrom? }] }` or `text/csv` with the same column names |
 
 **PUT …/locations/{locationId}/variants/{variantId}/price** (`If-Match: "55102"`) → 200
 ```json
@@ -805,7 +811,7 @@ Client return from the gateway never changes status; the client polls `GET /orde
   }
 }
 ```
-`validFrom` omitted = now. Errors: `PRICE_IN_PAST`, `PRICE_PERIOD_OVERLAP`, `CONCURRENCY_CONFLICT`.
+`validFrom` omitted = now. Errors: `PRICE_IN_PAST`, `PRICE_PERIOD_OVERLAP` (a future period exists; send `replaceFuture: true`), `CONCURRENCY_CONFLICT`, `LOCATION_ACCESS_DENIED`. Sending the values already current (or already scheduled at the same `validFrom`) is a no-op 200.
 
 ### 4.13 Admin promotions
 

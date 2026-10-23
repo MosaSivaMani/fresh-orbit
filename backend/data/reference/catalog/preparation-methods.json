@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "code": "WHOLE",
+      "name": "Whole",
+      "description": "As received; not cleaned or cut (live when the variant is sold live)",
+      "sortOrder": 10,
+      "guidanceYieldBp": 10000
+    },
+    {
+      "code": "CLEANED",
+      "name": "Cleaned, whole",
+      "description": "Scaled, gutted, gills and fins removed; head on",
+      "sortOrder": 20,
+      "guidanceYieldBp": 8500
+    },
+    {
+      "code": "CLEANED_HEADLESS",
+      "name": "Cleaned, head off",
+      "description": "As CLEANED with head removed",
+      "sortOrder": 30,
+      "guidanceYieldBp": 7000
+    },
+    {
+      "code": "CURRY_CUT",
+      "name": "Curry cut",
+      "description": "Cleaned, head off, cut into bone-in pieces (3–4 cm)",
+      "sortOrder": 40,
+      "guidanceYieldBp": 6500
+    },
+    {
+      "code": "STEAK",
+      "name": "Steaks",
+      "description": "Cleaned, cross-cut slices about 1 cm with centre bone",
+      "sortOrder": 50,
+      "guidanceYieldBp": 7000
+    },
+    {
+      "code": "FRY_CUT",
+      "name": "Fry cut",
+      "description": "Cleaned, thin bone-in slices for frying",
+      "sortOrder": 60,
+      "guidanceYieldBp": 6500
+    },
+    {
+      "code": "FILLET",
+      "name": "Fillet, skin on",
+      "description": "Boneless fillets with skin",
+      "sortOrder": 70,
+      "guidanceYieldBp": 5500
+    },
+    {
+      "code": "FILLET_SKINLESS",
+      "name": "Fillet, skinless",
+      "description": "Boneless, skin removed",
+      "sortOrder": 80,
+      "guidanceYieldBp": 4500
+    },
+    {
+      "code": "BONELESS_CUBES",
+      "name": "Boneless cubes",
+      "description": "Skinless boneless fillet cut into cubes",
+      "sortOrder": 90,
+      "guidanceYieldBp": 4500
+    },
+    {
+      "code": "BUTTERFLY",
+      "name": "Butterflied",
+      "description": "Cleaned, opened flat along the back, spine removed, halves joined",
+      "sortOrder": 100,
+      "guidanceYieldBp": 6000
+    },
+    {
+      "code": "DEVEINED_SHELL_ON",
+      "name": "Deveined, shell on",
+      "description": "Head off, shell on, vein removed",
+      "sortOrder": 110,
+      "guidanceYieldBp": 6500
+    },
+    {
+      "code": "PEELED_TAIL_ON",
+      "name": "Peeled, tail on",
+      "description": "Head and shell off except tail, vein removed",
+      "sortOrder": 120,
+      "guidanceYieldBp": 6200
+    },
+    {
+      "code": "PEELED_DEVEINED",
+      "name": "Peeled and deveined",
+      "description": "Head, shell and tail off, vein removed",
+      "sortOrder": 130,
+      "guidanceYieldBp": 6000
+    },
+    {
+      "code": "CRAB_CLEANED_CUT",
+      "name": "Crab, cleaned and cut",
+      "description": "Top shell, gills and innards removed; halved or quartered",
+      "sortOrder": 140,
+      "guidanceYieldBp": 7000
+    },
+    {
+      "code": "SQUID_CLEANED",
+      "name": "Squid, cleaned",
+      "description": "Head, ink sac, quill and skin removed; tube and tentacles kept",
+      "sortOrder": 150,
+      "guidanceYieldBp": 7000
+    },
+    {
+      "code": "SQUID_RINGS",
+      "name": "Squid rings",
+      "description": "Cleaned tube cut into rings",
+      "sortOrder": 160,
+      "guidanceYieldBp": 6000
+    }
+  ]
+}

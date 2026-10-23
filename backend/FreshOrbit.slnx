@@ -108,6 +108,8 @@
     <Project Path="tests/FreshOrbit.Testing/FreshOrbit.Testing.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/Catalog.Tests/Catalog.Tests.csproj" />
     <Project Path="tests/Modules/Locations.Tests/Locations.Tests.csproj" />
+    <Project Path="tests/Modules/Pricing.Tests/Pricing.Tests.csproj" />
   </Folder>
 </Solution>

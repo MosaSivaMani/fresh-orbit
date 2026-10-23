@@ -127,7 +127,7 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | U8 | Category third level / cycle | `VALIDATION_FAILED` |
 | U9 | Archive ACTIVE, restore ARCHIVED → DRAFT, ACTIVE → DRAFT | ok, ok, `INVALID_STATUS_TRANSITION` |
 
-### Integration (Postgres, Testcontainers; MinIO fake `IFileStorage` in memory unless stated)
+### Integration (Postgres, Testcontainers; `LocalDiskFileStorage` on a temp directory, D21)
 
 | # | Scenario | Expect |
 |---|---|---|
@@ -155,3 +155,5 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | Q6 | Image processing library. | SkiaSharp (MIT); not ImageSharp (split licence). |
 | Q7 | Tax category codes are validated where? | Catalog checks format only; Pricing refuses a price when no tax rule exists (PRC-R9), so an unknown code can never sell. |
 | Q8 | `-newest` sort and PublishProduct need a publish time; no column. | Add `products.published_at timestamptz null` (set on first publish); needs a DB doc change. |
+
+**Implementation notes (Phase 2).** Q1: done as SQL views (`catalog.storefront_offers`, `storefront_preparation_charges`, `storefront_locations`) read by `Reads/` only. Q2, Q3, Q4, Q6, Q8: done as proposed. Q5: `QuantityRules` lives in `Catalog.Domain` for now; moving it to SharedKernel is a manager decision. Images: EXIF orientation is applied before resizing; shortest side must be ≥ 800 px; an orphan-image cleanup job (`catalog.cleanup-orphan-images`, 03:30 daily) deletes storage prefixes with no `product_images` row. Banners on `/home` stay empty until Promotions ships; `isWishlisted` is null until Customers exposes wishlists.
