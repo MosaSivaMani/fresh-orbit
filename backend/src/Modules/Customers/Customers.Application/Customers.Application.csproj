@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Customers.Domain\Customers.Domain.csproj" />
+    <ProjectReference Include="..\Customers.Public\Customers.Public.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Public\Identity.Public.csproj" />
+    <ProjectReference Include="..\..\Catalog\Catalog.Public\Catalog.Public.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>

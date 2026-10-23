@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "Migrations": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    },
+    "Migrations with sample data": {
+      "commandName": "Project",
+      "commandLineArgs": "--sample",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <!-- Project files are named <Module>.<Layer>; assemblies and namespaces are FreshOrbit.<Module>.<Layer>. -->
+    <AssemblyName>FreshOrbit.$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>FreshOrbit.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>

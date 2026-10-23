@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Ordering.Application\Ordering.Application.csproj" />
+    <ProjectReference Include="..\Ordering.Public\Ordering.Public.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.EntityFramework\FreshOrbit.SharedKernel.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.Web\FreshOrbit.SharedKernel.Web.csproj" />
+  </ItemGroup>
+</Project>

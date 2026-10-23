@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Delivery.Domain\Delivery.Domain.csproj" />
+    <ProjectReference Include="..\Delivery.Public\Delivery.Public.csproj" />
+    <ProjectReference Include="..\..\Locations\Locations.Public\Locations.Public.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>

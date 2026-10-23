@@ -1,0 +1,14 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- Test names use underscores; test classes are public; fixtures are disposed by xUnit. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA2007;CA1001</NoWarn>
+    <!-- Run xUnit v3 through VSTest (xunit.runner.visualstudio) so `dotnet test backend/FreshOrbit.slnx` works on the
+         .NET 10 SDK without opting the repository into Microsoft.Testing.Platform mode. -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'FreshOrbit.Testing'">
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,110 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Hosts/">
+    <Project Path="src/Hosts/FreshOrbit.Api/FreshOrbit.Api.csproj" />
+    <Project Path="src/Hosts/FreshOrbit.Hosting/FreshOrbit.Hosting.csproj" />
+    <Project Path="src/Hosts/FreshOrbit.Migrations/FreshOrbit.Migrations.csproj" />
+    <Project Path="src/Hosts/FreshOrbit.Worker/FreshOrbit.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Audit/">
+    <Project Path="src/Modules/Audit/Audit.Application/Audit.Application.csproj" />
+    <Project Path="src/Modules/Audit/Audit.Domain/Audit.Domain.csproj" />
+    <Project Path="src/Modules/Audit/Audit.Infrastructure/Audit.Infrastructure.csproj" />
+    <Project Path="src/Modules/Audit/Audit.Public/Audit.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Cart/">
+    <Project Path="src/Modules/Cart/Cart.Application/Cart.Application.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Domain/Cart.Domain.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Infrastructure/Cart.Infrastructure.csproj" />
+    <Project Path="src/Modules/Cart/Cart.Public/Cart.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Catalog/">
+    <Project Path="src/Modules/Catalog/Catalog.Application/Catalog.Application.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Domain/Catalog.Domain.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+    <Project Path="src/Modules/Catalog/Catalog.Public/Catalog.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Customers/">
+    <Project Path="src/Modules/Customers/Customers.Application/Customers.Application.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Domain/Customers.Domain.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Infrastructure/Customers.Infrastructure.csproj" />
+    <Project Path="src/Modules/Customers/Customers.Public/Customers.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Delivery/">
+    <Project Path="src/Modules/Delivery/Delivery.Application/Delivery.Application.csproj" />
+    <Project Path="src/Modules/Delivery/Delivery.Domain/Delivery.Domain.csproj" />
+    <Project Path="src/Modules/Delivery/Delivery.Infrastructure/Delivery.Infrastructure.csproj" />
+    <Project Path="src/Modules/Delivery/Delivery.Public/Delivery.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Identity.Application/Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+    <Project Path="src/Modules/Identity/Identity.Public/Identity.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Inventory/">
+    <Project Path="src/Modules/Inventory/Inventory.Application/Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Domain/Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" />
+    <Project Path="src/Modules/Inventory/Inventory.Public/Inventory.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Locations/">
+    <Project Path="src/Modules/Locations/Locations.Application/Locations.Application.csproj" />
+    <Project Path="src/Modules/Locations/Locations.Domain/Locations.Domain.csproj" />
+    <Project Path="src/Modules/Locations/Locations.Infrastructure/Locations.Infrastructure.csproj" />
+    <Project Path="src/Modules/Locations/Locations.Public/Locations.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Notifications.Application/Notifications.Application.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Domain/Notifications.Domain.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Infrastructure/Notifications.Infrastructure.csproj" />
+    <Project Path="src/Modules/Notifications/Notifications.Public/Notifications.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Ordering/">
+    <Project Path="src/Modules/Ordering/Ordering.Application/Ordering.Application.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Domain/Ordering.Domain.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Infrastructure/Ordering.Infrastructure.csproj" />
+    <Project Path="src/Modules/Ordering/Ordering.Public/Ordering.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Payments/">
+    <Project Path="src/Modules/Payments/Payments.Application/Payments.Application.csproj" />
+    <Project Path="src/Modules/Payments/Payments.Domain/Payments.Domain.csproj" />
+    <Project Path="src/Modules/Payments/Payments.Infrastructure/Payments.Infrastructure.csproj" />
+    <Project Path="src/Modules/Payments/Payments.Public/Payments.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Pricing/">
+    <Project Path="src/Modules/Pricing/Pricing.Application/Pricing.Application.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Domain/Pricing.Domain.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Infrastructure/Pricing.Infrastructure.csproj" />
+    <Project Path="src/Modules/Pricing/Pricing.Public/Pricing.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Promotions/">
+    <Project Path="src/Modules/Promotions/Promotions.Application/Promotions.Application.csproj" />
+    <Project Path="src/Modules/Promotions/Promotions.Domain/Promotions.Domain.csproj" />
+    <Project Path="src/Modules/Promotions/Promotions.Infrastructure/Promotions.Infrastructure.csproj" />
+    <Project Path="src/Modules/Promotions/Promotions.Public/Promotions.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/Reporting.Application/Reporting.Application.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Domain/Reporting.Domain.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Infrastructure/Reporting.Infrastructure.csproj" />
+    <Project Path="src/Modules/Reporting/Reporting.Public/Reporting.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Settings/">
+    <Project Path="src/Modules/Settings/Settings.Application/Settings.Application.csproj" />
+    <Project Path="src/Modules/Settings/Settings.Domain/Settings.Domain.csproj" />
+    <Project Path="src/Modules/Settings/Settings.Infrastructure/Settings.Infrastructure.csproj" />
+    <Project Path="src/Modules/Settings/Settings.Public/Settings.Public.csproj" />
+  </Folder>
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="src/SharedKernel/FreshOrbit.SharedKernel.EntityFramework/FreshOrbit.SharedKernel.EntityFramework.csproj" />
+    <Project Path="src/SharedKernel/FreshOrbit.SharedKernel.Web/FreshOrbit.SharedKernel.Web.csproj" />
+    <Project Path="src/SharedKernel/FreshOrbit.SharedKernel/FreshOrbit.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FreshOrbit.ArchitectureTests/FreshOrbit.ArchitectureTests.csproj" />
+    <Project Path="tests/FreshOrbit.SharedKernel.Tests/FreshOrbit.SharedKernel.Tests.csproj" />
+    <Project Path="tests/FreshOrbit.Testing/FreshOrbit.Testing.csproj" />
+  </Folder>
+</Solution>

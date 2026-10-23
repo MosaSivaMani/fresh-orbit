@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Payments.Domain\Payments.Domain.csproj" />
+    <ProjectReference Include="..\Payments.Public\Payments.Public.csproj" />
+    <ProjectReference Include="..\..\Ordering\Ordering.Public\Ordering.Public.csproj" />
+    <ProjectReference Include="..\..\Delivery\Delivery.Public\Delivery.Public.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Public\Identity.Public.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>

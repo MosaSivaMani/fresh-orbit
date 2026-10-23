@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
+    <ProjectReference Include="..\Notifications.Public\Notifications.Public.csproj" />
+    <ProjectReference Include="..\..\Identity\Identity.Public\Identity.Public.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>

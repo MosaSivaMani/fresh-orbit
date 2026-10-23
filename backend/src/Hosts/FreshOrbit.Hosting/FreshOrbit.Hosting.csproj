@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>FreshOrbit.Hosting</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\SharedKernel\FreshOrbit.SharedKernel.Web\FreshOrbit.SharedKernel.Web.csproj" />
+    <ProjectReference Include="..\..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Customers\Customers.Infrastructure\Customers.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Locations\Locations.Infrastructure\Locations.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Catalog\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Pricing\Pricing.Infrastructure\Pricing.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Inventory\Inventory.Infrastructure\Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Cart\Cart.Infrastructure\Cart.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Promotions\Promotions.Infrastructure\Promotions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Ordering\Ordering.Infrastructure\Ordering.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Payments\Payments.Infrastructure\Payments.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Delivery\Delivery.Infrastructure\Delivery.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Notifications\Notifications.Infrastructure\Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Reporting\Reporting.Infrastructure\Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Audit\Audit.Infrastructure\Audit.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\Settings\Settings.Infrastructure\Settings.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

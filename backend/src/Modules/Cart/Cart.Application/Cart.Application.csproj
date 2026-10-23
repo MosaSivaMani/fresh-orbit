@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Cart.Domain\Cart.Domain.csproj" />
+    <ProjectReference Include="..\Cart.Public\Cart.Public.csproj" />
+    <ProjectReference Include="..\..\Catalog\Catalog.Public\Catalog.Public.csproj" />
+    <ProjectReference Include="..\..\Pricing\Pricing.Public\Pricing.Public.csproj" />
+    <ProjectReference Include="..\..\Inventory\Inventory.Public\Inventory.Public.csproj" />
+    <ProjectReference Include="..\..\Locations\Locations.Public\Locations.Public.csproj" />
+    <ProjectReference Include="..\..\Promotions\Promotions.Public\Promotions.Public.csproj" />
+    <ProjectReference Include="..\..\Settings\Settings.Public\Settings.Public.csproj" />
+    <ProjectReference Include="..\..\Customers\Customers.Public\Customers.Public.csproj" />
+    <ProjectReference Include="..\..\Ordering\Ordering.Public\Ordering.Public.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>
