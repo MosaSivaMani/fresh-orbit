@@ -1,0 +1,33 @@
+# flutter_lints (Flutter team baseline, BSD-3) plus strict language modes and a short list of extra rules.
+# Why not very_good_analysis: it enforces public_member_api_docs and many style rules that add noise to an
+# app (not a library). The extras below catch the bugs we care about: unawaited futures, dynamic calls on
+# JSON, missing return types and implicit casts.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    todo: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_type_to_string
+    - cancel_subscriptions
+    - directives_ordering
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_locals
+    - prefer_single_quotes
+    - require_trailing_commas
+    - sort_child_properties_last
+    - unawaited_futures
+    - use_super_parameters
