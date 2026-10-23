@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/account/account_screens.dart';
 import 'features/account/address_screens.dart';
+import 'features/account/help_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/cart/cart_screen.dart';
 import 'features/catalog/home_screen.dart';
@@ -54,10 +56,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/location',
         builder: (_, state) => LocationScreen(changing: state.uri.queryParameters['change'] == '1'),
       ),
-      GoRoute(path: '/search', builder: (_, state) => SearchScreen(initialQuery: state.uri.queryParameters['q'])),
-      GoRoute(path: '/product/:slug', builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!)),
+      GoRoute(
+        path: '/search',
+        builder: (_, state) => SearchScreen(initialQuery: state.uri.queryParameters['q']),
+      ),
+      GoRoute(
+        path: '/product/:slug',
+        builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!),
+      ),
       GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
-      GoRoute(path: '/login', builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from'])),
+      GoRoute(
+        path: '/login',
+        builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from']),
+      ),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
       GoRoute(
         path: '/order-success/:orderId',
@@ -66,13 +77,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/home', builder: (_, _) => const HomeScreen())],
+          ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/shop', builder: (_, state) => ShopScreen(category: state.uri.queryParameters['category'])),
+              GoRoute(
+                path: '/shop',
+                builder: (_, state) => ShopScreen(category: state.uri.queryParameters['category']),
+              ),
             ],
           ),
-          StatefulShellBranch(routes: [GoRoute(path: '/cart', builder: (_, _) => const CartScreen())]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/cart', builder: (_, _) => const CartScreen())],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -91,8 +109,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/account',
-                builder: (_, _) => const _Pending('/account'),
+                builder: (_, _) => const AccountScreen(),
                 routes: [
+                  GoRoute(path: 'profile', builder: (_, _) => const ProfileScreen()),
                   GoRoute(
                     path: 'addresses',
                     builder: (_, _) => const AddressesScreen(),
@@ -104,6 +123,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                     ],
                   ),
+                  GoRoute(path: 'notifications', builder: (_, _) => const NotificationsScreen()),
+                  GoRoute(path: 'preferences', builder: (_, _) => const PreferencesScreen()),
+                  GoRoute(path: 'help', builder: (_, _) => const HelpScreen()),
                 ],
               ),
             ],
@@ -153,18 +175,13 @@ class AppShell extends ConsumerWidget {
             selectedIcon: Icon(Icons.receipt_long),
             label: 'Orders',
           ),
-          const NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Account'),
+          const NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Account',
+          ),
         ],
       ),
     );
   }
-}
-
-/// Temporary tab body until the screen group lands (removed in the same series of commits).
-class _Pending extends StatelessWidget {
-  const _Pending(this.path);
-  final String path;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(body: Center(child: Text(path)));
 }
