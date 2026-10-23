@@ -178,7 +178,7 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 | Job | Schedule | Work exists when | Does |
 |---|---|---|---|
 | Slot generation | Hourly (also enqueued after template change, closure removal, location activation) | For some ACTIVE location the expected set (DEL-R9) minus existing (location, `start_at`) is non-empty — computed from one read of templates, closures and horizon slots | Inserts missing slots, one transaction per location; nothing written otherwise. |
-| Stale shipment alert | Every 15 min | Shipments PENDING/ASSIGNED whose slot `start_at <= now` without `packed_at`, or OUT_FOR_DELIVERY with `dispatched_at` older than slot `end_at` + 60 min | Raises one `ShipmentsOverdue{fulfillmentLocationId, shipmentIds}` per location. (Optional; drop if not wanted.) |
+| Stale shipment alert (not implemented in Phase 2) | Every 15 min | Shipments PENDING/ASSIGNED whose slot `start_at <= now` without `packed_at`, or OUT_FOR_DELIVERY with `dispatched_at` older than slot `end_at` + 60 min | Raises one `ShipmentsOverdue{fulfillmentLocationId, shipmentIds}` per location. (Optional; drop if not wanted.) |
 
 ## 6. Test scenarios
 
@@ -200,7 +200,7 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 | U12 | Template change with booked slot | Times kept, capacity = max(new, booked) |
 | U13 | Dispatch without `packed_at` / without rider | `SHIPMENT_NOT_DISPATCHABLE` |
 | U14 | Deliver wrong code ×5, then right code | 5 × `DELIVERY_CODE_INVALID`, then `DELIVERY_CODE_LOCKED` |
-| U15 | Reattempt after 3 attempts / on the next local day | Refused `INVALID_STATUS_TRANSITION` / `REATTEMPT_NOT_ALLOWED` (A6) |
+| U15 | Reattempt after 3 attempts / on the next local day | Refused `REATTEMPT_NOT_ALLOWED` in both cases (A6) |
 | U16 | Attempt numbering after deliver following one failure | Attempts 1 (failed), 2 (DELIVERED) |
 | U17 | Assign inactive rider / rider of other location | `RIDER_NOT_AVAILABLE` |
 | U18 | Displayed status precedence CLOSED > CUTOFF_PASSED > FULL > AVAILABLE | As table |
@@ -217,7 +217,7 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 | I6 | **Duplicate event delivery**: `OrderPlaced` twice | One shipment |
 | I7 | `OrderCancelled` twice (and with inbox row removed) | Shipment CANCELLED once; `booked_count` decreased once |
 | I8 | `OrderCancelled` before `OrderPlaced` (out of order) | Shipment CANCELLED, slot released once; late `OrderPlaced` no-op |
-| I9 | Full happy path: placed → packed → assign → dispatch → deliver with cash | States as §2; `ShipmentDispatched`, `ShipmentDelivered`, `CashCollected` in outbox; second `cash-collected` → 409 `CASH_ALREADY_COLLECTED` |
+| I9 | Full happy path: placed → packed → assign → dispatch → deliver with cash | States as §2; `RiderAssigned`, `ShipmentDispatched`, `ShipmentDelivered` (with cash fields) in outbox. `CashCollected` and `cash-collected` belong to Payments (D14) |
 | I10 | Failed attempt → reattempt → deliver | Attempts 1, 2; events in order |
 | I11 | Dispatch with stale `If-Match` / missing | 412 / 428 |
 | I12 | Template PUT with booked future slots | Booked slot times unchanged, unbooked slots rewritten |
@@ -251,3 +251,14 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 | Q4 | Cancel after dispatch (order PACKED → CANCELLED races with dispatch). | Delivery raises `ShipmentRecallRequired`; Ordering refuses cancel once its handler has moved the order to OUT_FOR_DELIVERY. |
 | Q5 | Does a slot need to fall within the location's `operating_hours`? | No: delivery windows are independent of store hours; not validated. |
 | Q6 | Ownership of `GET /delivery-slots` and `Delivery.Public.GetNextSlot` for `/serviceability`. | Delivery (E3) owns both. |
+
+## 9. Phase 2 implementation notes
+
+| Item | Resolution |
+|---|---|
+| A1–A10 | Implemented as proposed (A5 uses `tsrange(DATE '2000-01-01' + start_time, … + end_time)`, mapped to 409 `SLOT_TEMPLATE_OVERLAP`). |
+| A11 | `IDeliveryPolicyProvider` port, default 3 attempts; wire to `order_policies.max_delivery_attempts` at merge. |
+| A12 | Ordering/Locations events are consumed through `OrderEventHandlers` / `LocationEventHandlers` services; the `IEventHandler<T>` adapters are added at merge. Closures come through the `ILocationCalendar` port; its Locations.Public adapter waits for `GetClosuresAsync`. |
+| Cash | `cash-collected` endpoint and `CashCollected` event are owned by Payments (D14). Delivery records cash given at deliver and raises it inside `ShipmentDelivered` (`cashCollectedPaise`, `cashMode`, `upiReference`). |
+| Location scope | Staff outside a location get 403 `LOCATION_ACCESS_DENIED` from a module-local endpoint filter until SharedKernel maps a forbidden exception. |
+| Customer slots | `GET /delivery-slots` returns `{ fulfillmentLocationId, items }` (not paged; at most 7 days of slots). |

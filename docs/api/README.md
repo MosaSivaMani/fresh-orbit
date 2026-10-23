@@ -321,6 +321,13 @@ Webhooks use the provider event id instead (§7).
 | SHIPMENT_NOT_DISPATCHABLE | 409 | Order not `PACKED` or no rider |
 | SLOT_TEMPLATE_OVERLAP | 409 | Template overlaps another for the same day |
 | SLOT_CAPACITY_BELOW_BOOKED | 422 | New capacity below `bookedCount` |
+| SLOT_NOT_AVAILABLE | 422 | Slot missing, closed or at another location (checkout booking; reopening a slot on a closure date) |
+| SLOT_CUTOFF_PASSED | 422 | Slot booking cutoff has passed (checked before capacity) |
+| SLOT_FULL | 422 | Slot has no capacity left |
+| RIDER_HAS_ACTIVE_SHIPMENTS | 409 | Rider cannot be deactivated while ASSIGNED / OUT_FOR_DELIVERY / FAILED shipments exist |
+| REATTEMPT_NOT_ALLOWED | 422 | Max delivery attempts reached or the slot's local date has passed; return the shipment |
+| DELIVERY_CODE_LOCKED | 422 | 5 wrong delivery codes; record a failed attempt and reattempt (resets the counter) |
+| CASH_ALREADY_COLLECTED | 409 | Cash already recorded for the shipment |
 
 ### Notifications / Settings
 | Code | HTTP | Meaning |
@@ -523,6 +530,10 @@ Not sellable at the location (no price, no stock item, product inactive) → exc
 |---|---|---|---|---|
 | GET | `/api/v1/availability?variantId=&preparation=` | public | LOC required | Live availability for one or more variants (repeat `variantId`) |
 | GET | `/api/v1/delivery-slots?date=` | public | LOC required | Slots for today + 6 days: `startAt`, `endAt`, `cutoffAt`, `status` (`AVAILABLE`, `FULL`, `CUTOFF_PASSED`, `CLOSED`) |
+
+`GET /delivery-slots` (Delivery, A10): `date` optional (absent = today … today + 6 in the city time zone; a date outside
+that range returns no items). Response `{ fulfillmentLocationId, items: [{ id, slotDate, startAt, endAt, cutoffAt, status }] }`
+ordered by `startAt`. Missing pincode → 422 `LOCATION_REQUIRED`; not served → 422 `PINCODE_NOT_SERVICEABLE`.
 
 ### 4.6 Cart
 
@@ -972,7 +983,33 @@ Rules: `amountPaise` ≤ paid/collected − refunded − pending → else 422 `R
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/attempts` | delivery.manage | IM | Failed attempt (`outcome`, `notes`) → `DELIVERY_FAILED` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/reattempt` | delivery.manage | IM | `DELIVERY_FAILED` → `OUT_FOR_DELIVERY` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/return` | delivery.manage | IM | `DELIVERY_FAILED` → `RETURNED` |
-| POST | `/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected` | delivery.manage | IK | Record COD / UPI-on-delivery collection (`amountPaise`, `mode` `CASH`/`UPI`, `upiReference`) when not given at deliver |
+| POST | `/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected` | delivery.manage | IK | Record COD / UPI-on-delivery collection (`amountPaise`, `mode` `CASH`/`UPI`, `upiReference`) when not given at deliver. **Mapped by Payments (D14)**, not Delivery |
+| GET | `/api/v1/admin/delivery/shipments/{shipmentId}` | delivery.manage | ETag | Shipment detail with attempts (A9); source of the shipment `If-Match` |
+
+Delivery request bodies (Phase 2, D13). Every list item and command response carries `version`; commands return the
+updated resource and its `ETag`. Staff outside the resource's location → 403 `LOCATION_ACCESS_DENIED`; lists are filtered.
+
+| Endpoint | Body | Response |
+|---|---|---|
+| POST `slot-templates` | `{ fulfillmentLocationId, dayOfWeek (1=Mon…7), startTime "HH:mm", endTime "HH:mm", capacity 1–500, cutoffMinutes 0–2880 }` (15-minute boundaries) | 201 template |
+| PUT `slot-templates/{id}` | `{ dayOfWeek, startTime, endTime, capacity, cutoffMinutes, isActive }` | 200 template; future slots follow via `SlotTemplateChanged` (seconds of lag) |
+| GET `slots` | query `fulfillmentLocationId`, `fromDate`, `toDate`, `page`, `pageSize` | items `{ id, fulfillmentLocationId, slotTemplateId, slotDate, startAt, endAt, cutoffAt, capacity, bookedCount, status OPEN/CLOSED, closedReason MANUAL/CLOSURE/TEMPLATE_INACTIVE, displayStatus, version }` |
+| PATCH `slots/{slotId}` | `{ capacity?: 0–500, status?: "OPEN" \| "CLOSED" }` (at least one) | 200 slot; `SLOT_CAPACITY_BELOW_BOOKED`, `SLOT_NOT_AVAILABLE` (open on a closure date) |
+| POST `riders` | `{ fulfillmentLocationId, fullName 1–120, phone E.164 }` | 201 rider; 409 `DUPLICATE` (`errors.phone`) |
+| PUT `riders/{riderId}` | `{ fullName, phone, isActive }` | 200 rider; 409 `RIDER_HAS_ACTIVE_SHIPMENTS` |
+| GET `shipments` | query `fulfillmentLocationId`, `slotId`, `riderId`, `status` (repeatable), `page`, `pageSize` | items as shipment detail |
+| POST `shipments/{id}/assign` | `{ riderId }` | 200 shipment; 422 `RIDER_NOT_AVAILABLE`; 409 `INVALID_STATUS_TRANSITION` |
+| POST `shipments/{id}/dispatch` | `{ dispatchTemperatureC: -40.0…40.0 }` | 200 shipment (`temperatureWarning` above 4.0 °C); 409 `SHIPMENT_NOT_DISPATCHABLE` |
+| POST `shipments/{id}/deliver` | `{ deliveryCode "1234", cashCollectedPaise?, cashMode? CASH/UPI (required with cash), upiReference? (required for UPI) }` (A7) | 200 shipment; 422 `DELIVERY_CODE_INVALID` (failure counted and saved), `DELIVERY_CODE_LOCKED`; 409 `CASH_ALREADY_COLLECTED` |
+| POST `shipments/{id}/attempts` | `{ outcome CUSTOMER_UNAVAILABLE/ADDRESS_NOT_FOUND/REFUSED/OTHER, notes? (required for OTHER, ≤ 500) }` | 200 shipment (FAILED) |
+| POST `shipments/{id}/reattempt` | — | 200 shipment; 422 `REATTEMPT_NOT_ALLOWED` |
+| POST `shipments/{id}/return` | — | 200 shipment (RETURNED) |
+
+Shipment detail: `{ id, orderId, fulfillmentLocationId, deliverySlotId, riderId, status, placedAt, packedAt, coldBoxUsed,
+dispatchTemperatureC, temperatureWarning, dispatchedAt, deliveredAt, returnedAt, cancelledAt, deliveryCodeFailures,
+deliveryCodeLocked, cashCollectedPaise, cashMode, upiReference, cashCollectedAt, attempts[{ attemptNo, outcome, notes,
+attemptedAt }], version }`. The delivery code is never shown to staff; the customer sees it through order tracking while
+`OUT_FOR_DELIVERY`.
 
 ### 4.18 Admin cities, locations, pincodes, schedules
 
