@@ -18,6 +18,7 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | tailwind-merge | 3.7.0 | MIT | ui | Conflict-free class merging |
 | openapi-fetch | 0.17.0 | MIT | api-client | Typed fetch client for generated paths |
 | tailwindcss | 4.3.3 | MIT | apps (CSS build) | Styling engine (output CSS ships) |
+| next | 16.4.2 | MIT | web | Customer website framework (App Router, SSR). **Exception to the two-week rule:** 16.4.0 and earlier carry critical advisories (GHSA-2464-fhr4-w9xw, GHSA-673q-mjm6-r5xr) and high GHSA-p3m5-59mp-jv5r, and `next build` refuses to run on them; 16.4.2 (published 2026-10-15) is the first fixed patch. See decision log |
 
 ## Development
 
@@ -51,6 +52,9 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | prettier-plugin-tailwindcss | 0.8.1 | MIT | Class sorting |
 | @types/react, @types/react-dom | 19.3.0 | MIT | Types |
 | @types/node | 26.6.5 | MIT | Types |
+| @tailwindcss/postcss | 4.3.3 | MIT | Tailwind in Next.js (web) |
+| msw | 2.15.0 | MIT | Mock Service Worker: API mocks in web unit tests (Node interceptor only, never shipped) |
+| @playwright/test | 1.64.0 | Apache-2.0 | End-to-end smoke tests (web) |
 
 ## Planned (not installed yet)
 
