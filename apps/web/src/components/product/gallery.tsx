@@ -38,11 +38,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
         />
       </div>
       {images.length > 1 && (
-        <div
-          role="group"
-          aria-label="Product photos"
-          className="flex gap-2 overflow-x-auto"
-        >
+        <div role="group" aria-label="Product photos" className="flex gap-2 overflow-x-auto">
           {images.map((image, i) => (
             <button
               key={image.url}
