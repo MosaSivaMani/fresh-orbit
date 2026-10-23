@@ -226,6 +226,14 @@ export function useUpdateServiceArea(id: Id) {
   });
 }
 
+export function useServiceArea(id: Id) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: ["locations", "service-area", id],
+    queryFn: ({ signal }) => http.get<ServiceArea>(`/admin/service-areas/${id}`, { signal }),
+  });
+}
+
 export function usePincodes(serviceAreaId: Id, includeRemoved = false) {
   const http = useHttp();
   return useQuery({
