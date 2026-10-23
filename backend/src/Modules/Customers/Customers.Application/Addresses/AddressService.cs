@@ -1,6 +1,7 @@
 using FreshOrbit.Customers.Application.Shared;
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Shared;
+using FreshOrbit.Locations.Public;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Persistence;
@@ -23,7 +24,7 @@ public sealed record SaveAddressRequest(
     decimal? Longitude,
     bool? IsDefault);
 
-/// <param name="IsServiceable">Null until Customers may ask Locations (CUS-R5).</param>
+/// <param name="IsServiceable">Whether Locations currently serves the pincode (CUS-R5); null where not resolved.</param>
 public sealed record AddressResponse(
     Guid AddressId,
     string Label,
@@ -56,13 +57,19 @@ public interface IAddressService
 }
 
 /// <summary>CUS-R3–R5. Every change stamps the customer row so concurrent address edits of one customer race there.</summary>
-public sealed class AddressService(CustomerContext context, ICustomersRepository repository, IUnitOfWork unitOfWork) : IAddressService
+public sealed class AddressService(CustomerContext context, ICustomersRepository repository, IUnitOfWork unitOfWork, ILocationsApi locations) : IAddressService
 {
     public async Task<IReadOnlyList<AddressResponse>> ListAsync(CancellationToken cancellationToken)
     {
         var customer = await context.LoadAsync(cancellationToken);
         var addresses = await repository.GetActiveAddressesAsync(customer.Id, cancellationToken);
-        return [.. addresses.Select(ToResponse)];
+        var serviceable = new Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach (var pincode in addresses.Select(a => a.Pincode).Distinct(StringComparer.Ordinal))
+        {
+            serviceable[pincode] = (await locations.ResolvePincodeAsync(pincode, cancellationToken)).IsServiceable;
+        }
+
+        return [.. addresses.Select(a => ToResponse(a, serviceable[a.Pincode]))];
     }
 
     public async Task<AddressResponse> AddAsync(SaveAddressRequest request, CancellationToken cancellationToken)
@@ -79,7 +86,7 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
         var address = Address.Create(customer.Id, data, context.Now);
         var currentDefault = active.FirstOrDefault(a => a.IsDefault);
         var makeDefault = currentDefault is null || request.IsDefault == true;
-        return await repository.InTransactionAsync(
+        var added = await repository.InTransactionAsync(
             async () =>
             {
                 customer.TouchAddresses(context.Now);
@@ -96,9 +103,10 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
 
                 repository.Add(address);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return ToResponse(address);
+                return address;
             },
             cancellationToken);
+        return await RespondAsync(added, cancellationToken);
     }
 
     public async Task<AddressResponse> ReplaceAsync(Guid addressId, SaveAddressRequest request, uint expectedVersion, CancellationToken cancellationToken)
@@ -116,7 +124,7 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
 
         customer.TouchAddresses(context.Now);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return ToResponse(address);
+        return await RespondAsync(address, cancellationToken);
     }
 
     public async Task DeleteAsync(Guid addressId, CancellationToken cancellationToken)
@@ -155,14 +163,15 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
         var address = await LoadActiveAsync(customer.Id, addressId, cancellationToken);
         if (address.IsDefault)
         {
-            return ToResponse(address);
+            return await RespondAsync(address, cancellationToken);
         }
 
         return await MoveDefaultAsync(customer, address, cancellationToken);
     }
 
-    private Task<AddressResponse> MoveDefaultAsync(Domain.Customers.Customer customer, Address address, CancellationToken cancellationToken)
-        => repository.InTransactionAsync(
+    private async Task<AddressResponse> MoveDefaultAsync(Domain.Customers.Customer customer, Address address, CancellationToken cancellationToken)
+    {
+        await repository.InTransactionAsync(
             async () =>
             {
                 customer.TouchAddresses(context.Now);
@@ -175,9 +184,14 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
                 await repository.FlushAsync(cancellationToken);
                 address.MakeDefault();
                 await unitOfWork.SaveChangesAsync(cancellationToken);
-                return ToResponse(address);
+                return true;
             },
             cancellationToken);
+        return await RespondAsync(address, cancellationToken);
+    }
+
+    private async Task<AddressResponse> RespondAsync(Address address, CancellationToken cancellationToken)
+        => ToResponse(address, (await locations.ResolvePincodeAsync(address.Pincode, cancellationToken)).IsServiceable);
 
     private async Task<Address> LoadActiveAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken)
     {
@@ -209,7 +223,7 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
         return errors.Count > 0 ? throw new RefusalException(errors) : data;
     }
 
-    public static AddressResponse ToResponse(Address address)
+    public static AddressResponse ToResponse(Address address, bool? isServiceable = null)
     {
         ArgumentNullException.ThrowIfNull(address);
         return new AddressResponse(
@@ -227,7 +241,7 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
             address.Latitude,
             address.Longitude,
             address.IsDefault,
-            null,
+            isServiceable,
             Versions.Format(address.Version));
     }
 }

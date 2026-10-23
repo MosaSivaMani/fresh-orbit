@@ -1,4 +1,5 @@
 using FluentValidation;
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Settings.Application.Shared;
 using FreshOrbit.Settings.Domain.BusinessProfiles;
 using FreshOrbit.Settings.Domain.Shared;
@@ -54,7 +55,7 @@ public interface IBusinessProfileService
     Task<BusinessProfileResponse> SaveAsync(SaveBusinessProfileRequest request, WriteCondition condition, CancellationToken cancellationToken);
 }
 
-public sealed class BusinessProfileService(ISettingsRepository repository, IUnitOfWork unitOfWork) : IBusinessProfileService
+public sealed class BusinessProfileService(ISettingsRepository repository, IUnitOfWork unitOfWork, IAuditApi audit) : IBusinessProfileService
 {
     public async Task<BusinessProfileResponse> GetAsync(CancellationToken cancellationToken)
     {
@@ -69,6 +70,7 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
         ArgumentNullException.ThrowIfNull(condition);
         var existing = await repository.GetBusinessProfileAsync(cancellationToken);
         var data = new BusinessProfileData(request.LegalName, request.TradeName, request.Gstin, request.FssaiLicenseNo, request.Address, request.SupportPhone, request.SupportEmail, request.TimeZone);
+        var before = existing is null ? null : ToResponse(existing);
         BusinessProfile profile;
         if (condition.ShouldCreate(existing, unitOfWork, "business profile"))
         {
@@ -81,6 +83,7 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
             profile.Update(data);
         }
 
+        audit.Record(new AuditRecord("BUSINESS_PROFILE_CHANGED", "BUSINESS_PROFILE", "default", before, ToResponse(profile)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToResponse(profile);
     }

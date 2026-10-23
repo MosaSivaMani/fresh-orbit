@@ -1,9 +1,10 @@
-using System.Globalization;
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Settings.Application.Shared;
 using FreshOrbit.Settings.Domain.OrderPolicies;
 using FreshOrbit.Settings.Domain.Shared;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Persistence;
+using System.Globalization;
 
 namespace FreshOrbit.Settings.Application.OrderPolicies;
 
@@ -42,7 +43,7 @@ public interface IOrderPolicyService
     Task<OrderPolicyResponse> SaveAsync(Guid? cityId, SaveOrderPolicyRequest request, WriteCondition condition, CancellationToken cancellationToken);
 }
 
-public sealed class OrderPolicyService(ISettingsRepository repository, IUnitOfWork unitOfWork) : IOrderPolicyService
+public sealed class OrderPolicyService(ISettingsRepository repository, IUnitOfWork unitOfWork, IAuditApi audit) : IOrderPolicyService
 {
     public async Task<OrderPolicyListResponse> ListAsync(CancellationToken cancellationToken)
     {
@@ -64,6 +65,7 @@ public sealed class OrderPolicyService(ISettingsRepository repository, IUnitOfWo
             request.ComplaintWindowHours,
             request.MaxDeliveryAttempts);
         var existing = await repository.GetOrderPolicyAsync(cityId, cancellationToken);
+        var before = existing is null ? null : ToResponse(existing);
         OrderPolicy policy;
         if (condition.ShouldCreate(existing, unitOfWork, "order policy"))
         {
@@ -76,6 +78,7 @@ public sealed class OrderPolicyService(ISettingsRepository repository, IUnitOfWo
             policy.Update(data);
         }
 
+        audit.Record(new AuditRecord("ORDER_POLICY_CHANGED", "ORDER_POLICY", cityId?.ToString() ?? "default", before, ToResponse(policy)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToResponse(policy);
     }

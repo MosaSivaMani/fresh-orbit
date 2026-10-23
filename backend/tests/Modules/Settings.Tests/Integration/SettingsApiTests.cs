@@ -115,6 +115,11 @@ public sealed class SettingsApiTests(E1Database database) : E1ApiTestBase(databa
         stale.Headers.IfMatch.Add(created.Headers.ETag!);
         (await admin.SendAsync(stale, Ct)).StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
 
+        // Each accepted save leaves an audit entry in the same transaction.
+        var audited = await InScopeAsync(p => p.GetRequiredService<FreshOrbitDbContext>().Database
+            .SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM audit.entries WHERE action = 'BUSINESS_PROFILE_CHANGED'").SingleAsync(Ct));
+        audited.Should().Be(2);
+
         // The period now follows the business time zone.
         var period = await InScopeAsync(p => p.GetRequiredService<ISettingsApi>().GetFinancialPeriodAsync(new DateTimeOffset(2027, 3, 31, 20, 0, 0, TimeSpan.Zero), Ct));
         period.Should().Be("2027-28");

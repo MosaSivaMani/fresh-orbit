@@ -1,3 +1,4 @@
+using FreshOrbit.Audit.Public;
 using FreshOrbit.Identity.Public;
 using FreshOrbit.Notifications.Application.Queueing;
 using FreshOrbit.Notifications.Application.Shared;
@@ -35,7 +36,8 @@ public sealed class TemplateAdminService(
     ISmsSender sms,
     IEmailSender email,
     ICurrentActor actor,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IAuditApi audit)
 {
     public async Task<IReadOnlyList<TemplateResponse>> ListAsync(CancellationToken cancellationToken)
         => [.. (await repository.GetAllTemplatesAsync(cancellationToken)).Select(ToResponse)];
@@ -45,7 +47,9 @@ public sealed class TemplateAdminService(
         ArgumentNullException.ThrowIfNull(request);
         var template = await FindAsync(code, channel, cancellationToken);
         unitOfWork.SetExpectedVersion(template, expectedVersion);
+        var before = ToResponse(template);
         template.Edit(request.Subject, request.Body, request.IsActive);
+        audit.Record(new AuditRecord("NOTIFICATION_TEMPLATE_CHANGED", "NOTIFICATION_TEMPLATE", $"{template.Code}/{channel}", before, ToResponse(template)));
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return ToResponse(template);
     }
