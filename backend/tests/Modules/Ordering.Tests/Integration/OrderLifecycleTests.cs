@@ -201,10 +201,13 @@ public sealed class OrderLifecycleTests(OrderingDatabase database) : OrderingTes
         detail.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         CodeOf(await ReadJsonAsync(detail)).Should().Be("LOCATION_ACCESS_DENIED");
 
-        var list = await ReadJsonAsync(await outsider.GetAsync(new Uri("/api/v1/admin/orders", UriKind.Relative), Ct));
+        // Filter by order number: the shared test database holds more orders than one page.
+        var orderNumber = (await LoadOrderAsync(orderId))!.OrderNumber;
+        var listUri = new Uri($"/api/v1/admin/orders?q={orderNumber}", UriKind.Relative);
+        var list = await ReadJsonAsync(await outsider.GetAsync(listUri, Ct));
         list.GetProperty("items").EnumerateArray().Should().NotContain(i => i.GetProperty("id").GetGuid() == orderId);
 
-        var insiderList = await ReadJsonAsync(await Staff().GetAsync(new Uri("/api/v1/admin/orders", UriKind.Relative), Ct));
+        var insiderList = await ReadJsonAsync(await Staff().GetAsync(listUri, Ct));
         insiderList.GetProperty("items").EnumerateArray().Should().Contain(i => i.GetProperty("id").GetGuid() == orderId);
     }
 
