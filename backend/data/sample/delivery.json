@@ -198,22 +198,22 @@
       "key": "RIDER-1",
       "locationCode": "VSKP-MVP",
       "fullName": "Ravi Teja",
-      "phone": "+910000000201",
-      "sampleNote": "[SAMPLE] Fictional rider; phone in the unallocatable +91 0… range."
+      "phone": "+919999900201",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
     },
     {
       "key": "RIDER-2",
       "locationCode": "VSKP-MVP",
       "fullName": "Suresh Babu",
-      "phone": "+910000000202",
-      "sampleNote": "[SAMPLE] Fictional rider; phone in the unallocatable +91 0… range."
+      "phone": "+919999900202",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
     },
     {
       "key": "RIDER-3",
       "locationCode": "VSKP-MVP",
       "fullName": "Lakshmi Prasanna",
-      "phone": "+910000000203",
-      "sampleNote": "[SAMPLE] Fictional rider; phone in the unallocatable +91 0… range."
+      "phone": "+919999900203",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
     }
   ]
 }

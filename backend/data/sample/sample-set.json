@@ -6,6 +6,13 @@
   "keys": "Records reference each other by natural keys (city code, location code, service-area key, category/product slug, SKU, coupon code, rider/customer/staff key). Database ids are new UUIDv7 values generated at load and recorded in platform.sample_records.",
   "loadOrder": [
     {
+      "order": 5,
+      "module": "settings",
+      "file": "settings.json",
+      "needs": [],
+      "note": "business profile only when none exists (invoices need a GSTIN)"
+    },
+    {
       "order": 10,
       "module": "locations",
       "file": "locations.json",

@@ -26,7 +26,28 @@ SKU = re.compile(r"^[A-Z0-9]+([_-][A-Z0-9]+)*$")
 SLUG = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 PINCODE = re.compile(r"^[1-9][0-9]{5}$")
 E164 = re.compile(r"^\+[1-9][0-9]{7,14}$")
-TEST_PHONE = re.compile(r"^\+910000[0-9]{6}$")  # +91 followed by 0: never a real Indian subscriber number
+# Fake block reserved in docs/product/sample-data.md (S-D3): +91 99999 00NNN.
+TEST_PHONE = re.compile(r"^\+919999900[0-9]{3}$")
+GSTIN_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+GSTIN = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+
+
+def gstin_check_character(first14: str) -> str:
+    """Same Luhn mod 36 as Settings.Domain Gstins.CheckCharacter."""
+    total = 0
+    for i, ch in enumerate(first14):
+        product = GSTIN_ALPHABET.index(ch) * ((i % 2) + 1)
+        total += product // 36 + product % 36
+    return GSTIN_ALPHABET[(36 - total % 36) % 36]
+
+
+def gstin_valid(value: str) -> bool:
+    if not GSTIN.match(value or ""):
+        return False
+    state = int(value[:2])
+    if not (1 <= state <= 38 or state in (97, 99)):
+        return False
+    return gstin_check_character(value[:14]) == value[14]
 STATE = re.compile(r"^[A-Z]{2}$")
 HSN = re.compile(r"^[0-9]{4,8}$")
 COUPON_CODE = re.compile(r"^[A-Z0-9]{3,20}$")
@@ -132,7 +153,7 @@ for code, l in locations.items():
         if l.get("hasColdStorage") is not True:
             err(w, "hasColdStorage must be true for an ACTIVE location (LOC-R11)")
     if l.get("phone") and not TEST_PHONE.match(l["phone"]):
-        err(w, "phone must use the fake +910000xxxxxx pattern")
+        err(w, "phone must use the fake block +919999900NNN (S-D3)")
 
 hours_by_location = {}
 for h in loc.get("operatingHours", []):
@@ -468,7 +489,7 @@ for key, r in riders.items():
     if not r.get("fullName") or len(r["fullName"]) > 120:
         err(w, "fullName must be 1 to 120 characters")
     if not E164.match(r.get("phone") or "") or not TEST_PHONE.match(r.get("phone") or ""):
-        err(w, "phone must be E.164 in the fake +910000xxxxxx pattern")
+        err(w, "phone must be E.164 in the fake block +919999900NNN (S-D3)")
 
 # ------------------------------------------------------------------ promotions
 pm = files.get("promotions.json", {})
@@ -566,7 +587,7 @@ for c in cu.get("customers", []):
     phone = c.get("phone") or ""
     phones.append(phone)
     if not E164.match(phone) or not TEST_PHONE.match(phone):
-        err(w, "phone must be E.164 in the fake +910000xxxxxx pattern")
+        err(w, "phone must be E.164 in the fake block +919999900NNN (S-D3)")
     email = c.get("email")
     if email is not None and (not EMAIL.match(email) or not email.endswith(RESERVED_EMAIL_DOMAINS)):
         err(w, "email must be null or valid on a reserved domain (.example, .invalid, .test)")
@@ -586,7 +607,7 @@ for c in cu.get("customers", []):
                 err(aw, f"{f} is required (CUS-R5)")
             no_marker(aw, f, a.get(f))
         if not TEST_PHONE.match(a.get("phone") or ""):
-            err(aw, "phone must use the fake +910000xxxxxx pattern")
+            err(aw, "phone must use the fake block +919999900NNN (S-D3)")
         if not STATE.match(a.get("stateCode") or ""):
             err(aw, "stateCode must be two upper-case letters")
         if not PINCODE.match(a.get("pincode") or ""):
@@ -595,6 +616,31 @@ unique("customers.customers", phones, "customer phone")
 overlap = set(phones) & {r.get("phone") for r in riders.values()}
 for ph in overlap:
     err("customers/delivery", f"phone {ph} used by both a customer and a rider")
+
+# ------------------------------------------------------------------ settings
+st = files.get("settings.json", {})
+bp = st.get("businessProfile")
+if bp is None:
+    err("settings.json", "businessProfile is required (invoices need a seller GSTIN, ORD-R52)")
+else:
+    w = "settings.businessProfile"
+    require_sample_note(w, bp)
+    for f in ("legalName", "tradeName", "address"):
+        if not bp.get(f):
+            err(w, f"{f} is required")
+    if not gstin_valid(bp.get("gstin") or ""):
+        err(w, "gstin must pass the Settings format and check-character rule (Gstins.IsValid)")
+    if bp.get("fssaiLicenseNo") is not None and not re.match(r"^[0-9]{14}$", bp["fssaiLicenseNo"]):
+        err(w, "fssaiLicenseNo must be null or 14 digits")
+    if not TEST_PHONE.match(bp.get("supportPhone") or ""):
+        err(w, "supportPhone must be E.164 in the fake block +919999900NNN (S-D3)")
+    email = bp.get("supportEmail") or ""
+    if not EMAIL.match(email) or not email.endswith(RESERVED_EMAIL_DOMAINS):
+        err(w, "supportEmail must be valid and on a reserved domain (.example, .invalid, .test)")
+    if not bp.get("timeZone"):
+        err(w, "timeZone is required (IANA name)")
+    if bp.get("onlyWhenMissing") is not True:
+        err(w, "onlyWhenMissing must be true so a real business profile is never replaced")
 
 # ------------------------------------------------------------------ images
 im = files.get("images.json", {})
@@ -658,5 +704,5 @@ print(
     f"{len(priced)} prices, {len(charged)} preparation charges, {len(tax_rules)} tax rules; "
     f"{len(stock_items)} stock items, {len(inv.get('receipts', []))} batches; "
     f"{len(dl.get('slotTemplates', []))} slot templates, {len(riders)} riders; {len(coupons)} coupons, "
-    f"{len(banners)} banners; {len(cu.get('customers', []))} customers, {len(idn.get('staff', []))} staff."
+    f"{len(banners)} banners; {len(cu.get('customers', []))} customers, {len(idn.get('staff', []))} staff; business profile {'yes' if bp else 'no'}."
 )

@@ -20,6 +20,7 @@ for demos, manual testing and screenshots. It is not reference data, never loade
 | `delivery.json` | Delivery | 21 slot templates (3 per day × 7 days: 07–09, 11–13, 17–19); 3 riders | `POST /admin/delivery/slot-templates`, `/riders` |
 | `promotions.json` | Promotions | Coupons `WELCOME100` (₹100 off first order ≥ ₹499) and `PRAWNFEST10` (10 % off prawns, cap ₹150, category scope); 2 home banners | Promotions spec §5 (coupon fields in camelCase + `scopes`, `isListed`); `POST /admin/promotions` |
 | `customers.json` | Customers (+ Identity users) | 3 demo customers, 5 addresses (one deliberately outside the service areas) | OTP-verify user creation, `PATCH /me`, `POST /me/addresses` (`SaveAddressRequest`) |
+| `settings.json` | Settings | Business profile (trade name Fresh Orbit, fake GSTIN, fake support phone and email, `Asia/Kolkata`), loaded only when no profile exists | `PUT /admin/settings/business-profile` (`SaveBusinessProfileRequest`) |
 | `identity.json` | Identity | 2 staff: `sample.admin@freshorbit.example` (ADMIN), `sample.finance@freshorbit.example` (FINANCE); no passwords | `POST /admin/staff` (`CreateStaffRequest` without `temporaryPassword`) |
 | `images.json` | Catalog / Promotions | One placeholder image description per product, category and banner | `POST …/products/{id}/images` (rendered, not downloaded) |
 
@@ -45,9 +46,10 @@ sent to the API as such.
 
 | Kind | Pattern | Why |
 |---|---|---|
-| Phones (customers, riders, location) | `+910000000NNN` | Valid E.164 for our regex (`^\+[1-9][0-9]{7,14}$`), but an Indian national number never starts with 0, so it cannot reach a real subscriber. A stricter Indian-mobile check (`[6-9]…`) would reject it — see decision S-D3 |
+| Phones (customers, riders, location, support) | `+91 99999 00NNN` (`+919999900000`–`+919999900999`) | **Reserved fake block (S-D3).** Mobile-shaped, so it passes our E.164 regex and any later Indian-mobile check (`+91[6-9]…`). Allocation: `1NN` store and support, `2NN` riders, `3NN` customers. India has no officially reserved fictional mobile range, so this block *could* be assigned to a real subscriber; no environment may send real SMS or calls to it (dev and staging use the fake SMS sender). Never use numbers from this block for real people, and never use any other number in sample data |
 | Emails | `…@customer.example`, `sample.…@freshorbit.example` | `.example` is reserved (RFC 2606); mail goes nowhere, and Mailpit catches it in development |
-| FSSAI number | `SAMPLE-FSSAI-0001` | Free text ≤ 20 chars; obviously not a licence |
+| FSSAI number | `SAMPLE-FSSAI-0001` on the location; null on the business profile | Location field is free text ≤ 20 chars; the profile accepts only 14 digits, so it is left empty rather than faked |
+| GSTIN | `37AAAAA0000A1Z1` | State 37 (AP), placeholder PAN `AAAAA0000A`, entity 1, valid check character, so it passes `Gstins.IsValid`; not a registered GSTIN |
 | Suppliers | `Sample Supplier A…D` | No real business named; the landing centre is the public harbour name only |
 | Addresses | `Sample Residency`, `Sample Towers`, plot 0 | Real localities and pincodes, fictional buildings |
 
@@ -82,6 +84,7 @@ One `ISampleDataLoader` per module (`Order` values leave gaps for later modules)
 
 | Order | Loader (module) | Reads | Needs | Writes and tracks (`platform.sample_records`) |
 |---|---|---|---|---|
+| 5 | `SettingsSampleDataLoader` | `settings.json` | — | `settings.business_profile` only when no row exists (never replaces a real profile); invoices need its GSTIN (ORD-R52) |
 | 10 | `LocationsSampleDataLoader` | `locations.json` | reference data | `locations.cities`, `fulfillment_locations`, `service_areas`, `pincodes`, `location_closures` (operating hours cascade with the location). City and location stay **DRAFT** |
 | 20 | `IdentitySampleDataLoader` | `identity.json`, phones from `customers.json` | roles, permissions; locations | `identity.users` (staff and customer users), `identity.staff_members` (roles and location access cascade). Customer users are created through the same path as the first OTP verify (user ACTIVE, `phone_verified_at = T0`, `ICustomerAccountDirectory` creates the customer row) |
 | 30 | `CatalogSampleDataLoader` | `catalog.json`, `images.json` | preparation methods | `catalog.categories`, `products`, `product_variants`, `product_images` (variant preparations cascade). Renders each placeholder image (SkiaSharp, already the Catalog image library), uploads through `IFileStorage`, then publishes products with `targetStatus: ACTIVE` |
@@ -165,22 +168,26 @@ Rows created **after** loading that point at sample rows block the purge:
 - city readiness (LOC-R6): service area with pincodes, slot template, a sellable priced variant with its default
   preparation charge and tax rule.
 
-Last run: `OK: 10 files; 1 city, 1 location, 3 service areas, 20 pincodes; 8 categories, 26 products, 28 variants;
+- business profile: GSTIN passes the same format and check-character rule as `Settings.Domain` `Gstins.IsValid`,
+  FSSAI null or 14 digits, fake support phone and reserved-domain email, `onlyWhenMissing` true.
+
+Last run: `OK: 11 files; 1 city, 1 location, 3 service areas, 20 pincodes; 8 categories, 26 products, 28 variants;
 28 prices, 67 preparation charges, 4 tax rules; 28 stock items, 29 batches; 21 slot templates, 3 riders; 2 coupons,
-2 banners; 3 customers, 2 staff.` A mutated copy (wrong unit flag, PIECE yield 6800, unknown category, price above
-the cap, missing charge row, duplicate pincode, broken banner link) produced exactly those 7 errors.
+2 banners; 3 customers, 2 staff; business profile yes.` A mutated copy (wrong unit flag, PIECE yield 6800, unknown
+category, price above the cap, missing charge row, duplicate pincode, broken banner link) produced exactly those 7
+errors; a GSTIN with a changed check character or state code 40 is refused.
 
-Suggested CI step (manager): run the validator in the backend job.
+CI: the backend job in `.github/workflows/ci.yml` runs the validator (step "Validate sample data").
 
-## 7. Open decisions
+## 7. Decisions (manager, 2026-10-24)
 
-| # | Question | Proposal |
+| # | Question | Decision |
 |---|---|---|
-| S-D1 | Ids in sample files | Natural keys, ids generated at load (§2) |
-| S-D2 | Purge with rows created after loading | Delivery purge hook for unbooked slots; otherwise refuse and drop the dev database (§5) |
-| S-D3 | Fake phone pattern | `+910000000NNN`; if Identity later restricts to Indian mobiles (`+91[6-9]…`), switch to `+9199999NNNNN` and accept that it is a valid-looking number |
-| S-D4 | Staff passwords | Environment variable or a generated password printed once; never in a file |
-| S-D5 | Tax rates in sample | Placeholders (fresh 0 bp, frozen and marinated 500 bp, delivery 1800 bp) marked "confirm with CA"; they are not advice |
-| S-D6 | Business profile and order policy | Not in the sample set: invoices need a business profile (`CONFIGURATION_MISSING` without it). Add a `settings.json` with an obviously fake GSTIN, or have the tester enter one in admin |
-| S-D7 | Preparation of a pre-cut PACK (seer steaks, marinated prawns, fillets) | The preparation code describes what is in the pack (STEAK, PEELED_DEVEINED, FILLET…), yield 10000, charge 0; RD-G2 (`display_name`) would let it read "As packed" |
-| S-D8 | Validator in CI | Add `python3 backend/data/sample/tools/validate.py` to the backend CI job |
+| S-D1 | Ids in sample files | Accepted: natural keys, ids generated at load (§2) |
+| S-D2 | Purge with rows created after loading | Accepted: Delivery purge hook deletes unbooked slots generated from sample templates; otherwise the purge refuses (§5) |
+| S-D3 | Fake phone pattern | Accepted with change: mobile-shaped block `+91 99999 00NNN` (`+919999900000`–`+919999900999`), reserved as fake in this document (§1) |
+| S-D4 | Staff passwords | Accepted: environment variable or a generated password printed once; never in a file |
+| S-D5 | Tax rates in sample | Accepted: placeholders (fresh 0 bp, frozen and marinated 500 bp, delivery 1800 bp) marked "confirm with CA"; not advice |
+| S-D6 | Business profile | Accepted: `settings.json` with a checksum-valid fake GSTIN `37AAAAA0000A1Z1`, loaded only when no profile exists |
+| S-D7 | Preparation of a pre-cut PACK (seer steaks, marinated prawns, fillets) | Proposed: the preparation code describes what is in the pack (STEAK, PEELED_DEVEINED, FILLET…), yield 10000, charge 0; RD-G2 (`display_name`) would let it read "As packed" |
+| S-D8 | Validator in CI | Accepted: done in the backend job |

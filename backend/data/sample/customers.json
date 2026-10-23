@@ -5,7 +5,7 @@
   "customers": [
     {
       "key": "CUST-1",
-      "phone": "+910000000301",
+      "phone": "+919999900301",
       "fullName": "Anjali Rao",
       "email": "anjali.rao@customer.example",
       "marketingOptIn": true,
@@ -13,7 +13,7 @@
         {
           "label": "HOME",
           "recipientName": "Anjali Rao",
-          "phone": "+910000000301",
+          "phone": "+919999900301",
           "line1": "Flat 101, Sample Residency",
           "line2": "Road No. 2",
           "landmark": "Near the bus stop",
@@ -28,7 +28,7 @@
         {
           "label": "WORK",
           "recipientName": "Anjali Rao",
-          "phone": "+910000000301",
+          "phone": "+919999900301",
           "line1": "Floor 3, Sample Tech Park",
           "line2": null,
           "landmark": null,
@@ -41,11 +41,11 @@
           "isDefault": false
         }
       ],
-      "sampleNote": "[SAMPLE] Fictional customer. Phone in the +91 0… range (never a real Indian subscriber); email on the reserved .example domain."
+      "sampleNote": "[SAMPLE] Fictional customer. Phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md); email on the reserved .example domain."
     },
     {
       "key": "CUST-2",
-      "phone": "+910000000302",
+      "phone": "+919999900302",
       "fullName": "Kiran Varma",
       "email": "kiran.varma@customer.example",
       "marketingOptIn": false,
@@ -53,7 +53,7 @@
         {
           "label": "HOME",
           "recipientName": "Kiran Varma",
-          "phone": "+910000000302",
+          "phone": "+919999900302",
           "line1": "House 12-3-45, Sample Street",
           "line2": null,
           "landmark": "Opposite the park",
@@ -66,11 +66,11 @@
           "isDefault": true
         }
       ],
-      "sampleNote": "[SAMPLE] Fictional customer. Phone in the +91 0… range (never a real Indian subscriber); email on the reserved .example domain."
+      "sampleNote": "[SAMPLE] Fictional customer. Phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md); email on the reserved .example domain."
     },
     {
       "key": "CUST-3",
-      "phone": "+910000000303",
+      "phone": "+919999900303",
       "fullName": "Farhan Sheikh",
       "email": null,
       "marketingOptIn": false,
@@ -78,7 +78,7 @@
         {
           "label": "HOME",
           "recipientName": "Farhan Sheikh",
-          "phone": "+910000000303",
+          "phone": "+919999900303",
           "line1": "Flat 5B, Sample Towers",
           "line2": "Beach Road",
           "landmark": null,
@@ -93,7 +93,7 @@
         {
           "label": "OTHER",
           "recipientName": "Farhan Sheikh",
-          "phone": "+910000000303",
+          "phone": "+919999900303",
           "line1": "Door 7, Sample Lane",
           "line2": null,
           "landmark": null,
