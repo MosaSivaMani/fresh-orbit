@@ -37,3 +37,19 @@ Manager: Claude (main session). Employees: five agent sessions (E1–E5). Fronte
 - Work only inside your modules' folders and their test projects. Shared code changes (SharedKernel, hosts, another module's `.Public`) are requested from the manager, not made.
 - Do not create EF migrations; the manager creates one after merge. Integration tests build the schema with `EnsureCreated` through the test fixture.
 - Commit on your branch with Conventional Commits. Report: what was built, tests run and their result, open issues.
+
+## Expanded team (2026-10-24)
+
+Owner asked for more parallel engineers. Current assignments:
+
+| Engineer | Work | Branch area |
+|---|---|---|
+| E1 | Phase 3 backend integration (adapters, migration, smoke test) | `integration/phase3` |
+| E2 | Phase 7 customer website | `apps/web` |
+| E3 | Phase 6 admin dashboard | `apps/admin` |
+| E4 | Phase 4 sample data + content drafts (policies, FAQ, about) | `backend/data/sample`, `docs/content` |
+| E5 | Phase 9 Docker, prod compose, Caddy, server scripts, deploy workflow, runbooks | `infra/`, `.github/workflows/deploy.yml`, `docs/runbooks` |
+| E6 (new) | Phase 8 Flutter mobile app | `apps/mobile`, `packages/flutter` |
+| E7 (new) | Phase 4 backend security review | `docs/security` |
+
+Front-end apps use hand-written TEMPORARY API types until Phase 3 lands, then switch to the generated clients.
