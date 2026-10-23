@@ -14,4 +14,5 @@
 | Design system (Phase 5) | `design/` |
 | Security review and pre-release checklist | `security/` |
 | Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
+| Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
 | Runbooks (Phase 9) | `runbooks/` |
