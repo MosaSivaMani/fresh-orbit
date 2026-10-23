@@ -8,11 +8,65 @@ public interface IDeliveryApi
 
     /// <summary>
     /// Books one unit of slot capacity. Tracked on the shared DbContext and saved by the caller; never saves.
+    /// Refusals (checked in this order): SLOT_NOT_AVAILABLE (missing, closed or another location),
+    /// SLOT_CUTOFF_PASSED, SLOT_FULL. A refusal changes nothing, so the caller may retry from Read.
     /// </summary>
     Task<SlotBooking> BookSlotAsync(Guid slotId, Guid fulfillmentLocationId, CancellationToken cancellationToken = default);
+
+    /// <summary>A slot of the location with its displayed status (checkout preview), or null when it does not exist there.</summary>
+    Task<SlotView?> GetSlotAsync(Guid slotId, Guid fulfillmentLocationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Order tracking: shipment, rider and attempts; the delivery code only while OUT_FOR_DELIVERY. Null before the shipment exists.</summary>
+    Task<ShipmentTracking?> GetShipmentForOrderAsync(Guid orderId, CancellationToken cancellationToken = default);
+
+    /// <summary>Shipment facts for Payments (cash collection: order, rider, status).</summary>
+    Task<ShipmentInfo?> GetShipmentAsync(Guid shipmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>City readiness: the location has at least one active slot template.</summary>
+    Task<bool> HasActiveSlotTemplateAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken = default);
 }
 
 public sealed record SlotInfo(Guid SlotId, DateTimeOffset StartAt, DateTimeOffset EndAt, DateTimeOffset CutoffAt, int Remaining);
 
 /// <param name="RefusalCode">UPPER_SNAKE reason when not booked (e.g. SLOT_FULL, SLOT_CUTOFF_PASSED).</param>
 public sealed record SlotBooking(bool Succeeded, Guid SlotId, DateTimeOffset? StartAt, DateTimeOffset? EndAt, string? RefusalCode);
+
+/// <param name="Status">Displayed status: AVAILABLE, FULL, CUTOFF_PASSED or CLOSED.</param>
+public sealed record SlotView(
+    Guid SlotId,
+    Guid FulfillmentLocationId,
+    DateOnly SlotDate,
+    DateTimeOffset StartAt,
+    DateTimeOffset EndAt,
+    DateTimeOffset CutoffAt,
+    int Capacity,
+    int BookedCount,
+    string Status);
+
+/// <param name="Status">PENDING, ASSIGNED, OUT_FOR_DELIVERY, DELIVERED, FAILED, RETURNED or CANCELLED.</param>
+/// <param name="DeliveryCode">4-digit code for the customer; null unless OUT_FOR_DELIVERY.</param>
+public sealed record ShipmentTracking(
+    Guid ShipmentId,
+    Guid OrderId,
+    string Status,
+    Guid? RiderId,
+    string? RiderName,
+    string? RiderPhone,
+    DateTimeOffset? DispatchedAt,
+    DateTimeOffset? DeliveredAt,
+    string? DeliveryCode,
+    IReadOnlyList<ShipmentAttemptInfo> Attempts);
+
+/// <param name="Outcome">DELIVERED, CUSTOMER_UNAVAILABLE, ADDRESS_NOT_FOUND, REFUSED or OTHER.</param>
+public sealed record ShipmentAttemptInfo(int AttemptNo, string Outcome, DateTimeOffset AttemptedAt);
+
+/// <param name="Status">PENDING, ASSIGNED, OUT_FOR_DELIVERY, DELIVERED, FAILED, RETURNED or CANCELLED.</param>
+public sealed record ShipmentInfo(
+    Guid ShipmentId,
+    Guid OrderId,
+    Guid FulfillmentLocationId,
+    Guid DeliverySlotId,
+    Guid? RiderId,
+    string Status,
+    DateTimeOffset? DeliveredAt,
+    long? CashCollectedPaise);

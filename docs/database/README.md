@@ -154,10 +154,10 @@ Weight rule (decided): charge actual packed net weight up to `max_chargeable_qua
 ### delivery
 | Table | Columns | Constraints |
 |---|---|---|
-| slot_templates | id, fulfillment_location_id, day_of_week, start_time, end_time, capacity, cutoff_minutes, is_active | |
-| delivery_slots | id, fulfillment_location_id, slot_date, start_at, end_at, cutoff_at, capacity, booked_count, status OPEN/CLOSED | unique (location, start_at); check booked_count <= capacity |
-| riders | id, fulfillment_location_id, full_name, phone, is_active | |
-| shipments | id, order_id, delivery_slot_id, rider_id, status PENDING/ASSIGNED/OUT_FOR_DELIVERY/DELIVERED/FAILED/RETURNED, cold_box_used, dispatch_temperature_c, dispatched_at, delivered_at, delivery_code_hash | unique order_id; index (rider_id, status) |
+| slot_templates | id, fulfillment_location_id, day_of_week 1–7 (ISO), start_time, end_time, capacity, cutoff_minutes, is_active, xmin | check day_of_week 1–7, end_time > start_time, capacity 1–500, cutoff_minutes 0–2880; `ex_slot_templates_no_overlap` EXCLUDE USING gist (location =, day_of_week =, tsrange(start,end) &&) WHERE is_active (D22) |
+| delivery_slots | id, fulfillment_location_id, slot_template_id (nullable), slot_date (city-local), start_at, end_at, cutoff_at, capacity, booked_count, status OPEN/CLOSED, closed_reason MANUAL/CLOSURE/TEMPLATE_INACTIVE, xmin | unique (location, start_at); check 0 <= booked_count <= capacity, capacity 0–500; index (location, slot_date) |
+| riders | id, fulfillment_location_id, full_name, phone, is_active, xmin | unique phone where is_active |
+| shipments | id, order_id, fulfillment_location_id, delivery_slot_id, rider_id, status PENDING/ASSIGNED/OUT_FOR_DELIVERY/DELIVERED/FAILED/RETURNED/CANCELLED, placed_at, packed_at, cold_box_used, dispatch_temperature_c numeric(4,1), temperature_warning, dispatched_at, delivered_at, returned_at, cancelled_at, delivery_code character(4), delivery_code_failures, cash_collected_paise, cash_mode CASH/UPI, upi_reference, cash_collected_at, xmin | unique order_id; FK delivery_slot_id, rider_id; check status, cash_mode, delivery_code_failures >= 0, cash_collected_paise >= 0; index (rider_id, status), (location, status); delivery code shown to the customer only while OUT_FOR_DELIVERY |
 | delivery_attempts | id, shipment_id, attempt_no, outcome DELIVERED/CUSTOMER_UNAVAILABLE/ADDRESS_NOT_FOUND/REFUSED/OTHER, notes, attempted_at | unique (shipment_id, attempt_no) |
 
 A job generates slots from templates 7 days ahead, skipping closures.
