@@ -7,7 +7,8 @@ namespace FreshOrbit.ArchitectureTests;
 public sealed class DependencyRuleTests
 {
     private static readonly string[] Frameworks = ["Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Npgsql", "FreshOrbit.SharedKernel.EntityFramework", "FreshOrbit.SharedKernel.Web"];
-    private static readonly string[] NonDomainLayers = ["Application", "Infrastructure", "Public"];
+    // D30: a Domain may use its own Public project (to raise the events other modules consume).
+    private static readonly string[] NonDomainLayers = ["Application", "Infrastructure"];
     private static readonly string[] NonPublicLayers = ["Domain", "Application", "Infrastructure"];
 
     public static TheoryData<string> Modules => ModuleCatalog.ModuleData;
@@ -25,7 +26,7 @@ public sealed class DependencyRuleTests
 
     [Theory]
     [MemberData(nameof(Modules))]
-    public void Domain_depends_only_on_the_shared_kernel(string module)
+    public void Domain_depends_only_on_the_shared_kernel_and_its_public(string module)
     {
         var forbidden = Frameworks
             .Concat(ModuleCatalog.Modules.Where(m => m != module).Select(m => $"FreshOrbit.{m}."))

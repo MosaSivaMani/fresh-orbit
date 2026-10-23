@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <!-- D30: events other modules consume live in Locations.Public/Events; the domain raises them. -->
+    <ProjectReference Include="..\Locations.Public\Locations.Public.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel\FreshOrbit.SharedKernel.csproj" />
   </ItemGroup>
 </Project>

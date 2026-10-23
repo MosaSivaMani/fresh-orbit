@@ -1,0 +1,95 @@
+using FreshOrbit.Catalog.Application.Admin;
+using FreshOrbit.Catalog.Domain.Categories;
+using FreshOrbit.Catalog.Domain.Preparations;
+using FreshOrbit.Catalog.Domain.Products;
+using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Storage;
+using Microsoft.EntityFrameworkCore;
+
+namespace FreshOrbit.Catalog.Infrastructure.Reads;
+
+public sealed class CatalogAdminReads(FreshOrbitDbContext db, IFileStorage storage) : ICatalogAdminReads
+{
+    public async Task<IReadOnlyList<AdminCategoryResponse>> GetCategoryTreeAsync(bool includeInactive, CancellationToken cancellationToken)
+    {
+        var all = await db.Set<Category>().AsNoTracking().OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToListAsync(cancellationToken);
+        var visible = includeInactive ? all : [.. all.Where(c => c.IsActive)];
+        return [.. visible.Where(c => c.ParentId is null).Select(c => ToResponse(c, [.. visible.Where(x => x.ParentId == c.Id).Select(x => ToResponse(x, []))]))];
+    }
+
+    public async Task<AdminCategoryResponse?> GetCategoryAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var rows = await db.Set<Category>().AsNoTracking().Where(c => c.Id == id || c.ParentId == id).ToListAsync(cancellationToken);
+        var category = rows.FirstOrDefault(c => c.Id == id);
+        return category is null
+            ? null
+            : ToResponse(category, [.. rows.Where(c => c.ParentId == id).OrderBy(c => c.SortOrder).ThenBy(c => c.Name).Select(c => ToResponse(c, []))]);
+    }
+
+    public async Task<(IReadOnlyList<AdminProductListItem> Items, int TotalCount)> ListProductsAsync(
+        string? q,
+        Guid? categoryId,
+        IReadOnlyCollection<ProductStatus> statuses,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var query = db.Set<Product>().AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var pattern = $"%{q.Trim().Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal)}%";
+            query = query.Where(p => EF.Functions.ILike(p.Name, pattern) || EF.Functions.ILike(p.Slug, pattern) || p.Variants.Any(v => EF.Functions.ILike(v.Sku, pattern)));
+        }
+
+        if (categoryId is { } category)
+        {
+            query = query.Where(p => p.CategoryId == category);
+        }
+
+        if (statuses.Count > 0)
+        {
+            query = query.Where(p => statuses.Contains(p.Status));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderBy(p => p.Name).ThenBy(p => p.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(p => new ProductRow(
+                p,
+                p.Variants.Count(v => v.IsActive),
+                p.Images.OrderBy(i => i.SortOrder).Select(i => i.StorageKey).FirstOrDefault()))
+            .ToListAsync(cancellationToken);
+        return ([.. rows.Select(r => new AdminProductListItem(
+            r.Product.Id,
+            r.Product.CategoryId,
+            r.Product.Slug,
+            r.Product.Name,
+            r.Product.Status,
+            r.ActiveVariants,
+            r.ImageKey is null ? null : storage.GetPublicUrl(ImageRenditions.Key(r.ImageKey, ImageRenditions.Small)),
+            r.Product.PublishedAt,
+            CatalogFormats.Version(r.Product.Version)))], total);
+    }
+
+    public async Task<IReadOnlyList<PreparationMethodResponse>> ListPreparationMethodsAsync(CancellationToken cancellationToken)
+        => await db.Set<PreparationMethod>().AsNoTracking()
+            .OrderBy(m => m.SortOrder)
+            .Select(m => new PreparationMethodResponse(m.Id, m.Code, m.Name, m.Description, m.SortOrder, m.GuidanceYieldBp))
+            .ToListAsync(cancellationToken);
+
+    private static AdminCategoryResponse ToResponse(Category category, IReadOnlyList<AdminCategoryResponse> children) => new(
+        category.Id,
+        category.ParentId,
+        category.Slug,
+        category.Name,
+        category.Description,
+        category.ImageKey,
+        category.SortOrder,
+        category.IsActive,
+        CatalogFormats.Version(category.Version),
+        children);
+
+    private sealed record ProductRow(Product Product, int ActiveVariants, string? ImageKey);
+}

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "code": "SEAFOOD_FRESH_CHILLED",
+      "name": "Fresh or chilled seafood",
+      "appliesTo": "fish, shellfish sold fresh or chilled, whole or cut"
+    },
+    {
+      "code": "SEAFOOD_FROZEN",
+      "name": "Frozen seafood",
+      "appliesTo": "frozen products"
+    },
+    {
+      "code": "SEAFOOD_DRIED_SALTED",
+      "name": "Dried or salted seafood",
+      "appliesTo": "dry fish and similar"
+    },
+    {
+      "code": "SEAFOOD_MARINATED",
+      "name": "Marinated / ready-to-cook seafood",
+      "appliesTo": "marinated or coated packs"
+    },
+    {
+      "code": "SEAFOOD_READY_TO_EAT",
+      "name": "Cooked / ready-to-eat seafood",
+      "appliesTo": "cooked products"
+    },
+    {
+      "code": "GROCERY_ADDON",
+      "name": "Grocery add-ons",
+      "appliesTo": "masalas, condiments sold with orders"
+    },
+    {
+      "code": "DELIVERY_SERVICE",
+      "name": "Delivery charge",
+      "appliesTo": "the order delivery fee"
+    }
+  ]
+}

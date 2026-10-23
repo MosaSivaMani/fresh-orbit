@@ -1,7 +1,8 @@
-# Local development services: PostgreSQL 17, MinIO (S3-compatible image storage), Mailpit (SMTP catcher).
+# Local development services: PostgreSQL 17, Mailpit (SMTP catcher). Product images are files on local disk
+# (FileStorage__RootPath, served by the Api at /media/*; decision D21), so no object store runs here.
 #   docker compose -f infra/compose/docker-compose.dev.yml up -d
-# Host ports can be changed with POSTGRES_PORT, MINIO_API_PORT, MINIO_CONSOLE_PORT, MAILPIT_SMTP_PORT and
-# MAILPIT_UI_PORT when the defaults are taken (then point ConnectionStrings__FreshOrbit at the new port).
+# Host ports can be changed with POSTGRES_PORT, MAILPIT_SMTP_PORT and MAILPIT_UI_PORT when the defaults are taken
+# (then point ConnectionStrings__FreshOrbit at the new port).
 name: freshorbit
 
 services:
@@ -21,20 +22,6 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    # The official minio/minio images are no longer published on Docker Hub / quay.io; this is the frozen
-    # Bitnami build of MinIO (AGPL-3.0, S3 API). Replace when the team picks a maintained S3-compatible image.
-    image: bitnamilegacy/minio:2025.7.23
-    environment:
-      MINIO_ROOT_USER: freshorbit
-      MINIO_ROOT_PASSWORD: freshorbit_dev
-      MINIO_DEFAULT_BUCKETS: freshorbit-images
-    ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    volumes:
-      - minio-data:/bitnami/minio/data
-
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
@@ -43,4 +30,3 @@ services:
 
 volumes:
   postgres-data:
-  minio-data:

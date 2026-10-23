@@ -10,8 +10,9 @@ public sealed class ProjectReferenceRuleTests
 
     [Theory]
     [MemberData(nameof(Modules))]
-    public void Domain_references_only_the_shared_kernel(string module)
-        => References(module, "Domain").Should().BeEquivalentTo(["FreshOrbit.SharedKernel"]);
+    public void Domain_references_only_the_shared_kernel_and_its_public(string module)
+        => References(module, "Domain").Should().OnlyContain(r => r == "FreshOrbit.SharedKernel" || r == $"{module}.Public")
+            .And.Contain("FreshOrbit.SharedKernel");
 
     [Theory]
     [MemberData(nameof(Modules))]

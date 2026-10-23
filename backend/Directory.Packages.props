@@ -20,6 +20,11 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
   </ItemGroup>
+  <ItemGroup Label="Media">
+    <!-- Product image re-encoding (CAT-R16, catalog.md Q6): SkiaSharp is MIT; the Linux asset needs no system libraries. -->
+    <PackageVersion Include="SkiaSharp" Version="4.150.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.150.1" />
+  </ItemGroup>
   <ItemGroup Label="Hosting">
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.25" />

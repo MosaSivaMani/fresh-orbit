@@ -144,3 +144,5 @@ Consumed: none required. (If Catalog chooses the projection option, catalog.md Q
 | Q4 | Default preparation charge per method to reduce setup rows? | No; explicit per location (configuration is data). Bulk upload covers setup. |
 | Q5 | Should a price also be required per preparation (fillet priced differently)? | No; preparation differences go through the charge (PRC-R7). |
 | Q6 | Price history visible to customers (strike-through)? | Only `compareAtPaise`; no history endpoint for customers. |
+
+**Implementation notes (Phase 2).** `validFrom` within 60 s in the past is treated as now; > 90 days ahead is refused. Repeating the current values (or the identical already-scheduled future period) is a no-op. Bulk upload: JSON or CSV, max 5000 rows, all-or-nothing, `dryRun`. Tax rules are set without `If-Match`. `CalculateLine`/`ContainedTax` belong to the checkout pricing contract (D20, Cart/Ordering owner). Pricing registers an `ICityActivationCheck` that reports `PRICE_MISSING` per active fulfillment location of the city.

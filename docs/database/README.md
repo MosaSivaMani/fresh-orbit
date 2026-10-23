@@ -81,8 +81,8 @@ City activation is refused unless the city has an active fulfillment location, s
 | products | id, category_id, slug, name, local_names text[], species_scientific_name, description, source_type WILD/FARMED, source_region, storage_instructions, handling_notes, hsn_code, tax_category_code, status DRAFT/ACTIVE/ARCHIVED, featured_rank, published_at, search_vector (generated tsvector) | unique slug; GIN search_vector; GIN trigram on name and on local_names (immutable wrapper function) |
 | product_images | id, product_id, storage_key, alt_text, width, height, sort_order | index (product_id, sort_order) |
 | product_variants | id, product_id, sku, name, sell_unit KG/PIECE/PACK, stock_unit GRAM/PIECE, pack_size_grams, avg_piece_grams, min_order, max_order, order_step, is_weight_variable, is_active | unique sku |
-| preparation_methods | id, code WHOLE/CLEANED/CURRY_CUT/STEAK/FILLET/..., name, description, sort_order | unique code |
-| variant_preparations | variant_id, preparation_method_id, yield_bp, is_default, is_active | PK both; one default per variant |
+| preparation_methods | id, code WHOLE/CLEANED/CURRY_CUT/STEAK/FILLET/..., name, description, guidance_yield_bp, sort_order, is_active | unique code; loaded from `data/reference/catalog/preparation-methods.json` (idempotent `IReferenceDataLoader`) |
+| variant_preparations | variant_id, preparation_method_id, yield_bp, is_default, is_active | PK both; one default per variant (deferred EXCLUDE `ex_variant_preparations_one_default`, checked at commit so a default can move in one save) |
 
 **Net weight rule (decided):** customers order and pay for net weight after preparation. Stock is gross raw weight.
 Reserve `ceil(net × 10000 / yield_bp)` grams (500 g curry cut at 6500 bp reserves 770 g).
@@ -91,8 +91,11 @@ Reserve `ceil(net × 10000 / yield_bp)` grams (500 g curry cut at 6500 bp reserv
 | Table | Columns | Constraints |
 |---|---|---|
 | variant_prices | id, fulfillment_location_id, variant_id, unit_price_paise, compare_at_paise, valid_from, valid_to | EXCLUDE gist (location =, variant =, tstzrange(valid_from, valid_to) &&) |
-| preparation_charges | id, fulfillment_location_id, variant_id, preparation_method_id, charge_paise, charge_basis PER_KG/PER_ITEM/FLAT, valid_from, valid_to | same no-overlap rule |
+| preparation_charges | id, fulfillment_location_id, variant_id, preparation_method_id, preparation_code, charge_paise, charge_basis PER_KG/PER_ITEM/FLAT, valid_from, valid_to | same no-overlap rule; `preparation_code` copied so reads need no join to catalog |
 | tax_rules | id, tax_category_code, rate_bp, valid_from, valid_to | no overlap per category |
+| tax_categories | id, code, name, applies_to | unique code; loaded from `data/reference/pricing/tax-categories.json` (idempotent) |
+
+The three EXCLUDE constraints are `DEFERRABLE INITIALLY DEFERRED`: closing the current period and opening the next happen in one save, and Postgres checks the ranges at commit (`23P01` → 409 `PRICE_PERIOD_OVERLAP`).
 
 Price per fulfillment location (decided). No price = not for sale there. A price change closes the current period and opens a new one. GST rates are data to be confirmed by the CA. Selling prices are tax-inclusive (B2C retail); `tax_paise` is the tax contained in the total, shown on the invoice.
 
@@ -181,7 +184,8 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | platform.sample_records | table_name, record_id | tracks sample data for purge |
 
 ### catalog storefront view
-`catalog.storefront_offers` (SQL view, created in a migration): active product + active variant + current price + preparation charges + available stock per fulfillment location. Catalog's storefront reads query this view; it is the only cross-schema read outside Reporting.
+`catalog.storefront_offers` (SQL view, created by `CatalogModuleModel.DatabaseObjectsSql`): active product + active variant + price periods + available stock per fulfillment location. `catalog.storefront_preparation_charges` exposes charge periods. Periods are filtered by the application clock (`@at`), not `now()`, so tests and scheduled prices agree. If `inventory.stock_items` does not exist yet the offers view is created without stock (every offer out of stock); Catalog's database-objects SQL must run after Inventory's table exists to include stock (open item for the Inventory merge).
+`catalog.storefront_locations`: pincode → active service area, fulfillment location and city (used to resolve `X-Pincode` inside the same read). These views are the only cross-schema reads outside Reporting.
 
 ### reporting (views only)
 `daily_sales`, `product_performance`, `contribution_margin` (revenue − SALE movement cost − refunds), `waste_summary`, `customer_daily_orders` (backs the repeat-customers report); materialized, refreshed `CONCURRENTLY` by a Worker job every 15 minutes when the source watermark moved. SQL in `Reporting.Infrastructure/Persistence/Sql/*.sql`, exposed as `ReportingModuleModel.DatabaseObjectsSql` (D22); each view is created only when its source tables exist. Columns and grains: docs/product/reporting.md §1, §3.
