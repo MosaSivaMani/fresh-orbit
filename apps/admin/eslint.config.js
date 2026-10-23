@@ -13,6 +13,7 @@ export default [
       "src/api/**",
       "src/test/**",
       "**/routes.tsx",
+      "src/features/*/shared.tsx",
     ],
     rules: { "react-refresh/only-export-components": "off" },
   },
