@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | 8 | E6 customer mobile app (Flutter 3.47.7 / Dart 3.13.5) on branch `worktree-agent-aad14a2dd2a4a0e0a`: `apps/mobile`, all 20 screens, API layer (single-flight refresh, Problem Details, Idempotency-Key), Riverpod state, TEMPORARY hand-written models, `PushService` no-op; `docs/design/mobile.md` (API gaps, release and FCM steps) | E6: `flutter analyze` no issues; `flutter test` 59/59. No device build (no Android SDK, Xcode incomplete), not run against a live API |
 | 2026-10-23 | 5 | Merged E3 frontend packages; frontend CI job added; D32 | `pnpm build/typecheck/lint/test` all pass; 129 tests (tokens 66, core 29, ui 32, api-client 2) |
 | 2026-10-23 | 3 | Merged E2 into `main`; architecture tests updated for D30 | `dotnet test` 575/575 passed (adds Locations 42, Catalog 45, Pricing 26) |
 | 2026-10-23 | 3 | Merged E1 into `main`; rulings D30 (events in Public), D31 (shared 401/403/429/503) | `dotnet test` 462/462 passed (adds Identity 22, Customers 14, Settings 18, Audit 6, Notifications 18) |
