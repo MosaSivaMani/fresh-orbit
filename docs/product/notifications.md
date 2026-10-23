@@ -9,7 +9,7 @@ Owner: E1. Schema `notifications`. Uses `Identity.Public`. Endpoints: `docs/api/
 |---|---|---|
 | Template | `templates` (unique `(code, channel)`) | `xmin` (If-Match on edit) |
 | Message | `messages` | `xmin` |
-| DeviceToken | `device_tokens` (unique `expo_push_token`) | `xmin` |
+| DeviceToken | `device_tokens` (unique `push_token`; `provider` FCM, `platform` ANDROID/IOS/WEB, `last_seen_at`) — Ruling D28 | `xmin` |
 | Preference | `preferences` (PK `user_id, category, channel`) | none |
 
 ### Public API
@@ -29,22 +29,24 @@ messages are stored SENT; SENT → READ when the customer reads them.
 
 | Key | Rule |
 |---|---|
-| NOT-R1 | Placeholders are `{{name}}`. Each template code has a fixed list of variables (compiled in code from reference data §5, plus `businessName`, `supportPhone`, `supportEmail`, `recipientName`). An edit using another name → 422 `TEMPLATE_PLACEHOLDER_UNKNOWN`. |
+| NOT-R1 | Placeholders are `{{name}}`. Each template code has a fixed list of variables (stored in `templates.variables` from `notification-templates.json`, plus `businessName`, `supportPhone`, `supportEmail`, `recipientName`; the first three come from configuration `Notifications:BusinessName|SupportPhone|SupportEmail` until Notifications may use `Settings.Public`). Reference-data reloads refresh variables and category but keep staff-edited texts. An edit using another name → 422 `TEMPLATE_PLACEHOLDER_UNKNOWN`. |
 | NOT-R2 | Channels for a message = active template rows of the code ∩ requested channels (null = all) ∩ preferences. Category `ORDER_UPDATES` SMS cannot be disabled; OTP and staff templates ignore preferences. Missing preference rows mean enabled for `ORDER_UPDATES` and disabled for `OFFERS`. |
 | NOT-R3 | No active template row for the code → 422 `CONFIGURATION_MISSING`. |
 | NOT-R4 | Dedupe: with a `DedupeKey` (the source event id for event handlers), the unique index `(dedupe_key)` where not null on `dedupe_key = key:channel:user` keeps one message per channel even if the same event is handled twice. |
 | NOT-R5 | Messages are rendered when queued (subject/body stored), so later template edits do not change queued messages. Variables missing in the data render as empty text. |
-| NOT-R6 | Worker job `notifications.send` (every minute) sends QUEUED SMS/EMAIL/PUSH in batches of 50 (`FOR UPDATE SKIP LOCKED`): SMS to the user's phone (`ISmsSender`), EMAIL to the user's email (`IEmailSender`, SMTP via MailKit; Mailpit in dev), PUSH to every device token (`IPushSender`, Expo adapter interface; dev no-op). Failure → attempts + 1; at 5 → FAILED. No address → FAILED (`NO_RECIPIENT_ADDRESS`). |
-| NOT-R7 | Device tokens: PUT registers (or moves to the caller) an Expo token `ExponentPushToken[…]`, platform IOS/ANDROID/WEB, `last_seen_at` refreshed; DELETE removes only the caller's token. |
+| NOT-R6 | Worker job `notifications.send` (every minute) sends QUEUED SMS/EMAIL/PUSH in batches of 50 (`FOR UPDATE SKIP LOCKED`): SMS to the user's phone (`ISmsSender`), EMAIL to the user's email (`IEmailSender`, SMTP via MailKit; Mailpit in dev), PUSH to every device token (`IPushSender`; FCM adapter later, dev logging no-op). A provider error → attempts + 1 and `next_attempt_at` = now + attempts minutes; at 5 → FAILED. No address (no phone, no email, no device) → FAILED (`NO_RECIPIENT_ADDRESS`). Tokens the provider reports invalid are removed. |
+| NOT-R7 | Device tokens (Ruling D28, Flutter app): `PUT /me/device-tokens` with `{ pushToken, provider: "FCM", platform: ANDROID/IOS/WEB }` registers the FCM registration token (or moves it to the caller), `last_seen_at` refreshed; another provider → 422; DELETE removes only the caller's token (unknown token → 204). |
 | NOT-R8 | Preferences PUT replaces the full set; categories ORDER_UPDATES, OFFERS × channels SMS, EMAIL, PUSH, IN_APP; disabling ORDER_UPDATES SMS → 422 `PREFERENCE_REQUIRED`. |
 | NOT-R9 | In-app list: the caller's IN_APP messages newest first, `unreadOnly` filter; mark read is idempotent; read-all marks every unread one. |
 | NOT-R10 | Test send: renders the template with sample values (`[name]`) and sends to the calling staff member's own email/phone immediately; nothing stored. |
-| NOT-R11 | Senders are adapters: `ISmsSender` (dev `LoggingSmsSender` logs the text, real DLT-registered provider later with `dlt_template_id`), `IEmailSender` (`SmtpEmailSender`; `LoggingEmailSender` when no SMTP host), `IPushSender` (`NullPushSender`; Expo later). |
+| NOT-R11 | Senders are adapters: `ISmsSender` (dev `LoggingSmsSender` logs the text, real DLT-registered provider later with `dlt_template_id`), `IEmailSender` (`SmtpEmailSender`; `LoggingEmailSender` when no SMTP host), `IPushSender` (`LoggingPushSender`, a no-op that logs; FCM adapter later). Hosts or tests register their own sender first (`TryAdd`). |
 
 ## 4. Event → template mapping (customer)
 
-Implemented in `CustomerEventNotifier` (Application); the `IEventHandler<T>` adapters are added once the Ordering /
-Payments event classes exist and the architecture rule allows a handler to reference another module's events.
+Not wired yet: the Ordering / Payments event classes do not exist, and `ProjectReferenceRuleTests` forbids
+Notifications from referencing another module's Domain project (where events live). Until that rule changes, the
+owning module calls `INotificationsApi.QueueForCustomerAsync(...)` from its own handler (or in its transaction) with
+the event id as `DedupeKey`, using the template and data below.
 
 | Event (owner) | Template | Data |
 |---|---|---|

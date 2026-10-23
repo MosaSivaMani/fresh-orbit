@@ -45,11 +45,11 @@ ordering.orders 1─N payments.payments 1─N payments.refunds; orders 0─1 pro
 ### identity
 | Table | Columns | Constraints |
 |---|---|---|
-| users | id, phone (E.164), email citext, password_hash, user_type CUSTOMER/STAFF, status ACTIVE/LOCKED/DISABLED, phone_verified_at, last_login_at, failed_login_count | unique phone, unique email; check phone or email |
-| otp_challenges | id, phone, purpose LOGIN/VERIFY_PHONE, code_hash, expires_at, attempt_count, consumed_at, request_ip | index (phone, created_at desc) |
-| refresh_tokens | id, user_id, token_hash, family_id, expires_at, revoked_at, replaced_by_id, device_label | unique token_hash; reuse of a rotated token revokes the family |
-| staff_members | id, user_id, full_name, all_locations, is_active | unique user_id |
-| roles | id, code, name, is_system | unique code |
+| users | id, phone (E.164), email citext, password_hash, user_type CUSTOMER/STAFF, status ACTIVE/LOCKED/DISABLED, phone_verified_at, last_login_at, failed_login_count, anonymised_at | unique phone, unique email; check phone or email (unless anonymised) |
+| otp_challenges | id, phone, purpose LOGIN/VERIFY_PHONE, code_hash (HMAC-SHA256), requested_at, expires_at, attempt_count, consumed_at, request_ip | index (phone, requested_at desc), (request_ip, requested_at desc) |
+| refresh_tokens | id, user_id, token_hash, family_id, issued_at, expires_at, revoked_at, revoke_reason, replaced_by_id, device_label | unique token_hash; reuse of a rotated token revokes the family |
+| staff_members | id, user_id, full_name, all_locations, is_active, revision | unique user_id; `revision` bumps on role/location changes so If-Match covers them |
+| roles | id, code, name, is_system, revision | unique code |
 | permissions | code PK, description | reference data |
 | role_permissions | role_id, permission_code | PK both |
 | staff_roles | staff_member_id, role_id | PK both |
@@ -58,9 +58,9 @@ ordering.orders 1─N payments.payments 1─N payments.refunds; orders 0─1 pro
 ### customers
 | Table | Columns | Constraints |
 |---|---|---|
-| customers | id, user_id, full_name, email, marketing_opt_in, status ACTIVE/DELETED | unique user_id |
-| addresses | id, customer_id, label HOME/WORK/OTHER, recipient_name, phone, line1, line2, landmark, locality, city_name, state_code, pincode, latitude, longitude, is_default, is_active | unique (customer_id) where is_default and is_active |
-| wishlist_items | customer_id, product_id, created_at | PK both |
+| customers | id, user_id, full_name, email, marketing_opt_in, status ACTIVE/DELETED, is_blocked, deleted_at, addresses_changed_at | unique user_id; every address change stamps `addresses_changed_at` so address edits of one customer race on this row |
+| addresses | id, customer_id, label HOME/WORK/OTHER, recipient_name, phone, line1, line2, landmark, locality, city_name, state_code, pincode, latitude, longitude, is_default, is_active, added_at | unique (customer_id) where is_default and is_active; check default implies active |
+| wishlist_items | customer_id, product_id, added_at | PK both |
 
 ### locations
 | Table | Columns | Constraints |
@@ -163,14 +163,14 @@ A job generates slots from templates 7 days ahead, skipping closures.
 ### notifications, audit, settings, platform
 | Table | Columns | Notes |
 |---|---|---|
-| notifications.templates | id, code, channel SMS/EMAIL/PUSH/IN_APP, subject, body, is_active | unique (code, channel) |
-| notifications.messages | id, user_id, channel, template_code, payload jsonb, status QUEUED/SENT/FAILED/READ, attempts, provider_message_id, sent_at, read_at | index (user_id, created_at desc) |
-| notifications.device_tokens | id, user_id, expo_push_token, platform, last_seen_at | unique token |
+| notifications.templates | id, code, channel SMS/EMAIL/PUSH/IN_APP, category ORDER_UPDATES/OFFERS (null = ignores preferences), subject (EMAIL subject / PUSH title), body, is_active, variables text[], dlt_template_id | unique (code, channel) |
+| notifications.messages | id, user_id, channel, template_code, subject, body (rendered when queued), payload jsonb, status QUEUED/SENT/FAILED/READ, attempts, last_error, next_attempt_at, provider_message_id, dedupe_key, queued_at, sent_at, read_at | index (user_id, queued_at desc); unique dedupe_key where not null (`eventId:CHANNEL:userId`); index queued_at where status = 'QUEUED' |
+| notifications.device_tokens | id, user_id, push_token, provider FCM, platform ANDROID/IOS/WEB, last_seen_at | unique push_token (Ruling D28) |
 | notifications.preferences | user_id, category ORDER_UPDATES/OFFERS, channel, enabled | PK (user_id, category, channel) |
-| audit.entries | id bigint, occurred_at, actor_type, actor_id, actor_name, action, entity_type, entity_id, before jsonb, after jsonb, ip, correlation_id | append-only; index (entity_type, entity_id), (occurred_at) |
-| settings.business_profile | id, legal_name, trade_name, gstin, fssai_license_no, address, support_phone, support_email | single row |
-| settings.order_policies | id, city_id (null = default), reservation_minutes, max_overweight_bp, cancel_allowed_until_status, cod_max_order_paise | unique city_id (nulls not distinct) |
-| settings.number_series | code ORDER/INVOICE, period, prefix, next_value | PK (code, period); row locked and incremented in the caller's transaction |
+| audit.entries | id bigint, occurred_at, actor_type, actor_id, actor_name, action, entity_type, entity_id, before jsonb, after jsonb, ip, correlation_id | append-only (trigger `entries_append_only` rejects UPDATE/DELETE); index (entity_type, entity_id), (occurred_at) |
+| settings.business_profile | id, legal_name, trade_name, gstin, fssai_license_no, address, support_phone, support_email, time_zone | single row; `time_zone` (IANA) decides the financial year of a number |
+| settings.order_policies | id, city_id (null = default), reservation_minutes, max_overweight_bp, cancel_allowed_until_status, cod_max_order_paise, enabled_payment_methods text[], substitution_response_minutes, complaint_window_hours, max_delivery_attempts | unique city_id (nulls not distinct); range checks |
+| settings.number_series | id, code ORDER/INVOICE, period, prefix, pad_width, next_value, last_issued_at | unique (code, period); row locked (`FOR UPDATE`) and incremented in the caller's transaction |
 | platform.outbox | id, event_type, payload jsonb, occurred_at, correlation_id, processed_at, attempts, error | index (occurred_at) where processed_at is null |
 | platform.inbox | event_id, handler, processed_at | PK both |
 | platform.dead_letters | id, event_id, handler, error, failed_at | |
