@@ -1,9 +1,18 @@
+using FreshOrbit.Cart.Application.Abstractions;
+using FreshOrbit.Cart.Application.Carts;
+using FreshOrbit.Cart.Application.Pricing;
+using FreshOrbit.Cart.Infrastructure.Endpoints;
+using FreshOrbit.Cart.Infrastructure.Jobs;
 using FreshOrbit.Cart.Infrastructure.Persistence;
+using FreshOrbit.Cart.Infrastructure.Public;
+using FreshOrbit.Cart.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FreshOrbit.Cart.Infrastructure;
 
@@ -16,12 +25,16 @@ public sealed class CartModule : IModule
     {
         services.AddModuleModel<CartModuleModel>();
 
-        // Owner: register the Public API implementation, services, repositories, validators,
-        // event handlers, recurring jobs and data loaders of this module here.
+        services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ICartCommandRunner, CartCommandRunner>();
+        services.TryAddScoped<IDeliveryFeeTaxRate, PricingGapDeliveryFeeTaxRate>();
+        services.AddScoped<CartPricer>();
+        services.AddScoped<CartService>();
+        services.AddScoped<ICartApi, CartApi>();
+
+        services.AddScoped<AbandonCartsJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, CartJobs>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // Owner: map customer endpoints at /api/v1/... and staff endpoints under /api/v1/admin/...
-    }
+    public void MapEndpoints(IEndpointRouteBuilder endpoints) => CartEndpoints.Map(endpoints);
 }

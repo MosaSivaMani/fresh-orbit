@@ -958,6 +958,16 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 | Stock | Reservation consumed; SALE movements FEFO by gross `ceil(packed × 10000 / yieldBp)` |
 | Pending substitution | 409 `INVALID_STATUS_TRANSITION` until answered or expired |
 
+Implementation notes (Phase 2, Cart / Promotions / Ordering):
+- Every endpoint in §4.6, §4.7, §4.8 (except the Payments-owned `/payments` and `/refunds` rows) §4.13 coupons and §4.15 is implemented. `GET /api/v1/promotions` (public banners, LOC optional) and `GET/POST/PUT /api/v1/admin/promotions[/{id}]` are implemented in Promotions.
+- `GET .../invoice` returns the frozen invoice with `pdfUrl: null`: PDF rendering is deferred to the `InvoiceIssued` consumer. Invoice before delivery → 404 `INVOICE_NOT_ISSUED`.
+- Complaints are created from JSON (`orderItemId`, `kind`, `description`); attachment upload is not implemented yet.
+- Staff order access outside the staff member's locations → 403 `LOCATION_ACCESS_DENIED`; lists are filtered to the staff member's locations. Customer access to another customer's order → 404 `NOT_FOUND` (not visible).
+- `PRICE_CHANGED` (409) is stored by the idempotency record with its `preview`; confirming the new total needs a new `Idempotency-Key`.
+- Unpaid ONLINE orders and PROPOSED substitutions are expired by minute sweeps (`ordering.expire-unpaid-orders`, `ordering.expire-substitutions`) instead of per-order delayed jobs.
+- The prepaid cap (charge never above the paid amount) is applied as a cap waiver inside the final discount, allocated over the lines, so invoice lines add up to the charged total.
+- Not written to the audit log yet (Audit is not in Ordering's Public API uses); rejected out-of-order Delivery events are logged as warnings.
+
 ### 4.16 Admin payments and refunds
 
 | Method | Path | Auth | Notes | Purpose |

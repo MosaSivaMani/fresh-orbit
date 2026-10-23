@@ -1,30 +1,101 @@
 namespace FreshOrbit.Promotions.Public;
 
-/// <summary>What other modules may ask the Promotions module.</summary>
+/// <summary>What other modules may ask the Promotions module (docs/product/promotions.md §1).</summary>
 public interface IPromotionsApi
 {
-    /// <summary>Checks a coupon against a cart and computes its discount. Read-only.</summary>
-    Task<CouponEvaluation> EvaluateCouponAsync(CouponEvaluationRequest request, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Checks a coupon against cart lines and computes its discount and per-line allocation. Read-only; never throws
+    /// for rule failures (PROMO-R12): the result carries <see cref="CouponApplicationStatus"/> and the COUPON_* code.
+    /// </summary>
+    Task<CouponEvaluation> EvaluateAsync(EvaluateCouponRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Records a redemption and increments usage. Tracked on the shared DbContext and saved by the caller; never
-    /// saves. False when the coupon can no longer be used.
+    /// Re-checks the coupon, increments its use count and adds an APPLIED redemption for the order. Tracked on the
+    /// shared DbContext and saved by the caller's single SaveChanges (checkout transaction); never saves. Refuses
+    /// with a 422 DomainException carrying the COUPON_* code. A lost race on the coupon row surfaces as
+    /// ConcurrentSaveException at the caller's save.
     /// </summary>
-    Task<bool> RedeemAsync(RedeemCouponRequest request, CancellationToken cancellationToken = default);
+    Task<CouponRedemptionResult> RedeemAsync(RedeemCouponRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Home banners shown at <paramref name="at"/> for the city plus all-city banners, by sort order.</summary>
+    Task<IReadOnlyList<BannerInfo>> GetActiveBannersAsync(Guid? cityId, DateTimeOffset at, CancellationToken cancellationToken = default);
+
+    /// <summary>Listed coupons currently usable in the city and not exhausted for the customer (PROMO-R24).</summary>
+    Task<IReadOnlyList<VisibleCoupon>> ListVisibleCouponsAsync(Guid? cityId, Guid? customerId, DateTimeOffset at, CancellationToken cancellationToken = default);
 }
 
-public sealed record CouponEvaluationRequest(
+/// <summary>Stored / returned as APPLIED / NOT_APPLICABLE / INVALID.</summary>
+public enum CouponApplicationStatus
+{
+    Applied,
+    NotApplicable,
+    Invalid,
+}
+
+/// <param name="Code">Coupon code as typed (matched case-insensitively).</param>
+/// <param name="HasQualifyingOrder">The customer has an order not CANCELLED / PAYMENT_FAILED (from Ordering).</param>
+/// <param name="Lines">Sellable lines only, in line order.</param>
+public sealed record EvaluateCouponRequest(
     string Code,
     Guid? CustomerId,
     Guid CityId,
-    IReadOnlyList<CouponLine> Lines,
-    long ItemsPaise,
-    long DeliveryFeePaise,
-    bool IsFirstOrder);
+    bool HasQualifyingOrder,
+    DateTimeOffset At,
+    IReadOnlyList<CouponLine> Lines);
 
-public sealed record CouponLine(Guid ProductId, Guid CategoryId, long AmountPaise);
+/// <param name="LineRef">Caller's line id, echoed in allocations.</param>
+/// <param name="AmountPaise">Line item + preparation amount.</param>
+public sealed record CouponLine(Guid LineRef, Guid ProductId, Guid CategoryId, long AmountPaise);
 
-/// <param name="RefusalCode">UPPER_SNAKE reason when not valid (e.g. COUPON_EXPIRED, COUPON_MIN_ORDER_NOT_MET).</param>
-public sealed record CouponEvaluation(bool IsValid, string? RefusalCode, long DiscountPaise, bool FreeDelivery);
+public sealed record CouponLineDiscount(Guid LineRef, long DiscountPaise);
 
-public sealed record RedeemCouponRequest(string Code, Guid CustomerId, Guid OrderId, long DiscountPaise);
+/// <param name="Code">Normalized coupon code.</param>
+/// <param name="RefusalCode">COUPON_* reason when not applied.</param>
+/// <param name="Allocations">Discount per eligible line; sums to <paramref name="DiscountPaise"/>.</param>
+public sealed record CouponEvaluation(
+    string Code,
+    CouponApplicationStatus Status,
+    string? RefusalCode,
+    long DiscountPaise,
+    bool WaivesDeliveryFee,
+    IReadOnlyList<CouponLineDiscount> Allocations);
+
+public sealed record RedeemCouponRequest(
+    string Code,
+    Guid CustomerId,
+    Guid OrderId,
+    Guid CityId,
+    bool HasQualifyingOrder,
+    DateTimeOffset At,
+    IReadOnlyList<CouponLine> Lines);
+
+public sealed record CouponRedemptionResult(
+    Guid RedemptionId,
+    Guid CouponId,
+    string Code,
+    long DiscountPaise,
+    bool WaivesDeliveryFee,
+    IReadOnlyList<CouponLineDiscount> Allocations);
+
+/// <param name="LinkType">CATEGORY / PRODUCT / COUPON.</param>
+public sealed record BannerInfo(
+    Guid Id,
+    string Title,
+    string? Subtitle,
+    string? ImageKey,
+    string LinkType,
+    string LinkTarget,
+    DateTimeOffset StartsAt,
+    DateTimeOffset? EndsAt,
+    int SortOrder);
+
+/// <param name="DiscountType">PERCENT (value in bp) / FLAT (paise) / FREE_DELIVERY.</param>
+public sealed record VisibleCoupon(
+    string Code,
+    string? Description,
+    string DiscountType,
+    long DiscountValue,
+    long? MaxDiscountPaise,
+    long MinOrderPaise,
+    DateTimeOffset? ValidTo,
+    bool FirstOrderOnly);
