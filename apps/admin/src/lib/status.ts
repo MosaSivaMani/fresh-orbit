@@ -126,7 +126,6 @@ export const CUSTOMER_STATUS: StatusMap = {
 };
 
 export const COUPON_STATUS: StatusMap = {
-  DRAFT: { label: "Draft", tone: "neutral" },
   ACTIVE: { label: "Active", tone: "success" },
   PAUSED: { label: "Paused", tone: "warning" },
   EXPIRED: { label: "Expired", tone: "neutral" },
