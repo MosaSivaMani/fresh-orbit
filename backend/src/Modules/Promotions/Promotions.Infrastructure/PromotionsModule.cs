@@ -30,8 +30,8 @@ public sealed class PromotionsModule : IModule
         services.AddScoped<IRedemptionRepository, RedemptionRepository>();
         services.AddScoped<IPromotionRepository, PromotionRepository>();
         services.AddScoped<IPromotionsReads, PromotionsReads>();
-        services.TryAddScoped<IPromotionsCatalog, CatalogGapPromotionsCatalog>();
-        services.TryAddScoped<ICityDirectory, LocationsGapCityDirectory>();
+        services.TryAddScoped<IPromotionsCatalog, CatalogPromotionsCatalog>();
+        services.TryAddScoped<ICityDirectory, LocationsCityDirectory>();
 
         services.AddScoped<CouponRedemptionService>();
         services.AddScoped<CouponAdminService>();

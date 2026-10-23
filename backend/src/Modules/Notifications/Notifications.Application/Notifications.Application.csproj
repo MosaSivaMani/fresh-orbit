@@ -3,6 +3,12 @@
     <ProjectReference Include="..\Notifications.Domain\Notifications.Domain.csproj" />
     <ProjectReference Include="..\Notifications.Public\Notifications.Public.csproj" />
     <ProjectReference Include="..\..\Identity\Identity.Public\Identity.Public.csproj" />
+    <ProjectReference Include="..\..\Audit\Audit.Public\Audit.Public.csproj" />
+    <ProjectReference Include="..\..\Settings\Settings.Public\Settings.Public.csproj" />
+    <ProjectReference Include="..\..\Customers\Customers.Public\Customers.Public.csproj" />
+    <ProjectReference Include="..\..\Ordering\Ordering.Public\Ordering.Public.csproj" />
+    <ProjectReference Include="..\..\Payments\Payments.Public\Payments.Public.csproj" />
+    <ProjectReference Include="..\..\Delivery\Delivery.Public\Delivery.Public.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

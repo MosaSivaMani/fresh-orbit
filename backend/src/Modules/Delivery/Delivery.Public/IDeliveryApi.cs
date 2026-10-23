@@ -22,8 +22,23 @@ public interface IDeliveryApi
     /// <summary>Shipment facts for Payments (cash collection: order, rider, status).</summary>
     Task<ShipmentInfo?> GetShipmentAsync(Guid shipmentId, CancellationToken cancellationToken = default);
 
+    /// <summary>Rider facts for Payments (cash settlement); <c>TimeZone</c> is the rider's location time zone. Null when unknown.</summary>
+    Task<RiderInfo?> GetRiderAsync(Guid riderId, CancellationToken cancellationToken = default);
+
     /// <summary>City readiness: the location has at least one active slot template.</summary>
     Task<bool> HasActiveSlotTemplateAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken = default);
+}
+
+public sealed record RiderInfo(Guid RiderId, Guid FulfillmentLocationId, string FullName, string Phone, bool IsActive, string TimeZone);
+
+/// <summary>
+/// Delivery limits held by the order policy (D12 <c>max_delivery_attempts</c>). Delivery does not use Settings; the
+/// Settings module implements this port (same pattern as the city checks in <c>Locations.Public</c>, D4).
+/// </summary>
+public interface IDeliveryAttemptPolicy
+{
+    /// <summary>Delivery attempts allowed on the slot date for orders of the city (city policy, else the default policy).</summary>
+    Task<int> GetMaxDeliveryAttemptsAsync(Guid cityId, CancellationToken cancellationToken = default);
 }
 
 public sealed record SlotInfo(Guid SlotId, DateTimeOffset StartAt, DateTimeOffset EndAt, DateTimeOffset CutoffAt, int Remaining);
@@ -55,7 +70,11 @@ public sealed record ShipmentTracking(
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? DeliveredAt,
     string? DeliveryCode,
-    IReadOnlyList<ShipmentAttemptInfo> Attempts);
+    IReadOnlyList<ShipmentAttemptInfo> Attempts)
+{
+    /// <summary>The order was packed with a cold box.</summary>
+    public bool ColdBoxUsed { get; init; }
+}
 
 /// <param name="Outcome">DELIVERED, CUSTOMER_UNAVAILABLE, ADDRESS_NOT_FOUND, REFUSED or OTHER.</param>
 public sealed record ShipmentAttemptInfo(int AttemptNo, string Outcome, DateTimeOffset AttemptedAt);

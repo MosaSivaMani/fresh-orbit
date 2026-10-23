@@ -34,8 +34,8 @@ public interface ICartCommandRunner
 }
 
 /// <summary>
-/// GST rate contained in the delivery fee (tax category DELIVERY_SERVICE, decision D5). <c>Pricing.Public</c> has
-/// no tax-rule lookup by category yet (merge gap); null means the rule is missing (blocker TAX_RULE_MISSING).
+/// GST rate contained in the delivery fee (tax category DELIVERY_SERVICE, decision D5); null means the rule is missing
+/// (blocker TAX_RULE_MISSING). Adapter <see cref="PricingDeliveryFeeTaxRate"/> over <c>Pricing.Public</c>.
 /// </summary>
 public interface IDeliveryFeeTaxRate
 {

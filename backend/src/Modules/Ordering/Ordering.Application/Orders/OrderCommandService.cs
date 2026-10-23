@@ -28,7 +28,6 @@ public sealed class OrderCommandService(
     IPaymentsApi payments,
     ISettingsApi settings,
     ICartApi carts,
-    OrderingOptions options,
     IClock clock)
 {
     public async Task<OrderDetailResponse> CancelByCustomerAsync(Guid customerId, Guid orderId, CancelOrderRequest request, CancellationToken cancellationToken)
@@ -115,7 +114,7 @@ public sealed class OrderCommandService(
             throw new RefusalException(new FieldError("quantity.unit", OrderingErrors.ValidationFailed, $"Send the quantity in {snapshot.QuantityUnit}."));
         }
 
-        var (substitution, autoAccept) = order.ProposeSubstitution(orderItemId, snapshot, name, options.SubstitutionMinutes, now);
+        var (substitution, autoAccept) = order.ProposeSubstitution(orderItemId, snapshot, name, policy.SubstitutionResponseMinutes, now);
         if (autoAccept)
         {
             await AcceptAsync(order, substitution, snapshot, OrderActor.System, now, cancellationToken);

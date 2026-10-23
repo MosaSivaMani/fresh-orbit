@@ -1,4 +1,5 @@
-using FreshOrbit.Payments.Application.Common;
+using FreshOrbit.Payments.Application.Providers;
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.Payments.Application.Payments;
 using FreshOrbit.Payments.Domain.Payments;
 using FreshOrbit.Payments.Public;
@@ -8,8 +9,24 @@ using Microsoft.EntityFrameworkCore;
 namespace FreshOrbit.Payments.Infrastructure.Public;
 
 /// <summary><see cref="IPaymentsApi"/> over the payments tables (no tracking: callers share the DbContext).</summary>
-internal sealed class PaymentsApi(FreshOrbitDbContext db) : IPaymentsApi
+internal sealed class PaymentsApi(FreshOrbitDbContext db, IPaymentProviderCatalog providers) : IPaymentsApi
 {
+    public Task<IReadOnlyList<string>> GetAvailablePaymentMethodsAsync(CancellationToken cancellationToken = default)
+    {
+        List<string> methods = [PaymentMethod.Cod.ToCode(), PaymentMethod.UpiOnDelivery.ToCode()];
+        try
+        {
+            providers.GetOnlineProvider();
+            methods.Add(PaymentMethod.Online.ToCode());
+        }
+        catch (PaymentProviderUnavailableException)
+        {
+            // No online provider configured or it is disabled: ONLINE is not offered.
+        }
+
+        return Task.FromResult<IReadOnlyList<string>>(methods);
+    }
+
     public async Task<OrderPaymentStatus> GetPaymentStatusAsync(Guid orderId, CancellationToken cancellationToken = default)
         => PaymentSummaries.BuildStatus(orderId, await LoadAsync([orderId], cancellationToken));
 
@@ -25,17 +42,4 @@ internal sealed class PaymentsApi(FreshOrbitDbContext db) : IPaymentsApi
 
     private async Task<List<Payment>> LoadAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken)
         => await db.Set<Payment>().AsNoTracking().Include(p => p.Refunds).Where(p => orderIds.Contains(p.OrderId)).ToListAsync(cancellationToken);
-}
-
-/// <summary>
-/// Placeholder for <see cref="IShipmentFacts"/> until <c>Delivery.Public</c> exposes shipment and rider lookups.
-/// The manager replaces this registration at merge with an adapter over <c>IDeliveryApi</c>.
-/// </summary>
-internal sealed class UnavailableShipmentFacts : IShipmentFacts
-{
-    public Task<ShipmentFacts?> GetShipmentAsync(Guid shipmentId, CancellationToken cancellationToken)
-        => throw new NotSupportedException("Delivery.Public has no shipment lookup yet; wire IShipmentFacts to IDeliveryApi at merge.");
-
-    public Task<RiderFacts?> GetRiderAsync(Guid riderId, CancellationToken cancellationToken)
-        => throw new NotSupportedException("Delivery.Public has no rider lookup yet; wire IShipmentFacts to IDeliveryApi at merge.");
 }

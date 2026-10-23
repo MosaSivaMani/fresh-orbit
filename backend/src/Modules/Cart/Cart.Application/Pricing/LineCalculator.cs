@@ -147,7 +147,7 @@ public static class LineCalculator
         var maxChargeable = LinePricing.MaxChargeableQuantity(line.Quantity, variant.IsWeightVariable, maxOverweightBp);
         var estimated = LinePricing.Compute(facts, line.Quantity);
         var max = LinePricing.Compute(facts, maxChargeable);
-        var availability = Availability(variant, stock, gross, yieldBp, lowStockThreshold: null);
+        var availability = Availability(variant, stock, gross, yieldBp, lowStockThreshold: stock is { LowStockThreshold: > 0 } known ? known.LowStockThreshold : null);
 
         if (line.Quantity > variant.MaxOrder)
         {

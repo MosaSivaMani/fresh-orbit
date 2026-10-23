@@ -27,7 +27,7 @@ public sealed class CartModule : IModule
 
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<ICartCommandRunner, CartCommandRunner>();
-        services.TryAddScoped<IDeliveryFeeTaxRate, PricingGapDeliveryFeeTaxRate>();
+        services.TryAddScoped<IDeliveryFeeTaxRate, PricingDeliveryFeeTaxRate>();
         services.AddScoped<CartPricer>();
         services.AddScoped<CartService>();
         services.AddScoped<ICartApi, CartApi>();

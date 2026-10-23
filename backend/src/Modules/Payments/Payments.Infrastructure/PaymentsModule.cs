@@ -59,8 +59,8 @@ public sealed class PaymentsModule : IModule
         services.TryAddScoped<IReconciliationIssueRepository, ReconciliationIssueRepository>();
         services.TryAddScoped<PaymentsReads>();
 
-        // Ports to other modules. Replaced at merge by an adapter over Delivery.Public (see the Phase 2 report).
-        services.TryAddScoped<IShipmentFacts, UnavailableShipmentFacts>();
+        // Ports to other modules.
+        services.TryAddScoped<IShipmentFacts, DeliveryShipmentFacts>();
 
         // Application services.
         services.TryAddScoped<IssueRecorder>();

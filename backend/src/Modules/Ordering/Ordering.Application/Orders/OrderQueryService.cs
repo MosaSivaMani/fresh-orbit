@@ -21,7 +21,6 @@ public sealed class OrderQueryService(
     ISettingsApi settings,
     IShipmentTracking shipments,
     ILocationsApi locations,
-    OrderingOptions options,
     IClock clock)
 {
     /// <summary>Parses the policy's <c>cancelAllowedUntilStatus</c>; CONFIRMED when missing or unknown.</summary>
@@ -60,7 +59,7 @@ public sealed class OrderQueryService(
         var now = clock.UtcNow;
         var actions = new AllowedActionsDto(
             CustomerMayCancel(order, CancelLimit(policy)),
-            order.Status == OrderStatus.Delivered && order.DeliveredAt is { } delivered && now <= delivered.AddHours(options.ComplaintWindowHours),
+            order.Status == OrderStatus.Delivered && order.DeliveredAt is { } delivered && now <= delivered.AddHours(policy.ComplaintWindowHours),
             invoice is not null,
             true);
         return OrderViews.Detail(order, new OrderPaymentView(payment.Status.ToCode(), payment.PaidPaise, payment.RefundedPaise), invoice, actions);

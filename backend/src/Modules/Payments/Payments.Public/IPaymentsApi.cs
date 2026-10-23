@@ -3,6 +3,12 @@ namespace FreshOrbit.Payments.Public;
 /// <summary>What other modules may ask the Payments module.</summary>
 public interface IPaymentsApi
 {
+    /// <summary>
+    /// Payment method codes Payments can take right now: COD and UPI_ON_DELIVERY always, ONLINE only while an online
+    /// provider is configured and enabled. Ordering intersects this with the city's order policy.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetAvailablePaymentMethodsAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Status of the order's latest attempt and the paid / refunded totals.</summary>
     Task<OrderPaymentStatus> GetPaymentStatusAsync(Guid orderId, CancellationToken cancellationToken = default);
 

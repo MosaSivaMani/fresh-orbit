@@ -10,6 +10,7 @@ public static class DeliveryErrors
     public const string Duplicate = "DUPLICATE";
     public const string LocationAccessDenied = "LOCATION_ACCESS_DENIED";
     public const string LocationRequired = "LOCATION_REQUIRED";
+    public const string ConfigurationMissing = "CONFIGURATION_MISSING";
     public const string PincodeNotServiceable = "PINCODE_NOT_SERVICEABLE";
 
     public const string SlotNotAvailable = "SLOT_NOT_AVAILABLE";

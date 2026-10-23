@@ -46,7 +46,7 @@ public sealed class DeliveryModule : IModule
         services.AddScoped<IDeliveryReads, DeliveryReads>();
 
         services.TryAddScoped<ILocationCalendar, LocationsPublicCalendar>();
-        services.TryAddSingleton<IDeliveryPolicyProvider, DefaultDeliveryPolicyProvider>();
+        services.TryAddScoped<IDeliveryPolicyProvider, OrderPolicyDeliveryPolicyProvider>();
 
         services.AddScoped<SlotTemplateService>();
         services.AddScoped<SlotService>();

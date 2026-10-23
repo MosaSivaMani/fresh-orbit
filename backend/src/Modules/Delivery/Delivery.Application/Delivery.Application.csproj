@@ -3,6 +3,7 @@
     <ProjectReference Include="..\Delivery.Domain\Delivery.Domain.csproj" />
     <ProjectReference Include="..\Delivery.Public\Delivery.Public.csproj" />
     <ProjectReference Include="..\..\Locations\Locations.Public\Locations.Public.csproj" />
+    <ProjectReference Include="..\..\Ordering\Ordering.Public\Ordering.Public.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

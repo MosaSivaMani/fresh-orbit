@@ -55,6 +55,8 @@ public sealed class CheckoutWorld
             .Returns(ci => new SlotBooking(true, ci.ArgAt<Guid>(0), Now.AddHours(5), Now.AddHours(7), null));
         Inventory.ReserveAsync(Arg.Any<ReserveStockRequest>(), Arg.Any<CancellationToken>())
             .Returns(_ => new ReserveStockResult(ReserveSucceeds, ReserveSucceeds ? [] : [Lines[0].VariantId]));
+        Payments.GetAvailablePaymentMethodsAsync(Arg.Any<CancellationToken>())
+            .Returns(["COD", "UPI_ON_DELIVERY", "ONLINE"]);
         Payments.GetPaymentStatusAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(ci => new OrderPaymentStatus(ci.Arg<Guid>(), PaidPaise > 0 ? PaymentStatus.Captured : PaymentStatus.Pending, PaidPaise, 0));
         Promotions.RedeemAsync(Arg.Any<RedeemCouponRequest>(), Arg.Any<CancellationToken>())
@@ -118,7 +120,13 @@ public sealed class CheckoutWorld
 
     public IPricingApi Pricing { get; } = Substitute.For<IPricingApi>();
 
-    public OrderPolicy Policy { get; set; } = new(15, 1000, "CONFIRMED", 500000);
+    public OrderPolicy Policy { get; set; } = new(15, 1000, "CONFIRMED", 500000)
+    {
+        EnabledPaymentMethods = ["COD", "UPI_ON_DELIVERY", "ONLINE"],
+        SubstitutionResponseMinutes = 15,
+        ComplaintWindowHours = 24,
+        MaxDeliveryAttempts = 3,
+    };
 
     public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com");
 

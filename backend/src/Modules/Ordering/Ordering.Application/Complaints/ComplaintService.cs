@@ -5,6 +5,7 @@ using FreshOrbit.Ordering.Application.Shared;
 using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Orders;
 using FreshOrbit.Ordering.Domain.Shared;
+using FreshOrbit.Settings.Public;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Errors;
@@ -66,7 +67,7 @@ public sealed class ComplaintService(
     IOrderReads reads,
     IUnitOfWork unitOfWork,
     OrderQueryService queries,
-    OrderingOptions options,
+    ISettingsApi settings,
     IClock clock)
 {
     public async Task<ComplaintResponse> RaiseAsync(Guid customerId, Guid orderId, RaiseComplaintRequest request, CancellationToken cancellationToken)
@@ -88,12 +89,13 @@ public sealed class ComplaintService(
         }
 
         var hasOpen = await complaints.HasOpenAsync(order.Id, itemId, cancellationToken);
+        var policy = await settings.GetOrderPolicyAsync(order.CityId, cancellationToken);
         var complaint = Complaint.Raise(
             new ComplaintOrderFacts(order.Id, order.OrderNumber, order.CustomerId, order.FulfillmentLocationId, deliveredAt),
             itemId,
             kind,
             request.Description,
-            options.ComplaintWindowHours,
+            policy.ComplaintWindowHours,
             hasOpen,
             clock.UtcNow);
         complaints.Add(complaint);

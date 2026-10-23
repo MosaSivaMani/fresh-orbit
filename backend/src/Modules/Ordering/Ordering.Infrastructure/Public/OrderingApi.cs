@@ -1,11 +1,10 @@
+using FreshOrbit.Customers.Public;
 using FreshOrbit.Locations.Public;
-using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Domain.Orders;
 using FreshOrbit.Ordering.Public;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using DomainPaymentMethod = FreshOrbit.Ordering.Domain.Orders.PaymentMethod;
 using DomainStatus = FreshOrbit.Ordering.Domain.Orders.OrderStatus;
 using PublicPaymentMethod = FreshOrbit.Ordering.Public.PaymentMethod;
@@ -65,11 +64,10 @@ internal sealed class OrderingCityRetirementCheck(FreshOrbitDbContext db) : ICit
 }
 
 /// <summary>
-/// A customer account cannot be deleted while the customer has an active (non-terminal) order. Implements
-/// Customers' <c>ICustomerDeletionCheck</c> (same signature); that interface is not on this branch yet, so at merge
-/// add <c>: ICustomerDeletionCheck</c> and register it with <c>TryAddEnumerable</c>.
+/// A customer account cannot be deleted while the customer has an active (non-terminal) order (Customers'
+/// <c>ICustomerDeletionCheck</c>).
 /// </summary>
-public sealed class OrderingCustomerDeletionCheck(FreshOrbitDbContext db)
+public sealed class OrderingCustomerDeletionCheck(FreshOrbitDbContext db) : ICustomerDeletionCheck
 {
     public const string ActiveOrdersExist = "ACTIVE_ORDERS_EXIST";
 
@@ -86,43 +84,5 @@ public sealed class OrderingCustomerDeletionCheck(FreshOrbitDbContext db)
     }
 }
 
-/// <summary>
-/// Merge gap: Inventory.Public has no <c>Release</c>. The SUBSTITUTED line's reservation is then released by
-/// Inventory's <c>OrderPacked</c> / <c>OrderCancelled</c> handlers instead of in the accept transaction.
-/// </summary>
-internal sealed partial class InventoryGapStockReleaser(ILogger<InventoryGapStockReleaser> logger) : IOrderStockReleaser
-{
-    public Task ReleaseAsync(Guid orderId, Guid orderItemId, CancellationToken cancellationToken)
-    {
-        LogReleaseDeferred(orderId, orderItemId);
-        return Task.CompletedTask;
-    }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Reservation of order {OrderId} line {OrderItemId} is released by Inventory on pack/cancel (no Release in Inventory.Public yet)")]
-    private partial void LogReleaseDeferred(Guid orderId, Guid orderItemId);
-}
 
-/// <summary>Merge gap (G7): enabled payment methods from configuration until Payments.Public exposes them per city.</summary>
-internal sealed class ConfiguredPaymentMethodAvailability(OrderingOptions options) : IPaymentMethodAvailability
-{
-    public Task<IReadOnlySet<DomainPaymentMethod>> GetEnabledMethodsAsync(Guid cityId, CancellationToken cancellationToken)
-    {
-        var methods = new HashSet<DomainPaymentMethod>();
-        foreach (var code in options.EnabledPaymentMethods)
-        {
-            if (EnumCodes.TryToEnum<DomainPaymentMethod>(code, out var method))
-            {
-                methods.Add(method);
-            }
-        }
-
-        return Task.FromResult<IReadOnlySet<DomainPaymentMethod>>(methods);
-    }
-}
-
-/// <summary>Merge gap (G6): Delivery.Public has no <c>GetShipmentForOrder</c> yet; tracking shows no shipment.</summary>
-internal sealed class DeliveryGapShipmentTracking : IShipmentTracking
-{
-    public Task<ShipmentTrackingInfo?> GetShipmentForOrderAsync(Guid orderId, CancellationToken cancellationToken)
-        => Task.FromResult<ShipmentTrackingInfo?>(null);
-}

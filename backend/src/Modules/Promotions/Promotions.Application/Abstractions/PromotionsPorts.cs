@@ -40,8 +40,8 @@ public interface IPromotionRepository
 }
 
 /// <summary>
-/// Catalog facts Promotions needs that <c>Catalog.Public</c> does not expose yet (merge gap): category ancestry for
-/// category scopes (PROMO-R6) and existence of scope ids (PROMO-R22).
+/// Catalog facts Promotions needs: category ancestry for category scopes (PROMO-R6) and existence of scope ids
+/// (PROMO-R22). Adapter <see cref="CatalogPromotionsCatalog"/> over <c>Catalog.Public</c>.
 /// </summary>
 public interface IPromotionsCatalog
 {
@@ -52,7 +52,7 @@ public interface IPromotionsCatalog
     Task<IReadOnlyCollection<Guid>> FindMissingAsync(IReadOnlyCollection<Guid> categoryIds, IReadOnlyCollection<Guid> productIds, CancellationToken cancellationToken);
 }
 
-/// <summary>City existence check (PROMO-R22); <c>Locations.Public</c> has no city lookup yet (merge gap).</summary>
+/// <summary>City existence check (PROMO-R22); adapter <see cref="LocationsCityDirectory"/> over <c>Locations.Public</c>.</summary>
 public interface ICityDirectory
 {
     Task<bool> CityExistsAsync(Guid cityId, CancellationToken cancellationToken);

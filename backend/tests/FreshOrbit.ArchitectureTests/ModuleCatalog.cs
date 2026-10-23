@@ -7,21 +7,21 @@ public static class ModuleCatalog
 {
     public static readonly IReadOnlyDictionary<string, string[]> Uses = new Dictionary<string, string[]>
     {
-        ["Identity"] = [],
-        ["Customers"] = ["Identity", "Catalog"],
+        ["Identity"] = ["Audit"],
+        ["Customers"] = ["Identity", "Catalog", "Audit", "Locations"],
         ["Locations"] = [],
         ["Catalog"] = [],
         ["Pricing"] = ["Catalog", "Locations"],
-        ["Inventory"] = ["Catalog", "Locations"],
-        ["Cart"] = ["Catalog", "Pricing", "Inventory", "Locations", "Promotions", "Settings", "Customers", "Ordering"],
-        ["Promotions"] = ["Catalog", "Locations"],
+        ["Inventory"] = ["Catalog", "Locations", "Ordering"],
+        ["Cart"] = ["Catalog", "Pricing", "Inventory", "Locations", "Promotions", "Settings", "Customers", "Ordering", "Identity"],
+        ["Promotions"] = ["Catalog", "Locations", "Ordering"],
         ["Ordering"] = ["Cart", "Catalog", "Pricing", "Inventory", "Delivery", "Promotions", "Locations", "Customers", "Settings", "Payments"],
         ["Payments"] = ["Ordering", "Delivery", "Identity"],
-        ["Delivery"] = ["Locations"],
-        ["Notifications"] = ["Identity"],
+        ["Delivery"] = ["Locations", "Ordering"],
+        ["Notifications"] = ["Identity", "Audit", "Settings", "Customers", "Ordering", "Payments", "Delivery"],
         ["Reporting"] = [],
         ["Audit"] = [],
-        ["Settings"] = [],
+        ["Settings"] = ["Audit", "Delivery"],
     };
 
     public static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Public"];

@@ -1,3 +1,4 @@
+using FreshOrbit.Customers.Public;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Application.Checkout;
@@ -38,10 +39,10 @@ public sealed class OrderingModule : IModule
         services.AddScoped<IOrderReads, OrderReads>();
         services.AddScoped<IOrderingTransactions, OrderingTransactions>();
 
-        // Merge gaps: replaced by adapters over Inventory / Payments / Delivery Public APIs once they exist.
-        services.TryAddScoped<IOrderStockReleaser, InventoryGapStockReleaser>();
-        services.TryAddScoped<IPaymentMethodAvailability, ConfiguredPaymentMethodAvailability>();
-        services.TryAddScoped<IShipmentTracking, DeliveryGapShipmentTracking>();
+        // Ports over other modules' Public APIs.
+        services.TryAddScoped<IOrderStockReleaser, InventoryOrderStockReleaser>();
+        services.TryAddScoped<IPaymentMethodAvailability, PolicyPaymentMethodAvailability>();
+        services.TryAddScoped<IShipmentTracking, DeliveryShipmentTracking>();
 
         services.AddScoped<OrderQueryService>();
         services.AddScoped<CheckoutService>();
@@ -54,6 +55,7 @@ public sealed class OrderingModule : IModule
         services.AddScoped<IOrderingApi, OrderingApi>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityRetirementCheck, OrderingCityRetirementCheck>());
         services.AddScoped<OrderingCustomerDeletionCheck>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ICustomerDeletionCheck, OrderingCustomerDeletionCheck>());
 
         services.AddScoped<ExpireUnpaidOrdersJob>();
         services.AddScoped<ExpireSubstitutionsJob>();

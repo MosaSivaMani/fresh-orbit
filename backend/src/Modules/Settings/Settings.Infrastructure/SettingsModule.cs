@@ -1,3 +1,4 @@
+using FreshOrbit.Delivery.Public;
 using FluentValidation;
 using FreshOrbit.Settings.Application.BusinessProfiles;
 using FreshOrbit.Settings.Application.Numbering;
@@ -32,6 +33,7 @@ public sealed class SettingsModule : IModule
         services.AddScoped<IOrderPolicyService, OrderPolicyService>();
         services.AddScoped<INumberSeriesService, NumberSeriesService>();
         services.AddScoped<ISettingsApi, SettingsApi>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDeliveryAttemptPolicy, SettingsDeliveryAttemptPolicy>());
         services.AddScoped<IValidator<SaveBusinessProfileRequest>, SaveBusinessProfileRequestValidator>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, SettingsReferenceDataLoader>());
     }

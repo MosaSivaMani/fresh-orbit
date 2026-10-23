@@ -1,3 +1,4 @@
+using FreshOrbit.Catalog.Domain.Categories;
 using System.Linq.Expressions;
 using FreshOrbit.Catalog.Domain.Preparations;
 using FreshOrbit.Catalog.Domain.Products;
@@ -45,6 +46,42 @@ public sealed class CatalogApi(FreshOrbitDbContext db) : ICatalogApi
             .Select(p => new { p.Id, p.Name, p.Slug, p.Status, ImageKey = p.Images.OrderBy(i => i.SortOrder).Select(i => i.StorageKey).FirstOrDefault() })
             .ToListAsync(cancellationToken);
         return [.. rows.Select(r => new ProductSummary(r.Id, r.Name, r.Slug, r.ImageKey, Map(r.Status)))];
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetCategoryLineagesAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(categoryIds);
+        var parents = new Dictionary<Guid, Guid?>();
+        var pending = categoryIds.Distinct().ToList();
+
+        // One query per level; categories are at most two levels deep (CAT rules), so this runs once or twice.
+        while (pending.Count > 0)
+        {
+            var rows = await db.Set<Category>().AsNoTracking()
+                .Where(c => pending.Contains(c.Id))
+                .Select(c => new { c.Id, c.ParentId })
+                .ToListAsync(cancellationToken);
+            foreach (var row in rows)
+            {
+                parents[row.Id] = row.ParentId;
+            }
+
+            pending = [.. rows.Where(r => r.ParentId is { } parent && !parents.ContainsKey(parent)).Select(r => r.ParentId!.Value).Distinct()];
+        }
+
+        var lineages = new Dictionary<Guid, IReadOnlyList<Guid>>();
+        foreach (var id in categoryIds.Distinct().Where(parents.ContainsKey))
+        {
+            var lineage = new List<Guid>();
+            for (Guid? current = id; current is { } c && parents.ContainsKey(c) && !lineage.Contains(c); current = parents[c])
+            {
+                lineage.Add(c);
+            }
+
+            lineages[id] = lineage;
+        }
+
+        return lineages;
     }
 
     private async Task<IReadOnlyList<VariantInfo>> LoadVariantsAsync(Expression<Func<ProductVariant, bool>> filter, CancellationToken cancellationToken)

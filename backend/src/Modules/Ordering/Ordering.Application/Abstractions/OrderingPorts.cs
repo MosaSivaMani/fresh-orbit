@@ -51,23 +51,19 @@ public interface IOrderingTransactions
     Task<T> RunAsync<T>(Func<CancellationToken, Task<T>> attempt, CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Releases the stock reservation of one order line (substitution accept, ORD-R35). Inventory.Public has no
-/// <c>Release</c> yet; the merge adapter calls it. The fallback leaves the reservation to Inventory's
-/// <c>OrderPacked</c> handler (the SUBSTITUTED line is released there).
-/// </summary>
+/// <summary>Releases the stock reservation of one order line (substitution accept, ORD-R35); adapter over Inventory.Public.</summary>
 public interface IOrderStockReleaser
 {
     Task ReleaseAsync(Guid orderId, Guid orderItemId, CancellationToken cancellationToken);
 }
 
-/// <summary>Payment methods enabled for a city (G7). Payments.Public has no such call yet; fallback = configuration.</summary>
+/// <summary>Payment methods enabled for a city (G7): the city's order policy ∩ what Payments can take.</summary>
 public interface IPaymentMethodAvailability
 {
     Task<IReadOnlySet<PaymentMethod>> GetEnabledMethodsAsync(Guid cityId, CancellationToken cancellationToken);
 }
 
-/// <summary>Shipment facts for tracking (Delivery <c>GetShipmentForOrder</c>, G6). Fallback: none.</summary>
+/// <summary>Shipment facts for tracking (Delivery <c>GetShipmentForOrder</c>, G6).</summary>
 public interface IShipmentTracking
 {
     Task<ShipmentTrackingInfo?> GetShipmentForOrderAsync(Guid orderId, CancellationToken cancellationToken);
@@ -85,25 +81,16 @@ public sealed record ShipmentTrackingInfo(
 
 public sealed record ShipmentAttemptInfo(int AttemptNo, string Outcome, DateTimeOffset AttemptedAt);
 
-/// <summary>Ordering settings not yet in Settings' order policy (D17 defaults).</summary>
+/// <summary>Ordering settings that are not business policy (policy values come from Settings' order policy).</summary>
 public sealed class OrderingOptions
 {
     public const string SectionName = "Ordering";
-
-    /// <summary>How long a CALL_ME substitution waits for the customer (minutes).</summary>
-    public int SubstitutionMinutes { get; set; } = 15;
-
-    /// <summary>Complaint window after delivery (hours).</summary>
-    public int ComplaintWindowHours { get; set; } = 24;
 
     /// <summary>How far ahead checkout looks for the chosen slot (days).</summary>
     public int SlotLookaheadDays { get; set; } = 14;
 
     /// <summary>SAC code printed on the delivery-fee invoice line.</summary>
     public string DeliveryServiceCode { get; set; } = "996813";
-
-    /// <summary>Methods used when Payments cannot say which are enabled for a city (G7).</summary>
-    public IReadOnlyList<string> EnabledPaymentMethods { get; set; } = ["COD", "UPI_ON_DELIVERY", "ONLINE"];
 }
 
 /// <summary>Read-side queries (lists and the pick list) projected straight from the tables.</summary>

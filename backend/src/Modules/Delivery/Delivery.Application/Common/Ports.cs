@@ -1,6 +1,8 @@
+using FreshOrbit.Delivery.Public;
 using FreshOrbit.Delivery.Domain.Shared;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.SharedKernel.Actors;
+using FreshOrbit.SharedKernel.Errors;
 
 namespace FreshOrbit.Delivery.Application.Common;
 
@@ -24,15 +26,18 @@ public interface IDeliveryPolicyProvider
 }
 
 /// <summary>
-/// Default 3 attempts (D12). Delivery may not use <c>Settings.Public</c> (architecture "Uses"), so the policy value
-/// reaches it through this port; replace when the order policy exposes <c>MaxDeliveryAttempts</c>.
+/// Max delivery attempts from the order policy of the location's city through <see cref="IDeliveryAttemptPolicy"/>
+/// (implemented by Settings). No implementation registered = configuration missing (CLAUDE.md rule 7).
 /// </summary>
-public sealed class DefaultDeliveryPolicyProvider : IDeliveryPolicyProvider
+public sealed class OrderPolicyDeliveryPolicyProvider(IEnumerable<IDeliveryAttemptPolicy> policies, ILocationCalendar calendar) : IDeliveryPolicyProvider
 {
-    public const int DefaultMaxDeliveryAttempts = 3;
-
-    public Task<int> GetMaxDeliveryAttemptsAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken)
-        => Task.FromResult(DefaultMaxDeliveryAttempts);
+    public async Task<int> GetMaxDeliveryAttemptsAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken)
+    {
+        var policy = policies.FirstOrDefault()
+            ?? throw new DomainException(DeliveryErrors.ConfigurationMissing, "No order policy source is registered; max delivery attempts cannot be read.");
+        var location = await calendar.GetRequiredLocationAsync(fulfillmentLocationId, "fulfillmentLocationId", cancellationToken);
+        return await policy.GetMaxDeliveryAttemptsAsync(location.CityId, cancellationToken);
+    }
 }
 
 public static class LocationCalendarExtensions

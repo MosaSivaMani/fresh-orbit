@@ -31,7 +31,14 @@ public interface ILocationsApi
     /// <summary>Weekly opening hours per location; a day without a row is closed.</summary>
     Task<IReadOnlyList<OperatingHoursEntry>> GetOperatingHoursAsync(IReadOnlyCollection<Guid> fulfillmentLocationIds, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>The requested cities that exist, any status (missing ids are simply absent).</summary>
+    Task<IReadOnlyList<CitySummary>> GetCitiesAsync(IReadOnlyCollection<Guid> cityIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
+
+/// <param name="Status">DRAFT, ACTIVE, PAUSED or RETIRED (stored code).</param>
+public sealed record CitySummary(Guid Id, string Code, string Name, string StateCode, string Status, string TimeZone);
 
 /// <summary>Stored as DRAFT / ACTIVE / PAUSED.</summary>
 public enum FulfillmentLocationStatus
