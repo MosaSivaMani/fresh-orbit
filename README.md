@@ -2,6 +2,7 @@
 
 Seafood e-commerce platform: customer website, mobile app and admin dashboard on one ASP.NET Core modular monolith and PostgreSQL.
 
+- Docs index: `docs/README.md`
 - Architecture: `docs/architecture/README.md`
 - Database: `docs/database/README.md`
 - API: `docs/api/README.md`

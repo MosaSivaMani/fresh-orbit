@@ -39,6 +39,7 @@ Read before working: `docs/architecture/README.md`, `docs/database/README.md`, `
 13. **Free and open-source first.** No paid service in code paths without an adapter and a free/fake implementation.
 14. **Never copy code from other repositories** (including anything under `~/Developer`). Ideas only.
 15. **Do not use AgentOps** (plugin, skills, CLI, MCP tools) in this project.
+17. **Everything is documented.** Every decision goes into `docs/decisions/log.md`, every analysis into `docs/research/`, every phase result into `docs/team/progress.md`, and module behaviour into `docs/product/<module>.md` — in the same change that makes it. Start at `docs/README.md`.
 16. **Sample data** lives only in `backend/data/sample`, is refused in Production, and is tracked so it can be purged.
 
 ## Commands
