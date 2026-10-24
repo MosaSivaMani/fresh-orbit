@@ -334,6 +334,9 @@ function ItemsTable({
         </thead>
         <tbody>
           {order.items.map((item) => {
+            // Gross stock reserved for the line, as the server reports it in `lines`.
+            const grossOf = (itemId: string) =>
+              order.lines.find((l) => l.orderItemId === itemId)?.grossQuantity;
             const hasPending = order.substitutions.some(
               (s) => s.orderItemId === item.id && s.status === "PROPOSED",
             );
@@ -347,20 +350,12 @@ function ItemsTable({
                     {formatRupees(item.unitPricePaise)}/
                     {item.orderedQuantity.unit === "GRAM" ? "kg" : "unit"}
                   </span>
-                  {item.batches && item.batches.length > 0 && (
-                    <span className="text-text-muted block text-xs">
-                      Batches:{" "}
-                      {item.batches
-                        .map((b) => `${b.batchCode} (${formatQuantity(b.quantity)})`)
-                        .join(", ")}
-                    </span>
-                  )}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {formatQuantity(item.orderedQuantity)}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
-                  {item.grossReservedQuantity ? formatQuantity(item.grossReservedQuantity) : "—"}
+                  {grossOf(item.id) ? formatQuantity(grossOf(item.id)!) : "—"}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {item.packedQuantity ? formatQuantity(item.packedQuantity) : "—"}
@@ -435,15 +430,14 @@ function Timeline({ order }: { order: Order }) {
   return (
     <ol className="border-border flex flex-col gap-4 border-l pl-4">
       {history.map((h, index) => (
-        <li key={`${h.toStatus}-${h.changedAt}-${index}`} className="flex flex-col gap-1">
+        <li key={`${h.to}-${h.at}-${index}`} className="flex flex-col gap-1">
           <span className="flex flex-wrap items-center gap-2">
-            <StatusBadge code={h.toStatus} map={ORDER_STATUS} />
-            <span className="text-text-muted text-xs">{formatDateTime(h.changedAt)}</span>
+            <StatusBadge code={h.to} map={ORDER_STATUS} />
+            <span className="text-text-muted text-xs">{formatDateTime(h.at)}</span>
           </span>
           <span className="text-text-muted text-xs">
             {humanizeCode(h.actorType)}
-            {h.actorName ? ` · ${h.actorName}` : ""}
-            {h.reason ? ` · ${humanizeCode(h.reason)}` : ""}
+            {h.reasonCode ? ` · ${humanizeCode(h.reasonCode)}` : ""}
           </span>
         </li>
       ))}
@@ -452,7 +446,7 @@ function Timeline({ order }: { order: Order }) {
           <span className="flex items-center gap-2 text-sm">
             <Badge tone="info">{humanizeCode(a.kind)}</Badge>
             <span className="tabular-nums">{formatRupees(a.amountPaise)}</span>
-            <span className="text-text-muted text-xs">{formatDateTime(a.createdAt)}</span>
+            <span className="text-text-muted text-xs">{formatDateTime(a.at)}</span>
           </span>
           {a.reason && <span className="text-text-muted text-xs">{a.reason}</span>}
         </li>

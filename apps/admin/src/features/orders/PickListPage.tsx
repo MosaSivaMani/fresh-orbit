@@ -1,4 +1,4 @@
-import { formatQuantity, formatTime } from "@fresh/core";
+import { formatQuantity } from "@fresh/core";
 import { Button, EmptyState } from "@fresh/ui";
 import { ClipboardList, Printer } from "lucide-react";
 import { useSearchParams } from "react-router";
@@ -40,11 +40,7 @@ export function PickListPage() {
             title="Pick list"
             backTo="/orders"
             backLabel="Orders"
-            description={`${nameOf(fulfillmentLocationId)}${
-              pick.slot
-                ? ` · slot ${formatTime(pick.slot.startAt)} – ${formatTime(pick.slot.endAt)}`
-                : ""
-            }${pick.orderCount != null ? ` · ${pick.orderCount} orders` : ""}`}
+            description={nameOf(fulfillmentLocationId)}
             actions={
               <Button
                 variant="outline"
@@ -55,7 +51,7 @@ export function PickListPage() {
               </Button>
             }
           />
-          {pick.items.length === 0 ? (
+          {pick.lines.length === 0 ? (
             <EmptyState
               icon={<ClipboardList aria-hidden="true" />}
               title="Nothing to pick for this slot"
@@ -70,9 +66,6 @@ export function PickListPage() {
                       Item
                     </th>
                     <th scope="col" className="px-3 py-2">
-                      SKU
-                    </th>
-                    <th scope="col" className="px-3 py-2">
                       Preparation
                     </th>
                     <th scope="col" className="px-3 py-2 text-right">
@@ -84,7 +77,7 @@ export function PickListPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {pick.items.map((item) => (
+                  {pick.lines.map((item) => (
                     <tr
                       key={`${item.variantId}-${item.preparationCode}`}
                       className="border-border border-t"
@@ -93,10 +86,9 @@ export function PickListPage() {
                         <span className="font-medium">{item.productName}</span>{" "}
                         <span className="text-text-muted">{item.variantName}</span>
                       </td>
-                      <td className="px-3 py-2">{item.sku ?? "—"}</td>
-                      <td className="px-3 py-2">{item.preparationName}</td>
+                      <td className="px-3 py-2">{item.preparationName ?? "—"}</td>
                       <td className="px-3 py-2 text-right text-base font-semibold tabular-nums">
-                        {formatQuantity(item.grossQuantity)}
+                        {formatQuantity({ value: item.grossQuantity, unit: item.stockUnit })}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums">{item.orderCount}</td>
                     </tr>

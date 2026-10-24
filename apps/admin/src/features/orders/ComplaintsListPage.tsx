@@ -56,7 +56,7 @@ export function ComplaintsListPage() {
         id: "item",
         header: "Item",
         enableSorting: false,
-        cell: ({ row }) => row.original.productName ?? "Whole order",
+        cell: ({ row }) => (row.original.orderItemId ? "One item" : "Whole order"),
       },
       {
         id: "status",

@@ -1,46 +1,16 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.1; shapes match backend Identity.Application/Staff/StaffContracts.cs.
+// Staff sign-in (docs/api §4.1), generated from the backend OpenAPI document.
 
-import type { Id, Instant } from "./common";
+import type { RequestBody, Schema } from "./common";
 
-export interface StaffLoginRequest {
-  email: string;
-  password: string;
-  deviceLabel?: string | null;
-}
+export type StaffLoginRequest = RequestBody<Schema<"StaffLoginRequest">>;
 
-export interface StaffRoleRef {
-  id: Id;
-  code: string;
-  name: string;
-}
+export type StaffRoleRef = Schema<"StaffRoleRef">;
 
 /** `GET /admin/auth/me` and `staff` in the login response. */
-export interface StaffProfile {
-  staffId: Id;
-  userId: Id;
-  email: string | null;
-  fullName: string;
-  roles: StaffRoleRef[];
-  permissions: string[];
-  allLocations: boolean;
-  locationIds: Id[];
-}
+export type StaffProfile = Schema<"StaffProfileResponse">;
 
-export interface StaffLoginResponse {
-  accessToken: string;
-  accessTokenExpiresAt: Instant;
-  refreshToken: string;
-  refreshTokenExpiresAt: Instant;
-  staff: StaffProfile;
-}
+export type StaffLoginResponse = Schema<"StaffLoginResponse">;
 
-export interface LogoutRequest {
-  refreshToken: string | null;
-  allDevices?: boolean;
-}
+export type LogoutRequest = Schema<"LogoutRequest">;
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
+export type ChangePasswordRequest = Schema<"ChangePasswordRequest">;

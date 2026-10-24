@@ -1,10 +1,7 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.15 (admin orders, complaints), §4.8 order detail shape, §6 status machine;
-// docs/product/ordering.md (ORD-R25…R60) and docs/database/README.md (ordering tables). The Ordering module was
-// not on `main` when these were written, so fields marked "proposed" are the admin's reading of the spec and
-// must be checked against the generated client after Phase 3.
+// Admin orders, pick list, packing, substitutions and complaints (docs/api §4.15), generated from the backend
+// OpenAPI document. Ordering writes most codes as plain strings; `Coded` narrows them to the documented codes.
 
-import type { CalendarDate, Id, Instant, Quantity, Version } from "./common";
+import type { CalendarDate, Coded, Id, Quantity, Schema } from "./common";
 
 export type OrderStatus =
   | "PENDING_PAYMENT"
@@ -18,7 +15,7 @@ export type OrderStatus =
   | "RETURNED"
   | "CANCELLED";
 
-export type PaymentMethod = "COD" | "UPI_ON_DELIVERY" | "ONLINE";
+export type PaymentMethod = Schema<"PaymentsPaymentMethod">;
 export type SubstitutionPreference = "CALL_ME" | "AUTO_SIMILAR" | "NONE";
 export type OrderItemStatus = "ACTIVE" | "SHORT_SUPPLIED" | "SUBSTITUTED" | "CANCELLED";
 
@@ -31,235 +28,145 @@ export const STAFF_CANCEL_REASONS = [
 ] as const;
 export type StaffCancelReason = (typeof STAFF_CANCEL_REASONS)[number];
 
-/** List row (proposed: docs/api §4.15 names the filters, not the item fields). */
-export interface AdminOrderSummary {
-  id: Id;
-  orderNumber: string;
-  status: OrderStatus;
-  placedAt: Instant;
-  fulfillmentLocationId: Id;
-  customerName: string | null;
-  customerPhone: string | null;
-  slot: { id: Id; startAt: Instant; endAt: Instant } | null;
-  itemCount: number;
-  paymentMethod: PaymentMethod;
-  /** Estimated total until packed, final total after. */
-  totalPaise: number;
-  amountDuePaise: number;
-  version: Version;
-}
+/**
+ * List row. `totalPaise` is the estimate; `finalTotalPaise` is set once packed. The row has no `version`
+ * (gap G13): bulk actions read it from the order detail first.
+ */
+export type AdminOrderSummary = Coded<
+  Schema<"AdminOrderListItem">,
+  { status: OrderStatus; paymentMethod: PaymentMethod }
+>;
 
+/** `status` takes one code (the API refuses a list); `slotDate` narrows by the slot's local date. */
 export interface AdminOrderListQuery {
   fulfillmentLocationId?: Id;
-  status?: string | string[];
+  status?: string;
   slotDate?: CalendarDate;
   slotId?: Id;
   paymentMethod?: string;
   q?: string;
   page?: number;
   pageSize?: number;
-  sort?: string;
 }
 
-export interface OrderAddress {
-  recipientName: string;
-  phone: string;
-  line1: string;
-  line2: string | null;
-  landmark: string | null;
-  locality: string;
-  cityName: string;
-  stateCode: string;
-  pincode: string;
-}
+export type OrderAddress = Schema<"OrderAddressDto">;
 
-export interface OrderItem {
-  id: Id;
-  lineNo: number;
-  productName: string;
-  variantName: string;
-  preparationName: string;
-  orderedQuantity: Quantity;
-  maxChargeableQuantity: Quantity;
-  packedQuantity: Quantity | null;
-  chargedQuantity: Quantity | null;
-  unitPricePaise: number;
-  preparationChargePaise: number;
-  estimatedTotalPaise: number;
-  finalTotalPaise: number | null;
-  status: OrderItemStatus;
-  /** Admin detail: gross stock reserved for the line (`ceil(net × 10000 / yieldBp)`), from Inventory. */
-  grossReservedQuantity?: Quantity | null;
-  /** Admin detail: batches the line was packed from (after pack). */
-  batches?: { batchId: Id; batchCode: string; quantity: Quantity }[];
-}
-
-export interface OrderTotals {
-  itemsPaise: number;
-  preparationPaise: number;
-  discountPaise: number;
-  deliveryFeePaise: number;
-  taxPaise: number;
-  totalPaise: number;
-}
-
-export interface Substitution {
-  id: Id;
-  orderItemId: Id;
-  proposedVariantId: Id;
-  proposedName: string;
-  proposedQuantity: Quantity;
-  priceDifferencePaise: number;
-  status: "PROPOSED" | "ACCEPTED" | "REJECTED" | "EXPIRED";
-  expiresAt: Instant | null;
-  respondedAt: Instant | null;
-}
-
-export interface OrderStatusChange {
-  fromStatus: OrderStatus | null;
-  toStatus: OrderStatus;
-  actorType: "CUSTOMER" | "STAFF" | "SYSTEM";
-  actorName: string | null;
-  reason: string | null;
-  changedAt: Instant;
-}
-
-export interface OrderAdjustment {
-  id: Id;
-  orderItemId: Id | null;
-  kind: "WEIGHT" | "SHORT_SUPPLY" | "SUBSTITUTION" | "GOODWILL";
-  amountPaise: number;
-  reason: string | null;
-  createdAt: Instant;
-}
-
-/** `GET /admin/orders/{id}` = customer order detail (§4.8) + admin extras (history, adjustments). */
-export interface AdminOrderDetail {
-  id: Id;
-  orderNumber: string;
-  version: Version;
-  status: OrderStatus;
-  paymentMethod: PaymentMethod;
-  placedAt: Instant;
-  fulfillmentLocationId?: Id;
-  customerId?: Id;
-  customerNotes?: string | null;
-  slot: { id?: Id; startAt: Instant; endAt: Instant };
-  address: OrderAddress;
-  substitutionPreference: SubstitutionPreference;
-  items: OrderItem[];
-  estimate: OrderTotals;
-  final: OrderTotals | null;
-  amountDuePaise: number;
-  amountPaidPaise: number;
-  amountRefundedPaise: number;
-  couponCode: string | null;
-  substitutions: Substitution[];
-  payment: { method: PaymentMethod; status: string; nextAction: unknown } | null;
-  invoice: { invoiceNumber: string; issuedAt: Instant } | null;
-  history?: OrderStatusChange[];
-  adjustments?: OrderAdjustment[];
-}
-
-export interface PackRequest {
-  lines: { orderItemId: Id; packedQuantity: Quantity }[];
-  coldBoxUsed: boolean;
-}
-
-export interface PackResponse {
-  orderId: Id;
-  status: OrderStatus;
-  version: Version;
-  lines: {
-    orderItemId: Id;
-    packed: Quantity;
-    charged: Quantity;
-    capped: boolean;
-    finalTotalPaise: number;
-    adjustmentPaise: number;
+/** Order quantities: the spec types `unit` as a string; the server writes GRAM / PIECE / PACK. */
+export type OrderItem = Coded<
+  Schema<"OrderItemDto">,
+  {
     status: OrderItemStatus;
-  }[];
-  finalTotalPaise: number;
-  amountDuePaise: number;
-  refundDuePaise: number;
+    orderedQuantity: Quantity;
+    maxChargeableQuantity: Quantity;
+    packedQuantity: Quantity | null;
+    chargedQuantity: Quantity | null;
+  }
+>;
+
+export type OrderTotals = Schema<"AmountsDto">;
+
+export type Substitution = Coded<
+  Schema<"SubstitutionDto">,
+  { status: "PROPOSED" | "ACCEPTED" | "REJECTED" | "EXPIRED"; proposedQuantity: Quantity }
+>;
+
+export type OrderStatusChange = Coded<
+  Schema<"OrderHistoryDto">,
+  { from: OrderStatus | null; to: OrderStatus; actorType: "CUSTOMER" | "STAFF" | "SYSTEM" }
+>;
+
+export type OrderAdjustment = Coded<
+  Schema<"OrderAdjustmentDto">,
+  { kind: "WEIGHT" | "SHORT_SUPPLY" | "SUBSTITUTION" | "GOODWILL" }
+>;
+
+/** Gross stock reserved per line (`grossQuantity` in the stock unit), from Inventory. */
+export type OrderLineStock = Coded<Schema<"OrderLineStockDto">, { grossQuantity: Quantity }>;
+
+export type CustomerOrderDetail = Coded<
+  Schema<"OrderDetailResponse">,
+  {
+    status: OrderStatus;
+    paymentMethod: PaymentMethod;
+    substitutionPreference: SubstitutionPreference;
+    items: OrderItem[];
+    substitutions: Substitution[];
+  }
+>;
+
+/** `GET /admin/orders/{id}` as sent: the customer order under `order`, staff extras beside it. */
+export type AdminOrderDetailResponse = Omit<
+  Schema<"AdminOrderDetailResponse">,
+  "order" | "lines" | "history" | "adjustments"
+> & {
+  order: CustomerOrderDetail;
+  lines: OrderLineStock[];
+  history: OrderStatusChange[];
+  adjustments: OrderAdjustment[];
+};
+
+/** The admin screens read one flat object: the customer order fields plus the staff extras. */
+export type AdminOrderDetail = CustomerOrderDetail & Omit<AdminOrderDetailResponse, "order">;
+
+export function flattenAdminOrder(response: AdminOrderDetailResponse): AdminOrderDetail {
+  const { order, ...extras } = response;
+  return { ...order, ...extras };
 }
+
+export type PackRequest = Omit<Schema<"PackOrderRequest">, "lines"> & {
+  lines: { orderItemId: Id; packedQuantity: Quantity }[];
+};
+
+export type PackResponse = Coded<
+  Schema<"PackResponse">,
+  {
+    status: OrderStatus;
+    lines: Coded<
+      Schema<"PackedLineDto">,
+      { packed: Quantity; charged: Quantity; status: OrderItemStatus }
+    >[];
+  }
+>;
 
 export interface CancelOrderRequest {
   reasonCode: StaffCancelReason;
-  notes?: string | null;
+  note?: string | null;
 }
 
-/** Proposed body (ORD-R33): the substitute variant, its preparation and quantity. */
-export interface ProposeSubstitutionRequest {
-  variantId: Id;
-  preparationCode: string;
-  quantity: Quantity;
-}
+/** ORD-R33: the substitute variant, its preparation method (id) and quantity. */
+export type ProposeSubstitutionRequest = Coded<
+  Schema<"ProposeSubstitutionRequest">,
+  { preparationMethodId: Id | null; quantity: Quantity }
+>;
 
-/** Proposed body for `record-response` (answer taken by phone). */
+/** Answer taken by phone. */
 export interface RecordSubstitutionResponseRequest {
-  accepted: boolean;
+  answer: "ACCEPTED" | "REJECTED";
 }
 
-export interface GoodwillRequest {
-  /** Negative paise (ORD-R58). */
-  amountPaise: number;
-  reason: string;
-  orderItemId?: Id | null;
-}
+/** `amountPaise` is negative (ORD-R58). */
+export type GoodwillRequest = Schema<"GoodwillRequest">;
+
+/** `grossQuantity` is in `stockUnit` (GRAM or PIECE). */
+export type PickListItem = Coded<Schema<"PickListLine">, { stockUnit: "GRAM" | "PIECE" }>;
 
 /** `GET /admin/orders/pick-list` (ORD-R60): gross quantities per variant × preparation for a slot. */
-export interface PickList {
-  fulfillmentLocationId: Id;
-  slotId: Id;
-  slot?: { startAt: Instant; endAt: Instant } | null;
-  orderCount?: number;
-  items: PickListItem[];
-}
-
-export interface PickListItem {
-  variantId: Id;
-  sku: string | null;
-  productName: string;
-  variantName: string;
-  preparationCode: string;
-  preparationName: string;
-  grossQuantity: Quantity;
-  orderCount: number;
-}
+export type PickList = Coded<Schema<"PickListResponse">, { lines: PickListItem[] }>;
 
 export type ComplaintKind = "MISSING" | "DAMAGED" | "QUALITY" | "WRONG_ITEM" | "LATE";
 export type ComplaintStatus = "OPEN" | "APPROVED" | "REJECTED" | "RESOLVED";
 export type ComplaintResolution = "REFUND" | "REPLACEMENT" | "NONE";
 
-export interface ComplaintSummary {
-  id: Id;
-  orderId: Id;
-  orderNumber: string;
-  orderItemId: Id | null;
-  productName: string | null;
-  kind: ComplaintKind;
-  status: ComplaintStatus;
-  description: string;
-  raisedAt: Instant;
-  fulfillmentLocationId: Id;
-  version: Version;
-}
-
-export interface ComplaintDetail extends ComplaintSummary {
-  resolution: ComplaintResolution | null;
-  refundAmountPaise: number | null;
-  /** Final line total (or order total for LATE) — the server's upper bound for a refund. */
-  maxRefundPaise?: number | null;
-  attachments: { id: Id; url: string; contentType: string }[];
-  decidedBy: string | null;
-  decidedAt: Instant | null;
-  resolvedAt: Instant | null;
-}
+/** List and detail are one shape (`ComplaintResponse`). */
+export type ComplaintDetail = Coded<
+  Schema<"ComplaintResponse">,
+  { kind: ComplaintKind; status: ComplaintStatus; resolution: ComplaintResolution | null }
+>;
+export type ComplaintSummary = ComplaintDetail;
 
 export interface DecideComplaintRequest {
   status: "APPROVED" | "REJECTED";
   resolution: ComplaintResolution;
   refundAmountPaise?: number | null;
-  notes?: string | null;
+  note?: string | null;
 }

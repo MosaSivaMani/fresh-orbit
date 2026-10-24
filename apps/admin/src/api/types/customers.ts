@@ -1,65 +1,24 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.19; shapes match backend Customers.Application/Admin/AdminCustomerService.cs and
-// Customers.Application/Addresses/AddressService.cs.
+// Customers (docs/api §4.19), generated from the backend OpenAPI document.
 
-import type { Id, Instant, Version } from "./common";
+import type { Coded, Id, Schema } from "./common";
 
 export type CustomerStatus = "ACTIVE" | "DELETED";
 
-export interface CustomerListItem {
-  customerId: Id;
-  fullName: string | null;
-  phone: string | null;
-  email: string | null;
-  status: CustomerStatus;
-  isBlocked: boolean;
-}
+export type CustomerListItem = Coded<Schema<"CustomerListItem">, { status: CustomerStatus }>;
 
 export interface CustomerListQuery {
   q?: string;
   status?: string;
-  /** In docs/api §4.19; not yet accepted by the backend list request (ignored). */
+  /** In docs/api §4.19; the backend list does not accept it yet (gap G6). */
   cityId?: Id;
   page?: number;
   pageSize?: number;
 }
 
-export interface CustomerAddress {
-  addressId: Id;
-  label: string;
-  recipientName: string;
-  phone: string;
-  line1: string;
-  line2: string | null;
-  landmark: string | null;
-  locality: string;
-  cityName: string;
-  stateCode: string;
-  pincode: string;
-  latitude: number | null;
-  longitude: number | null;
-  isDefault: boolean;
-  isServiceable: boolean | null;
-  version: Version;
-}
+export type CustomerAddress = Schema<"AddressResponse">;
 
 /**
- * `GET /admin/customers/{id}`. Order counts and lifetime value (docs/api §4.19) are not in the backend
- * response yet; they are optional here and shown only when present.
+ * `GET /admin/customers/{id}`. Order counts and lifetime value (docs/api §4.19) are not in the response; the screen
+ * does not show them (gap G6).
  */
-export interface CustomerDetail {
-  customerId: Id;
-  userId: Id;
-  fullName: string | null;
-  phone: string | null;
-  email: string | null;
-  marketingOptIn: boolean;
-  status: CustomerStatus;
-  isBlocked: boolean;
-  deletedAt: Instant | null;
-  addresses: CustomerAddress[];
-  version: Version;
-  orderCount?: number | null;
-  deliveredOrderCount?: number | null;
-  lifetimeValuePaise?: number | null;
-}
+export type CustomerDetail = Coded<Schema<"CustomerDetailResponse">, { status: CustomerStatus }>;

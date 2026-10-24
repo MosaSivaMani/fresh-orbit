@@ -1,36 +1,12 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.21 (notification templates); shapes match backend
-// Notifications.Application/Templates/TemplateAdminService.cs.
+// Notification templates (docs/api §4.21), generated from the backend OpenAPI document.
 
-import type { Id, Version } from "./common";
+import type { Schema } from "./common";
 
 export type NotificationChannel = "SMS" | "EMAIL" | "PUSH" | "IN_APP" | (string & {});
 
-export interface NotificationTemplate {
-  templateId: Id;
-  code: string;
-  channel: NotificationChannel;
-  category: string | null;
-  subject: string | null;
-  body: string;
-  isActive: boolean;
-  /** Placeholders this template may use (`{{orderNumber}}` …). */
-  variables: string[];
-  dltTemplateId: string | null;
-  version: Version;
-}
+export type NotificationTemplate = Schema<"TemplateResponse">;
 
-export interface UpdateTemplateRequest {
-  subject: string | null;
-  body: string;
-  isActive: boolean;
-}
+export type UpdateTemplateRequest = Schema<"UpdateTemplateRequest">;
 
-export interface TestSendResponse {
-  /** False when the staff member has no address for the channel (PUSH / IN_APP). */
-  sent: boolean;
-  channel: NotificationChannel;
-  recipient: string | null;
-  subject: string | null;
-  body: string;
-}
+/** `sent` is false when the staff member has no address for the channel (PUSH / IN_APP). */
+export type TestSendResponse = Schema<"TestSendResponse">;

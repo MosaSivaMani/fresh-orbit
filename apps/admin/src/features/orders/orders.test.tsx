@@ -1,6 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
-import { type AdminOrderDetail, type AdminOrderSummary } from "../../api/types/orders";
+import {
+  type AdminOrderDetailResponse,
+  type AdminOrderSummary,
+  type CustomerOrderDetail,
+} from "../../api/types/orders";
 import { page } from "../../test/fixtures";
 import { AdminLayout } from "../../app/AdminLayout";
 import { LOCATION_A, type RenderAppOptions, renderApp as renderWith } from "../../test/render";
@@ -29,7 +33,25 @@ function totals(totalPaise: number) {
   };
 }
 
-function orderDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetail {
+/** `GET /admin/orders/{id}` as the API sends it: the customer order under `order`, staff extras beside it. */
+function orderDetail(overrides: Partial<CustomerOrderDetail> = {}): AdminOrderDetailResponse {
+  return {
+    order: customerOrder(overrides),
+    customerId: "cust-1",
+    cityId: "city-1",
+    fulfillmentLocationId: LOCATION_A,
+    serviceAreaId: "area-1",
+    deliverySlotId: "slot-1",
+    cancelReasonCode: null,
+    coldBoxUsed: false,
+    refundDuePaise: 0,
+    lines: [],
+    history: [],
+    adjustments: [],
+  };
+}
+
+function customerOrder(overrides: Partial<CustomerOrderDetail>): CustomerOrderDetail {
   return {
     id: ORDER_ID,
     orderNumber: "FO-HYD-000123",
@@ -37,9 +59,8 @@ function orderDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetai
     status: "PREPARING",
     paymentMethod: "COD",
     placedAt: "2026-10-24T04:00:00Z",
-    fulfillmentLocationId: LOCATION_A,
     customerNotes: null,
-    slot: { id: "slot-1", startAt: "2026-10-24T06:30:00Z", endAt: "2026-10-24T08:30:00Z" },
+    slot: { startAt: "2026-10-24T06:30:00Z", endAt: "2026-10-24T08:30:00Z" },
     address: {
       recipientName: "Ravi K",
       phone: "+919800000001",
@@ -56,9 +77,11 @@ function orderDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetai
       {
         id: "item-1",
         lineNo: 1,
+        variantId: "variant-1",
         productName: "Seer fish",
         variantName: "Steaks",
         preparationName: "Cleaned",
+        imageKey: null,
         orderedQuantity: { value: 500, unit: "GRAM" },
         maxChargeableQuantity: { value: 550, unit: "GRAM" },
         packedQuantity: null,
@@ -68,6 +91,7 @@ function orderDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetai
         estimatedTotalPaise: 60000,
         finalTotalPaise: null,
         status: "ACTIVE",
+        substitutedFromItemId: null,
       },
     ],
     estimate: totals(60000),
@@ -77,10 +101,9 @@ function orderDetail(overrides: Partial<AdminOrderDetail> = {}): AdminOrderDetai
     amountRefundedPaise: 0,
     couponCode: null,
     substitutions: [],
-    payment: null,
+    payment: { method: "COD", status: "PENDING", nextAction: null },
     invoice: null,
-    history: [],
-    adjustments: [],
+    allowedActions: { cancel: true, raiseComplaint: false, downloadInvoice: false, reorder: false },
     ...overrides,
   };
 }
@@ -92,14 +115,17 @@ function summary(overrides: Partial<AdminOrderSummary> = {}): AdminOrderSummary 
     status: "CONFIRMED",
     placedAt: "2026-10-24T04:00:00Z",
     fulfillmentLocationId: LOCATION_A,
-    customerName: "Ravi K",
-    customerPhone: "+919800000001",
-    slot: { id: "slot-1", startAt: "2026-10-24T06:30:00Z", endAt: "2026-10-24T08:30:00Z" },
+    customerId: "cust-1",
+    recipientName: "Ravi K",
+    phone: "+919800000001",
+    deliverySlotId: "slot-1",
+    slotStartAt: "2026-10-24T06:30:00Z",
+    slotEndAt: "2026-10-24T08:30:00Z",
     itemCount: 2,
     paymentMethod: "COD",
     totalPaise: 60000,
+    finalTotalPaise: null,
     amountDuePaise: 60000,
-    version: "11",
     ...overrides,
   };
 }
@@ -249,7 +275,7 @@ describe("order detail: cancel", () => {
     await user.click(await screen.findByRole("option", { name: "Out of stock" }));
     await user.click(within(dialog).getByRole("button", { name: "Cancel order" }));
 
-    await waitFor(() => expect(body).toEqual({ reasonCode: "OUT_OF_STOCK", notes: null }));
+    await waitFor(() => expect(body).toEqual({ reasonCode: "OUT_OF_STOCK", note: null }));
     expect(ifMatch).toBe('"11"');
   });
 
