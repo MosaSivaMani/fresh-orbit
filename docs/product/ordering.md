@@ -370,3 +370,5 @@ All jobs: primary trigger is a Hangfire delayed job scheduled at the due time by
 | Q16 | Credit notes for post-delivery refunds | Out of Phase 2; refunds recorded in Payments only |
 | Q17 | PDF library (free/open-source) | QuestPDF Community licence or HTML template → PDF via a free renderer; manager to pick |
 | Q18 | PACK variants (D10: stock unit PIECE) yield | Yield ignored for PIECE (INV-R11); gross = pack count |
+
+**Bestsellers for the storefront (CAT-R24).** `OrderingBestsellerSource` implements Catalog's `IBestsellerSource`: product ids at a location ranked by distinct orders placed since the window start in `CONFIRMED`, `PREPARING`, `PACKED`, `OUT_FOR_DELIVERY` or `DELIVERED`, counting lines `ACTIVE` or `SHORT_SUPPLIED`; ties by latest order, then product id. Read-only, one query (Catalog caches the ranking 10 minutes).

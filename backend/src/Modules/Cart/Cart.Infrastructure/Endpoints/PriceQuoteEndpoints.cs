@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Routing;
 namespace FreshOrbit.Cart.Infrastructure.Endpoints;
 
 /// <summary>
-/// <c>GET /price-quote?variantId=&amp;preparation=&amp;quantity=&amp;unit=</c> (docs/api §4.6, CART-R17): estimate and max
+/// <c>GET /price-quote?variantId=&amp;preparation=&amp;quantity=&amp;unit=</c> (docs/api §4.6, CART-R24): estimate and max
 /// chargeable of one line before it is added. Public; location from the <c>pincode</c> query or <c>X-Pincode</c>.
 /// </summary>
 internal static class PriceQuoteEndpoints

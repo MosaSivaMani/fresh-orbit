@@ -11,7 +11,7 @@ using FreshOrbit.SharedKernel.Pricing;
 namespace FreshOrbit.Cart.Application.Pricing;
 
 /// <summary>
-/// <c>GET /price-quote</c>: one line priced before it is in the cart (CART-R17). Same loaders, quantity rules and line
+/// <c>GET /price-quote</c>: one line priced before it is in the cart (CART-R24). Same loaders, quantity rules and line
 /// formula as a cart line (<see cref="CartPricer"/>, <see cref="QuantityRules"/>, <see cref="LineCalculator"/>), so the
 /// quote equals the cart line it becomes (without a coupon).
 /// </summary>

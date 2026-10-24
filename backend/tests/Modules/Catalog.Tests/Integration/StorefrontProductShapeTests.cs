@@ -13,7 +13,7 @@ namespace FreshOrbit.Catalog.Tests.Integration;
 
 /// <summary>
 /// catalog.md §6 I10–I16: customer product shapes — default variant and order rules, compare-at discount, serving facts,
-/// freshness, offer line, bestsellers, public preparation methods — and the cart's pre-add price quote (cart.md CART-R17).
+/// freshness, offer line, bestsellers, public preparation methods — and the cart's pre-add price quote (cart.md CART-R24).
 /// </summary>
 public sealed class StorefrontProductShapeTests(CatalogDatabase database) : StorefrontTestBase(database)
 {
