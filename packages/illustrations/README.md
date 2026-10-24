@@ -103,16 +103,16 @@ Full scene backgrounds (a harbour at sunrise, the market, a kitchen) are welcome
 ## Using it in a web app
 
 `@fresh/ui`'s `<Illustration slot="EMPTY_CART" />` reads this manifest and loads `<baseUrl>/<file>`; the base URL is
-`/illustrations` unless an `IllustrationProvider` sets another. Copy the files into the app's public folder before
-`dev` and `build`:
+`/illustrations` unless an `IllustrationProvider` sets another. Copy the files into the app's public folder in its
+`dev` and `build` scripts (pnpm does not run `pre` scripts by default):
 
 ```json
 {
   "scripts": {
-    "predev": "fresh-illustrations-copy public/illustrations",
-    "prebuild": "fresh-illustrations-copy public/illustrations"
+    "dev": "fresh-illustrations-copy public/illustrations && vite",
+    "build": "fresh-illustrations-copy public/illustrations && vite build"
   }
 }
 ```
 
-Add `public/illustrations/` to the app's `.gitignore`.
+Add `public/illustrations/` to the app's `.gitignore`. The playground (`apps/playground`) does exactly this.
