@@ -5,7 +5,10 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using FreshOrbit.E1Testing;
+using FreshOrbit.Hosting;
 using FreshOrbit.Notifications.Infrastructure.Senders;
+using FreshOrbit.Notifications.Infrastructure.Senders.Dlt;
+using FreshOrbit.Notifications.Tests.Unit;
 using FreshOrbit.Testing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,14 +26,7 @@ namespace FreshOrbit.Notifications.Tests.Integration;
 /// </summary>
 public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncLifetime
 {
-    private static readonly Dictionary<string, string?> FullDlt = new()
-    {
-        ["Notifications:Sms:Provider"] = "DLT",
-        ["Notifications:Sms:Dlt:BaseUrl"] = "https://sms.example.in/api",
-        ["Notifications:Sms:Dlt:ApiKey"] = "test-key",
-        ["Notifications:Sms:Dlt:SenderId"] = "FRSHOR",
-        ["Notifications:Sms:Dlt:PrincipalEntityId"] = "1101000000000000001",
-    };
+    private static readonly Dictionary<string, string?> FullDlt = FullDltSettings();
 
     private readonly List<SmsHostFactory> _factories = [];
 
@@ -72,8 +68,33 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
         var failure = await StartFailure("Staging", new() { ["Notifications:Sms:Provider"] = "DLT", ["Notifications:Sms:Dlt:ApiKey"] = "test-key" });
 
         failure.Failures.Should().ContainSingle().Which.Should()
-            .Contain("Notifications:Sms:Dlt:BaseUrl").And.Contain("Notifications:Sms:Dlt:SenderId")
-            .And.Contain("Notifications:Sms:Dlt:PrincipalEntityId").And.NotContain("Notifications:Sms:Dlt:ApiKey");
+            .Contain("Notifications:Sms:Dlt:Gateway").And.Contain("Notifications:Sms:Dlt:SenderId")
+            .And.Contain("Notifications:Sms:Dlt:PrincipalEntityId").And.Contain("Notifications:Sms:Dlt:Templates:OTP_LOGIN")
+            .And.NotContain("Notifications:Sms:Dlt:ApiKey").And.NotContain("Notifications:Sms:Dlt:BaseUrl");
+    }
+
+    [Theory]
+    [InlineData("OTP_LOGIN")]
+    [InlineData("ORDER_CONFIRMED")]
+    public async Task Host_refuses_dlt_without_a_template_id_for_an_sms_template(string code)
+    {
+        var settings = new Dictionary<string, string?>(FullDlt) { [$"Notifications:Sms:Dlt:Templates:{code}"] = "" };
+
+        var failure = await StartFailure("Production", settings);
+
+        failure.Failures.Should().ContainSingle().Which.Should().Contain($"Notifications:Sms:Dlt:Templates:{code}")
+            .And.NotContain("Notifications:Sms:Dlt:ApiKey");
+    }
+
+    [Fact]
+    public async Task Refused_sms_configuration_exits_with_code_one()
+    {
+        var settings = new Dictionary<string, string?>(FullDlt) { ["Notifications:Sms:Dlt:Templates:OTP_LOGIN"] = null };
+        settings.Remove("Notifications:Sms:Dlt:Templates:OTP_LOGIN");
+
+        var exitCode = await SmsHost("Production", settings).RunFreshOrbitAsync();
+
+        exitCode.Should().Be(1);
     }
 
     [Fact]
@@ -98,19 +119,59 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
     }
 
     [Fact]
-    public async Task Production_with_dlt_starts_fails_loudly_and_hides_the_dev_outbox()
+    public async Task Production_with_dlt_sends_the_otp_through_the_gateway_and_hides_the_dev_outbox()
     {
-        var factory = Create("Production", FullDlt);
+        var handler = new FakeHandler((_, _) => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"return":true,"request_id":"e2e1-ok"}""", System.Text.Encoding.UTF8, "application/json"),
+        });
+        var factory = Create("Production", FullDlt, handler);
         using var client = factory.CreateClient();
         var phone = E1ApiFactory.NewPhone();
 
         var otp = await client.PostAsJsonAsync("/api/v1/auth/otp/request", new { phone }, Ct);
         var outbox = await client.GetAsync($"/api/v1/dev/sms?phone={Uri.EscapeDataString(phone)}", Ct);
 
-        // The stub cannot deliver, so the request fails instead of pretending the code was sent.
-        otp.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
-        (await otp.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString().Should().Be("INTERNAL_ERROR");
+        otp.StatusCode.Should().Be(HttpStatusCode.Accepted);
         outbox.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var request = handler.Requests.Should().ContainSingle().Subject;
+        request.Uri.Should().Be("https://sms.example.in/dev/bulkV2");
+        request.Authorization.Should().Be("test-key");
+        using var body = JsonDocument.Parse(request.Body);
+        body.RootElement.GetProperty("numbers").GetString().Should().Be(phone[3..]);
+        body.RootElement.GetProperty("template_id").GetString().Should().Be(FullDlt["Notifications:Sms:Dlt:Templates:OTP_LOGIN"]);
+        var code = SixDigits().Match(body.RootElement.GetProperty("message").GetString()!).Value;
+        code.Should().HaveLength(6);
+
+        var logs = RenderedLogs(factory);
+        var lastTwo = "**" + phone[^2..];
+        var national = phone[3..];
+        logs.Should().Contain(l => l.Contains("OTP_LOGIN", StringComparison.Ordinal) && l.Contains(lastTwo, StringComparison.Ordinal));
+        logs.Should().NotContain(l => l.Contains(national, StringComparison.Ordinal));
+        logs.Should().NotContain(l => l.Contains(code, StringComparison.Ordinal));
+        logs.Should().NotContain(l => l.Contains("test-key", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Production_otp_request_answers_503_when_the_gateway_fails(bool unreachable)
+    {
+        var handler = unreachable
+            ? new FakeHandler((_, _) => Task.FromException<HttpResponseMessage>(new HttpRequestException("No such host is known.")))
+            : new FakeHandler((_, _) => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"return":false,"status_code":995}""", System.Text.Encoding.UTF8, "application/json"),
+            });
+        var factory = Create("Production", FullDlt, handler);
+        using var client = factory.CreateClient();
+        var phone = E1ApiFactory.NewPhone();
+
+        var otp = await client.PostAsJsonAsync("/api/v1/auth/otp/request", new { phone }, Ct);
+
+        otp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        (await otp.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString().Should().Be("SMS_PROVIDER_UNAVAILABLE");
+        RenderedLogs(factory).Should().Contain(l => l.Contains(unreachable ? "SMS_UNREACHABLE" : "SMS_REJECTED", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -129,8 +190,7 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
         var code = SixDigits().Match(messages[0].GetProperty("text").GetString()!).Value;
         code.Should().HaveLength(6);
 
-        var logs = factory.Logs.Select(e => e.RenderMessage(System.Globalization.CultureInfo.InvariantCulture)
-            + " " + string.Join(" ", e.Properties.Select(p => p.Value.ToString()))).ToList();
+        var logs = RenderedLogs(factory);
         var masked = "***" + phone[^4..];
         var digits = phone[1..];
         logs.Should().Contain(l => l.Contains(masked, StringComparison.Ordinal), "the send is still logged, masked");
@@ -170,9 +230,32 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
         return failure;
     }
 
-    private SmsHostFactory Create(string environment, Dictionary<string, string?> settings)
+    private static Dictionary<string, string?> FullDltSettings()
     {
-        var factory = new SmsHostFactory(database, environment, settings);
+        var settings = new Dictionary<string, string?>
+        {
+            ["Notifications:Sms:Provider"] = "DLT",
+            ["Notifications:Sms:Dlt:Gateway"] = Fast2SmsGateway.GatewayName,
+            ["Notifications:Sms:Dlt:BaseUrl"] = "https://sms.example.in",
+            ["Notifications:Sms:Dlt:ApiKey"] = "test-key",
+            ["Notifications:Sms:Dlt:SenderId"] = "FRSHOR",
+            ["Notifications:Sms:Dlt:PrincipalEntityId"] = "1101000000000000001",
+        };
+        foreach (var code in DltTemplateCodes.All)
+        {
+            settings[$"Notifications:Sms:Dlt:Templates:{code}"] = SmsSenderUnitTests.TemplateId(code);
+        }
+
+        return settings;
+    }
+
+    private static List<string> RenderedLogs(SmsHostFactory factory)
+        => [.. factory.Logs.Select(e => e.RenderMessage(System.Globalization.CultureInfo.InvariantCulture)
+            + " " + string.Join(" ", e.Properties.Select(p => p.Value.ToString())))];
+
+    private SmsHostFactory Create(string environment, Dictionary<string, string?> settings, FakeHandler? handler = null)
+    {
+        var factory = new SmsHostFactory(database, environment, settings, handler);
         _factories.Add(factory);
         return factory;
     }
@@ -182,7 +265,7 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
 }
 
 /// <summary>The real Api in a chosen environment with the module's own SMS sender and every log event captured.</summary>
-public sealed class SmsHostFactory(E1Database database, string environment, IReadOnlyDictionary<string, string?> settings) : ApiFactory(database), ILogEventSink
+public sealed class SmsHostFactory(E1Database database, string environment, IReadOnlyDictionary<string, string?> settings, HttpMessageHandler? smsHandler = null) : ApiFactory(database), ILogEventSink
 {
     private readonly ConcurrentQueue<LogEvent> _logs = new();
 
@@ -204,5 +287,13 @@ public sealed class SmsHostFactory(E1Database database, string environment, IRea
         }
     }
 
-    protected override void ConfigureTestServices(IServiceCollection services) => services.AddSingleton<ILogEventSink>(this);
+    protected override void ConfigureTestServices(IServiceCollection services)
+    {
+        services.AddSingleton<ILogEventSink>(this);
+        if (smsHandler is not null)
+        {
+            // The real Fast2SMS adapter, with a fake transport: no network.
+            services.AddHttpClient(Fast2SmsGateway.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => smsHandler);
+        }
+    }
 }
