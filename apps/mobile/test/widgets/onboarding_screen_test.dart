@@ -83,6 +83,35 @@ void main() {
     expect(find.byKey(const ValueKey('illustration-placeholder-ONBOARDING_TILE_MORNING_CATCH')), findsNothing);
   });
 
+  testWidgets('with the owner pictures bundled every tile and banner shows its picture, no fallback', (tester) async {
+    const pages = [
+      (tiles: ['morning_catch', 'kept_chilled', 'delivered_fresh'], banner: 'fresh'),
+      (tiles: ['your_cut', 'cleaned_by_hand', 'net_weight'], banner: 'cleaned'),
+      (tiles: ['pick_slot', 'cold_box', 'cash_upi'], banner: 'delivery'),
+    ];
+    IllustrationAssets.debugSetAvailable({
+      for (final page in pages) ...[
+        for (final tile in page.tiles) 'assets/illustrations/onboarding_tile_$tile.png',
+        'assets/illustrations/onboarding_banner_${page.banner}.png',
+      ],
+    });
+    await _pump(tester);
+
+    for (var i = 0; i < pages.length; i++) {
+      final page = pages[i];
+      for (final tile in page.tiles) {
+        final code = 'ONBOARDING_TILE_${tile.toUpperCase()}';
+        expect(find.byKey(ValueKey('illustration-image-$code')), findsOneWidget, reason: code);
+        expect(find.byKey(ValueKey('tile-fallback-$code')), findsNothing, reason: code);
+      }
+      final banner = 'ONBOARDING_BANNER_${page.banner.toUpperCase()}';
+      expect(find.byKey(ValueKey('illustration-image-$banner')), findsOneWidget, reason: banner);
+      expect(find.byKey(ValueKey('banner-fallback-$banner')), findsNothing, reason: banner);
+      expect(tester.takeException(), isNull);
+      if (i < pages.length - 1) await _next(tester);
+    }
+  });
+
   testWidgets('tiles read as "label, caption" and the decoration is not announced', (tester) async {
     IllustrationAssets.debugSetAvailable(const {});
     final handle = tester.ensureSemantics();

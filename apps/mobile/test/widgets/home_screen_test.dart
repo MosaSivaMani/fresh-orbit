@@ -242,12 +242,20 @@ void main() {
   testWidgets('the home pictures replace the stand-ins once bundled', (tester) async {
     IllustrationAssets.debugSetAvailable(const {
       'assets/illustrations/home_hero_catch.png',
+      'assets/illustrations/home_card_rider.png',
       'assets/illustrations/onboarding_fresh.jpg',
+      'assets/illustrations/onboarding_tile_cold_box.png',
     });
     await _pump(tester);
 
     expect(find.byKey(const ValueKey('illustration-image-HOME_HERO_CATCH')), findsOneWidget);
     expect(find.byKey(const ValueKey('illustration-image-ONBOARDING_FRESH')), findsNothing);
+    expect(find.byKey(const ValueKey('illustration-image-HOME_CARD_RIDER')), findsOneWidget);
+    expect(find.byKey(const ValueKey('illustration-image-ONBOARDING_TILE_COLD_BOX')), findsNothing);
+    // Ravi pops 16 above the top of the mango card.
+    final card = tester.getRect(find.byKey(const Key('homeCardCold')));
+    final rider = tester.getRect(find.byKey(const ValueKey('homePicture-HOME_CARD_RIDER')));
+    expect(card.top - rider.top, moreOrLessEquals(16 * _scale(tester), epsilon: 0.5));
   });
 
   testWidgets('with no pictures at all it draws placeholders, never a broken image', (tester) async {

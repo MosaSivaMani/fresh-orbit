@@ -762,11 +762,11 @@ class _CardPicture extends StatelessWidget {
   const _CardPicture.rider()
     : slot = IllustrationSlot.homeCardRider,
       standIn = IllustrationSlot.onboardingTileColdBox,
-      width = 86,
-      height = 96,
-      top = -14,
+      width = 100,
+      height = 100,
+      top = -16,
       bottom = null,
-      right = -4;
+      right = -6;
 
   final IllustrationSlot slot;
   final IllustrationSlot standIn;

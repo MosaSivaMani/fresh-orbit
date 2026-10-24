@@ -484,7 +484,7 @@ content.
 | Greeting and heading | "Good morning, <name>" (no name when signed out), then Baloo 2 800 32 "What's cooking *today?*" with "today?" on the yellow brush and coral sparks (one header for screen readers), then a coral Dancing Script line (19, −3°) with a swoosh |
 | Harbour | `HarbourScene` from `fresh_theme` at the top right (x 168–390), soft palms at the left and right edges (`PalmsPainter`). Decoration only |
 | Hero | Radius 24, `#075E54`, 194 tall: the next slot chip (server `nextSlot`, hidden when there is none), "Today's catch / is in!" (Baloo 29) with a yellow spark, body 12.5, and the "Shop fresh catch →" pill. The `HOME_HERO_CATCH` picture is anchored bottom-right at 236 / 358 of the width, natural 3:2 aspect, no wavy edge, no fade. Tap: `/shop`. Key `homeHero` |
-| Two cards | Radius 20, 122 tall. Cleaned your way (`#F59B7C`, deep coral pill text, `HOME_CARD_CLEANED` 84 × 84 bottom-right) → `/shop`. Kept cold till your door (`#F7C66B`, teal pill text, `HOME_CARD_RIDER` overflowing the top by 14) → a sheet with the server's delivery terms (service area, next slot, fee, free above, minimum order). One label each |
+| Two cards | Radius 20, 122 tall. Cleaned your way (`#F59B7C`, deep coral pill text, `HOME_CARD_CLEANED` 84 × 84 bottom-right) → `/shop`. Kept cold till your door (`#F7C66B`, teal pill text, `HOME_CARD_RIDER` 100 × 100 at the top-right, popping 16 above the card) → a sheet with the server's delivery terms (service area, next slot, fee, free above, minimum order). One label each |
 | Categories | The first five server categories in 50 dp tinted circles (picture or initial) and More → `/shop`. Keys `homeCategory-<slug>`, `homeCategoryMore` |
 | Today's special | Shown only when the server sends banners: "Today's *special*" with "See all →", then 200 × 96 cards (radius 16, picture 54 tall, title, subtitle). The chevron and the button role appear only when the banner links somewhere (`linkType` CATEGORY → `/shop?category=`, PRODUCT → `/product/<slug>`) |
 | Cart bar and menu | The restyled shell `ViewCartBar` (top 746, 52 tall) and floating `FoodTabBar` (58 tall, radius 22), §15 |
@@ -495,8 +495,8 @@ system text scale of 1.5 or more does it scroll (`SingleChildScrollView`, key `h
 `ClampingScrollPhysics`). The sideways specials row uses `ClampingScrollPhysics` too. "Popular today" moved off
 Home (it lives in Shop).
 
-**Pictures.** The owner's hero and cleaned-cut pictures are bundled in `assets/illustrations/` (resized with
-`sips`: hero 1024 wide, card 512, alpha kept). The package manifest keeps all three home slots PLACEHOLDER until
+**Pictures.** The owner's hero, cleaned-cut and rider pictures are bundled in `assets/illustrations/` (resized
+with `sips`: hero 1024 wide, cards 512, alpha kept). The package manifest keeps all three home slots PLACEHOLDER until
 `import` + `optimize` run. Until a picture is bundled a stand-in shows (`ONBOARDING_FRESH` in the hero,
 `ONBOARDING_BANNER_CLEANED` and `ONBOARDING_TILE_COLD_BOX` in the cards), never a broken image.
 
