@@ -160,3 +160,16 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D154 | 2026-10-24 | Delivery ETA | Extends `nextSlot` (date, cutoffAt) instead of a new field (Track E, PR #6) |
 | D155 | 2026-10-24 | Stock-alert rate limit | Public per-IP limit until a customer limiter exists (Track E, PR #6) |
 | D156 | 2026-10-24 | Rich onboarding pages | Owner approved the three intro screens in the style of their reference (`design/mockups/onboarding-reference-owner.jpg`, preview `design/mockups/app-onboarding-rich.html`): bold two-line heading with brush, Dancing Script tagline, code-drawn boat/board/scooter, birds, rays, clouds and waves, three picture tiles, a food banner with a handwritten line, dots and Next pinned at the bottom; 12 new owner images (9 tiles, 3 banners); Dancing Script bundled in the app |
+| D157 | 2026-10-24 | Demo environment | A `Demo` host environment for the free online demo; the API refuses to start unless the database carries the demo marker (exit 5) and refuses a marked database outside Demo (exit 1), so demo data never meets real data (Render demo, PR #10) |
+| D158 | 2026-10-24 | Background jobs in the API for Demo only | `RunBackgroundJobsInApi` runs the Worker's jobs inside the API process only in Demo, so the free demo needs one service; production keeps a separate Worker (PR #10) |
+| D159 | 2026-10-24 | Demo start-up | The demo applies migrations and loads `--sample` data on start (PR #10) |
+| D160 | 2026-10-24 | Demo media | Demo uses placeholder images instead of object storage (PR #10) |
+| D161 | 2026-10-24 | Demo Data Protection keys | Persisted keys are optional in Demo only; sessions may reset on a redeploy (PR #10) |
+| D162 | 2026-10-24 | Demo banner on the front ends | `NEXT_PUBLIC_SITE_URL` stays unset on the demo; `NEXT_PUBLIC_DEMO_MODE` / `VITE_DEMO_MODE` show a "demo, not a real shop" banner (PR #10) |
+| D163 | 2026-10-24 | Demo rate limits | Raised limits in Demo so one tester behind a shared IP is not blocked (PR #10) |
+| D164 | 2026-10-24 | CI runner disk and images | CI frees runner disk first and pre-pulls Postgres from `mirror.gcr.io` to avoid Docker Hub limits (PR #10) |
+| D165 | 2026-10-24 | Render demo smoke check | `render-demo.yml` checks the deployed demo answers health and catalogue calls (PR #10) |
+| D166 | 2026-10-24 | Demo APK build | The demo APK is a profile build for ARM phones only (smaller download), published as a prerelease (PR #9) |
+| D167 | 2026-10-24 | Codespaces size | The dev container asks for a 4-core Codespace and frees disk before starting the stack (PR #9) |
+| D168 | 2026-10-24 | BFF origin outside production | The web BFF accepts `NEXT_PUBLIC_SITE_URL` as an allowed origin outside Production, so the Codespaces URL works (PR #9) |
+| D169 | 2026-10-24 | Codespaces host binding | Codespaces host settings apply only when the Codespaces environment variable is set (PR #9) |
