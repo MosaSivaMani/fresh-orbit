@@ -53,7 +53,7 @@ Price, charge and tax periods have no status column. State is derived from time:
 |---|---|
 | PRC-R1 | **Price per fulfillment location.** No CURRENT price for (location, variant) = not for sale there (`PRICE_NOT_AVAILABLE`). No fallback to another location, city or default. |
 | PRC-R2 | **Periods.** Half-open `[valid_from, valid_to)`, `valid_to` null = open-ended. No overlap per key (EXCLUDE gist). Lookup at instant `t`: `valid_from ≤ t < coalesce(valid_to, 'infinity')`. One `t` per command. |
-| PRC-R3 | **Set price at `validFrom` (T).** T omitted = now. T < now − 60 s → `PRICE_IN_PAST`; T within the last 60 s → now. T ≤ now + 90 days. The period containing T gets `valid_to = T`; a new open-ended period starts at T. |
+| PRC-R3 | **Set price at `validFrom` (T).** T omitted = now. T < now − 60 s → `PRICE_IN_PAST`; T within the last 60 s → now. T ≤ now + 90 days. T is cut to whole microseconds (the stored precision), so repeating a request with the same T is unchanged (PRC-R5). The period containing T gets `valid_to = T`; a new open-ended period starts at T. |
 | PRC-R4 | FUTURE periods starting after T → 409 `PRICE_PERIOD_OVERLAP` unless `replaceFuture=true`, which deletes them (never effective; audited). |
 | PRC-R5 | Values: `unitPricePaise` 1–5 000 000 (≤ ₹50 000 per unit, typo guard); `compareAtPaise` null or > `unitPricePaise`. Same values as the CURRENT period and T = now → no write, 200 unchanged. Unit = variant sell unit: per KG, per PIECE, per PACK. |
 | PRC-R6 | **Item amount.** KG: `roundHalfUp(grams × unitPricePaise / 1000)`. PIECE / PACK: `count × unitPricePaise`. |
