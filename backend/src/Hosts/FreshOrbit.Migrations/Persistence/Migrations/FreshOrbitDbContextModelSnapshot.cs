@@ -641,6 +641,14 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("pack_size_grams");
 
+                    b.Property<int?>("PiecesMax")
+                        .HasColumnType("integer")
+                        .HasColumnName("pieces_max");
+
+                    b.Property<int?>("PiecesMin")
+                        .HasColumnType("integer")
+                        .HasColumnName("pieces_min");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid")
                         .HasColumnName("product_id");
@@ -650,6 +658,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("sell_unit");
+
+                    b.Property<int?>("Serves")
+                        .HasColumnType("integer")
+                        .HasColumnName("serves");
 
                     b.Property<string>("Sku")
                         .IsRequired()
@@ -675,9 +687,13 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
 
                     b.ToTable("product_variants", "catalog", t =>
                         {
+                            t.HasCheckConstraint("ck_product_variants_pieces", "(pieces_min IS NULL AND pieces_max IS NULL) OR (pieces_min BETWEEN 1 AND 1000 AND pieces_max BETWEEN pieces_min AND 1000)");
+
                             t.HasCheckConstraint("ck_product_variants_quantity_rules", "order_step > 0 AND min_order >= order_step AND min_order % order_step = 0 AND max_order >= min_order AND max_order % order_step = 0");
 
                             t.HasCheckConstraint("ck_product_variants_sell_unit", "sell_unit IN ('KG', 'PIECE', 'PACK')");
+
+                            t.HasCheckConstraint("ck_product_variants_serves", "serves IS NULL OR serves BETWEEN 1 AND 100");
 
                             t.HasCheckConstraint("ck_product_variants_stock_unit", "stock_unit IN ('GRAM', 'PIECE')");
                         });
@@ -3327,6 +3343,66 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                             t.HasCheckConstraint("ck_complaints_kind", "kind IN ('MISSING', 'DAMAGED', 'QUALITY', 'WRONG_ITEM', 'LATE')");
 
                             t.HasCheckConstraint("ck_complaints_status", "status IN ('OPEN', 'APPROVED', 'REJECTED', 'RESOLVED')");
+                        });
+                });
+
+            modelBuilder.Entity("FreshOrbit.Ordering.Domain.Complaints.ComplaintPhoto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ComplaintId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("complaint_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_at");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<int>("SizeBytes")
+                        .HasColumnType("integer")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("storage_key");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id")
+                        .HasName("pk_complaint_photos");
+
+                    b.HasIndex("ComplaintId", "UploadedAt")
+                        .HasDatabaseName("ix_complaint_photos_complaint_id_uploaded_at");
+
+                    b.ToTable("complaint_photos", "ordering", t =>
+                        {
+                            t.HasCheckConstraint("ck_complaint_photos_size", "width > 0 AND height > 0 AND size_bytes > 0");
                         });
                 });
 
@@ -6337,6 +6413,16 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasConstraintName("fk_service_areas_fulfillment_locations_fulfillment_location_id");
                 });
 
+            modelBuilder.Entity("FreshOrbit.Ordering.Domain.Complaints.ComplaintPhoto", b =>
+                {
+                    b.HasOne("FreshOrbit.Ordering.Domain.Complaints.Complaint", null)
+                        .WithMany("Photos")
+                        .HasForeignKey("ComplaintId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_complaint_photos_complaints_complaint_id");
+                });
+
             modelBuilder.Entity("FreshOrbit.Ordering.Domain.Invoices.InvoiceLine", b =>
                 {
                     b.HasOne("FreshOrbit.Ordering.Domain.Invoices.Invoice", null)
@@ -6493,6 +6579,11 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
             modelBuilder.Entity("FreshOrbit.Locations.Domain.ServiceAreas.ServiceArea", b =>
                 {
                     b.Navigation("Pincodes");
+                });
+
+            modelBuilder.Entity("FreshOrbit.Ordering.Domain.Complaints.Complaint", b =>
+                {
+                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("FreshOrbit.Ordering.Domain.Invoices.Invoice", b =>

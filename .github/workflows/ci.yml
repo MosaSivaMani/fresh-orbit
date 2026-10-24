@@ -52,3 +52,52 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm format:check
+
+  # Regenerates the API client from the real OpenAPI document (the local procedure of docs/design/admin.md §4, run on
+  # the runner because the dev Mac runs no tools). Download the `api-client` artifact and commit it when it differs.
+  openapi:
+    name: OpenAPI document and API client types
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: freshorbit
+          POSTGRES_USER: freshorbit
+          POSTGRES_PASSWORD: freshorbit_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U freshorbit" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the Api
+        run: dotnet build backend/src/Hosts/FreshOrbit.Api -c Release
+      - name: Start the Api in Development
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5080
+        run: |
+          nohup dotnet run --project backend/src/Hosts/FreshOrbit.Api -c Release --no-build --no-launch-profile > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:5080/openapi/v1.json && exit 0; sleep 2; done
+          cat api.log; exit 1
+      - run: pnpm --filter @fresh/api-client fetch-spec
+      - run: pnpm generate:api
+      - name: Show whether the committed client is current
+        run: git diff --stat -- packages/api-client
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-client
+          path: |
+            packages/api-client/openapi.json
+            packages/api-client/src/schema.d.ts
