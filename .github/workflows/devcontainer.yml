@@ -30,7 +30,7 @@ jobs:
           # A fixed password for this check only; the owner's Codespace generates its own.
           FRESHORBIT_SAMPLE_STAFF_PASSWORD: ci-sample-staff-password-01
         with:
-          imageName: ghcr.io/${{ github.repository }}/devcontainer-check
+          imageName: fresh-orbit-devcontainer-check
           push: never
           env: FRESHORBIT_SAMPLE_STAFF_PASSWORD
           runCmd: |
