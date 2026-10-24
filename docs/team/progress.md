@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | UI | Owner rejected the D94 typography experiment; mockup restored to chosen version B (Bricolage Grotesque + DM Sans, no motion, no decorative marks); D94 records the withdrawal | Decided |
 | 2026-10-24 | UI | Typography system D94 (two-line headings, Instrument Serif italic accents, marker / wave / italic marks) across app, web and admin; orbit halo and ticker removed at owner request (D88 amended) | Decided |
 | 2026-10-24 | UI | Owner chose app look B "Bold blocks" with the orbit halo and ticker (D88) and fonts Bricolage Grotesque + DM Sans (D89); mockup committed at `docs/design/mockups/app-bold-blocks.html` | Decided |
 | 2026-10-24 | UI | Manager merged `admin/illustrated` (Track C, af40b5b) into main; decisions D90–D93 logged, D88–D89 reserved for the app look; owner reviewing mockup version B "Bold blocks" (shop, cart, product, account, settings, food-app tab bar) | Merged |

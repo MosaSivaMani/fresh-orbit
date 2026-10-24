@@ -1,6 +1,6 @@
 <title>Fresh Orbit Bold Screens</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
 <style>
 /* Version B "Bold blocks": every screen is a full colour block; the character sits in a big ringed circle avatar that breaks out over the top of a white sheet; navigation is a floating dark pill. */
 :root{--page:#F4EEE3;--paper:#FFFDF8;--ink:#14302F;--muted:#5B6F6B;--line:#E8DCC8;--teal:#0B7D70;--teal-deep:#075F55;--teal-soft:#D8EEEA;--coral:#F07A5A;--coral-soft:#FCE3DA;--coral-text:#B4432A;--mango:#F5B544;--mango-soft:#FBEBC8;--ice:#BFE3EE;--ice-soft:#E4F3F8;--on-ink:#FFFDF8;--frame:#0E1E1D;
@@ -229,34 +229,6 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
 .tile.wide span:not(.chip){max-width:55%}
 .box{padding:10px;gap:8px}
 .cpad{gap:8px}
-
-
-/* v5 type system: line 1 = Bricolage Grotesque 800 upright; line 2 = Instrument Serif italic in the screen's accent; key words get one of three marks — marker swipe, wavy underline, serif italic. Labels in DM Sans caps. */
-:root{--serif:"Instrument Serif","Iowan Old Style",Georgia,serif;--acc:var(--teal);--mark:rgb(245 181 68 / .75);--wave:var(--coral)}
-.s-coral{--acc:#FFFDF8}.s-teal{--acc:#F5B544}.s-mango{--acc:#8E2F18}.s-ice{--acc:#075F55}.s-page{--acc:var(--teal)}
-.l1,.l2{display:block}
-.l2{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--acc);letter-spacing:-.01em;font-size:1.12em;line-height:.9}
-.it{font-family:var(--serif);font-style:italic;font-weight:400;color:var(--coral-text);letter-spacing:0;font-size:1.1em}
-.mk{background:linear-gradient(transparent 52%,var(--mark) 52%,var(--mark) 88%,transparent 88%);padding:0 .08em;margin:0 -.04em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-.wv{text-decoration:underline wavy var(--wave);text-decoration-thickness:2px;text-underline-offset:5px;text-decoration-skip-ink:none}
-.ol{color:transparent;-webkit-text-stroke:1.5px currentColor}
-.tile.wide .it,.s-teal .it{color:#F5B544}
-.tile[style*="coral"] .it{color:#FFFDF8}
-.sheet h3{font-size:26px}
-.eta b .it{color:var(--teal-deep);font-size:.62em}
-.specimen{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:18px}
-.spec{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:20px;display:grid;gap:10px;align-content:start;min-width:0}
-.spec .k{font:700 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.spec .demo{font:800 34px/.95 var(--display);letter-spacing:-.025em}
-.spec p{color:var(--muted);font-size:13.5px}
-.adm{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:18px;display:grid;gap:12px;min-width:0}
-.adm .hd{font:800 28px/.95 var(--display);letter-spacing:-.025em}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
-.kpi{border-radius:16px;padding:12px;background:var(--page);display:grid;gap:2px}
-.kpi small{font:700 10.5px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.kpi b{font:800 26px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.kpi em{font:italic 400 14px var(--serif);color:var(--teal-deep)}
-.tile b .it{font-size:1.12em;font-weight:400;position:static}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -287,55 +259,42 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
 <div class="wrap">
 <header style="display:grid;gap:12px">
   <p class="eyebrow">Fresh Orbit · mobile app · version B · chosen design</p>
-  <h1>Bold <span class="it" style="color:var(--teal)">blocks</span>, <span class="mk">fresh</span> type</h1>
+  <h1>Bold blocks</h1>
   <p class="lede">A newer direction. Each screen is one strong colour, the character is a big round avatar with a dark ring that breaks out over the white sheet, and the menu floats as a dark pill. Home becomes a bento grid where every tile has a character peeking from its corner.</p>
   <div class="compare"><span>Coral = welcome, cart</span><span>Teal = home, tracking</span><span>Mango = orders, sign-in</span><span>Ice = location, alerts</span></div>
 </header>
 
 <section class="group">
-  <h2>Type <span class="it" style="color:var(--teal)">system</span></h2>
-  <div class="specimen">
-    <div class="spec"><span class="k">Two-line headings</span><div class="demo"><span class="l1">Straight off</span><span class="l2" style="color:var(--coral-text)">the boats</span></div><p>Line 1: Bricolage Grotesque 800, tight. Line 2: Instrument Serif italic, 1.12×, in the screen’s accent colour.</p></div>
-    <div class="spec"><span class="k">Three highlight marks</span><div class="demo" style="font-size:28px">A <span class="mk">marker</span>, a <span class="wv">wave</span> and an <span class="it">italic</span></div><p>Mango marker for offers and choices, coral wave for promises, serif italic for warmth. One mark per heading, never stacked.</p></div>
-    <div class="spec"><span class="k">Numbers and labels</span><div class="demo">₹1,239 <span class="it" style="font-size:.6em">to pay</span></div><p>Prices and counts in Bricolage with tabular figures. Labels in DM Sans caps, +0.1em tracking. Body text DM Sans 400–600.</p></div>
-  </div>
-  <div class="adm"><span class="k" style="font:700 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Admin dashboard, same system, calmer</span>
-    <div class="hd">Good morning, <span class="it" style="color:var(--teal)">Priya</span></div>
-    <div class="kpis"><div class="kpi"><small>Orders today</small><b>48</b><em>12 to pack</em></div><div class="kpi"><small>Sales</small><b>₹62,410</b><em>+8% on Monday</em></div><div class="kpi"><small>Low stock</small><b><span class="mk">3</span></b><em>pomfret, crab, squid</em></div><div class="kpi"><small>Late deliveries</small><b>0</b><em>all on time</em></div></div>
-    <p class="muted" style="font-size:13px">Admin uses the two-line style only for page titles and the italic for KPI notes. Tables and forms stay plain DM Sans, so they’re quick to scan.</p></div>
-</section>
-
-<section class="group">
   <h2>Welcome</h2>
   <div class="row">
-    <figure><div class="phone"><div class="screen s-coral" style="--sat:#F5B544"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 1 of 3</small><span class="big"><span class="l1">Straight off</span><span class="l2">the boats</span></span></div>
+    <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Step 1 of 3</small><span class="big">Straight off the boats</span></div>
       <div class="stage"><span class="badge mango" style="left:28px;top:40px;transform:rotate(-8deg)">Caught at dawn</span><div class="avatar"><img src="../characters/generated/onboarding_fresh.jpg" alt="Padma holding a fresh seer fish" style="object-position:55% 22%"></div></div>
-      <div class="sheet"><h3>Hours old, <span class="wv">not days</span></h3><p class="muted">We buy at dawn from partner boats in Vizag harbour.</p><div class="dots"><i class="on"></i><i></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 1</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-teal" style="--sat:#F5B544"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 2 of 3</small><span class="big"><span class="l1">Cleaned</span><span class="l2">your way</span></span></div>
+      <div class="sheet"><h3>Hours old, not days</h3><p class="muted">We buy at dawn from partner boats in Vizag harbour.</p><div class="dots"><i class="on"></i><i></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 1</figcaption></figure>
+    <figure><div class="phone"><div class="screen s-teal"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Step 2 of 3</small><span class="big">Cleaned your way</span></div>
       <div class="stage"><span class="badge coral" style="right:26px;top:44px;transform:rotate(7deg)">Cleaning free</span><div class="avatar"><img src="../characters/generated/onboarding_cleaned.jpg" alt="Padma cutting fish into steaks" style="object-position:50% 28%"></div></div>
-      <div class="sheet"><h3>Steaks, curry cut, <span class="it">fillet</span></h3><p class="muted">Pick the cut. We weigh it after cleaning, so you pay for what you cook.</p><div class="dots"><i></i><i class="on"></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 2</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-mango" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 3 of 3</small><span class="big"><span class="l1">At your door</span><span class="l2">today</span></span></div>
+      <div class="sheet"><h3>Steaks, curry cut, fillet</h3><p class="muted">Pick the cut. We weigh it after cleaning, so you pay for what you cook.</p><div class="dots"><i></i><i class="on"></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 2</figcaption></figure>
+    <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Step 3 of 3</small><span class="big">At your door today</span></div>
       <div class="stage"><span class="badge teal" style="left:24px;top:46px;transform:rotate(-6deg)">Iced all the way</span><div class="avatar"><img src="../characters/generated/onboarding_delivery.jpg" alt="Ravi waving from his scooter" style="object-position:45% 28%"></div></div>
-      <div class="sheet"><h3>Same-day <span class="mk">slots</span></h3><p class="muted">Ravi brings it in a cold box. Pay cash or UPI at the door.</p><div class="dots"><i></i><i></i><i class="on"></i></div><span class="btn">Get started →</span></div></div></div><figcaption class="cap">Welcome 3</figcaption></figure>
+      <div class="sheet"><h3>Same-day slots</h3><p class="muted">Ravi brings it in a cold box. Pay cash or UPI at the door.</p><div class="dots"><i></i><i></i><i class="on"></i></div><span class="btn">Get started →</span></div></div></div><figcaption class="cap">Welcome 3</figcaption></figure>
   </div>
 </section>
 
 <section class="group">
   <h2>Location and sign-in</h2>
   <div class="row">
-    <figure><div class="phone"><div class="screen s-ice" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Delivery area</small><span class="big"><span class="l1">Where do we</span><span class="l2">deliver?</span></span></div>
+    <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Delivery area</small><span class="big">Where do we deliver?</span></div>
       <div class="stage"><div class="avatar sm"><img src="../characters/generated/location_pick.jpg" alt="Chanduva with a map pin" style="object-position:50% 40%"></div></div>
       <div class="sheet sm"><p class="muted">Prices, stock and slots depend on your nearest store.</p><div class="input">Pincode, e.g. 530017</div><span class="btn">Check my area</span><span class="btn ghost">Use my location</span></div></div></div><figcaption class="cap">Pick your area</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-ice" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>531001</small><span class="big"><span class="l1">Not here</span><span class="l2">yet</span></span></div>
+    <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>531001</small><span class="big">Not here yet</span></div>
       <div class="stage"><span class="badge mango" style="right:30px;top:30px;transform:rotate(6deg)">Coming soon</span><div class="avatar"><img src="../characters/generated/not_serviceable.jpg" alt="Ravi scratching his head" style="object-position:40% 28%"></div></div>
-      <div class="sheet"><h3>We’re growing <span class="it">fast</span></h3><p class="muted">We’ll message you the day we start delivering here.</p><span class="btn">Notify me</span><span class="note">Try another pincode</span></div></div></div><figcaption class="cap">Area not served</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-mango" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Sign in</small><span class="big"><span class="l1">Enter your</span><span class="l2">code</span></span></div>
+      <div class="sheet"><h3>We’re growing fast</h3><p class="muted">We’ll message you the day we start delivering here.</p><span class="btn">Notify me</span><span class="note">Try another pincode</span></div></div></div><figcaption class="cap">Area not served</figcaption></figure>
+    <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Sign in</small><span class="big">Enter your code</span></div>
       <div class="stage"><span class="badge" style="left:20px;top:26px">Stand-in picture</span><div class="avatar sm"><img src="../characters/generated/onboarding_delivery.jpg" alt="" style="object-position:50% 16%"></div></div>
       <div class="sheet sm"><p class="muted">6 digits sent to +91 98xxx x4210</p><div class="otp"><span>4</span><span>8</span><span>2</span><span>1</span><span class="f"></span><span></span></div><span class="btn">Verify</span><span class="note">Resend in 0:24</span></div></div></div><figcaption class="cap">OTP login</figcaption></figure>
   </div>
@@ -346,15 +305,15 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <div class="row">
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
       <div class="top"><span style="font:600 12px var(--body)">530017 · MVP Colony ▾</span><span class="round"><svg class="ic"><use href="#i-cart"/></svg></span></div>
-      <div class="hello"><span class="muted">Good morning, Lakshmi</span><b>What’s <span class="wv">cooking</span><span class="l2" style="font-size:1.15em">today?</span></b></div>
+      <div class="hello"><span class="muted">Good morning, Lakshmi</span><b>What’s cooking today?</b></div>
       <div class="bento">
-        <div class="tile wide"><span class="chip">Caught 5:40 am</span><b>Today’s catch <span class="it">is in</span></b><span>Seer, pomfret, tiger prawns</span><div class="peek"><img src="../characters/generated/onboarding_fresh.jpg" alt="" style="object-position:55% 22%"></div></div>
-        <div class="tile" style="background:var(--coral)"><b>Cleaned <span class="it">free</span></b><span>Any cut</span><div class="peek"><img src="../characters/generated/onboarding_cleaned.jpg" alt="" style="object-position:50% 28%"></div></div>
+        <div class="tile wide"><span class="chip">Caught 5:40 am</span><b>Today’s catch is in</b><span>Seer, pomfret, tiger prawns</span><div class="peek"><img src="../characters/generated/onboarding_fresh.jpg" alt="" style="object-position:55% 22%"></div></div>
+        <div class="tile" style="background:var(--coral)"><b>Cleaned free</b><span>Any cut</span><div class="peek"><img src="../characters/generated/onboarding_cleaned.jpg" alt="" style="object-position:50% 28%"></div></div>
         <div class="tile" style="background:var(--mango)"><b>Same-day</b><span>Slots from 4 pm</span><div class="peek"><img src="../characters/generated/onboarding_delivery.jpg" alt="" style="object-position:45% 28%"></div></div>
       </div>
       <div class="cartbar"><div><small>2 items added</small><b>₹1,339</b></div><span class="go">View cart <svg class="ic"><use href="#i-chev"/></svg></span></div><nav class="tabbar"><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg><span class="pip">2</span>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">Home, bento grid</figcaption></figure>
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em">Shop the <span class="it" style="color:var(--teal)">catch</span></b><span class="round"><svg class="ic"><use href="#i-filter"/></svg></span></div>
+      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em">Shop</b><span class="round"><svg class="ic"><use href="#i-filter"/></svg></span></div>
       <div class="sbar"><svg class="ic"><use href="#i-search"/></svg>Search “seer fish”, “prawns”…</div>
       <div class="cats">
         <span class="cat on"><i style="background:var(--teal-soft)"><svg viewBox="0 0 44 30"><path d="M4 15c6-9 18-11 28-4l8-6v20l-8-6C22 26 10 24 4 15z" fill="#0B7D70"/><circle cx="12" cy="13" r="1.8" fill="#FFFDF8"/></svg></i>Fish</span>
@@ -375,36 +334,36 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span>
       <div class="pdhero"><div class="status" style="position:absolute;top:0;left:0;right:0"><span>9:41</span><span>●●● 5G</span></div><div class="tb" style="top:38px"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><span class="round"><svg class="ic"><use href="#i-heart"/></svg></span></div><svg class="big" viewBox="0 0 44 30"><path d="M4 15c6-9 18-11 28-4l8-6v20l-8-6C22 26 10 24 4 15z" fill="#0B7D70"/><circle cx="12" cy="13" r="1.8" fill="#FFFDF8"/></svg><span class="badge mango" style="transform:rotate(-4deg)">Caught 5:40 am</span></div>
       <div class="pdbody">
-        <div><h3><span class="l1">Seer fish</span><span class="l2" style="color:var(--teal);font-size:.95em">Vanjaram</span></h3><span class="muted">Firm, mild, the curry favourite</span></div>
+        <div><h3>Seer fish (Vanjaram)</h3><span class="muted">Firm, mild, the curry favourite</span></div>
         <div class="facts"><span><svg class="ic"><use href="#i-snow"/></svg>Iced 0–4 °C</span><span><svg class="ic"><use href="#i-clock"/></svg>Same day</span><span><svg class="ic"><use href="#i-tag"/></svg>Clean free</span></div>
-        <span class="sect">Choose your <span class="it" style="font-size:1.15em">cut</span></span>
+        <span class="sect">Choose your cut</span>
         <div class="cuts"><span>Whole<small>uncleaned weight</small></span><span class="on">Steaks<small>6–8 pcs · 500 g</small></span><span>Curry cut<small>bone-in pieces</small></span><span>Fillet<small>boneless · +₹40</small></span></div>
         <p class="estimate">₹590 is an estimate. We weigh after cleaning and charge the real weight, never more than 10% over.</p>
       </div>
       <div class="addbar"><span class="qty"><svg class="ic"><use href="#i-minus"/></svg>1<svg class="ic"><use href="#i-plus"/></svg></span><span class="place" style="display:flex;justify-content:space-between;align-items:center;background:var(--teal);color:#FFFDF8;border-radius:14px;padding:11px 14px;font:800 14px var(--body)">Add to cart<span style="font:800 16px var(--display)">₹590</span></span></div>
       </div></div><figcaption class="cap">Product: pick the cut</figcaption></figure>
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="ctop"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><div><b>Your <span class="it" style="color:var(--teal)">cart</span></b><small>MVP Colony store · 530017</small></div></div>
+      <div class="ctop"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><div><b>Your cart</b><small>MVP Colony store · 530017</small></div></div>
       <div class="cpad">
         <div class="box">
           <div class="line"><span class="th" style="background:var(--teal-soft)"><svg viewBox="0 0 44 30"><path d="M4 15c6-9 18-11 28-4l8-6v20l-8-6C22 26 10 24 4 15z" fill="#0B7D70"/><circle cx="12" cy="13" r="1.8" fill="#FFFDF8"/></svg></span><div><b>Seer fish steaks</b><small>500 g · cleaned free</small></div><div><span class="qty"><svg class="ic"><use href="#i-minus"/></svg>1<svg class="ic"><use href="#i-plus"/></svg></span><div class="lp">₹590</div></div></div>
           <div class="line"><span class="th" style="background:var(--mango-soft)"><svg viewBox="0 0 44 30"><path d="M8 8c10-6 26-2 28 10-4 6-12 8-18 5 6-2 10-6 8-10-4-3-12-3-18-5z" fill="#B07A12"/><path d="M8 8C4 4 2 2 1 1M10 7C7 3 6 1 6 0" stroke="#B07A12" stroke-width="1.5" fill="none"/></svg></span><div><b>Tiger prawns</b><small>Peeled · 500 g</small></div><div><span class="qty"><svg class="ic"><use href="#i-minus"/></svg>1<svg class="ic"><use href="#i-plus"/></svg></span><div class="lp">₹749</div></div></div>
         </div>
-        <div class="coupon"><svg class="ic"><use href="#i-tag"/></svg><div><b><span class="mk">WELCOME100</span> applied</b>You save ₹100 on this order</div></div>
-        <div class="box"><span class="sect">Delivery <span class="mk">slot</span></span><div class="slots"><span class="on">Today<small>4–6 pm</small></span><span>Today<small>6–8 pm</small></span><span>Tomorrow<small>7–9 am</small></span></div></div>
-        <div class="box bill2"><span class="sect">Bill <span class="it" style="font-size:1.15em">details</span></span><div class="r"><span>Items (estimate)</span><span>₹1,339</span></div><div class="r free"><span>Cleaning</span><span>FREE</span></div><div class="r free"><span>Delivery</span><span>FREE</span></div><div class="r free"><span>Coupon</span><span>−₹100</span></div><div class="r tot"><span>To pay</span><span>₹1,239</span></div></div>
+        <div class="coupon"><svg class="ic"><use href="#i-tag"/></svg><div><b>WELCOME100 applied</b>You save ₹100 on this order</div></div>
+        <div class="box"><span class="sect">Delivery slot</span><div class="slots"><span class="on">Today<small>4–6 pm</small></span><span>Today<small>6–8 pm</small></span><span>Tomorrow<small>7–9 am</small></span></div></div>
+        <div class="box bill2"><span class="sect">Bill details</span><div class="r"><span>Items (estimate)</span><span>₹1,339</span></div><div class="r free"><span>Cleaning</span><span>FREE</span></div><div class="r free"><span>Delivery</span><span>FREE</span></div><div class="r free"><span>Coupon</span><span>−₹100</span></div><div class="r tot"><span>To pay</span><span>₹1,239</span></div></div>
       </div>
       <div class="paybar"><div><small>Pay on delivery</small><b>Cash / UPI ▾</b></div><span class="place">Place order<span>₹1,239</span></span></div>
       </div></div><figcaption class="cap">Cart with coupon, slot and bill</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-coral" style="--sat:#F5B544"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Your cart</small><span class="big"><span class="l1">Basket’s</span><span class="l2">empty</span></span></div>
+    <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Your cart</small><span class="big">Basket’s empty</span></div>
       <div class="stage"><span class="badge mango" style="right:26px;top:36px;transform:rotate(6deg)">Fresh today</span><div class="avatar"><img src="../characters/generated/empty_cart.jpg" alt="Chanduva peeking from a basket" style="object-position:50% 45%"></div></div>
-      <div class="sheet"><h3>Nothing in here <span class="it">yet</span></h3><p class="muted">Seer, pomfret and prawns came in this morning.</p><span class="btn">See today’s catch</span></div>
+      <div class="sheet"><h3>Nothing in here yet</h3><p class="muted">Seer, pomfret and prawns came in this morning.</p><span class="btn">See today’s catch</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">Empty cart</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-coral" style="--sat:#F5B544"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Saved</small><span class="big"><span class="l1">Nothing</span><span class="l2">saved yet</span></span></div>
+    <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Saved</small><span class="big">Nothing saved yet</span></div>
       <div class="stage"><div class="avatar"><img src="../characters/generated/empty_wishlist.jpg" alt="Chanduva hugging a heart" style="object-position:50% 45%"></div></div>
-      <div class="sheet"><h3>Tap the ♥ on <span class="mk">any fish</span></h3><p class="muted">It waits here for next time.</p><span class="btn">Browse fish</span></div>
+      <div class="sheet"><h3>Tap the ♥ on any fish</h3><p class="muted">It waits here for next time.</p><span class="btn">Browse fish</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No saved items</figcaption></figure>
   </div>
 </section>
@@ -412,26 +371,26 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
 <section class="group">
   <h2>Orders and alerts</h2>
   <div class="row">
-    <figure><div class="phone"><div class="screen s-teal" style="--sat:#F5B544"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Order FO-000123</small><span class="big"><span class="l1">On the</span><span class="l2">way</span></span></div>
+    <figure><div class="phone"><div class="screen s-teal"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Order FO-000123</small><span class="big">On the way</span></div>
       <div class="stage"><span class="badge mango" style="left:26px;top:30px;transform:rotate(-6deg)">Code 4821</span><div class="avatar sm"><img src="../characters/generated/onboarding_delivery.jpg" alt="Ravi on the way" style="object-position:45% 22%"></div></div>
       <div class="track" style="padding-top:74px">
-        <div class="eta"><b>12 <span class="it">min</span></b><p class="muted">Ravi is riding to MVP Colony</p></div>
+        <div class="eta"><b>12 min</b><p class="muted">Ravi is riding to MVP Colony</p></div>
         <div class="steps"><span class="on"><i></i>Placed</span><span class="on"><i></i>Packed</span><span class="on"><i></i>On the way</span><span><i></i>Delivered</span></div>
         <div class="bill">
           <div class="rr"><span>Seer fish, steaks<small>Packed 1,012 g net</small></span><span>₹1,194</span></div>
           <div class="rr"><span>Tiger prawns, peeled<small>500 g</small></span><span>₹749</span></div>
           <div class="rr tot"><span>Pay at the door</span><span>₹1,943</span></div>
         </div></div></div></div><figcaption class="cap">Live tracking</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-mango" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>My orders</small><span class="big"><span class="l1">No orders</span><span class="l2">yet</span></span></div>
+    <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>My orders</small><span class="big">No orders yet</span></div>
       <div class="stage"><span class="badge coral" style="right:24px;top:40px;transform:rotate(6deg)">Pot’s waiting</span><div class="avatar"><img src="../characters/generated/empty_orders.jpg" alt="Ammamma at the stove" style="object-position:50% 28%"></div></div>
-      <div class="sheet"><h3>Your first <span class="it">fish curry</span> is <span class="wv">one tap</span> away</h3><span class="btn">Start shopping</span></div>
+      <div class="sheet"><h3>Your first fish curry is one tap away</h3><span class="btn">Start shopping</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No orders</figcaption></figure>
-    <figure><div class="phone"><div class="screen s-ice" style="--sat:#F07A5A"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Notifications</small><span class="big"><span class="l1">All</span><span class="l2">quiet</span></span></div>
+    <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
+      <div class="block"><small>Notifications</small><span class="big">All quiet</span></div>
       <div class="stage"><div class="avatar"><img src="../characters/generated/empty_notifications.jpg" alt="Chanduva relaxing on a float" style="object-position:50% 45%"></div></div>
-      <div class="sheet"><h3>Nothing <span class="it">new</span></h3><p class="muted">We’ll tell you when your order is packed, on the way and delivered.</p></div>
+      <div class="sheet"><h3>Nothing new</h3><p class="muted">We’ll tell you when your order is packed, on the way and delivered.</p></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No notifications</figcaption></figure>
   </div>
 </section>
@@ -440,8 +399,8 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <h2>Account and settings</h2>
   <div class="row">
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="top"><b style="font:800 22px var(--display);letter-spacing:-.02em">My <span class="it" style="color:var(--teal)">account</span></b><span class="round"><svg class="ic"><use href="#i-gear"/></svg></span></div>
-      <div class="prof"><span class="edit">Edit</span><span class="av">L</span><div><b>Hello, <span class="it" style="color:#14302F">Lakshmi</span></b><small>+91 98xxx x4210</small></div></div>
+      <div class="top"><b style="font:800 22px var(--display);letter-spacing:-.02em">Account</b><span class="round"><svg class="ic"><use href="#i-gear"/></svg></span></div>
+      <div class="prof"><span class="edit">Edit</span><span class="av">L</span><div><b>Lakshmi P.</b><small>+91 98xxx x4210</small></div></div>
       <div class="quick"><span><i style="background:var(--teal-soft)"><svg class="ic"><use href="#i-orders"/></svg></i>Orders</span><span><i style="background:var(--coral-soft)"><svg class="ic"><use href="#i-heart"/></svg></i>Saved</span><span><i style="background:var(--ice-soft)"><svg class="ic"><use href="#i-pin"/></svg></i>Addresses</span></div>
       <div class="menu">
         <div class="it"><svg class="ic"><use href="#i-bell"/></svg><span>Notifications<small>Order updates, offers</small></span><svg class="ic ch"><use href="#i-chev"/></svg></div>
@@ -451,7 +410,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
       </div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">Account</figcaption></figure>
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em"><span class="mk">Settings</span></b><span style="width:36px"></span></div>
+      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em">Settings</b><span style="width:36px"></span></div>
       <div class="lbl">Notifications</div>
       <div class="menu" style="margin-top:6px">
         <div class="it"><svg class="ic"><use href="#i-bell"/></svg><span>Order updates<small>Packed, on the way, delivered</small></span><span class="tog on"></span></div>
