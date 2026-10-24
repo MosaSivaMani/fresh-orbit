@@ -31,22 +31,83 @@ Steps:
 
 ## 2. SMS sender: `Notifications:Sms` (Api and Worker)
 
-| Key | Values |
-|---|---|
-| `Notifications:Sms:Provider` | `DEVELOPMENT` (Development and Testing only) or `DLT` |
-| `Notifications:Sms:Dlt:BaseUrl` | The provider's API base URL; must be `https` |
-| `Notifications:Sms:Dlt:ApiKey` | The provider secret. Keep it in the secret store or the environment, never in a committed file |
-| `Notifications:Sms:Dlt:SenderId` | The DLT-registered sender header |
-| `Notifications:Sms:Dlt:PrincipalEntityId` | The TRAI DLT principal entity id |
+Outside Development and Testing, SMS goes through the `DLT` sender (E2E-1). It maps each of our template codes to its
+DLT content template id and sends through one provider adapter (`Gateway`). Today the only adapter is `FAST2SMS`
+(why: `docs/research/sms-provider-2026-10.md`).
 
-- Outside Development and Testing, the hosts refuse to start when the provider is `DEVELOPMENT`, empty or unknown,
-  or when any `Dlt` setting is missing.
-- Until a provider is chosen, the `DLT` sender is a stub. It starts when configured, but every send throws, so OTP
-  requests fail with 500 rather than pretending a code was sent. Do not open the store to customers until the
-  provider client is written.
-- SMS text is never logged. Phone numbers appear in the logs as `***` followed by the last 4 digits.
+| Key (environment variable in `.env.prod`) | Values |
+|---|---|
+| `Notifications:Sms:Provider` | `DEVELOPMENT` (Development and Testing only) or `DLT`. Fixed to `DLT` in `docker-compose.prod.yml` |
+| `Notifications:Sms:Dlt:Gateway` (`SMS_DLT_GATEWAY`) | `FAST2SMS` |
+| `Notifications:Sms:Dlt:BaseUrl` (`SMS_DLT_BASE_URL`) | Optional. Empty means the gateway's documented endpoint (`https://www.fast2sms.com/`). When set, it must be `https` |
+| `Notifications:Sms:Dlt:ApiKey` (`SMS_DLT_API_KEY`) | The provider's API key. A secret: keep it in `.env.prod` on the server only, never in a committed file |
+| `Notifications:Sms:Dlt:SenderId` (`SMS_DLT_SENDER_ID`) | The DLT-approved header, 3 to 6 letters or digits |
+| `Notifications:Sms:Dlt:PrincipalEntityId` (`SMS_DLT_PRINCIPAL_ENTITY_ID`) | The DLT principal entity id (digits) |
+| `Notifications:Sms:Dlt:TimeoutSeconds` (`SMS_DLT_TIMEOUT_SECONDS`) | 1 to 60, default 10 |
+| `Notifications:Sms:Dlt:Templates:<CODE>` (`SMS_DLT_TEMPLATE_<CODE>`) | The DLT content template id (digits) of each SMS template in the table below. **Every one is required** |
+
+What the hosts refuse:
+- Outside Development and Testing, the Api and Worker refuse to start (one Critical log line, exit code 1, E2E-2)
+  when the provider is `DEVELOPMENT`, empty or unknown, or when any `Dlt` value above is missing or malformed. That
+  includes a missing template id for any of the 13 SMS templates.
+- When a send fails (provider unreachable, timed out, key refused, message rejected), an OTP request answers
+  **503 `SMS_PROVIDER_UNAVAILABLE`**, never 500. The Worker retries queued SMS only after an outage or a refused key
+  (up to 5 attempts). A rejected message is marked FAILED at once, with `last_error` `SMS_REJECTED`.
+- SMS text is never logged by the DLT sender: a log line has the template code and the last 2 digits of the phone
+  (`**10`), plus the failure code and the provider's status code. The API key is sent only in the `authorization`
+  header.
 - In Development, read OTPs from `GET /api/v1/dev/sms?phone=+91…` (newest first). This route does not exist in other
   environments.
+
+### 2.1 What the owner registers (once, before launch)
+
+DLT registration is done by the business, not by us. Each step's id goes into `.env.prod`.
+
+1. **Principal entity (PE).** Register Fresh Orbit as a principal entity on one operator's DLT portal (for example
+   Jio, Airtel, Vi or BSNL; one is enough, as all operators share it). You will need the company PAN, GST and a
+   letter of authorisation. After approval, copy the **PE id** → `SMS_DLT_PRINCIPAL_ENTITY_ID`.
+2. **Header (sender id).** On the same portal, register a header for transactional and service messages, for
+   example `FRSHOR` (up to 6 characters, related to the brand name) → `SMS_DLT_SENDER_ID`.
+3. **Content templates.** Register one content template per row below, under the header from step 2:
+   - **Type:** OTP_LOGIN and OTP_VERIFY_PHONE as **Transactional** (the category for OTPs). Every other row as
+     **Service Implicit**.
+   - **Text:** exactly the "DLT text" column, character for character. Each `{#var#}` is one variable. Our text
+     must match the registered one exactly (spaces, full stops, dashes), or the operator drops the message.
+   - After approval, copy each **content template id** → its `SMS_DLT_TEMPLATE_<CODE>`.
+   - Variables are filled in this order: the "Variables" column. Keep each value within the portal's variable
+     length limit (30 characters on the portals we know of, not verified). `businessName` is the Settings trade
+     name (or `Notifications:BusinessName`).
+4. **Provider account.** Open a Fast2SMS account (free ₹50 test credit), complete its DLT details with the same PE
+   id, header and templates, and create an **API key** → `SMS_DLT_API_KEY`. Top up the prepaid balance before
+   launch.
+5. **Link the provider to the entity.** On the DLT portal, add Fast2SMS as your telemarketer (the "telemarketer
+   chain" or "TM binding"; the menu name differs by portal). Without it, the operator refuses every message from
+   the provider for your PE.
+6. **Check before opening the store.** Deploy, request an OTP for your own phone, and confirm that the SMS arrives
+   and that the Api log line shows `SMS OTP_LOGIN to **NN accepted by FAST2SMS`. A 503 `SMS_PROVIDER_UNAVAILABLE`
+   means the log line gives the reason (`SMS_UNAUTHORIZED`: the key; `SMS_REJECTED` with a provider status: the PE,
+   header, template or text; `SMS_UNREACHABLE`: network or timeout).
+
+| Code | Environment variable | DLT text (register exactly) | Variables, in order |
+|---|---|---|---|
+| `OTP_LOGIN` | `SMS_DLT_TEMPLATE_OTP_LOGIN` | `{#var#} is your {#var#} login code. It expires in {#var#} minutes. Do not share it with anyone.` | code, businessName, expiresInMinutes |
+| `OTP_VERIFY_PHONE` | `SMS_DLT_TEMPLATE_OTP_VERIFY_PHONE` | `{#var#} is your {#var#} code to verify this phone number. It expires in {#var#} minutes.` | code, businessName, expiresInMinutes |
+| `ORDER_CONFIRMED` | `SMS_DLT_TEMPLATE_ORDER_CONFIRMED` | `Order {#var#} confirmed. Delivery {#var#}, {#var#}. Est. total {#var#} ({#var#}). - {#var#}` | orderNumber, slotDateText, slotWindowText, estimatedTotalText, paymentMethodText, businessName |
+| `PAYMENT_RECEIVED` | `SMS_DLT_TEMPLATE_PAYMENT_RECEIVED` | `Payment of {#var#} received for order {#var#} ({#var#}). - {#var#}` | amountText, orderNumber, paymentMethodText, businessName |
+| `PAYMENT_FAILED` | `SMS_DLT_TEMPLATE_PAYMENT_FAILED` | `Payment of {#var#} for order {#var#} failed. Retry: {#var#} - {#var#}` | amountText, orderNumber, retryUrl, businessName |
+| `SUBSTITUTION_PROPOSED` | `SMS_DLT_TEMPLATE_SUBSTITUTION_PROPOSED` | `Order {#var#}: {#var#} is unavailable. Accept {#var#} ({#var#}) by {#var#}: {#var#}` | orderNumber, itemName, proposedItemName, priceDifferenceText, respondByText, orderUrl |
+| `ORDER_OUT_FOR_DELIVERY` | `SMS_DLT_TEMPLATE_ORDER_OUT_FOR_DELIVERY` | `Order {#var#} is out for delivery with {#var#} ({#var#}). Code {#var#}. Due {#var#}. - {#var#}` | orderNumber, riderName, riderPhone, deliveryCode, amountDueText, businessName |
+| `ORDER_DELIVERED` | `SMS_DLT_TEMPLATE_ORDER_DELIVERED` | `Order {#var#} delivered. Total {#var#}, invoice {#var#}. Thank you! - {#var#}` | orderNumber, finalTotalText, invoiceNumber, businessName |
+| `DELIVERY_FAILED` | `SMS_DLT_TEMPLATE_DELIVERY_FAILED` | `We could not deliver order {#var#}: {#var#}. We will contact you. - {#var#} {#var#}` | orderNumber, reasonText, businessName, supportPhone |
+| `ORDER_CANCELLED` | `SMS_DLT_TEMPLATE_ORDER_CANCELLED` | `Order {#var#} was cancelled: {#var#}. {#var#} - {#var#}` | orderNumber, reasonText, refundAmountText, businessName |
+| `REFUND_INITIATED` | `SMS_DLT_TEMPLATE_REFUND_INITIATED` | `Refund of {#var#} for order {#var#} started to {#var#}. - {#var#}` | amountText, orderNumber, refundMethodText, businessName |
+| `REFUND_SUCCEEDED` | `SMS_DLT_TEMPLATE_REFUND_SUCCEEDED` | `Refund of {#var#} for order {#var#} completed to {#var#}. Ref {#var#}. - {#var#}` | amountText, orderNumber, refundMethodText, referenceText, businessName |
+| `COMPLAINT_RESOLVED` | `SMS_DLT_TEMPLATE_COMPLAINT_RESOLVED` | `Your complaint on order {#var#} is resolved: {#var#}. {#var#} - {#var#}` | orderNumber, resolutionText, refundAmountText, businessName |
+
+**Editing an SMS text.** Staff can edit template texts in the admin dashboard (Notification templates). An SMS text
+must stay equal to its registered DLT text: register the new text on the DLT portal first, wait for approval, put
+the new id in `SMS_DLT_TEMPLATE_<CODE>`, redeploy, and only then save the edited text. The `dltTemplateId` shown on
+a template in the admin API is not used for sending; the configuration is the source (E2E-1).
 
 ## 3. Rate limits: `RateLimiting:<Rule>` (Api)
 

@@ -30,6 +30,31 @@ x-backend-env: &backend-env
   # Stamped into logs; times in the database are UTC regardless.
   TZ: UTC
 
+# SMS through the DLT adapter (api and worker); the hosts refuse to start outside Development without every value,
+# including a DLT template id per SMS template (E2E-1, docs/runbooks/security-configuration.md §2).
+x-sms-env: &sms-env
+  Notifications__Sms__Provider: DLT
+  Notifications__Sms__Dlt__Gateway: ${SMS_DLT_GATEWAY:?SMS_DLT_GATEWAY is required}
+  # Empty = the gateway's documented endpoint.
+  Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:-}
+  Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
+  Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
+  Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
+  Notifications__Sms__Dlt__TimeoutSeconds: ${SMS_DLT_TIMEOUT_SECONDS:-10}
+  Notifications__Sms__Dlt__Templates__OTP_LOGIN: ${SMS_DLT_TEMPLATE_OTP_LOGIN:?SMS_DLT_TEMPLATE_OTP_LOGIN is required}
+  Notifications__Sms__Dlt__Templates__OTP_VERIFY_PHONE: ${SMS_DLT_TEMPLATE_OTP_VERIFY_PHONE:?SMS_DLT_TEMPLATE_OTP_VERIFY_PHONE is required}
+  Notifications__Sms__Dlt__Templates__ORDER_CONFIRMED: ${SMS_DLT_TEMPLATE_ORDER_CONFIRMED:?SMS_DLT_TEMPLATE_ORDER_CONFIRMED is required}
+  Notifications__Sms__Dlt__Templates__PAYMENT_RECEIVED: ${SMS_DLT_TEMPLATE_PAYMENT_RECEIVED:?SMS_DLT_TEMPLATE_PAYMENT_RECEIVED is required}
+  Notifications__Sms__Dlt__Templates__PAYMENT_FAILED: ${SMS_DLT_TEMPLATE_PAYMENT_FAILED:?SMS_DLT_TEMPLATE_PAYMENT_FAILED is required}
+  Notifications__Sms__Dlt__Templates__SUBSTITUTION_PROPOSED: ${SMS_DLT_TEMPLATE_SUBSTITUTION_PROPOSED:?SMS_DLT_TEMPLATE_SUBSTITUTION_PROPOSED is required}
+  Notifications__Sms__Dlt__Templates__ORDER_OUT_FOR_DELIVERY: ${SMS_DLT_TEMPLATE_ORDER_OUT_FOR_DELIVERY:?SMS_DLT_TEMPLATE_ORDER_OUT_FOR_DELIVERY is required}
+  Notifications__Sms__Dlt__Templates__ORDER_DELIVERED: ${SMS_DLT_TEMPLATE_ORDER_DELIVERED:?SMS_DLT_TEMPLATE_ORDER_DELIVERED is required}
+  Notifications__Sms__Dlt__Templates__DELIVERY_FAILED: ${SMS_DLT_TEMPLATE_DELIVERY_FAILED:?SMS_DLT_TEMPLATE_DELIVERY_FAILED is required}
+  Notifications__Sms__Dlt__Templates__ORDER_CANCELLED: ${SMS_DLT_TEMPLATE_ORDER_CANCELLED:?SMS_DLT_TEMPLATE_ORDER_CANCELLED is required}
+  Notifications__Sms__Dlt__Templates__REFUND_INITIATED: ${SMS_DLT_TEMPLATE_REFUND_INITIATED:?SMS_DLT_TEMPLATE_REFUND_INITIATED is required}
+  Notifications__Sms__Dlt__Templates__REFUND_SUCCEEDED: ${SMS_DLT_TEMPLATE_REFUND_SUCCEEDED:?SMS_DLT_TEMPLATE_REFUND_SUCCEEDED is required}
+  Notifications__Sms__Dlt__Templates__COMPLAINT_RESOLVED: ${SMS_DLT_TEMPLATE_COMPLAINT_RESOLVED:?SMS_DLT_TEMPLATE_COMPLAINT_RESOLVED is required}
+
 services:
   postgres:
     image: postgres:17.10-alpine3.24
@@ -120,7 +145,7 @@ services:
       migrations:
         condition: service_completed_successfully
     environment:
-      <<: *backend-env
+      <<: [*backend-env, *sms-env]
       ASPNETCORE_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
       # Trust X-Forwarded-For/-Proto only from the compose network (Caddy). Left empty, every client shares one
       # rate-limit bucket (docs/runbooks/security-configuration.md).
@@ -142,13 +167,6 @@ services:
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
       Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
-      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
-      # (docs/runbooks/security-configuration.md).
-      Notifications__Sms__Provider: DLT
-      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
-      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
-      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
-      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
     volumes:
       - media:/media
     healthcheck:
@@ -173,7 +191,7 @@ services:
       migrations:
         condition: service_completed_successfully
     environment:
-      <<: *backend-env
+      <<: [*backend-env, *sms-env]
       DOTNET_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
       Outbox__BatchSize: ${OUTBOX_BATCH_SIZE:-50}
       Outbox__MaxAttempts: ${OUTBOX_MAX_ATTEMPTS:-5}
@@ -191,13 +209,6 @@ services:
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
       Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
-      # SMS through the DLT adapter; the hosts refuse to start outside Development without these
-      # (docs/runbooks/security-configuration.md).
-      Notifications__Sms__Provider: DLT
-      Notifications__Sms__Dlt__BaseUrl: ${SMS_DLT_BASE_URL:?SMS_DLT_BASE_URL is required}
-      Notifications__Sms__Dlt__ApiKey: ${SMS_DLT_API_KEY:?SMS_DLT_API_KEY is required}
-      Notifications__Sms__Dlt__SenderId: ${SMS_DLT_SENDER_ID:?SMS_DLT_SENDER_ID is required}
-      Notifications__Sms__Dlt__PrincipalEntityId: ${SMS_DLT_PRINCIPAL_ENTITY_ID:?SMS_DLT_PRINCIPAL_ENTITY_ID is required}
     volumes:
       - media:/media
     # No HTTP endpoint: the restart policy covers crashes; deploy.sh checks it stays running.
