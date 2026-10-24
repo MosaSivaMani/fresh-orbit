@@ -42,7 +42,9 @@ internal static class OrderingEndpoints
             .WithTags("Checkout");
 
         var orders = root.MapGroup("/orders").WithTags("Orders");
-        orders.MapPost(string.Empty, PlaceOrderAsync).WithIdempotency(required: true).RequireRateLimiting(RateLimitPolicies.Checkout);
+        orders.MapPost(string.Empty, PlaceOrderAsync).WithIdempotency(required: true).RequireRateLimiting(RateLimitPolicies.Checkout)
+            .Produces<OrderDetailResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status409Conflict);
         orders.MapGet(string.Empty, async ([FromQuery] string? status, [FromQuery] int? page, [FromQuery] int? pageSize, ICurrentActor actor, OrderQueryService queries, CancellationToken ct) =>
         {
             var (p, size) = Paging(page, pageSize);

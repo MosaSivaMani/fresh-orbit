@@ -3,10 +3,10978 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+    "/api/v1/auth/otp/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OtpRequestRequest"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OtpRequestResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/otp/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OtpVerifyRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerLoginResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RefreshRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessionTokensResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LogoutRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StaffLoginRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffLoginResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["LogoutRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffProfileResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ChangePasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Q?: string;
+                    IsActive?: boolean;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffListResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateStaffRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/staff/{staffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateStaffRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/staff/{staffId}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    staffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ResetStaffPasswordRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StaffResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoleListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateRoleRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoleResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateRoleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RoleResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    roleId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PermissionListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProfileResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProfileResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/me/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddressResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SaveAddressRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddressResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{addressId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    addressId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SaveAddressRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddressResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    addressId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{addressId}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    addressId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddressResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/wishlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WishlistItemResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/wishlist/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Q?: string;
+                    Status?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerListResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerDetailResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customerId}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{customerId}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    customerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/serviceability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    pincode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ServiceabilityResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicCityResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    status?: unknown[];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfCityResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateCityRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities/{cityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityDetailResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities/{cityId}/readiness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReadinessResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities/{cityId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities/{cityId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cities/{cityId}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CityResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment-locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    cityId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfFulfillmentLocationResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateFulfillmentLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FulfillmentLocationResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment-locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FulfillmentLocationResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateFulfillmentLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FulfillmentLocationResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment-locations/{id}/operating-hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetOperatingHoursRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["FulfillmentLocationResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment-locations/{id}/closures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fromDate?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClosureResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddClosureRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClosureResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment-locations/{id}/closures/{closureId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    closureId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/service-areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    cityId?: string;
+                    fulfillmentLocationId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfServiceAreaResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateServiceAreaRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ServiceAreaResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/service-areas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ServiceAreaResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateServiceAreaRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ServiceAreaResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/service-areas/{id}/pincodes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    includeRemoved?: boolean;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PincodeResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddPincodesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AddPincodesResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/service-areas/{id}/pincodes/{pincode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    pincode: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ServiceAreaResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["HomeResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StorefrontCategory"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StorefrontCategoryDetail"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    category?: string[];
+                    q?: string;
+                    sourceType?: string[];
+                    preparation?: string[];
+                    inStock?: boolean;
+                    minPricePaise?: number;
+                    maxPricePaise?: number;
+                    sort?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfProductListItem"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    preparation?: string;
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StorefrontProductDetail"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    q?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SuggestItem"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    variantId?: string[];
+                    preparation?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AvailabilityResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    includeInactive?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminCategoryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateCategoryRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminCategoryResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminCategoryResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCategoryRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminCategoryResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/preparation-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreparationMethodResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    q?: string;
+                    categoryId?: string;
+                    status?: unknown[];
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfAdminProductListItem"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProductRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProductRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VariantRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/variants/{variantId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VariantRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        file?: components["schemas"]["IFormFile"];
+                    } & {
+                        altText?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminImageResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReorderImagesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{id}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    imageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminProductResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/pricing/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Page?: number;
+                    PageSize?: number;
+                    fulfillmentLocationId?: string;
+                    variantId?: string;
+                    q?: string;
+                    missingOnly?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfPriceListItem"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PriceScheduleResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetPriceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PriceScheduleResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    variantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PriceScheduleResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/preparations/{code}/charge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    variantId: string;
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChargeScheduleResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    locationId: string;
+                    variantId: string;
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetChargeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChargeScheduleResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/pricing/tax-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxCategoryRulesResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ScheduleTaxRuleRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TaxCategoryRulesResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/pricing/prices/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    dryRun?: boolean;
+                    validFrom?: string;
+                    replaceFuture?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BulkPriceResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    variantId?: string;
+                    lowStockOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfStockItemResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stock/{stockItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    stockItemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockItemResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stock/{stockItemId}/threshold": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    stockItemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SetThresholdRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockItemResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/stock-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateStockItemRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockItemResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReceiveStockRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReceiptResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    variantId?: string;
+                    stockItemId?: string;
+                    status?: string[];
+                    expiringBefore?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfBatchResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/batches/{batchId}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    batchId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DiscardBatchRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockChangeResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/waste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordWasteRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockChangeResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AdjustStockRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockChangeResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CountStockRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StockChangeResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    stockItemId?: string;
+                    fulfillmentLocationId?: string;
+                    kind?: string[];
+                    fromDate?: string;
+                    toDate?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfMovementResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    orderId?: string;
+                    status?: string[];
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfReservationResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/inventory/cold-chain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    outOfRangeOnly?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfColdChainLogResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordTemperatureRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ColdChainLogResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: {
+                    pincode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AddCartItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ChangeCartItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/cart/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: {
+                    force?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CartLocationRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/coupon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CartCouponRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    pincode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfVisibleCoupon"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    pincode?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfBannerInfo"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/webhooks/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    provider: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebhookReceipt"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dev/payments/fake/{providerOrderId}/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    providerOrderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SimulateFakePaymentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebhookReceipt"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/delivery-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    pincode?: string;
+                    date?: string;
+                };
+                header?: {
+                    "X-Pincode"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerSlotsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    EntityType?: string;
+                    EntityId?: string;
+                    ActorId?: string;
+                    Action?: string;
+                    FromDate?: string;
+                    ToDate?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuditListResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: unknown[];
+                    cityId?: string;
+                    q?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfCouponResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CouponRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CouponResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/{couponId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    couponId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CouponResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    couponId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CouponRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CouponResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/{couponId}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    couponId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CouponResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/{couponId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    couponId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CouponResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/coupons/{couponId}/redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    couponId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfRedemptionResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    cityId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfPromotionResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PromotionRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PromotionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{promotionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    promotionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PromotionResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    promotionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PromotionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PromotionResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CheckoutRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CheckoutPreview"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfOrderListItem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CheckoutRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderDetailResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/tracking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderTrackingResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CancelOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/substitutions/{substitutionId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                    substitutionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/substitutions/{substitutionId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                    substitutionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/complaints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ComplaintResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RaiseComplaintRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ComplaintResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CartView"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    status?: string;
+                    slotDate?: string;
+                    slotId?: string;
+                    paymentMethod?: string;
+                    q?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfAdminOrderListItem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/pick-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    fulfillmentLocationId: string;
+                    slotId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PickListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/start-preparing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/pack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PackOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PackResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/items/{itemId}/substitutions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProposeSubstitutionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/substitutions/{substitutionId}/record-response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                    substitutionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordSubstitutionResponseRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CancelOrderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/goodwill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GoodwillRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminOrderDetailResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/complaints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string;
+                    kind?: string;
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfComplaintResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/complaints/{complaintId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ComplaintResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/complaints/{complaintId}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DecideComplaintRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ComplaintResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/complaints/{complaintId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    complaintId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ComplaintResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerPaymentResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InitiatePaymentResponse"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InitiatePaymentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CustomerRefundResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string[];
+                    method?: string[];
+                    provider?: string;
+                    fromDate?: string;
+                    toDate?: string;
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfPaymentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    paymentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderPaymentsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/webhook-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    provider?: string;
+                    signatureValid?: boolean;
+                    processed?: boolean;
+                    status?: string[];
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfWebhookEventResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/webhook-events/{eventId}/reprocess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WebhookEventResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateRefundRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    status?: string[];
+                    reasonCode?: string[];
+                    fromDate?: string;
+                    toDate?: string;
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfRefundResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RejectRefundRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{refundId}/mark-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    refundId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MarkRefundPaidRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RefundResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CashCollectedRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash-settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    riderId?: string;
+                    date?: string;
+                    status?: string[];
+                    fromDate?: string;
+                    toDate?: string;
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfCashSettlementResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateCashSettlementRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CashSettlementResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash-settlements/{settlementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    settlementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CashSettlementResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash-settlements/{settlementId}/dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    settlementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DisputeCashSettlementRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CashSettlementResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash-settlements/{settlementId}/settle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    settlementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SettleCashSettlementRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CashSettlementResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payment-issues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    kind?: string[];
+                    status?: string[];
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfPaymentIssueResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payment-issues/{issueId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    issueId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ResolveIssueRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaymentIssueResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/slot-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfSlotTemplateResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateSlotTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotTemplateResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/slot-templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateSlotTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SlotTemplateResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    fromDate?: string;
+                    toDate?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfDeliverySlotResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/slots/{slotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slotId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ChangeSlotRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeliverySlotResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/riders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    isActive?: boolean;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfRiderResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateRiderRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RiderResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/riders/{riderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    riderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateRiderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RiderResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    slotId?: string;
+                    riderId?: string;
+                    status?: string[];
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfShipmentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AssignRiderRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/dispatch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DispatchShipmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DeliverShipmentRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RecordAttemptRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/reattempt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/delivery/shipments/{shipmentId}/return": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    shipmentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ShipmentResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    UnreadOnly?: boolean;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InboxResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications/{messageId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    messageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/device-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RegisterDeviceTokenRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeviceTokenResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/device-tokens/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferencesResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReplacePreferencesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PreferencesResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notification-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TemplateResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notification-templates/{code}/{channel}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    channel: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTemplateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TemplateResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/notification-templates/{code}/{channel}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    channel: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TestSendResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/daily-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/product-performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/contribution-margin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/waste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/repeat-customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReportResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reports/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DashboardResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/business-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BusinessProfileResponse"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SaveBusinessProfileRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["BusinessProfileResponse"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/order-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderPolicyListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/order-policies/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SaveOrderPolicyRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["OrderPolicyResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/number-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NumberSeriesListResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/settings/number-series/{code}/{period}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    code: string;
+                    period: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SaveNumberSeriesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["NumberSeriesResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        /** @enum {string} */
+        ActorType: "ANONYMOUS" | "CUSTOMER" | "STAFF" | "SYSTEM";
+        AddCartItemRequest: {
+            /** Format: uuid */
+            variantId: string;
+            preparationCode: null | string;
+            quantity: components["schemas"]["QuantityRequest"];
+        };
+        AddClosureRequest: {
+            /** Format: date */
+            closedOn: string;
+            reason: null | string;
+        };
+        AddPincodesRequest: {
+            pincodes: null | string[];
+        };
+        AddPincodesResponse: {
+            /** Format: uuid */
+            serviceAreaId: string;
+            added: string[];
+            /** Format: int32 */
+            activePincodeCount: number;
+            version: string;
+        };
+        AddressResponse: {
+            /** Format: uuid */
+            addressId: string;
+            label: string;
+            recipientName: string;
+            phone: string;
+            line1: string;
+            line2: null | string;
+            landmark: null | string;
+            locality: string;
+            cityName: string;
+            stateCode: string;
+            pincode: string;
+            /** Format: double */
+            latitude: null | number;
+            /** Format: double */
+            longitude: null | number;
+            isDefault: boolean;
+            isServiceable: null | boolean;
+            version: string;
+        };
+        AdjustStockRequest: {
+            /** Format: uuid */
+            stockItemId: string;
+            kind: string;
+            /** Format: uuid */
+            batchId: null | string;
+            quantity: components["schemas"]["QuantityInput"];
+            reasonCode: string;
+            notes: null | string;
+        };
+        AdminCategoryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parentId: null | string;
+            slug: string;
+            name: string;
+            description: null | string;
+            imageKey: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+            version: string;
+            children: components["schemas"]["AdminCategoryResponse"][];
+        };
+        AdminImageResponse: {
+            /** Format: uuid */
+            id: string;
+            storageKey: string;
+            url: string;
+            altText: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        AdminOrderDetailResponse: {
+            order: components["schemas"]["OrderDetailResponse"];
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            cityId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            serviceAreaId: string;
+            /** Format: uuid */
+            deliverySlotId: string;
+            cancelReasonCode: null | string;
+            coldBoxUsed: boolean;
+            /** Format: int64 */
+            refundDuePaise: number;
+            lines: components["schemas"]["OrderLineStockDto"][];
+            history: components["schemas"]["OrderHistoryDto"][];
+            adjustments: components["schemas"]["OrderAdjustmentDto"][];
+        };
+        AdminOrderListItem: {
+            /** Format: uuid */
+            id: string;
+            orderNumber: string;
+            status: string;
+            paymentMethod: string;
+            /** Format: uuid */
+            customerId: string;
+            recipientName: string;
+            phone: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            deliverySlotId: string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            slotStartAt: string;
+            /** Format: date-time */
+            slotEndAt: string;
+            /** Format: int32 */
+            itemCount: number;
+            /** Format: int64 */
+            totalPaise: number;
+            /** Format: int64 */
+            finalTotalPaise: null | number;
+            /** Format: int64 */
+            amountDuePaise: number;
+        };
+        AdminPreparationResponse: {
+            code: string;
+            name: string;
+            /** Format: int32 */
+            yieldBp: number;
+            isDefault: boolean;
+            isActive: boolean;
+        };
+        AdminProductListItem: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            categoryId: string;
+            slug: string;
+            name: string;
+            status: components["schemas"]["ProductStatus"];
+            /** Format: int32 */
+            activeVariantCount: number;
+            imageUrl: null | string;
+            /** Format: date-time */
+            publishedAt: null | string;
+            version: string;
+        };
+        AdminProductResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            categoryId: string;
+            slug: string;
+            name: string;
+            localNames: string[];
+            speciesScientificName: null | string;
+            description: null | string;
+            sourceType: components["schemas"]["SourceType"];
+            sourceRegion: null | string;
+            storageInstructions: null | string;
+            handlingNotes: null | string;
+            hsnCode: null | string;
+            taxCategoryCode: null | string;
+            status: components["schemas"]["ProductStatus"];
+            /** Format: int32 */
+            featuredRank: null | number;
+            /** Format: date-time */
+            publishedAt: null | string;
+            version: string;
+            variants: components["schemas"]["AdminVariantResponse"][];
+            images: components["schemas"]["AdminImageResponse"][];
+        };
+        AdminVariantResponse: {
+            /** Format: uuid */
+            id: string;
+            sku: string;
+            name: string;
+            sellUnit: components["schemas"]["SellUnit"];
+            stockUnit: components["schemas"]["StockUnit"];
+            /** Format: int32 */
+            packSizeGrams: null | number;
+            /** Format: int32 */
+            avgPieceGrams: null | number;
+            /** Format: int32 */
+            minOrder: number;
+            /** Format: int32 */
+            maxOrder: number;
+            /** Format: int32 */
+            orderStep: number;
+            isWeightVariable: boolean;
+            isActive: boolean;
+            preparations: components["schemas"]["AdminPreparationResponse"][];
+        };
+        AllowedActionsDto: {
+            cancel: boolean;
+            raiseComplaint: boolean;
+            downloadInvoice: boolean;
+            reorder: boolean;
+        };
+        AmountsDto: {
+            /** Format: int64 */
+            itemsPaise: number;
+            /** Format: int64 */
+            preparationPaise: number;
+            /** Format: int64 */
+            discountPaise: number;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            totalPaise: number;
+        };
+        AssignRiderRequest: {
+            /** Format: uuid */
+            riderId: string;
+        };
+        /** @enum {string} */
+        AttemptOutcome: "DELIVERED" | "CUSTOMER_UNAVAILABLE" | "ADDRESS_NOT_FOUND" | "REFUSED" | "OTHER";
+        AuditEntryResponse: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            occurredAt: string;
+            actorType: components["schemas"]["ActorType"];
+            /** Format: uuid */
+            actorId: null | string;
+            actorName: null | string;
+            action: string;
+            entityType: string;
+            entityId: string;
+            before: null | components["schemas"]["JsonElement"];
+            after: null | components["schemas"]["JsonElement"];
+            ip: null | string;
+            correlationId: null | string;
+        };
+        AuditListResponse: {
+            items: components["schemas"]["AuditEntryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        AvailabilityItem: {
+            /** Format: uuid */
+            variantId: string;
+            status: components["schemas"]["AvailabilityStatus"];
+            preparationCode: null | string;
+            maxOrderableNow: null | components["schemas"]["QuantityValue"];
+            /** Format: int64 */
+            unitPricePaise: null | number;
+            message: null | string;
+        };
+        AvailabilityResponse: {
+            location: components["schemas"]["LocationRef"];
+            items: components["schemas"]["AvailabilityItem"][];
+        };
+        /** @enum {string} */
+        AvailabilityStatus: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "NOT_SOLD_HERE";
+        BannerInfo: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            subtitle: null | string;
+            imageKey: null | string;
+            linkType: string;
+            linkTarget: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        BatchResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            stockItemId: string;
+            stockItemVersion: null | string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            batchCode: string;
+            status: components["schemas"]["BatchStatus"];
+            supplierName: null | string;
+            sourceLandingCenter: null | string;
+            /** Format: date */
+            caughtOrHarvestedOn: null | string;
+            /** Format: date-time */
+            receivedAt: string;
+            receivedQuantity: components["schemas"]["QuantityDto"];
+            remainingQuantity: components["schemas"]["QuantityDto"];
+            /** Format: date-time */
+            bestBeforeAt: string;
+            /** Format: double */
+            receiptTemperatureC: null | number;
+            /** Format: int64 */
+            totalCostPaise: number;
+            /** Format: int64 */
+            costPerUnitPaise: number;
+        };
+        /** @enum {string} */
+        BatchStatus: "ACTIVE" | "DEPLETED" | "EXPIRED" | "DISCARDED";
+        BulkPriceResponse: {
+            /** Format: uuid */
+            uploadId: null | string;
+            dryRun: boolean;
+            /** Format: int32 */
+            rowCount: number;
+            /** Format: int32 */
+            changedCount: number;
+            /** Format: int32 */
+            unchangedCount: number;
+            rows: components["schemas"]["BulkRowResult"][];
+        };
+        /** @enum {string} */
+        BulkRowKind: "PRICE" | "PREP_CHARGE";
+        BulkRowResult: {
+            /** Format: int32 */
+            index: number;
+            kind: components["schemas"]["BulkRowKind"];
+            locationCode: string;
+            sku: string;
+            preparationCode: null | string;
+            status: components["schemas"]["BulkRowStatus"];
+            current: null | components["schemas"]["BulkValues"];
+            new: components["schemas"]["BulkValues"];
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: int32 */
+            changeBp: null | number;
+            largeChange: boolean;
+        };
+        /** @enum {string} */
+        BulkRowStatus: "CHANGED" | "UNCHANGED";
+        BulkValues: {
+            /** Format: int64 */
+            unitPricePaise: null | number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            /** Format: int64 */
+            chargePaise: null | number;
+            chargeBasis: null | components["schemas"]["ChargeBasis"];
+        };
+        BusinessProfileResponse: {
+            legalName: string;
+            tradeName: string;
+            gstin: null | string;
+            fssaiLicenseNo: null | string;
+            address: string;
+            supportPhone: string;
+            supportEmail: string;
+            timeZone: string;
+            version: string;
+        };
+        CancelOrderRequest: {
+            reasonCode: null | string;
+            note: null | string;
+        };
+        CartAvailabilityView: {
+            status: string;
+            message: null | string;
+        };
+        CartBlockerView: {
+            code: string;
+            /** Format: uuid */
+            lineId: null | string;
+            message: string;
+        };
+        CartCouponRequest: {
+            code: string;
+        };
+        CartCouponView: {
+            code: string;
+            status: string;
+            reasonCode: null | string;
+            /** Format: int64 */
+            discountPaise: number;
+            message: null | string;
+        };
+        CartIssueView: {
+            code: string;
+            message: string;
+        };
+        CartLineView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            productId: string;
+            productSlug: string;
+            productName: string;
+            /** Format: uuid */
+            variantId: string;
+            variantName: string;
+            sellUnit: string;
+            imageUrl: null | string;
+            preparation: null | components["schemas"]["CartPreparationView"];
+            quantity: components["schemas"]["QuantityView"];
+            estimatedNetQuantity: components["schemas"]["QuantityView"];
+            maxChargeableQuantity: components["schemas"]["QuantityView"];
+            /** Format: int64 */
+            unitPricePaise: null | number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            priceUnit: string;
+            /** Format: int64 */
+            itemPaise: number;
+            /** Format: int64 */
+            preparationChargePaise: number;
+            preparationChargeBasis: null | string;
+            /** Format: int32 */
+            taxRateBp: number;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            estimatedLineTotalPaise: number;
+            /** Format: int64 */
+            maxLineTotalPaise: number;
+            availability: components["schemas"]["CartAvailabilityView"];
+            isSellable: boolean;
+            issues: components["schemas"]["CartIssueView"][];
+        };
+        CartLocationRequest: {
+            pincode: string;
+        };
+        CartPreparationView: {
+            code: string;
+            name: string;
+            /** Format: int32 */
+            yieldBp: number;
+        };
+        CartTotalsView: {
+            /** Format: int64 */
+            itemsPaise: number;
+            /** Format: int64 */
+            preparationPaise: number;
+            /** Format: int64 */
+            subtotalPaise: number;
+            /** Format: int64 */
+            discountPaise: number;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            deliveryFeeWaived: boolean;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            estimatedTotalPaise: number;
+            /** Format: int64 */
+            maxTotalPaise: number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            /** Format: int64 */
+            minOrderShortfallPaise: number;
+            /** Format: int64 */
+            freeDeliveryShortfallPaise: null | number;
+        };
+        CartView: {
+            /** Format: uuid */
+            id: null | string;
+            cartToken: null | string;
+            pincode: null | string;
+            fulfillmentLocationCode: null | string;
+            lines: components["schemas"]["CartLineView"][];
+            coupon: null | components["schemas"]["CartCouponView"];
+            totals: components["schemas"]["CartTotalsView"];
+            canCheckout: boolean;
+            checkoutBlockers: components["schemas"]["CartBlockerView"][];
+            messages: string[];
+        };
+        CashCollectedRequest: {
+            /** Format: int64 */
+            amountPaise: number;
+            mode: components["schemas"]["CollectionMode"];
+            upiReference: null | string;
+        };
+        /** @enum {null|string} */
+        CashMode: "CASH" | "UPI" | null;
+        CashSettlementResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            riderId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            expectedPaise: number;
+            /** Format: int64 */
+            receivedPaise: number;
+            /** Format: int64 */
+            differencePaise: number;
+            status: components["schemas"]["CashSettlementStatus"];
+            /** Format: int32 */
+            collectionsCount: number;
+            /** Format: uuid */
+            recordedBy: null | string;
+            /** Format: uuid */
+            settledBy: null | string;
+            /** Format: date-time */
+            settledAt: null | string;
+            note: null | string;
+            disputeReason: null | string;
+            version: string;
+        };
+        /** @enum {string} */
+        CashSettlementStatus: "OPEN" | "SETTLED" | "DISPUTED";
+        CategoryRef: {
+            slug: string;
+            name: string;
+        };
+        ChangeCartItemRequest: {
+            quantity: null | components["schemas"]["QuantityRequest"];
+            preparationCode: null | string;
+        };
+        ChangePasswordRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
+        ChangeSlotRequest: {
+            /** Format: int32 */
+            capacity: null | number;
+            status: null | components["schemas"]["SlotStatus"];
+        };
+        /** @enum {string} */
+        ChargeBasis: "PER_KG" | "PER_ITEM" | "FLAT";
+        ChargePeriodResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            chargePaise: number;
+            chargeBasis: components["schemas"]["ChargeBasis"];
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: null | string;
+        };
+        ChargeScheduleResponse: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            preparationCode: string;
+            version: null | string;
+            current: null | components["schemas"]["ChargePeriodResponse"];
+            next: null | components["schemas"]["ChargePeriodResponse"];
+            history: components["schemas"]["ChargePeriodResponse"][];
+            unchanged: boolean;
+        };
+        CheckoutAddressDto: {
+            /** Format: uuid */
+            id: string;
+            label: null | string;
+            line1: string;
+            locality: string;
+            pincode: string;
+            isServiceable: boolean;
+        };
+        CheckoutPreview: {
+            /** Format: uuid */
+            cartId: null | string;
+            address: components["schemas"]["CheckoutAddressDto"];
+            fulfillmentLocationCode: null | string;
+            slot: components["schemas"]["CheckoutSlotDto"];
+            lines: components["schemas"]["CartLineView"][];
+            coupon: null | components["schemas"]["CartCouponView"];
+            totals: components["schemas"]["CartTotalsView"];
+            paymentMethods: components["schemas"]["PaymentMethodOption"][];
+            canPlaceOrder: boolean;
+            blockers: components["schemas"]["CartBlockerView"][];
+            /** Format: int64 */
+            expectedTotalPaise: number;
+        };
+        CheckoutRequest: {
+            /** Format: uuid */
+            addressId: string;
+            /** Format: uuid */
+            deliverySlotId: string;
+            paymentMethod: null | string;
+            substitutionPreference: null | string;
+            customerNotes: null | string;
+            /** Format: int64 */
+            expectedTotalPaise: null | number;
+        };
+        CheckoutSlotDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            startAt: null | string;
+            /** Format: date-time */
+            endAt: null | string;
+            /** Format: date-time */
+            cutoffAt: null | string;
+            status: string;
+        };
+        CityDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            stateCode: string;
+            timeZone: string;
+            status: components["schemas"]["CityStatus"];
+            /** Format: date-time */
+            activatedAt: null | string;
+            /** Format: uuid */
+            activatedBy: null | string;
+            version: string;
+            readiness: components["schemas"]["ReadinessResponse"];
+        };
+        CityResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            stateCode: string;
+            timeZone: string;
+            status: components["schemas"]["CityStatus"];
+            /** Format: date-time */
+            activatedAt: null | string;
+            /** Format: uuid */
+            activatedBy: null | string;
+            version: string;
+        };
+        /** @enum {string} */
+        CityStatus: "DRAFT" | "ACTIVE" | "PAUSED" | "RETIRED";
+        ClosureResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: date */
+            closedOn: string;
+            reason: null | string;
+        };
+        ColdChainLogResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            storageUnit: string;
+            /** Format: double */
+            temperatureC: number;
+            isOutOfRange: boolean;
+            /** Format: date-time */
+            recordedAt: string;
+            /** Format: uuid */
+            recordedBy: null | string;
+        };
+        /** @enum {null|string} */
+        CollectionMode: "CASH" | "UPI" | null;
+        ComplaintResponse: {
+            /** Format: uuid */
+            id: string;
+            version: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            /** Format: uuid */
+            orderItemId: null | string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            kind: string;
+            description: string;
+            status: string;
+            resolution: null | string;
+            /** Format: int64 */
+            refundAmountPaise: null | number;
+            decisionNote: null | string;
+            /** Format: date-time */
+            raisedAt: string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            /** Format: date-time */
+            resolvedAt: null | string;
+            attachmentUrls: string[];
+        };
+        CountStockRequest: {
+            /** Format: uuid */
+            stockItemId: string;
+            countedQuantity: components["schemas"]["QuantityInput"];
+            /** Format: uuid */
+            batchId: null | string;
+            notes: null | string;
+        };
+        CouponRequest: {
+            code: string;
+            description: null | string;
+            discountType: components["schemas"]["DiscountType"];
+            /** Format: int64 */
+            discountValue: number;
+            /** Format: int64 */
+            maxDiscountPaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            /** Format: uuid */
+            cityId: null | string;
+            firstOrderOnly: boolean;
+            /** Format: int32 */
+            perCustomerLimit: null | number;
+            /** Format: int32 */
+            totalLimit: null | number;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: null | string;
+            isListed: boolean;
+            scopes: null | components["schemas"]["CouponScopeDto"][];
+        };
+        CouponResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            description: null | string;
+            discountType: components["schemas"]["DiscountType"];
+            /** Format: int64 */
+            discountValue: number;
+            /** Format: int64 */
+            maxDiscountPaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            /** Format: uuid */
+            cityId: null | string;
+            firstOrderOnly: boolean;
+            /** Format: int32 */
+            perCustomerLimit: null | number;
+            /** Format: int32 */
+            totalLimit: null | number;
+            /** Format: int32 */
+            usedCount: number;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: null | string;
+            status: components["schemas"]["CouponStatus"];
+            isListed: boolean;
+            scopes: components["schemas"]["CouponScopeDto"][];
+            version: string;
+        };
+        CouponScopeDto: {
+            scopeType: components["schemas"]["CouponScopeType"];
+            /** Format: uuid */
+            scopeId: string;
+        };
+        /** @enum {string} */
+        CouponScopeType: "CATEGORY" | "PRODUCT";
+        /** @enum {string} */
+        CouponStatus: "ACTIVE" | "PAUSED" | "EXPIRED";
+        CreateCashSettlementRequest: {
+            /** Format: uuid */
+            riderId: string;
+            /** Format: date */
+            date: string;
+            /** Format: int64 */
+            receivedPaise: number;
+            note: null | string;
+        };
+        CreateCategoryRequest: {
+            /** Format: uuid */
+            parentId: null | string;
+            slug: null | string;
+            name: null | string;
+            description: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+        };
+        CreateCityRequest: {
+            code: null | string;
+            name: null | string;
+            stateCode: null | string;
+            timeZone: null | string;
+        };
+        CreateFulfillmentLocationRequest: {
+            /** Format: uuid */
+            cityId: string;
+            code: null | string;
+            name: null | string;
+            addressLine: null | string;
+            pincode: null | string;
+            phone: null | string;
+            /** Format: double */
+            latitude: null | number;
+            /** Format: double */
+            longitude: null | number;
+            hasColdStorage: boolean;
+            fssaiLicenseNo: null | string;
+        };
+        CreateRefundRequest: {
+            /** Format: int64 */
+            amountPaise: number;
+            reasonCode: components["schemas"]["RefundReason"];
+            method: components["schemas"]["RefundMethod"];
+            /** Format: uuid */
+            complaintId: null | string;
+            upiId: null | string;
+            notes: null | string;
+        };
+        CreateRiderRequest: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            fullName: string;
+            phone: string;
+        };
+        CreateRoleRequest: {
+            code: string;
+            name: string;
+            permissions: string[];
+        };
+        CreateServiceAreaRequest: {
+            /** Format: uuid */
+            cityId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            name: null | string;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            /** Format: int64 */
+            freeDeliveryAbovePaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+        };
+        CreateSlotTemplateRequest: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: int32 */
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            cutoffMinutes: number;
+        };
+        CreateStaffRequest: {
+            email: string;
+            fullName: string;
+            roleIds: string[];
+            allLocations: boolean;
+            locationIds: null | string[];
+            temporaryPassword: string;
+        };
+        CreateStockItemRequest: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            /** Format: int32 */
+            lowStockThreshold: number;
+        };
+        CustomerDetailResponse: {
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            userId: string;
+            fullName: null | string;
+            phone: null | string;
+            email: null | string;
+            marketingOptIn: boolean;
+            status: string;
+            isBlocked: boolean;
+            /** Format: date-time */
+            deletedAt: null | string;
+            addresses: components["schemas"]["AddressResponse"][];
+            version: string;
+        };
+        CustomerListItem: {
+            /** Format: uuid */
+            customerId: string;
+            fullName: null | string;
+            phone: null | string;
+            email: null | string;
+            status: string;
+            isBlocked: boolean;
+        };
+        CustomerListResponse: {
+            items: components["schemas"]["CustomerListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        CustomerLoginCart: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            mergedLineCount: number;
+        };
+        CustomerLoginResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            accessTokenExpiresAt: string;
+            refreshToken: string;
+            /** Format: date-time */
+            refreshTokenExpiresAt: string;
+            user: components["schemas"]["CustomerLoginUser"];
+            cart: null | components["schemas"]["CustomerLoginCart"];
+        };
+        CustomerLoginUser: {
+            /** Format: uuid */
+            id: string;
+            phone: null | string;
+            fullName: null | string;
+            isNewCustomer: boolean;
+        };
+        CustomerPaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            method: components["schemas"]["PaymentMethod"];
+            provider: string;
+            status: components["schemas"]["PaymentStatus"];
+            /** Format: int64 */
+            amountPaise: number;
+            providerOrderId: null | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            capturedAt: null | string;
+            /** Format: date-time */
+            collectedAt: null | string;
+            failureCode: null | string;
+        };
+        CustomerRefundResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            amountPaise: number;
+            reasonCode: components["schemas"]["RefundReason"];
+            method: components["schemas"]["RefundMethod"];
+            status: components["schemas"]["RefundStatus"];
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: date-time */
+            succeededAt: null | string;
+        };
+        CustomerSlotResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            slotDate: string;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** Format: date-time */
+            cutoffAt: string;
+            status: components["schemas"]["SlotDisplayStatus"];
+        };
+        CustomerSlotsResponse: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            items: components["schemas"]["CustomerSlotResponse"][];
+        };
+        DashboardCount: {
+            status: string;
+            /** Format: int64 */
+            count: number;
+        };
+        DashboardLowStock: {
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            sku: null | string;
+            variantName: null | string;
+            /** Format: int64 */
+            available: number;
+            /** Format: int64 */
+            lowStockThreshold: number;
+        };
+        DashboardResponse: {
+            /** Format: date-time */
+            asOf: string;
+            /** Format: date */
+            date: string;
+            filters: Record<string, never>;
+            ordersByStatus: components["schemas"]["DashboardCount"][];
+            slots: components["schemas"]["DashboardSlot"][];
+            lowStock: components["schemas"]["DashboardLowStock"][];
+            /** Format: int64 */
+            openComplaints: number;
+            /** Format: int64 */
+            refundsRequested: number;
+            /** Format: int64 */
+            refundsRequestedPaise: number;
+            /** Format: int64 */
+            openPaymentIssues: number;
+        };
+        DashboardSlot: {
+            /** Format: uuid */
+            slotId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** Format: int32 */
+            bookedCount: number;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            fillBp: null | number;
+        };
+        /** @enum {string} */
+        DayOfWeek: "SUNDAY" | "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY";
+        DecideComplaintRequest: {
+            status: null | string;
+            resolution: null | string;
+            /** Format: int64 */
+            refundAmountPaise: null | number;
+            note: null | string;
+        };
+        DeliverShipmentRequest: {
+            deliveryCode: string;
+            /** Format: int64 */
+            cashCollectedPaise: null | number;
+            cashMode: null | components["schemas"]["CashMode"];
+            upiReference: null | string;
+        };
+        DeliveryAttemptResponse: {
+            /** Format: int32 */
+            attemptNo: number;
+            outcome: components["schemas"]["AttemptOutcome"];
+            notes: null | string;
+            /** Format: date-time */
+            attemptedAt: string;
+        };
+        DeliverySlotResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            slotTemplateId: null | string;
+            /** Format: date */
+            slotDate: string;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+            /** Format: date-time */
+            cutoffAt: string;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            bookedCount: number;
+            status: components["schemas"]["SlotStatus"];
+            closedReason: null | components["schemas"]["SlotClosedReason"];
+            displayStatus: components["schemas"]["SlotDisplayStatus"];
+            version: string;
+        };
+        DeviceTokenResponse: {
+            pushToken: string;
+            provider: string;
+            platform: string;
+            /** Format: date-time */
+            lastSeenAt: string;
+        };
+        DiscardBatchRequest: {
+            reasonCode: string;
+            notes: null | string;
+        };
+        /** @enum {string} */
+        DiscountType: "PERCENT" | "FLAT" | "FREE_DELIVERY";
+        DispatchShipmentRequest: {
+            /** Format: double */
+            dispatchTemperatureC: null | number;
+        };
+        DisputeCashSettlementRequest: {
+            reason: null | string;
+        };
+        FromPrice: {
+            /** Format: int64 */
+            unitPricePaise: number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            perUnit: components["schemas"]["SellUnit"];
+        };
+        FulfillmentLocationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            cityId: string;
+            code: string;
+            name: string;
+            addressLine: null | string;
+            pincode: null | string;
+            phone: null | string;
+            /** Format: double */
+            latitude: null | number;
+            /** Format: double */
+            longitude: null | number;
+            hasColdStorage: boolean;
+            fssaiLicenseNo: null | string;
+            status: components["schemas"]["LocationStatus"];
+            operatingHours: components["schemas"]["OperatingHoursResponse"][];
+            version: string;
+        };
+        GoodwillRequest: {
+            /** Format: int64 */
+            amountPaise: number;
+            reason: null | string;
+            /** Format: uuid */
+            orderItemId: null | string;
+        };
+        HomeResponse: {
+            banners: unknown[];
+            featuredCategories: components["schemas"]["StorefrontCategory"][];
+            featuredProducts: components["schemas"]["ProductListItem"][];
+            locationRequired: boolean;
+        };
+        /** Format: binary */
+        IFormFile: string;
+        ImageSource: {
+            /** Format: int32 */
+            width: number;
+            url: string;
+        };
+        InboxItem: {
+            /** Format: uuid */
+            messageId: string;
+            templateCode: string;
+            title: null | string;
+            body: string;
+            isRead: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            readAt: null | string;
+        };
+        InboxResponse: {
+            items: components["schemas"]["InboxItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: int32 */
+            unreadCount: number;
+        };
+        InitiatePaymentResponse: {
+            /** Format: uuid */
+            paymentId: string;
+            provider: string;
+            providerOrderId: string;
+            /** Format: int64 */
+            amountPaise: number;
+            keyId: null | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+        };
+        InvoiceLineDto: {
+            /** Format: int32 */
+            lineNo: number;
+            description: string;
+            hsnCode: string;
+            quantity: components["schemas"]["QuantityDto"];
+            /** Format: int64 */
+            unitPricePaise: number;
+            /** Format: int64 */
+            taxablePaise: number;
+            /** Format: int32 */
+            taxRateBp: number;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            cgstPaise: number;
+            /** Format: int64 */
+            sgstPaise: number;
+            /** Format: int64 */
+            totalPaise: number;
+        };
+        InvoiceResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            invoiceNumber: string;
+            /** Format: date-time */
+            issuedAt: string;
+            sellerLegalName: string;
+            sellerGstin: string;
+            lines: components["schemas"]["InvoiceLineDto"][];
+            /** Format: int64 */
+            taxablePaise: number;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            totalPaise: number;
+            pdfUrl: null | string;
+        };
+        /** @enum {string} */
+        IssueKind: "AMOUNT_MISMATCH" | "MISSED_WEBHOOK" | "COLLECTION_DIFFERENCE" | "REFUND_CAPPED" | "REFUND_STUCK" | "DELIVERED_NOT_COLLECTED" | "UNSETTLED_CASH" | "SETTLEMENT_AGED" | "CASH_DIFFERENCE" | "WEBHOOK_ERROR" | "REFUND_METHOD_REQUIRED";
+        /** @enum {string} */
+        IssueStatus: "OPEN" | "AUTO_RESOLVED" | "RESOLVED";
+        /** @enum {string} */
+        IssueSubjectType: "PAYMENT" | "REFUND" | "SETTLEMENT" | "WEBHOOK_EVENT" | "ORDER";
+        JsonElement: unknown;
+        ListAvailability: {
+            status: components["schemas"]["AvailabilityStatus"];
+            message: null | string;
+        };
+        LocationRef: {
+            fulfillmentLocationCode: string;
+            pincode: string;
+        };
+        /** @enum {string} */
+        LocationStatus: "DRAFT" | "ACTIVE" | "PAUSED";
+        LogoutRequest: {
+            refreshToken: null | string;
+            /** @default false */
+            allDevices: boolean;
+        };
+        MarkRefundPaidRequest: {
+            reference: null | string;
+        };
+        MissingItemResponse: {
+            code: string;
+            /** Format: uuid */
+            fulfillmentLocationId: null | string;
+            message: string;
+        };
+        /** @enum {string} */
+        MovementKind: "RECEIPT" | "SALE" | "WASTE" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT" | "RETURN" | "COUNT_CORRECTION";
+        /** @enum {string} */
+        MovementReferenceType: "ORDER_ITEM" | "BATCH" | "MANUAL";
+        MovementResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            batchId: null | string;
+            kind: components["schemas"]["MovementKind"];
+            quantity: components["schemas"]["QuantityDto"];
+            /** Format: int64 */
+            costPaise: number;
+            reasonCode: null | string;
+            notes: null | string;
+            referenceType: components["schemas"]["MovementReferenceType"];
+            /** Format: uuid */
+            referenceId: null | string;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: uuid */
+            recordedBy: null | string;
+        };
+        NumberSeriesListResponse: {
+            items: components["schemas"]["NumberSeriesResponse"][];
+        };
+        NumberSeriesResponse: {
+            code: string;
+            period: string;
+            prefix: string;
+            /** Format: int32 */
+            padWidth: number;
+            /** Format: int64 */
+            nextValue: number;
+            nextNumberPreview: string;
+            isInUse: boolean;
+            /** Format: date-time */
+            lastIssuedAt: null | string;
+            version: string;
+        };
+        OperatingHoursDay: {
+            dayOfWeek: components["schemas"]["DayOfWeek"];
+            opensAt: null | string;
+            closesAt: null | string;
+        };
+        OperatingHoursResponse: {
+            dayOfWeek: components["schemas"]["DayOfWeek"];
+            opensAt: string;
+            closesAt: string;
+        };
+        OrderAddressDto: {
+            recipientName: string;
+            phone: string;
+            line1: string;
+            line2: null | string;
+            landmark: null | string;
+            locality: string;
+            cityName: string;
+            stateCode: string;
+            pincode: string;
+        };
+        OrderAdjustmentDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderItemId: null | string;
+            kind: string;
+            /** Format: int64 */
+            amountPaise: number;
+            reason: string;
+            /** Format: uuid */
+            createdBy: null | string;
+            /** Format: date-time */
+            at: string;
+        };
+        OrderDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            orderNumber: string;
+            version: string;
+            status: string;
+            paymentMethod: string;
+            /** Format: date-time */
+            placedAt: string;
+            slot: components["schemas"]["SlotDto"];
+            address: components["schemas"]["OrderAddressDto"];
+            substitutionPreference: string;
+            items: components["schemas"]["OrderItemDto"][];
+            estimate: components["schemas"]["AmountsDto"];
+            final: null | components["schemas"]["AmountsDto"];
+            /** Format: int64 */
+            amountDuePaise: number;
+            /** Format: int64 */
+            amountPaidPaise: number;
+            /** Format: int64 */
+            amountRefundedPaise: number;
+            couponCode: null | string;
+            customerNotes: null | string;
+            substitutions: components["schemas"]["SubstitutionDto"][];
+            payment: components["schemas"]["OrderPaymentDto"];
+            invoice: null | components["schemas"]["OrderInvoiceRefDto"];
+            allowedActions: components["schemas"]["AllowedActionsDto"];
+        };
+        OrderHistoryDto: {
+            from: null | string;
+            to: string;
+            actorType: string;
+            /** Format: uuid */
+            actorId: null | string;
+            reasonCode: null | string;
+            /** Format: date-time */
+            at: string;
+        };
+        OrderInvoiceRefDto: {
+            /** Format: uuid */
+            id: string;
+            invoiceNumber: string;
+            /** Format: date-time */
+            issuedAt: string;
+        };
+        OrderItemDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            lineNo: number;
+            /** Format: uuid */
+            variantId: string;
+            productName: string;
+            variantName: string;
+            preparationName: null | string;
+            imageKey: null | string;
+            orderedQuantity: components["schemas"]["QuantityDto"];
+            maxChargeableQuantity: components["schemas"]["QuantityDto"];
+            packedQuantity: null | components["schemas"]["QuantityDto"];
+            chargedQuantity: null | components["schemas"]["QuantityDto"];
+            /** Format: int64 */
+            unitPricePaise: number;
+            /** Format: int64 */
+            preparationChargePaise: number;
+            /** Format: int64 */
+            estimatedTotalPaise: number;
+            /** Format: int64 */
+            finalTotalPaise: null | number;
+            status: string;
+            /** Format: uuid */
+            substitutedFromItemId: null | string;
+        };
+        OrderLineStockDto: {
+            /** Format: uuid */
+            orderItemId: string;
+            /** Format: uuid */
+            variantId: string;
+            preparationCode: null | string;
+            grossQuantity: components["schemas"]["QuantityDto"];
+            /** Format: int32 */
+            yieldBp: number;
+        };
+        OrderListItem: {
+            /** Format: uuid */
+            id: string;
+            orderNumber: string;
+            status: string;
+            paymentMethod: string;
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            slotStartAt: string;
+            /** Format: date-time */
+            slotEndAt: string;
+            /** Format: int32 */
+            itemCount: number;
+            /** Format: int64 */
+            totalPaise: number;
+            /** Format: int64 */
+            finalTotalPaise: null | number;
+            /** Format: int64 */
+            amountDuePaise: number;
+        };
+        OrderPaymentDto: {
+            method: string;
+            status: string;
+            nextAction: unknown;
+        };
+        OrderPaymentsResponse: {
+            /** Format: uuid */
+            orderId: string;
+            payments: components["schemas"]["PaymentResponse"][];
+            refunds: components["schemas"]["RefundResponse"][];
+        };
+        OrderPolicyListResponse: {
+            items: components["schemas"]["OrderPolicyResponse"][];
+        };
+        OrderPolicyResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            cityId: null | string;
+            isDefault: boolean;
+            /** Format: int32 */
+            reservationMinutes: number;
+            /** Format: int32 */
+            maxOverweightBp: number;
+            cancelAllowedUntilStatus: string;
+            /** Format: int64 */
+            codMaxOrderPaise: number;
+            enabledPaymentMethods: string[];
+            /** Format: int32 */
+            substitutionResponseMinutes: number;
+            /** Format: int32 */
+            complaintWindowHours: number;
+            /** Format: int32 */
+            maxDeliveryAttempts: number;
+            version: string;
+        };
+        OrderTrackingResponse: {
+            orderNumber: string;
+            status: string;
+            timeline: components["schemas"]["TimelineEntryDto"][];
+            slot: components["schemas"]["SlotDto"];
+            shipment: null | components["schemas"]["TrackingShipmentDto"];
+            deliveryCode: null | string;
+            /** Format: int64 */
+            amountDuePaise: number;
+        };
+        OtpRequestRequest: {
+            phone: string;
+            /**
+             * @default LOGIN
+             * @enum {string}
+             */
+            purpose: "LOGIN" | "VERIFY_PHONE";
+        };
+        OtpRequestResponse: {
+            /** Format: uuid */
+            challengeId: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: int32 */
+            resendAfterSeconds: number;
+            /** Format: int32 */
+            codeLength: number;
+        };
+        OtpVerifyRequest: {
+            /** Format: uuid */
+            challengeId: string;
+            phone: string;
+            code: string;
+            deviceLabel: null | string;
+            guestCartToken: null | string;
+        };
+        PackLineRequest: {
+            /** Format: uuid */
+            orderItemId: string;
+            packedQuantity: null | components["schemas"]["QuantityDto"];
+        };
+        PackOrderRequest: {
+            lines: null | components["schemas"]["PackLineRequest"][];
+            coldBoxUsed: boolean;
+        };
+        PackResponse: {
+            /** Format: uuid */
+            orderId: string;
+            status: string;
+            version: string;
+            lines: components["schemas"]["PackedLineDto"][];
+            /** Format: int64 */
+            finalTotalPaise: number;
+            /** Format: int64 */
+            amountDuePaise: number;
+            /** Format: int64 */
+            refundDuePaise: number;
+        };
+        PackedLineDto: {
+            /** Format: uuid */
+            orderItemId: string;
+            packed: components["schemas"]["QuantityDto"];
+            charged: components["schemas"]["QuantityDto"];
+            capped: boolean;
+            /** Format: int64 */
+            finalTotalPaise: number;
+            /** Format: int64 */
+            adjustmentPaise: number;
+            status: string;
+        };
+        PagedResponseOfAdminOrderListItem: {
+            items: components["schemas"]["AdminOrderListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfAdminProductListItem: {
+            items: components["schemas"]["AdminProductListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfBannerInfo: {
+            items: components["schemas"]["BannerInfo"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfBatchResponse: {
+            items: components["schemas"]["BatchResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfCashSettlementResponse: {
+            items: components["schemas"]["CashSettlementResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfCityResponse: {
+            items: components["schemas"]["CityResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfColdChainLogResponse: {
+            items: components["schemas"]["ColdChainLogResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfComplaintResponse: {
+            items: components["schemas"]["ComplaintResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfCouponResponse: {
+            items: components["schemas"]["CouponResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfDeliverySlotResponse: {
+            items: components["schemas"]["DeliverySlotResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfFulfillmentLocationResponse: {
+            items: components["schemas"]["FulfillmentLocationResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfMovementResponse: {
+            items: components["schemas"]["MovementResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfOrderListItem: {
+            items: components["schemas"]["OrderListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfPaymentIssueResponse: {
+            items: components["schemas"]["PaymentIssueResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfPaymentResponse: {
+            items: components["schemas"]["PaymentResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfPriceListItem: {
+            items: components["schemas"]["PriceListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfProductListItem: {
+            items: components["schemas"]["ProductListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfPromotionResponse: {
+            items: components["schemas"]["PromotionResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfRedemptionResponse: {
+            items: components["schemas"]["RedemptionResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfRefundResponse: {
+            items: components["schemas"]["RefundResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfReservationResponse: {
+            items: components["schemas"]["ReservationResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfRiderResponse: {
+            items: components["schemas"]["RiderResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfServiceAreaResponse: {
+            items: components["schemas"]["ServiceAreaResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfShipmentResponse: {
+            items: components["schemas"]["ShipmentResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfSlotTemplateResponse: {
+            items: components["schemas"]["SlotTemplateResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfStockItemResponse: {
+            items: components["schemas"]["StockItemResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfVisibleCoupon: {
+            items: components["schemas"]["VisibleCoupon"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfWebhookEventResponse: {
+            items: components["schemas"]["WebhookEventResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PaymentIssueResponse: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["IssueKind"];
+            subjectType: components["schemas"]["IssueSubjectType"];
+            /** Format: uuid */
+            subjectId: string;
+            /** Format: uuid */
+            orderId: null | string;
+            /** Format: uuid */
+            fulfillmentLocationId: null | string;
+            details: string;
+            status: components["schemas"]["IssueStatus"];
+            /** Format: date-time */
+            detectedAt: string;
+            /** Format: date-time */
+            resolvedAt: null | string;
+            /** Format: uuid */
+            resolvedBy: null | string;
+            note: null | string;
+            version: string;
+        };
+        /** @enum {string} */
+        PaymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
+        PaymentMethodOption: {
+            method: string;
+            enabled: boolean;
+            reasonCode: null | string;
+        };
+        PaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            customerId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            method: components["schemas"]["PaymentMethod"];
+            provider: string;
+            status: components["schemas"]["PaymentStatus"];
+            /** Format: int64 */
+            amountPaise: number;
+            currency: string;
+            providerOrderId: null | string;
+            providerPaymentId: null | string;
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            capturedAt: null | string;
+            /** Format: int64 */
+            collectedPaise: null | number;
+            /** Format: date-time */
+            collectedAt: null | string;
+            /** Format: uuid */
+            collectedByRiderId: null | string;
+            collectionMode: null | components["schemas"]["CollectionMode"];
+            collectionReference: null | string;
+            /** Format: uuid */
+            cashSettlementId: null | string;
+            /** Format: date-time */
+            orderDeliveredAt: null | string;
+            isExcess: boolean;
+            failureCode: null | string;
+            failureMessage: null | string;
+            summary: components["schemas"]["PaymentSummaryResponse"];
+            version: string;
+        };
+        /** @enum {string} */
+        PaymentStatus: "PENDING" | "AUTHORIZED" | "CAPTURED" | "COLLECTED" | "FAILED" | "CANCELLED";
+        PaymentSummaryResponse: {
+            /** Format: int64 */
+            paidPaise: number;
+            /** Format: int64 */
+            refundedPaise: number;
+            /** Format: int64 */
+            pendingRefundPaise: number;
+            /** Format: int64 */
+            refundablePaise: number;
+        };
+        PermissionListResponse: {
+            items: components["schemas"]["PermissionResponse"][];
+        };
+        PermissionResponse: {
+            code: string;
+            description: string;
+        };
+        PickListLine: {
+            /** Format: uuid */
+            variantId: string;
+            productName: string;
+            variantName: string;
+            preparationCode: null | string;
+            preparationName: null | string;
+            stockUnit: string;
+            /** Format: int64 */
+            grossQuantity: number;
+            /** Format: int32 */
+            orderCount: number;
+        };
+        PickListResponse: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            slotId: string;
+            lines: components["schemas"]["PickListLine"][];
+        };
+        PincodeResponse: {
+            pincode: string;
+            isActive: boolean;
+            /** Format: date-time */
+            addedAt: string;
+        };
+        PreferenceItem: {
+            category: string;
+            channel: string;
+            enabled: boolean;
+        };
+        PreferencesResponse: {
+            preferences: components["schemas"]["PreferenceItem"][];
+        };
+        PreparationMethodResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            /** Format: int32 */
+            guidanceYieldBp: number;
+        };
+        PriceListItem: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            productId: string;
+            sku: string;
+            productName: string;
+            variantName: string;
+            priceUnit: string;
+            current: null | components["schemas"]["PricePeriodResponse"];
+            next: null | components["schemas"]["PricePeriodResponse"];
+            missing: boolean;
+        };
+        PricePeriodResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            unitPricePaise: number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: null | string;
+        };
+        PriceScheduleResponse: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            version: null | string;
+            current: null | components["schemas"]["PricePeriodResponse"];
+            next: null | components["schemas"]["PricePeriodResponse"];
+            history: components["schemas"]["PricePeriodResponse"][];
+            unchanged: boolean;
+            largeChange: boolean;
+        };
+        ProblemDetails: {
+            type?: null | string;
+            title?: null | string;
+            /** Format: int32 */
+            status?: null | number;
+            detail?: null | string;
+            instance?: null | string;
+        };
+        ProductListItem: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            localNames: string[];
+            sourceType: components["schemas"]["SourceType"];
+            imageUrl: null | string;
+            fromPrice: null | components["schemas"]["FromPrice"];
+            availability: null | components["schemas"]["ListAvailability"];
+            locationRequired: boolean;
+        };
+        ProductRequest: {
+            /** Format: uuid */
+            categoryId: string;
+            slug: null | string;
+            name: null | string;
+            localNames: null | string[];
+            speciesScientificName: null | string;
+            description: null | string;
+            sourceType: components["schemas"]["SourceType"];
+            sourceRegion: null | string;
+            storageInstructions: null | string;
+            handlingNotes: null | string;
+            hsnCode: null | string;
+            taxCategoryCode: null | string;
+            /** Format: int32 */
+            featuredRank: null | number;
+        };
+        /** @enum {string} */
+        ProductStatus: "DRAFT" | "ACTIVE" | "ARCHIVED";
+        ProfileResponse: {
+            /** Format: uuid */
+            customerId: string;
+            phone: null | string;
+            fullName: null | string;
+            email: null | string;
+            marketingOptIn: boolean;
+            status: string;
+            version: string;
+        };
+        /** @enum {string} */
+        PromotionLinkType: "CATEGORY" | "PRODUCT" | "COUPON";
+        PromotionRequest: {
+            title: string;
+            subtitle: null | string;
+            imageKey: null | string;
+            linkType: components["schemas"]["PromotionLinkType"];
+            linkTarget: string;
+            /** Format: uuid */
+            cityId: null | string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        PromotionResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            subtitle: null | string;
+            imageKey: null | string;
+            linkType: components["schemas"]["PromotionLinkType"];
+            linkTarget: string;
+            /** Format: uuid */
+            cityId: null | string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+            version: string;
+        };
+        ProposeSubstitutionRequest: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            preparationMethodId: null | string;
+            quantity: null | components["schemas"]["QuantityDto"];
+        };
+        PublicCityResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            stateCode: string;
+        };
+        QuantityDto: {
+            /** Format: int32 */
+            value: number;
+            unit: components["schemas"]["StockUnit"];
+        };
+        QuantityInput: {
+            /** Format: int32 */
+            value: number;
+            unit: string;
+        };
+        QuantityRequest: {
+            /** Format: int32 */
+            value: number;
+            unit: string;
+        };
+        /** @enum {string} */
+        QuantityUnit: "GRAM" | "PIECE" | "PACK";
+        QuantityValue: {
+            /** Format: int32 */
+            value: number;
+            unit: components["schemas"]["QuantityUnit"];
+        };
+        QuantityView: {
+            /** Format: int32 */
+            value: number;
+            unit: string;
+        };
+        RaiseComplaintRequest: {
+            /** Format: uuid */
+            orderItemId: null | string;
+            kind: null | string;
+            description: null | string;
+        };
+        ReadinessResponse: {
+            /** Format: uuid */
+            cityId: string;
+            isReady: boolean;
+            missing: components["schemas"]["MissingItemResponse"][];
+        };
+        ReceiptResponse: {
+            batch: components["schemas"]["BatchResponse"];
+            movement: components["schemas"]["MovementResponse"];
+            stockItem: components["schemas"]["StockItemResponse"];
+            temperatureWarning: boolean;
+        };
+        ReceiveStockRequest: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            batchCode: string;
+            supplierName: null | string;
+            sourceLandingCenter: null | string;
+            /** Format: date */
+            caughtOrHarvestedOn: null | string;
+            receivedQuantity: components["schemas"]["QuantityInput"];
+            /** Format: int64 */
+            totalCostPaise: number;
+            /** Format: date-time */
+            bestBeforeAt: string;
+            /** Format: double */
+            receiptTemperatureC: null | number;
+        };
+        RecordAttemptRequest: {
+            outcome: components["schemas"]["AttemptOutcome"];
+            notes: null | string;
+        };
+        RecordSubstitutionResponseRequest: {
+            answer: null | string;
+        };
+        RecordTemperatureRequest: {
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            storageUnit: string;
+            /** Format: double */
+            temperatureC: number;
+            /** Format: date-time */
+            recordedAt: null | string;
+        };
+        RecordWasteRequest: {
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            batchId: null | string;
+            quantity: components["schemas"]["QuantityInput"];
+            reasonCode: string;
+            notes: null | string;
+        };
+        RedemptionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            customerId: string;
+            /** Format: int64 */
+            discountPaise: number;
+            status: components["schemas"]["RedemptionStatus"];
+            /** Format: date-time */
+            redeemedAt: string;
+            /** Format: date-time */
+            reversedAt: null | string;
+            reversalReason: null | components["schemas"]["ReversalReason"];
+        };
+        /** @enum {string} */
+        RedemptionStatus: "APPLIED" | "REVERSED";
+        RefreshRequest: {
+            refreshToken: string;
+        };
+        /** @enum {string} */
+        RefundMethod: "ORIGINAL" | "UPI" | "BANK_TRANSFER" | "CASH";
+        /** @enum {string} */
+        RefundReason: "WEIGHT_SHORTFALL" | "CANCELLATION" | "COMPLAINT" | "SHORT_SUPPLY" | "GOODWILL" | "RETURN";
+        RefundResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            paymentId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: int64 */
+            amountPaise: number;
+            reasonCode: components["schemas"]["RefundReason"];
+            method: components["schemas"]["RefundMethod"];
+            status: components["schemas"]["RefundStatus"];
+            /** Format: uuid */
+            requestedBy: null | string;
+            /** Format: date-time */
+            requestedAt: string;
+            /** Format: uuid */
+            approvedBy: null | string;
+            /** Format: date-time */
+            approvedAt: null | string;
+            /** Format: uuid */
+            complaintId: null | string;
+            payeeUpiId: null | string;
+            notes: null | string;
+            failureReason: null | string;
+            providerRefundId: null | string;
+            manualReference: null | string;
+            /** Format: date-time */
+            succeededAt: null | string;
+            /** Format: int32 */
+            attemptCount: number;
+            version: string;
+            paymentSummary: components["schemas"]["PaymentSummaryResponse"];
+        };
+        /** @enum {string} */
+        RefundStatus: "REQUESTED" | "APPROVED" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+        RegisterDeviceTokenRequest: {
+            pushToken: string;
+            provider: string;
+            platform: string;
+        };
+        RejectRefundRequest: {
+            reason: null | string;
+        };
+        ReorderImagesRequest: {
+            imageIds: null | string[];
+        };
+        ReplacePreferencesRequest: {
+            preferences: components["schemas"]["PreferenceItem"][];
+        };
+        ReportResponse: {
+            /** Format: date-time */
+            asOf: null | string;
+            /** Format: date */
+            fromDate: string;
+            /** Format: date */
+            toDate: string;
+            filters: Record<string, never>;
+            totals: Record<string, never>;
+            items: Record<string, never>[];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        ReservationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            orderItemId: string;
+            quantity: components["schemas"]["QuantityDto"];
+            status: components["schemas"]["ReservationStatus"];
+            /** Format: date-time */
+            expiresAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        ReservationStatus: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
+        ResetStaffPasswordRequest: {
+            temporaryPassword: string;
+        };
+        ResolveIssueRequest: {
+            note: null | string;
+        };
+        /** @enum {null|string} */
+        ReversalReason: "ORDER_CANCELLED" | "PAYMENT_FAILED" | null;
+        RiderResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            fullName: string;
+            phone: string;
+            isActive: boolean;
+            version: string;
+        };
+        RoleListResponse: {
+            items: components["schemas"]["RoleResponse"][];
+        };
+        RoleResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            isSystem: boolean;
+            permissions: string[];
+            version: string;
+        };
+        SaveAddressRequest: {
+            label: string;
+            recipientName: string;
+            phone: string;
+            line1: string;
+            line2: null | string;
+            landmark: null | string;
+            locality: string;
+            cityName: string;
+            stateCode: string;
+            pincode: string;
+            /** Format: double */
+            latitude: null | number;
+            /** Format: double */
+            longitude: null | number;
+            isDefault: null | boolean;
+        };
+        SaveBusinessProfileRequest: {
+            legalName: string;
+            tradeName: string;
+            gstin: null | string;
+            fssaiLicenseNo: null | string;
+            address: string;
+            supportPhone: string;
+            supportEmail: string;
+            timeZone: string;
+        };
+        SaveNumberSeriesRequest: {
+            prefix: string;
+            /** Format: int32 */
+            padWidth: number;
+            /** Format: int64 */
+            nextValue: number;
+        };
+        SaveOrderPolicyRequest: {
+            /** Format: int32 */
+            reservationMinutes: number;
+            /** Format: int32 */
+            maxOverweightBp: number;
+            cancelAllowedUntilStatus: string;
+            /** Format: int64 */
+            codMaxOrderPaise: number;
+            enabledPaymentMethods: string[];
+            /** Format: int32 */
+            substitutionResponseMinutes: number;
+            /** Format: int32 */
+            complaintWindowHours: number;
+            /** Format: int32 */
+            maxDeliveryAttempts: number;
+        };
+        ScheduleTaxRuleRequest: {
+            taxCategoryCode: null | string;
+            /** Format: int32 */
+            rateBp: number;
+            /** Format: date-time */
+            validFrom: null | string;
+            replaceFuture: null | boolean;
+        };
+        /** @enum {string} */
+        SellUnit: "KG" | "PIECE" | "PACK";
+        ServiceAreaResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            cityId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            name: string;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            /** Format: int64 */
+            freeDeliveryAbovePaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            isActive: boolean;
+            /** Format: int32 */
+            activePincodeCount: number;
+            version: string;
+        };
+        ServiceabilityArea: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            /** Format: int64 */
+            freeDeliveryAbovePaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+        };
+        ServiceabilityCity: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        ServiceabilityLocation: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            hasColdStorage: boolean;
+        };
+        ServiceabilityResponse: {
+            pincode: string;
+            serviceable: boolean;
+            reasonCode: null | string;
+            city: null | components["schemas"]["ServiceabilityCity"];
+            fulfillmentLocation: null | components["schemas"]["ServiceabilityLocation"];
+            serviceArea: null | components["schemas"]["ServiceabilityArea"];
+            nextSlot: null | components["schemas"]["ServiceabilitySlot"];
+        };
+        ServiceabilitySlot: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+        };
+        SessionTokensResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            accessTokenExpiresAt: string;
+            refreshToken: string;
+            /** Format: date-time */
+            refreshTokenExpiresAt: string;
+        };
+        SetChargeRequest: {
+            /** Format: int64 */
+            chargePaise: number;
+            chargeBasis: components["schemas"]["ChargeBasis"];
+            /** Format: date-time */
+            validFrom: null | string;
+            replaceFuture: null | boolean;
+        };
+        SetOperatingHoursRequest: {
+            days: null | components["schemas"]["OperatingHoursDay"][];
+        };
+        SetPriceRequest: {
+            /** Format: int64 */
+            unitPricePaise: number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            /** Format: date-time */
+            validFrom: null | string;
+            reason: null | string;
+            replaceFuture: null | boolean;
+        };
+        SetThresholdRequest: {
+            /** Format: int32 */
+            lowStockThreshold: number;
+        };
+        SettleCashSettlementRequest: {
+            note: null | string;
+        };
+        ShipmentResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            deliverySlotId: string;
+            /** Format: uuid */
+            riderId: null | string;
+            status: components["schemas"]["ShipmentStatus"];
+            /** Format: date-time */
+            placedAt: string;
+            /** Format: date-time */
+            packedAt: null | string;
+            coldBoxUsed: boolean;
+            /** Format: double */
+            dispatchTemperatureC: null | number;
+            temperatureWarning: boolean;
+            /** Format: date-time */
+            dispatchedAt: null | string;
+            /** Format: date-time */
+            deliveredAt: null | string;
+            /** Format: date-time */
+            returnedAt: null | string;
+            /** Format: date-time */
+            cancelledAt: null | string;
+            /** Format: int32 */
+            deliveryCodeFailures: number;
+            deliveryCodeLocked: boolean;
+            /** Format: int64 */
+            cashCollectedPaise: null | number;
+            cashMode: null | components["schemas"]["CashMode"];
+            upiReference: null | string;
+            /** Format: date-time */
+            cashCollectedAt: null | string;
+            attempts: components["schemas"]["DeliveryAttemptResponse"][];
+            version: string;
+        };
+        /** @enum {string} */
+        ShipmentStatus: "PENDING" | "ASSIGNED" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED" | "RETURNED" | "CANCELLED";
+        SimulateFakePaymentRequest: {
+            outcome: string;
+            /** Format: int64 */
+            amountPaise: null | number;
+        };
+        /** @enum {null|string} */
+        SlotClosedReason: "MANUAL" | "CLOSURE" | "TEMPLATE_INACTIVE" | null;
+        /** @enum {string} */
+        SlotDisplayStatus: "AVAILABLE" | "FULL" | "CUTOFF_PASSED" | "CLOSED";
+        SlotDto: {
+            /** Format: date-time */
+            startAt: string;
+            /** Format: date-time */
+            endAt: string;
+        };
+        /** @enum {string} */
+        SlotStatus: "OPEN" | "CLOSED";
+        SlotTemplateResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: int32 */
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            cutoffMinutes: number;
+            isActive: boolean;
+            version: string;
+        };
+        /** @enum {string} */
+        SourceType: "WILD" | "FARMED";
+        StaffListResponse: {
+            items: components["schemas"]["StaffResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        StaffLoginRequest: {
+            email: string;
+            password: string;
+            deviceLabel: null | string;
+        };
+        StaffLoginResponse: {
+            accessToken: string;
+            /** Format: date-time */
+            accessTokenExpiresAt: string;
+            refreshToken: string;
+            /** Format: date-time */
+            refreshTokenExpiresAt: string;
+            staff: components["schemas"]["StaffProfileResponse"];
+        };
+        StaffProfileResponse: {
+            /** Format: uuid */
+            staffId: string;
+            /** Format: uuid */
+            userId: string;
+            email: null | string;
+            fullName: string;
+            roles: components["schemas"]["StaffRoleRef"][];
+            permissions: string[];
+            allLocations: boolean;
+            locationIds: string[];
+        };
+        StaffResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            email: null | string;
+            fullName: string;
+            roles: components["schemas"]["StaffRoleRef"][];
+            allLocations: boolean;
+            locationIds: string[];
+            isActive: boolean;
+            userStatus: string;
+            /** Format: date-time */
+            lastLoginAt: null | string;
+            version: string;
+        };
+        StaffRoleRef: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        StockChangeResponse: {
+            movements: components["schemas"]["MovementResponse"][];
+            stockItem: components["schemas"]["StockItemResponse"];
+        };
+        StockItemResponse: {
+            /** Format: uuid */
+            id: string;
+            version: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: uuid */
+            variantId: string;
+            stockUnit: components["schemas"]["StockUnit"];
+            onHand: components["schemas"]["QuantityDto"];
+            reserved: components["schemas"]["QuantityDto"];
+            available: components["schemas"]["QuantityDto"];
+            /** Format: int32 */
+            lowStockThreshold: number;
+            isLowStock: boolean;
+            batches: null | components["schemas"]["BatchResponse"][];
+        };
+        /** @enum {string} */
+        StockUnit: "GRAM" | "PIECE";
+        StorefrontCategory: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            description: null | string;
+            imageUrl: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            children: components["schemas"]["StorefrontCategory"][];
+        };
+        StorefrontCategoryDetail: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            description: null | string;
+            imageUrl: null | string;
+            parent: null | components["schemas"]["CategoryRef"];
+            children: components["schemas"]["StorefrontCategory"][];
+        };
+        StorefrontImage: {
+            url: string;
+            altText: string;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            sources: components["schemas"]["ImageSource"][];
+        };
+        StorefrontPreparation: {
+            code: string;
+            name: string;
+            /** Format: int32 */
+            yieldBp: number;
+            isDefault: boolean;
+            /** Format: int64 */
+            chargePaise: null | number;
+            chargeBasis: null | string;
+        };
+        StorefrontProductDetail: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            localNames: string[];
+            speciesScientificName: null | string;
+            description: null | string;
+            sourceType: components["schemas"]["SourceType"];
+            sourceRegion: null | string;
+            storageInstructions: null | string;
+            category: components["schemas"]["CategoryRef"];
+            images: components["schemas"]["StorefrontImage"][];
+            location: null | components["schemas"]["LocationRef"];
+            variants: components["schemas"]["StorefrontVariant"][];
+            availability: null | components["schemas"]["ListAvailability"];
+            netWeightNote: string;
+            isWishlisted: null | boolean;
+            locationRequired: boolean;
+        };
+        StorefrontVariant: {
+            /** Format: uuid */
+            id: string;
+            sku: string;
+            name: string;
+            sellUnit: components["schemas"]["SellUnit"];
+            isWeightVariable: boolean;
+            /** Format: int32 */
+            packSizeGrams: null | number;
+            /** Format: int32 */
+            avgPieceGrams: null | number;
+            minOrder: components["schemas"]["QuantityValue"];
+            maxOrder: components["schemas"]["QuantityValue"];
+            orderStep: components["schemas"]["QuantityValue"];
+            /** Format: int64 */
+            unitPricePaise: null | number;
+            /** Format: int64 */
+            compareAtPaise: null | number;
+            preparations: components["schemas"]["StorefrontPreparation"][];
+            availability: null | components["schemas"]["VariantAvailability"];
+        };
+        SubstitutionDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderItemId: string;
+            proposedName: string;
+            proposedQuantity: components["schemas"]["QuantityDto"];
+            /** Format: int64 */
+            priceDifferencePaise: number;
+            status: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            respondedAt: null | string;
+            /** Format: uuid */
+            newOrderItemId: null | string;
+        };
+        SuggestItem: {
+            name: string;
+            matchedLocalName: null | string;
+            slug: string;
+            imageUrl: null | string;
+        };
+        TaxCategoryRulesResponse: {
+            taxCategoryCode: string;
+            name: string;
+            version: null | string;
+            current: null | components["schemas"]["TaxRulePeriodResponse"];
+            next: null | components["schemas"]["TaxRulePeriodResponse"];
+            history: components["schemas"]["TaxRulePeriodResponse"][];
+            unchanged: boolean;
+        };
+        TaxRulePeriodResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            rateBp: number;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: null | string;
+        };
+        TemplateResponse: {
+            /** Format: uuid */
+            templateId: string;
+            code: string;
+            channel: string;
+            category: null | string;
+            subject: null | string;
+            body: string;
+            isActive: boolean;
+            variables: string[];
+            dltTemplateId: null | string;
+            version: string;
+        };
+        TestSendResponse: {
+            sent: boolean;
+            channel: string;
+            recipient: null | string;
+            subject: null | string;
+            body: string;
+        };
+        TimelineEntryDto: {
+            status: string;
+            /** Format: date-time */
+            at: string;
+        };
+        TrackingAttemptDto: {
+            /** Format: int32 */
+            attemptNo: number;
+            outcome: string;
+            /** Format: date-time */
+            attemptedAt: string;
+        };
+        TrackingShipmentDto: {
+            status: string;
+            riderName: null | string;
+            riderPhone: null | string;
+            /** Format: date-time */
+            dispatchedAt: null | string;
+            coldBoxUsed: boolean;
+            attempts: components["schemas"]["TrackingAttemptDto"][];
+        };
+        UpdateCategoryRequest: {
+            /** Format: uuid */
+            parentId: null | string;
+            slug: null | string;
+            name: null | string;
+            description: null | string;
+            imageKey: null | string;
+            /** Format: int32 */
+            sortOrder: number;
+            isActive: boolean;
+        };
+        UpdateCityRequest: {
+            name: null | string;
+            stateCode: null | string;
+            timeZone: null | string;
+        };
+        UpdateFulfillmentLocationRequest: {
+            name: null | string;
+            addressLine: null | string;
+            pincode: null | string;
+            phone: null | string;
+            /** Format: double */
+            latitude: null | number;
+            /** Format: double */
+            longitude: null | number;
+            hasColdStorage: boolean;
+            fssaiLicenseNo: null | string;
+            status: null | components["schemas"]["LocationStatus"];
+        };
+        UpdateProfileRequest: {
+            fullName: null | string;
+            email: null | string;
+            marketingOptIn: null | boolean;
+        };
+        UpdateRiderRequest: {
+            fullName: string;
+            phone: string;
+            isActive: boolean;
+        };
+        UpdateRoleRequest: {
+            name: string;
+            permissions: string[];
+        };
+        UpdateServiceAreaRequest: {
+            name: null | string;
+            /** Format: int64 */
+            deliveryFeePaise: number;
+            /** Format: int64 */
+            freeDeliveryAbovePaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            isActive: boolean;
+        };
+        UpdateSlotTemplateRequest: {
+            /** Format: int32 */
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+            /** Format: int32 */
+            capacity: number;
+            /** Format: int32 */
+            cutoffMinutes: number;
+            isActive: boolean;
+        };
+        UpdateStaffRequest: {
+            fullName: string;
+            roleIds: string[];
+            allLocations: boolean;
+            locationIds: null | string[];
+            isActive: boolean;
+        };
+        UpdateTemplateRequest: {
+            subject: null | string;
+            body: string;
+            isActive: boolean;
+        };
+        VariantAvailability: {
+            status: components["schemas"]["AvailabilityStatus"];
+            maxOrderableNow: null | components["schemas"]["QuantityValue"];
+            message: null | string;
+        };
+        VariantPreparationRequest: {
+            code: null | string;
+            /** Format: int32 */
+            yieldBp: number;
+            isDefault: boolean;
+        };
+        VariantRequest: {
+            sku: null | string;
+            name: null | string;
+            sellUnit: components["schemas"]["SellUnit"];
+            /** Format: int32 */
+            packSizeGrams: null | number;
+            /** Format: int32 */
+            avgPieceGrams: null | number;
+            /** Format: int32 */
+            minOrder: null | number;
+            /** Format: int32 */
+            maxOrder: null | number;
+            /** Format: int32 */
+            orderStep: null | number;
+            isActive: null | boolean;
+            preparations: null | components["schemas"]["VariantPreparationRequest"][];
+        };
+        VisibleCoupon: {
+            code: string;
+            description: null | string;
+            discountType: string;
+            /** Format: int64 */
+            discountValue: number;
+            /** Format: int64 */
+            maxDiscountPaise: null | number;
+            /** Format: int64 */
+            minOrderPaise: number;
+            /** Format: date-time */
+            validTo: null | string;
+            firstOrderOnly: boolean;
+        };
+        WebhookEventResponse: {
+            /** Format: uuid */
+            id: string;
+            provider: string;
+            providerEventId: string;
+            eventType: string;
+            signatureValid: boolean;
+            status: components["schemas"]["WebhookEventStatus"];
+            /** Format: date-time */
+            receivedAt: string;
+            /** Format: date-time */
+            processedAt: null | string;
+            error: null | string;
+        };
+        /** @enum {string} */
+        WebhookEventStatus: "RECEIVED" | "PROCESSED" | "IGNORED" | "ERROR" | "REJECTED";
+        WebhookReceipt: {
+            received: boolean;
+            duplicate: boolean;
+        };
+        WishlistItemResponse: {
+            /** Format: uuid */
+            productId: string;
+            /** Format: date-time */
+            addedAt: string;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

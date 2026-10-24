@@ -25,11 +25,11 @@ internal static class PromotionsEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/coupons", ListVisibleCouponsAsync).RequireAuthorization().WithTags("Promotions");
-        endpoints.MapGet("/promotions", ListBannersAsync).WithTags("Promotions");
+        endpoints.MapGet("/coupons", ListVisibleCouponsAsync).RequireAuthorization().WithTags("Promotions").Produces<PagedResponse<VisibleCoupon>>();
+        endpoints.MapGet("/promotions", ListBannersAsync).WithTags("Promotions").Produces<PagedResponse<BannerInfo>>();
 
         var coupons = endpoints.MapGroup("/admin/coupons").RequirePermission(PromotionsManage).WithTags("Admin promotions");
-        coupons.MapGet(string.Empty, ListCouponsAsync);
+        coupons.MapGet(string.Empty, ListCouponsAsync).Produces<PagedResponse<CouponResponse>>();
         coupons.MapPost(string.Empty, async (CouponRequest request, CouponAdminService service, HttpResponse response, CancellationToken ct) =>
         {
             var coupon = await service.CreateAsync(request, ct);

@@ -50,7 +50,9 @@ internal static class PaymentsEndpoints
                     : Results.Ok(result.Payment);
             })
             .WithIdempotency(required: true)
-            .RequireRateLimiting(RateLimitPolicies.Checkout);
+            .RequireRateLimiting(RateLimitPolicies.Checkout)
+            .Produces<InitiatePaymentResponse>()
+            .Produces<InitiatePaymentResponse>(StatusCodes.Status201Created);
 
         orders.MapGet("/payments", async (Guid orderId, OnlinePaymentService service, CancellationToken ct)
             => TypedResults.Ok(await service.ListPaymentsAsync(orderId, ct)));
