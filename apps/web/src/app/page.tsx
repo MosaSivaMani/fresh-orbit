@@ -17,8 +17,9 @@ import { PincodeForm } from "@/location/pincode-form";
 /**
  * Home in the food-app style (D95, web-food-app.html version 2): the coral hero with the headline, a pincode box
  * that asks the server about delivery and the search box, three promise cards and two tilted character photos;
- * then the round category row, "Top picks in <city>", offers, "Filter and pick" and the get-the-app band. Every
- * slot, offer, price and city shown is the server's.
+ * then the round category row, "Top picks in <city>", the location's bestsellers (CAT-R24; the section is left out
+ * when the server has none), offers, "Filter and pick" and the get-the-app band. Every slot, offer, price, ranking
+ * and city shown is the server's.
  */
 export default async function HomePage() {
   const api = await requestApi();
@@ -39,6 +40,7 @@ export default async function HomePage() {
   const banners = offers.ok ? offers.value.data : [];
   const offerLines = offersBySlug(banners);
   const freshness = slotText ? `Next slot ${slotText}` : undefined;
+  const bestsellers = home.ok ? (home.value.data.bestsellers ?? []) : [];
 
   return (
     <>
@@ -123,6 +125,20 @@ export default async function HomePage() {
             <SectionError message={home.message} traceId={home.traceId} />
           )}
         </Section>
+
+        {bestsellers.length > 0 && (
+          <Section
+            id="bestsellers"
+            title={city ? "Bestsellers in" : "Best"}
+            script={city ?? "sellers"}
+          >
+            <ProductGrid
+              products={bestsellers}
+              offers={offerLines}
+              {...(freshness ? { freshness } : {})}
+            />
+          </Section>
+        )}
 
         {banners.length > 0 && (
           <Section id="offers" title="Today's" script="offers">

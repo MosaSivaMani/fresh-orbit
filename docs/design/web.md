@@ -152,7 +152,7 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 | # | Gap | Status | What the website does now / what closes it |
 |---|---|---|---|
-| W1 | No bestsellers endpoint | STILL OPEN | Home shows `GET /home` `featuredProducts` titled "Top picks in <city>" (D95). Closes with a Catalog/Reporting bestsellers read |
+| W1 | No bestsellers endpoint | CLOSED (`web/api-adoption`) | Home keeps "Top picks in <city>" from `featuredProducts` and adds "Bestsellers in <city>" from `/home` `bestsellers` (CAT-R24); the section is left out when the list is empty, never filled |
 | W2 | No price quote for a chosen weight before it is in the cart | STILL OPEN | `GET /products/{id}/availability` gives the unit price only; estimate and maximum appear from the cart line. Closes with a quote endpoint (variant, preparation, quantity → estimate, max chargeable) |
 | W3 | Product list items carry no variant ids | STILL OPEN | ADD on a card first reads the product (one extra request), then adds when there is one size; with several it opens the product page. Closes with the default variant id (and its order rules) on `ProductListItem` |
 | W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Each line's − n + stepper reads its product (`GET /products/{slug}`, cached 60 s) for the bounds and stays disabled until they arrive: one read per line. Closes with the three fields on `CartLineView` |
@@ -165,10 +165,10 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W11 | Banner `imageKey` is a storage key, not a URL | NEW, OPEN | Offer strip shows text only. Closes with a resolved image URL on `BannerInfo` |
 | W12 | Complaint create is JSON with no attachments | NEW, OPEN | Report-a-problem form has no photo field. Closes with a photo upload (multipart or upload URL) on complaints |
 
-| W13 | List items carry no weight, pieces or serves | NEW, OPEN | Picture cards show local names instead of the mockup's "500 g · 6–8 pcs · serves 3"; the product page shows pack and average piece weight. Closes with pack size, piece range and serves on `ProductListItem` |
-| W14 | A CATEGORY banner's `linkTarget` is the category id, not its slug | NEW, OPEN | Offer strip maps id → slug from the category tree (no link when unknown); category pages match the id. Closes with the slug (or both) in `BannerInfo` |
+| W13 | List items carry no weight, pieces or serves | CLOSED (`web/api-adoption`) | Picture cards show the default variant's `serving` as "1 kg · 10–14 pcs · serves 4" (`lib/product-facts.ts` `servingLine`, per the server's basis, never scaled), else the local names; the product page adds the chosen size's line under pack and piece weight |
+| W14 | A CATEGORY banner's `linkTarget` is the category id, not its slug | CLOSED (`web/api-adoption`) | Offer strip links CATEGORY banners by `linkSlug` (featured-category id → slug map as fallback) and PRODUCT banners by `linkSlug` only (they linked to `/products/<id>` before, a broken page); `offersBySlug` keys product offers by `linkSlug` (it keyed by the id and never matched a card) |
 | W15 | Image URLs are paths on the API origin (`/media/...`) | NEW, OPEN | The website serves them through `/media/*` (route handler). Closes with absolute public image URLs, or keeps the route |
-| W16 | No product-specific offer or freshness ("caught 5:40 am") fields | NEW, OPEN | Offer line only from banners that link to the product or its category; freshness line = availability message or the next slot. Closes with an offer label and a batch time on list items |
+| W16 | No product-specific offer or freshness ("caught 5:40 am") fields | CLOSED (`web/api-adoption`) | Card offer line = item `offer.text` (CAT-R26), else a banner title; freshness = availability message, else "Caught <date>" from `freshness.caughtOn` (CAT-R25), else the next slot; `PriceTag` shows "<n>% off" from `discountBp` (CAT-R22) on cards and on the product page. Nothing is computed in the browser |
 
 **Backend Track E (2026-10-24).** These gaps are closed in the backend: on `main` through #5, or on draft PR #6 (`backend/api-gaps-2`, not merged). The website has not adopted them yet; the rows above stay as the front-end status until it does. The generated client is not committed yet, because the new `timeZone` fields break `apps/web/test/fixtures.ts` and that fix belongs to the web owner. The CI `openapi` job uploads the regenerated client as the `api-client` artifact.
 
@@ -187,8 +187,8 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W12 | Complaint photo upload, list and delete | main |
 | W13 | Variant `piecesMin` / `piecesMax` / `serves` (CAT-R21) | main (migration in PR #6) |
 | W16 | `offer` (CAT-R26), `freshness` (CAT-R25) and `discountBp` (CAT-R22) | main |
-| W14 | Banner `linkSlug` for CATEGORY and PRODUCT links (PROMO-R28); `linkTarget` stays the id | `backend/followups-f` |
-| W15 | Production refuses a relative or non-https `FileStorage:PublicBaseUrl`, so server image URLs are absolute (CAT-R18) | `backend/followups-f` |
+| W14 | Banner `linkSlug` for CATEGORY and PRODUCT links (PROMO-R28); `linkTarget` stays the id | main (PR #12) |
+| W15 | Production refuses a relative or non-https `FileStorage:PublicBaseUrl`, so server image URLs are absolute (CAT-R18) | main (PR #12) |
 
 ## 7. API types (generated)
 

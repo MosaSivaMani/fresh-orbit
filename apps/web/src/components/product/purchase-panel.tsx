@@ -11,6 +11,7 @@ import { getProduct } from "@/api/endpoints/catalog";
 import { type Preparation, type ProductDetail, type Variant } from "@/api/types/catalog";
 import { useAddToCart, useCart } from "@/cart/use-cart";
 import { describeError, fieldMessage, hasCode } from "@/lib/errors";
+import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
@@ -112,6 +113,9 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
   }
 
   const formatValue = (v: number) => formatQuantity({ value: v, unit: variant.minOrder.unit });
+  // The chosen size's serving facts (CAT-R21) and catch date (CAT-R25), as the server states them.
+  const serving = servingLine(variant.serving);
+  const caught = freshnessLine(variant.freshness);
 
   return (
     <div className="flex flex-col gap-5">
@@ -121,6 +125,7 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
             paise={variant.unitPricePaise!}
             mrpPaise={variant.compareAtPaise}
             per={sellUnitLabels[variant.sellUnit]}
+            savingsLabel={discountLabel(variant.discountBp)}
             size="lg"
           />
         ) : (
@@ -174,6 +179,8 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
             .join(" · ")}
         </p>
       )}
+      {serving && <p className="text-text-muted text-sm">{serving}</p>}
+      {caught && <p className="text-text-muted text-sm">{caught}</p>}
 
       {variant.preparations.length > 0 && (
         <fieldset className="flex flex-col gap-2">
