@@ -7,11 +7,9 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   StatusBadge,
   Switch,
 } from "@fresh/ui";
-import { Mail } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,6 +24,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { errorMessage } from "../../lib/errors";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { ACTIVE_FLAG } from "../../lib/status";
+import { ListEmpty } from "../../components/states";
 
 export function NotificationTemplatesPage() {
   const templates = useNotificationTemplates();
@@ -98,7 +97,7 @@ export function NotificationTemplatesPage() {
         isLoading={templates.isFetching}
         error={tableError(templates.error)}
         onRetry={() => void templates.refetch()}
-        emptyState={<EmptyState icon={<Mail aria-hidden="true" />} title="No templates" />}
+        emptyState={<ListEmpty title="No templates" />}
       />
       {editing && (
         <TemplateDialog

@@ -32,6 +32,9 @@ importers:
       '@fresh/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@fresh/illustrations':
+        specifier: workspace:*
+        version: link:../../packages/illustrations
       '@fresh/ui':
         specifier: workspace:*
         version: link:../../packages/ui

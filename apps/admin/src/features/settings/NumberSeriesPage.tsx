@@ -1,15 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDateTime, humanizeCode, isApiError } from "@fresh/core";
-import {
-  Badge,
-  Button,
-  type ColumnDef,
-  DataTable,
-  Dialog,
-  DialogContent,
-  EmptyState,
-} from "@fresh/ui";
-import { Hash } from "lucide-react";
+import { Badge, Button, type ColumnDef, DataTable, Dialog, DialogContent } from "@fresh/ui";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +12,7 @@ import { applyFieldErrors, errorMessage } from "../../lib/errors";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { parseWholeNumber } from "../../lib/units";
 import { FormAlert } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 export function NumberSeriesPage() {
   const series = useNumberSeries();
@@ -107,7 +99,7 @@ export function NumberSeriesPage() {
         isLoading={series.isFetching}
         error={tableError(series.error)}
         onRetry={() => void series.refetch()}
-        emptyState={<EmptyState icon={<Hash aria-hidden="true" />} title="No number series" />}
+        emptyState={<ListEmpty title="No number series" />}
       />
       {editing && (
         <SeriesDialog

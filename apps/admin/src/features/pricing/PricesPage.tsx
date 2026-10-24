@@ -1,5 +1,5 @@
 import { formatDateTime, formatRupees } from "@fresh/core";
-import { Badge, Button, type ColumnDef, DataTable, EmptyState, FilterBar, Switch } from "@fresh/ui";
+import { Badge, Button, type ColumnDef, DataTable, FilterBar, Switch } from "@fresh/ui";
 import { Percent, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
@@ -10,6 +10,7 @@ import { LocationRequired, PageHeader, tableError } from "../../components/page"
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { SetPriceDialog } from "./SetPriceDialog";
 import { PRICE_UNIT } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 export function PricesPage() {
   const scope = useLocationScope();
@@ -170,7 +171,7 @@ function PriceList({ locationId }: { locationId: string }) {
         error={tableError(prices.error)}
         onRetry={() => void prices.refetch()}
         emptyState={
-          <EmptyState
+          <ListEmpty
             title={
               list.q || missingOnly ? "No variants match these filters" : "No variants to price"
             }

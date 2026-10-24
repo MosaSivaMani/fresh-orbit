@@ -3,12 +3,10 @@ import {
   type ActiveFilter,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
 } from "@fresh/ui";
-import { MessageSquareWarning } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { useComplaints } from "../../api/orders";
@@ -17,6 +15,7 @@ import { useLocationScope } from "../../app/location-scope";
 import { PageHeader, tableError } from "../../components/page";
 import { useListParams } from "../../lib/list-params";
 import { COMPLAINT_STATUS, statusOptions } from "../../lib/status";
+import { ListEmpty } from "../../components/states";
 
 const FILTER_KEYS = ["status", "kind"] as const;
 const KINDS = ["MISSING", "DAMAGED", "QUALITY", "WRONG_ITEM", "LATE"];
@@ -149,12 +148,7 @@ export function ComplaintsListPage() {
           isLoading={complaints.isFetching}
           error={tableError(complaints.error)}
           onRetry={() => void complaints.refetch()}
-          emptyState={
-            <EmptyState
-              icon={<MessageSquareWarning aria-hidden="true" />}
-              title="No complaints match these filters"
-            />
-          }
+          emptyState={<ListEmpty title="No complaints match these filters" />}
         />
       </div>
     </>

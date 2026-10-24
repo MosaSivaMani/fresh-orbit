@@ -3,7 +3,6 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Input,
   Select,
@@ -22,6 +21,7 @@ import { istLocalToUtcIso } from "../../lib/units";
 import { qty } from "./maps";
 import { InventoryNav, VariantRef } from "./shared";
 import { DiscardBatchDialog } from "./StockActions";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status", "expiringBefore", "stockItemId"];
 
@@ -178,7 +178,7 @@ export function BatchesPage() {
           error={tableError(batches.error)}
           onRetry={() => void batches.refetch()}
           emptyState={
-            <EmptyState
+            <ListEmpty
               title="No batches match"
               description="Change the filters or receive stock."
             />

@@ -1,6 +1,20 @@
+/*
+ * Illustrated look (U3): fonts and colours come only from @fresh/ui and @fresh/design-tokens. Never name a font
+ * family, hex colour or font file here or in components; a font or colour swap is one change in those packages.
+ */
+@import "@fresh/ui/fonts.css";
 @import "tailwindcss";
 @import "@fresh/config/tailwind.css";
 @import "@fresh/ui/styles.css";
 
 /* The admin's own source. */
 @source "./";
+
+@layer base {
+  /* Headings use the display font token; body text keeps the sans token from the preset. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--fo-font-display);
+  }
+}

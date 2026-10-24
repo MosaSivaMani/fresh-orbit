@@ -12,13 +12,12 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   FormField,
   Input,
   Select,
 } from "@fresh/ui";
-import { BarChart3, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { useMemo } from "react";
 import { useCities } from "../../api/locations";
 import { useReport, useReportCsv } from "../../api/reports";
@@ -34,6 +33,7 @@ import {
   type ReportDefinition,
   reportDefinition,
 } from "./report-definitions";
+import { ListEmpty } from "../../components/states";
 
 const ANY = "__any";
 /** `fulfillmentLocationId=all` in the URL: every location the staff member may see (overrides the switcher). */
@@ -264,8 +264,7 @@ export function ReportsPage() {
           error={tableError(result.error)}
           onRetry={() => void result.refetch()}
           emptyState={
-            <EmptyState
-              icon={<BarChart3 aria-hidden="true" />}
+            <ListEmpty
               title="No data for these filters"
               description="Try a wider date range or another location."
             />

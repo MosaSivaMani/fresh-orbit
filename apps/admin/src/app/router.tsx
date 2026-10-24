@@ -1,5 +1,6 @@
 import { type RouteObject, createBrowserRouter } from "react-router";
 import { NotFound } from "../components/page";
+import { RouteError } from "../components/states";
 import { LoginPage } from "../features/auth/LoginPage";
 import { citiesRoutes } from "../features/cities/routes";
 import { customersRoutes } from "../features/customers/routes";
@@ -17,24 +18,31 @@ import { AdminLayout } from "./AdminLayout";
 
 /** Every admin route. Feature folders own their route lists; permissions per route are in each list. */
 export const routes: RouteObject[] = [
-  { path: "/login", element: <LoginPage /> },
+  { path: "/login", element: <LoginPage />, errorElement: <RouteError fullPage /> },
   {
     path: "/",
     element: <AdminLayout />,
+    errorElement: <RouteError fullPage />,
     children: [
-      ...dashboardRoutes,
-      ...ordersRoutes,
-      ...deliveryRoutes,
-      ...inventoryRoutes,
-      ...productsRoutes,
-      ...pricingRoutes,
-      ...promotionsRoutes,
-      ...citiesRoutes,
-      ...customersRoutes,
-      ...reportsRoutes,
-      ...paymentsRoutes,
-      ...settingsRoutes,
-      { path: "*", element: <NotFound /> },
+      {
+        // Screens that throw keep the shell (menu, sign out) and show the failed-load card in it.
+        errorElement: <RouteError />,
+        children: [
+          ...dashboardRoutes,
+          ...ordersRoutes,
+          ...deliveryRoutes,
+          ...inventoryRoutes,
+          ...productsRoutes,
+          ...pricingRoutes,
+          ...promotionsRoutes,
+          ...citiesRoutes,
+          ...customersRoutes,
+          ...reportsRoutes,
+          ...paymentsRoutes,
+          ...settingsRoutes,
+          { path: "*", element: <NotFound /> },
+        ],
+      },
     ],
   },
 ];

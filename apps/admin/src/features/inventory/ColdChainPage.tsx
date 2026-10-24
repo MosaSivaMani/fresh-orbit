@@ -7,7 +7,6 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   FilterBar,
   Select,
 } from "@fresh/ui";
@@ -26,6 +25,7 @@ import { useListParams } from "../../lib/list-params";
 import { istLocalToUtcIso } from "../../lib/units";
 import { STORAGE_UNIT_OPTIONS } from "./maps";
 import { InventoryNav } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const RANGE_OPTIONS = [
   { value: "all", label: "All readings" },
@@ -126,7 +126,7 @@ export function ColdChainPage() {
           error={tableError(logs.error)}
           onRetry={() => void logs.refetch()}
           emptyState={
-            <EmptyState title="No readings" description="Record a temperature to start the log." />
+            <ListEmpty title="No readings" description="Record a temperature to start the log." />
           }
         />
       </div>

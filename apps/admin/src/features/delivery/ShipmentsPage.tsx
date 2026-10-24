@@ -1,14 +1,5 @@
 import { formatCalendarDate, formatRupees, formatTime } from "@fresh/core";
-import {
-  type ColumnDef,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  Input,
-  Select,
-  StatusBadge,
-  cn,
-} from "@fresh/ui";
+import { type ColumnDef, DataTable, FilterBar, Input, Select, StatusBadge, cn } from "@fresh/ui";
 import { Thermometer } from "lucide-react";
 import { Link } from "react-router";
 import { useRiders, useShipments, useSlots } from "../../api/delivery";
@@ -20,6 +11,7 @@ import { SHIPMENT_STATUS, statusOptions } from "../../lib/status";
 import { todayInIndia } from "../../lib/units";
 import { ShipmentActions } from "./ShipmentActions";
 import { DeliveryNav, shortId } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["slotId", "riderId", "status"] as const;
 const ANY = "__any";
@@ -231,7 +223,7 @@ export function ShipmentsPage() {
           error={tableError(shipments.error)}
           onRetry={() => void shipments.refetch()}
           emptyState={
-            <EmptyState
+            <ListEmpty
               title="No shipments match these filters"
               description="Shipments appear here when orders are packed."
             />

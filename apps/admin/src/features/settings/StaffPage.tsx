@@ -5,7 +5,6 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
@@ -14,7 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@fresh/ui";
-import { Plus, UserCog } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useStaffList } from "../../api/staff";
@@ -25,6 +24,7 @@ import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { ACTIVE_FLAG } from "../../lib/status";
 import { RolesPanel } from "./RolesPanel";
 import { ResetPasswordDialog, StaffFormDialog } from "./StaffDialogs";
+import { ListEmpty } from "../../components/states";
 
 const FILTER_KEYS = ["isActive"] as const;
 const ANY = "__any";
@@ -207,8 +207,7 @@ function StaffList() {
         error={tableError(staff.error)}
         onRetry={() => void staff.refetch()}
         emptyState={
-          <EmptyState
-            icon={<UserCog aria-hidden="true" />}
+          <ListEmpty
             title="No staff match"
             description={list.q || isActive ? "Clear the filters to see everyone." : undefined}
           />

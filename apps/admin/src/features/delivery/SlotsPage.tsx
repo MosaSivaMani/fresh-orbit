@@ -6,7 +6,6 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   FilterBar,
   Input,
   StatusBadge,
@@ -24,6 +23,7 @@ import { useListParams } from "../../lib/list-params";
 import { SLOT_STATUS } from "../../lib/status";
 import { parseWholeNumber, todayInIndia } from "../../lib/units";
 import { DeliveryNav, reportWriteError } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["fromDate", "toDate"] as const;
 
@@ -153,7 +153,7 @@ export function SlotsPage() {
           error={tableError(slots.error)}
           onRetry={() => void slots.refetch()}
           emptyState={
-            <EmptyState
+            <ListEmpty
               title="No slots in these dates"
               description="Slots are generated from the active slot templates each night."
             />

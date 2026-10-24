@@ -1,5 +1,5 @@
 import { formatDateTime, humanizeCode } from "@fresh/core";
-import { type ColumnDef, DataTable, EmptyState, FilterBar, Select, StatusBadge } from "@fresh/ui";
+import { type ColumnDef, DataTable, FilterBar, Select, StatusBadge } from "@fresh/ui";
 import { Link } from "react-router";
 import { useReservations } from "../../api/inventory";
 import { type Reservation } from "../../api/types/inventory";
@@ -10,6 +10,7 @@ import { useListParams } from "../../lib/list-params";
 import { statusOptions } from "../../lib/status";
 import { RESERVATION_STATUS, qty } from "./maps";
 import { InventoryNav, VariantRef } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status", "orderId"];
 
@@ -128,9 +129,7 @@ export function ReservationsPage() {
           isLoading={reservations.isFetching}
           error={tableError(reservations.error)}
           onRetry={() => void reservations.refetch()}
-          emptyState={
-            <EmptyState title="No reservations match" description="Change the filters." />
-          }
+          emptyState={<ListEmpty title="No reservations match" description="Change the filters." />}
         />
       </div>
     </>

@@ -1,5 +1,5 @@
 import { formatDateTime, formatRupees } from "@fresh/core";
-import { type ColumnDef, DataTable, EmptyState, FilterBar, Input, StatusBadge } from "@fresh/ui";
+import { type ColumnDef, DataTable, FilterBar, Input, StatusBadge } from "@fresh/ui";
 import { Link } from "react-router";
 import { usePayments } from "../../api/payments";
 import { type Payment } from "../../api/types/payments";
@@ -15,6 +15,7 @@ import {
   activeFilters,
   options,
 } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status", "method", "provider", "fromDate", "toDate"] as const;
 
@@ -149,7 +150,7 @@ export function PaymentsPage() {
           isLoading={payments.isFetching}
           error={tableError(payments.error)}
           onRetry={() => void payments.refetch()}
-          emptyState={<EmptyState title="No payments match these filters" />}
+          emptyState={<ListEmpty title="No payments match these filters" />}
         />
       </div>
     </>

@@ -1,5 +1,5 @@
 import { formatDateTime } from "@fresh/core";
-import { Button, type ColumnDef, DataTable, EmptyState, FilterBar, StatusBadge } from "@fresh/ui";
+import { Button, type ColumnDef, DataTable, FilterBar, StatusBadge } from "@fresh/ui";
 import { useState } from "react";
 import { Link } from "react-router";
 import { usePaymentIssues, useResolvePaymentIssue } from "../../api/payments";
@@ -17,6 +17,7 @@ import {
   activeFilters,
   options,
 } from "./shared";
+import { AllCaughtUp } from "../../components/states";
 
 const FILTERS = ["kind", "status"] as const;
 
@@ -149,7 +150,12 @@ export function PaymentIssuesPage() {
           isLoading={issues.isFetching}
           error={tableError(issues.error)}
           onRetry={() => void issues.refetch()}
-          emptyState={<EmptyState title="No payment issues match these filters" />}
+          emptyState={
+            <AllCaughtUp
+              title="All caught up"
+              description="No payment issues match these filters."
+            />
+          }
         />
       </div>
     </>

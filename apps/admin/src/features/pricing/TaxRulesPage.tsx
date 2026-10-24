@@ -1,6 +1,6 @@
 import { formatDateTime, formatPercentFromBp } from "@fresh/core";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, type ColumnDef, DataTable, Dialog, DialogContent, EmptyState } from "@fresh/ui";
+import { Button, type ColumnDef, DataTable, Dialog, DialogContent } from "@fresh/ui";
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -14,6 +14,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { istLocalToUtcIso, parsePercentToBp } from "../../lib/units";
 import { CheckboxField, StartField, hasCode } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 export function TaxRulesPage() {
   const rules = useTaxRules();
@@ -108,7 +109,7 @@ export function TaxRulesPage() {
         error={tableError(rules.error)}
         onRetry={() => void rules.refetch()}
         emptyState={
-          <EmptyState
+          <ListEmpty
             title="No tax rules yet"
             description={
               canSchedule

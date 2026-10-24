@@ -1,6 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isApiError } from "@fresh/core";
-import { Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from "@fresh/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Illustration,
+} from "@fresh/ui";
 import { AlertCircle, Clock, Fish } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -107,68 +115,80 @@ export function LoginPage() {
   });
 
   return (
-    <div className="bg-background flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className="bg-primary text-on-primary mb-2 flex size-10 items-center justify-center rounded-lg">
-            <Fish aria-hidden="true" className="size-5" />
-          </div>
-          <CardTitle>Sign in to Fresh Orbit Admin</CardTitle>
-          <CardDescription>Sign in with your staff email and password.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-            {throttled && (
-              <p
-                role="alert"
-                data-code="RATE_LIMITED"
-                className="bg-warning-subtle text-warning-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
-              >
-                <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                <span>
-                  Too many sign-in attempts. Try again in{" "}
-                  <span data-testid="retry-after">{formatWait(waitSeconds)}</span>.
-                </span>
-              </p>
-            )}
-            {expired && !formError && !throttled && (
-              <p
-                role="status"
-                className="bg-info-subtle text-info-text rounded-md px-3 py-2 text-sm"
-              >
-                Your session ended. Sign in again to continue.
-              </p>
-            )}
-            {formError && (
-              <p
-                role="alert"
-                className="bg-danger-subtle text-danger-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
-              >
-                <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                {formError}
-              </p>
-            )}
-            <TextField
-              form={form}
-              name="email"
-              label="Email"
-              type="email"
-              autoComplete="username"
-              required
-            />
-            <TextField
-              form={form}
-              name="password"
-              label="Password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-            <Button type="submit" loading={login.isPending} disabled={throttled} fullWidth>
-              Sign in
-            </Button>
-          </form>
-        </CardContent>
+    <div className="bg-surface-sand flex min-h-dvh items-center justify-center p-4">
+      <Card
+        data-state-slot="ADMIN_LOGIN"
+        className="bg-surface-paper grid w-full max-w-sm overflow-hidden p-0 md:max-w-3xl md:grid-cols-2"
+      >
+        {/* Side panel (md and up): the staff character on a tinted panel, inside the card. */}
+        <div className="bg-teal-soft hidden flex-col justify-center gap-4 p-6 md:flex">
+          <Illustration slot="ADMIN_LOGIN" size="fill" priority decorative />
+          <p className="font-display text-text text-lg leading-7 font-bold text-balance">
+            Today's catch, packed and on its way.
+          </p>
+        </div>
+        <div className="flex flex-col justify-center py-2">
+          <CardHeader>
+            <div className="bg-primary text-on-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+              <Fish aria-hidden="true" className="size-5" />
+            </div>
+            <CardTitle>Sign in to Fresh Orbit Admin</CardTitle>
+            <CardDescription>Sign in with your staff email and password.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+              {throttled && (
+                <p
+                  role="alert"
+                  data-code="RATE_LIMITED"
+                  className="bg-warning-subtle text-warning-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
+                >
+                  <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                  <span>
+                    Too many sign-in attempts. Try again in{" "}
+                    <span data-testid="retry-after">{formatWait(waitSeconds)}</span>.
+                  </span>
+                </p>
+              )}
+              {expired && !formError && !throttled && (
+                <p
+                  role="status"
+                  className="bg-info-subtle text-info-text rounded-md px-3 py-2 text-sm"
+                >
+                  Your session ended. Sign in again to continue.
+                </p>
+              )}
+              {formError && (
+                <p
+                  role="alert"
+                  className="bg-danger-subtle text-danger-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
+                >
+                  <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                  {formError}
+                </p>
+              )}
+              <TextField
+                form={form}
+                name="email"
+                label="Email"
+                type="email"
+                autoComplete="username"
+                required
+              />
+              <TextField
+                form={form}
+                name="password"
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                required
+              />
+              <Button type="submit" loading={login.isPending} disabled={throttled} fullWidth>
+                Sign in
+              </Button>
+            </form>
+          </CardContent>
+        </div>
       </Card>
     </div>
   );
