@@ -305,6 +305,9 @@ public abstract class StorefrontTestBase(StorefrontDatabase database) : IAsyncLi
         return data.ToArray();
     }
 
+    /// <summary>SEC-5: a small 900 px PNG whose header claims <paramref name="width"/> × <paramref name="height"/>.</summary>
+    protected static byte[] PngClaiming(int width, int height) => PngHeader.Claiming(Png(), width, height);
+
     protected async Task<HttpResponseMessage> UploadImageAsync(Guid productId, byte[] bytes, string fileName = "photo.png", string? altText = "Seer fish steaks")
     {
         using var content = new MultipartFormDataContent();
