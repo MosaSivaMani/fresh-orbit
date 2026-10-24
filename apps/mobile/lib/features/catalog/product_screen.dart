@@ -1,4 +1,5 @@
-// Product detail: variant and preparation choice (with yield note and the location's preparation charge),
+// Product detail (D88): a teal-soft hero, the cut choice as tiles, a sticky bar with the − n + stepper and Add to
+// cart. Variant and preparation choice (with yield note and the location's preparation charge),
 // quantity stepper bounded by the server's min / max / step / maxOrderableNow, and add to cart.
 //
 // Prices: the screen shows the server's unit price and preparation charge. The estimated line price and the
@@ -16,13 +17,14 @@ import '../../api/models/cart.dart';
 import '../../api/models/catalog.dart';
 import '../../api/models/common.dart';
 import '../../core/format.dart';
-import '../../illustrations/illustration.dart';
 import '../../state/account_state.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/session.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/illustrated.dart';
 import '../../widgets/states.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
@@ -153,6 +155,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     }
 
     final theme = Theme.of(context);
+    final c = illustratedColors(context);
     final v = _variant(detail);
     final prep = _prep(v);
     final qty = _qty(v);
@@ -160,184 +163,244 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     final line = _cartLine(v, prep);
     final wished = ref.watch(wishlistIdsProvider).contains(detail.id) || (detail.isWishlisted ?? false);
     final selectedPrep = v.preparations.where((p) => p.code == prep).firstOrNull;
+    final locationRequired = detail.locationRequired || v.unitPricePaise == null;
+    final heroSticker = v.availability != null && v.availability!.status != 'IN_STOCK'
+        ? Sticker(
+            label: v.availability!.status == 'LOW_STOCK' ? 'Low stock' : 'Sold out',
+            tone: StickerTone.coral,
+            tilt: -0.011,
+          )
+        : detail.sourceType == null
+        ? null
+        : Sticker(label: humanizeCode(detail.sourceType!), tone: StickerTone.mango, tilt: -0.011);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(detail.name),
-        actions: [
-          IconButton(
-            tooltip: wished ? 'Remove from wishlist' : 'Add to wishlist',
-            icon: Icon(wished ? Icons.favorite : Icons.favorite_border),
-            onPressed: () => _toggleWishlist(detail),
-          ),
-        ],
-      ),
       body: ListView(
-        padding: const EdgeInsets.all(FreshSpacing.s4),
+        padding: EdgeInsets.zero,
         children: [
-          _Gallery(images: detail.images),
-          const SizedBox(height: FreshSpacing.s4),
-          Semantics(header: true, child: Text(detail.name, style: theme.textTheme.headlineSmall)),
-          if (detail.localNames.isNotEmpty)
-            Text(
-              'Also called ${detail.localNames.join(', ')}',
-              style: theme.textTheme.bodyMedium?.copyWith(color: freshColors(context).textMuted),
+          // Hero: the picture on teal-soft with round back and save buttons and a sticker.
+          Container(
+            height: 250,
+            decoration: BoxDecoration(
+              color: c.tealSoft,
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.sheet)),
             ),
-          const SizedBox(height: FreshSpacing.s2),
-          Wrap(
-            spacing: FreshSpacing.s2,
-            runSpacing: FreshSpacing.s1,
-            children: [
-              if (detail.sourceType != null) FreshBadge(label: humanizeCode(detail.sourceType!)),
-              if (v.availability != null) AvailabilityBadge(status: v.availability!.status),
-              if (async.isLoading) const FreshBadge(label: 'Updating…'),
-            ],
-          ),
-          const SizedBox(height: FreshSpacing.s3),
-          if (v.unitPricePaise != null)
-            PriceTag(
-              paise: v.unitPricePaise!,
-              compareAtPaise: v.compareAtPaise,
-              perUnit: v.sellUnit,
-              style: theme.textTheme.headlineSmall,
-            )
-          else
-            const InfoBanner(text: 'Set your pincode to see the price and availability.', tone: BannerTone.warning),
-          if (v.availability?.message != null) ...[
-            const SizedBox(height: FreshSpacing.s2),
-            InfoBanner(text: v.availability!.message!, tone: BannerTone.warning),
-          ],
-          if (v.availability?.status == 'OUT_OF_STOCK' || v.availability?.status == 'NOT_SOLD_HERE') ...[
-            const SizedBox(height: FreshSpacing.s3),
-            _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
-          ],
-          if (detail.variants.length > 1) ...[
-            const SizedBox(height: FreshSpacing.s5),
-            Text('Size', style: theme.textTheme.titleSmall),
-            const SizedBox(height: FreshSpacing.s2),
-            Wrap(
-              spacing: FreshSpacing.s2,
-              runSpacing: FreshSpacing.s2,
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
               children: [
-                for (final option in detail.variants)
-                  ChoiceChip(
-                    label: Text(option.name),
-                    selected: option.id == v.id,
-                    onSelected: (_) => setState(() {
-                      _variantId = option.id;
-                      _quantity = null;
-                      _quantityError = null;
-                    }),
+                Positioned.fill(child: _Gallery(images: detail.images)),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Row(
+                      children: [
+                        if (context.canPop())
+                          RoundIconButton(
+                            icon: Icons.arrow_back_rounded,
+                            tooltip: 'Back',
+                            onPressed: () => context.pop(),
+                          ),
+                        const Spacer(),
+                        RoundIconButton(
+                          icon: wished ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          tooltip: wished ? 'Remove from saved' : 'Save for later',
+                          onPressed: () => _toggleWishlist(detail),
+                        ),
+                      ],
+                    ),
                   ),
+                ),
+                if (heroSticker != null) Positioned(left: 16, bottom: 14, child: heroSticker),
               ],
             ),
-          ] else ...[
-            const SizedBox(height: FreshSpacing.s2),
-            Text(v.name, style: theme.textTheme.bodyMedium),
-          ],
-          if (v.preparations.isNotEmpty) ...[
-            const SizedBox(height: FreshSpacing.s5),
-            Text('Preparation', style: theme.textTheme.titleSmall),
-            const SizedBox(height: FreshSpacing.s2),
-            Wrap(
-              spacing: FreshSpacing.s2,
-              runSpacing: FreshSpacing.s2,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final p in v.preparations)
-                  ChoiceChip(
-                    label: Text('${p.name} · ${_chargeText(p)}'),
-                    selected: p.code == prep,
-                    onSelected: p.chargePaise == null
-                        ? null
-                        : (_) => setState(() {
-                            _prepCode = p.code;
-                            _requestedPrep = p.code;
+                Semantics(header: true, child: Text(detail.name, style: AppText.display(c.ink, 25, height: 1))),
+                if (detail.localNames.isNotEmpty)
+                  Text(
+                    'Also called ${detail.localNames.join(', ')}',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: c.muted),
+                  ),
+                const SizedBox(height: FreshSpacing.s2),
+                Wrap(
+                  spacing: FreshSpacing.s2,
+                  runSpacing: FreshSpacing.s1,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (v.unitPricePaise != null)
+                      PriceTag(
+                        paise: v.unitPricePaise!,
+                        compareAtPaise: v.compareAtPaise,
+                        perUnit: v.sellUnit,
+                        style: AppText.price(c.ink, size: 22),
+                      ),
+                    if (v.availability != null) AvailabilityBadge(status: v.availability!.status),
+                    if (async.isLoading) const FreshBadge(label: 'Updating…'),
+                  ],
+                ),
+                if (locationRequired) ...[
+                  const SizedBox(height: FreshSpacing.s2),
+                  const InfoBanner(
+                    text: 'Set your pincode to see the price and availability.',
+                    tone: BannerTone.warning,
+                  ),
+                ],
+                if (v.availability?.message != null) ...[
+                  const SizedBox(height: FreshSpacing.s2),
+                  InfoBanner(text: v.availability!.message!, tone: BannerTone.warning),
+                ],
+                if (v.availability?.status == 'OUT_OF_STOCK' || v.availability?.status == 'NOT_SOLD_HERE') ...[
+                  const SizedBox(height: FreshSpacing.s3),
+                  _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
+                ],
+                const SizedBox(height: 10),
+                const _Facts(),
+                if (detail.variants.length > 1) ...[
+                  const SizedBox(height: 14),
+                  const SectionTitle('Size'),
+                  const SizedBox(height: 7),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: [
+                      for (final option in detail.variants)
+                        ChoiceChip(
+                          label: Text(option.name),
+                          selected: option.id == v.id,
+                          onSelected: (_) => setState(() {
+                            _variantId = option.id;
+                            _quantity = null;
                             _quantityError = null;
                           }),
+                        ),
+                    ],
+                  ),
+                ] else ...[
+                  const SizedBox(height: FreshSpacing.s2),
+                  Text(v.name, style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
+                ],
+                if (v.preparations.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const SectionTitle('Choose your cut'),
+                  const SizedBox(height: 7),
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 7,
+                    crossAxisSpacing: 7,
+                    childAspectRatio: 2.6,
+                    children: [
+                      for (final p in v.preparations)
+                        _CutTile(
+                          name: p.name,
+                          detail: _chargeText(p),
+                          selected: p.code == prep,
+                          onTap: p.chargePaise == null
+                              ? null
+                              : () => setState(() {
+                                  _prepCode = p.code;
+                                  _requestedPrep = p.code;
+                                  _quantityError = null;
+                                }),
+                        ),
+                    ],
+                  ),
+                  if (selectedPrep != null) ...[
+                    const SizedBox(height: FreshSpacing.s2),
+                    Text(formatYieldNote(selectedPrep.yieldBp), style: theme.textTheme.bodySmall),
+                  ],
+                ],
+                if (_quantityError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: FreshSpacing.s2),
+                    child: Text(
+                      _quantityError!,
+                      style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).dangerText),
+                    ),
+                  ),
+                const SizedBox(height: FreshSpacing.s2),
+                Text(
+                  'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, in steps of ${formatQuantity(v.orderStep)} (net weight).',
+                  style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                ),
+                if (detail.netWeightNote.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(color: c.coralSoft, borderRadius: BorderRadius.circular(10)),
+                    child: Text(
+                      detail.netWeightNote,
+                      style: theme.textTheme.bodySmall?.copyWith(color: c.coralText, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+                if (line != null) ...[
+                  const SizedBox(height: FreshSpacing.s3),
+                  InfoBanner(
+                    tone: BannerTone.success,
+                    title: 'In your cart: ${formatQuantity(line.quantity)}',
+                    text:
+                        'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
+                        '${formatRupees(line.maxLineTotalPaise)} (up to ${formatQuantity(line.maxChargeableQuantity)}).',
+                  ),
+                ],
+                const SizedBox(height: FreshSpacing.s3),
+                if (detail.description != null)
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text('About'),
+                    initiallyExpanded: true,
+                    children: [Align(alignment: Alignment.centerLeft, child: Text(detail.description!))],
+                  ),
+                if (detail.storageInstructions != null)
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text('Storage and cooking'),
+                    children: [Align(alignment: Alignment.centerLeft, child: Text(detail.storageInstructions!))],
+                  ),
+                if (detail.sourceRegion != null)
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text('Sourcing'),
+                    children: [Align(alignment: Alignment.centerLeft, child: Text('From ${detail.sourceRegion}'))],
                   ),
               ],
             ),
-            if (selectedPrep != null) ...[
-              const SizedBox(height: FreshSpacing.s2),
-              Text(formatYieldNote(selectedPrep.yieldBp), style: theme.textTheme.bodySmall),
-            ],
-          ],
-          const SizedBox(height: FreshSpacing.s5),
-          Text('Quantity (net weight)', style: theme.textTheme.titleSmall),
-          const SizedBox(height: FreshSpacing.s2),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: QuantityStepper(
-              value: qty,
-              min: v.minOrder,
-              max: maxQty,
-              step: v.orderStep,
-              itemName: detail.name,
-              onChanged: (q) => setState(() {
-                _quantity = q;
-                _quantityError = null;
-              }),
-            ),
           ),
-          if (_quantityError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: FreshSpacing.s1),
-              child: Text(
-                _quantityError!,
-                style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).dangerText),
-              ),
-            ),
-          const SizedBox(height: FreshSpacing.s2),
-          Text(
-            'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, in steps of ${formatQuantity(v.orderStep)}.',
-            style: theme.textTheme.bodySmall,
-          ),
-          if (detail.netWeightNote.isNotEmpty) ...[
-            const SizedBox(height: FreshSpacing.s3),
-            InfoBanner(text: detail.netWeightNote),
-          ],
-          if (line != null) ...[
-            const SizedBox(height: FreshSpacing.s3),
-            InfoBanner(
-              tone: BannerTone.success,
-              title: 'In your cart: ${formatQuantity(line.quantity)}',
-              text:
-                  'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
-                  '${formatRupees(line.maxLineTotalPaise)} (up to ${formatQuantity(line.maxChargeableQuantity)}).',
-            ),
-          ],
-          const SizedBox(height: FreshSpacing.s4),
-          if (detail.description != null)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: const Text('About'),
-              initiallyExpanded: true,
-              children: [Align(alignment: Alignment.centerLeft, child: Text(detail.description!))],
-            ),
-          if (detail.storageInstructions != null)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: const Text('Storage and cooking'),
-              children: [Align(alignment: Alignment.centerLeft, child: Text(detail.storageInstructions!))],
-            ),
-          if (detail.sourceRegion != null)
-            ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: const Text('Sourcing'),
-              children: [Align(alignment: Alignment.centerLeft, child: Text('From ${detail.sourceRegion}'))],
-            ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          child: _AddBar(
-            variant: v,
-            locationRequired: detail.locationRequired || v.unitPricePaise == null,
-            adding: _adding,
-            onAdd: () => _add(detail, v, prep, qty),
-            onSetPincode: () => context.push('/location?change=1'),
-          ),
+      bottomNavigationBar: StickyActionBar(
+        leading: locationRequired || !(v.availability?.canAdd ?? true)
+            ? null
+            : CompactStepper(
+                large: true,
+                label: formatQuantity(qty),
+                itemName: detail.name,
+                onDecrease: qty.value - v.orderStep.value >= v.minOrder.value
+                    ? () => setState(() {
+                        _quantity = qty.withValue(qty.value - v.orderStep.value);
+                        _quantityError = null;
+                      })
+                    : null,
+                onIncrease: qty.value + v.orderStep.value <= maxQty.value
+                    ? () => setState(() {
+                        _quantity = qty.withValue(qty.value + v.orderStep.value);
+                        _quantityError = null;
+                      })
+                    : null,
+              ),
+        action: _AddAction(
+          variant: v,
+          locationRequired: locationRequired,
+          adding: _adding,
+          onAdd: () => _add(detail, v, prep, qty),
+          onSetPincode: () => context.push('/location?change=1'),
         ),
       ),
     );
@@ -345,8 +408,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
   static String _chargeText(Preparation p) {
     final c = p.chargePaise;
-    if (c == null) return 'not available here';
-    if (c == 0) return 'free';
+    if (c == null) return 'Not available here';
+    if (c == 0) return 'Free';
     return switch (p.chargeBasis) {
       'PER_KG' => '+${formatRupees(c)}/kg',
       'PER_ITEM' => '+${formatRupees(c)}/piece',
@@ -355,8 +418,117 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   }
 }
 
-class _AddBar extends StatelessWidget {
-  const _AddBar({
+/// Three fixed promises of the shop, as small tiles.
+class _Facts extends StatelessWidget {
+  const _Facts();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    Widget fact(IconData icon, String text) => Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: c.paper,
+          borderRadius: BorderRadius.circular(13),
+          boxShadow: cardShadow(context),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 17, color: c.tealText),
+            const SizedBox(height: 2),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppFonts.body,
+                fontSize: 10.5,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+                color: c.ink,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return Row(
+      children: [
+        fact(Icons.ac_unit_rounded, 'Kept cold'),
+        fact(Icons.content_cut_rounded, 'Cut your way'),
+        fact(Icons.scale_outlined, 'Net weight'),
+      ],
+    );
+  }
+}
+
+/// One cut choice: its name and the location's charge; the chosen one is teal.
+class _CutTile extends StatelessWidget {
+  const _CutTile({required this.name, required this.detail, required this.selected, required this.onTap});
+
+  final String name;
+  final String detail;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      enabled: onTap != null,
+      label: '$name, $detail',
+      excludeSemantics: true,
+      child: Material(
+        color: selected ? c.tealSoft : c.paper,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(13),
+          side: BorderSide(color: selected ? c.tealText : c.line, width: selected ? 2 : 1.5),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(13),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.body,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: onTap == null ? c.muted : c.ink,
+                  ),
+                ),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: AppFonts.body,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w500,
+                    color: c.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddAction extends StatelessWidget {
+  const _AddAction({
     required this.variant,
     required this.locationRequired,
     required this.adding,
@@ -372,23 +544,15 @@ class _AddBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (locationRequired) {
-      return PrimaryButton(label: 'Set pincode to buy', icon: Icons.location_on_outlined, onPressed: onSetPincode);
-    }
+    if (locationRequired) return TealActionButton(label: 'Set pincode to buy', onPressed: onSetPincode);
     final availability = variant.availability;
     if (availability != null && !availability.canAdd) {
-      return PrimaryButton(
+      return TealActionButton(
         label: availability.status == 'NOT_SOLD_HERE' ? 'Not sold in your area' : 'Sold out',
         onPressed: null,
       );
     }
-    return PrimaryButton(
-      key: const Key('addToCart'),
-      label: 'Add to cart',
-      icon: Icons.add_shopping_cart,
-      loading: adding,
-      onPressed: onAdd,
-    );
+    return TealActionButton(key: const Key('addToCart'), label: 'Add to cart', loading: adding, onPressed: onAdd);
   }
 }
 
@@ -408,21 +572,15 @@ class _GalleryState extends State<_Gallery> {
   Widget build(BuildContext context) {
     final images = widget.images;
     if (images.length <= 1) {
-      return ProductImageView(url: images.firstOrNull?.url, alt: images.firstOrNull?.altText);
+      return ProductImageView(url: images.firstOrNull?.url, alt: images.firstOrNull?.altText, aspectRatio: 1.6);
     }
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: 4 / 3,
-          child: PageView.builder(
-            itemCount: images.length,
-            onPageChanged: (i) => setState(() => _index = i),
-            itemBuilder: (_, i) => ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: 4 / 3),
-          ),
-        ),
-        const SizedBox(height: FreshSpacing.s2),
-        Semantics(label: 'Image ${_index + 1} of ${images.length}', child: const SizedBox(height: 4)),
-      ],
+    return Semantics(
+      label: 'Image ${_index + 1} of ${images.length}',
+      child: PageView.builder(
+        itemCount: images.length,
+        onPageChanged: (i) => setState(() => _index = i),
+        itemBuilder: (_, i) => ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: 1.6),
+      ),
     );
   }
 }
@@ -436,8 +594,13 @@ class ProductImageView extends StatelessWidget {
   final double aspectRatio;
 
   @override
-  Widget build(BuildContext context) =>
-      ProductPhoto(url: url, semanticLabel: alt == null || alt!.isEmpty ? null : alt, aspectRatio: aspectRatio);
+  Widget build(BuildContext context) => ProductPhoto(
+    url: url,
+    semanticLabel: alt == null || alt!.isEmpty ? null : alt,
+    aspectRatio: aspectRatio,
+    radius: 0,
+    transparent: true,
+  );
 }
 
 /// Sold out (or not sold at the store for this pincode) for the chosen size: the OUT_OF_STOCK character and
@@ -450,12 +613,12 @@ class _SoldOutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return SectionBox(
       child: Padding(
-        padding: const EdgeInsets.all(FreshSpacing.s4),
+        padding: const EdgeInsets.all(FreshSpacing.s1),
         child: Row(
           children: [
-            const Illustration(slot: IllustrationSlot.outOfStock, size: 96, excludeFromSemantics: true),
+            const AvatarCircle(slot: IllustrationSlot.outOfStock, size: 88),
             const SizedBox(width: FreshSpacing.s3),
             Expanded(
               child: Semantics(

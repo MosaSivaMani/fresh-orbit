@@ -5,8 +5,8 @@ export const metadata: Metadata = { title: "Orders" };
 
 export default function AccountOrdersPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-text text-2xl font-bold">Orders</h1>
+    <div className="flex flex-col gap-5">
+      <h1 className="font-display text-text text-3xl font-extrabold">Orders</h1>
       <OrdersList />
     </div>
   );

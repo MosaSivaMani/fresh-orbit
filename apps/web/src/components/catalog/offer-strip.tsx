@@ -1,12 +1,15 @@
-import { Badge } from "@fresh/ui";
+import { Sticker } from "@fresh/ui";
 import Link from "next/link";
 import { type HomeBanner } from "@/api/types/catalog";
 
-function hrefOf(banner: HomeBanner): string | null {
+function hrefOf(banner: HomeBanner, categorySlugs: Record<string, string>): string | null {
   if (!banner.linkTarget) return null;
   switch (banner.linkType) {
-    case "CATEGORY":
-      return `/shop/${encodeURIComponent(banner.linkTarget)}`;
+    case "CATEGORY": {
+      // The banner names the category by id; an unknown id gets no link rather than a broken one.
+      const slug = categorySlugs[banner.linkTarget];
+      return slug ? `/shop/${encodeURIComponent(slug)}` : null;
+    }
     case "PRODUCT":
       return `/products/${encodeURIComponent(banner.linkTarget)}`;
     case "COUPON":
@@ -17,19 +20,28 @@ function hrefOf(banner: HomeBanner): string | null {
 }
 
 /** Offers from `GET /promotions`; all text is the server's. Renders nothing when there are no active offers. */
-export function OfferStrip({ banners }: { banners: HomeBanner[] }) {
+export function OfferStrip({
+  banners,
+  categorySlugs = {},
+}: {
+  banners: HomeBanner[];
+  /** Category id → slug, for banners that link to a category. */
+  categorySlugs?: Record<string, string>;
+}) {
   if (banners.length === 0) return null;
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {banners.map((banner) => {
-        const href = hrefOf(banner);
+        const href = hrefOf(banner, categorySlugs);
         const body = (
-          <div className="border-highlight/40 bg-highlight-subtle flex h-full gap-4 overflow-hidden rounded-xl border p-5">
+          <div className="border-mango bg-mango-soft flex h-full gap-4 overflow-hidden rounded-3xl border-[1.5px] border-dashed p-5">
             <div className="flex flex-1 flex-col gap-2">
-              <Badge tone="highlight" className="w-fit">
+              <Sticker tone="coral" size="sm" className="w-fit">
                 Offer
-              </Badge>
-              <p className="text-text font-display text-lg font-semibold">{banner.title}</p>
+              </Sticker>
+              <p className="text-text font-display text-xl leading-tight font-extrabold">
+                {banner.title}
+              </p>
               {banner.subtitle && <p className="text-text-muted text-sm">{banner.subtitle}</p>}
               {banner.linkType === "COUPON" && banner.linkTarget && (
                 <p className="text-text text-sm">
@@ -43,7 +55,7 @@ export function OfferStrip({ banners }: { banners: HomeBanner[] }) {
         return (
           <li key={banner.id}>
             {href ? (
-              <Link href={href} className="block h-full rounded-xl">
+              <Link href={href} className="block h-full rounded-3xl">
                 {body}
               </Link>
             ) : (

@@ -22,6 +22,19 @@ class ThemeModeController extends Notifier<ThemeMode> {
   }
 }
 
+/// The chosen app language code ('en', 'te', 'hi'). Screens are English only for now (docs/design/mobile.md).
+final languageProvider = NotifierProvider<LanguageController, String>(LanguageController.new);
+
+class LanguageController extends Notifier<String> {
+  @override
+  String build() => ref.read(appPrefsProvider).language;
+
+  Future<void> set(String code) async {
+    await ref.read(appPrefsProvider).setLanguage(code);
+    state = code;
+  }
+}
+
 class FreshOrbitApp extends ConsumerWidget {
   const FreshOrbitApp({super.key});
 

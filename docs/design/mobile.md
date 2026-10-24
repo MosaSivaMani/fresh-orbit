@@ -179,6 +179,9 @@ Paths are under `/api/v1/`.
 | Orders list item shape is not documented | `OrderSummary` reads the common fields and tolerates the rest |
 | Support contacts are only in the admin business profile | Taken from `SUPPORT_PHONE` / `SUPPORT_EMAIL` defines until a public endpoint exists |
 | Cart and Ordering modules are not merged yet | Their models follow `docs/api/README.md`; re-check when they land |
+| Product summary has no default size, cut or limits (D88 card ADD) | The card's ADD and − / + read the product detail first (one extra call per tap) |
+| No discount percentage, no catch time, no delivery ETA in the API | The mockup's "% off", "caught 4:30 am" and "arrives in 25 min" are not shown; the slot window is shown instead |
+| No "Notify me" (back in stock) endpoint | Sold-out products show the state only |
 
 ## 9. Not done or not verified
 
@@ -257,7 +260,7 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 
 ## 13. Tests
 
-`flutter test` (no device): 80 tests.
+`flutter test` (no device): 106 tests.
 
 | Area | File | What it proves |
 |---|---|---|
@@ -267,6 +270,8 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | Cart provider | `test/state/cart_controller_test.dart` | Server cart replaces state, refused writes keep the cart, guest token from the body, `CART_NOT_FOUND`, `CART_LOCATION_CHANGED` then force |
 | Checkout provider | `test/state/checkout_controller_test.dart` | Preview on selection, key reuse on transient errors, new key after 4xx and after price acceptance, `PRICE_CHANGED` |
 | Widgets | `test/widgets/*` | Location (serviceable / not / invalid), product detail, cart, checkout `PRICE_CHANGED` dialog, order tracking (delivery code, cancel with key) |
+| Bold blocks widgets | `test/widgets/bold_test.dart` | `AvatarCircle` (size, circle crop, JPEG cropped with no rectangle frame, decorative), `ColorBlockScreen` (eyebrow, one heading header, avatar, sticker, back; reduced motion runs nothing; dark mode), `Heading` script tilt and font, `ScriptTitle`, tab bar (icon over label, selected, "Cart, 2 items"), View cart bar, card ADD → stepper, disabled ADD without a price, bubbles and pills, segmented pills, slot buttons, progress steps, teal action |
+| Bold blocks screens | `test/widgets/bold_screens_test.dart` | Card ADD sends the server defaults and turns into a stepper; + sends the next server step, − below the minimum removes; settings stores theme and language; OTP boxes; empty orders and saved blocks |
 | Illustrated UI | `test/widgets/illustrated_test.dart` | Slot codes and PNG names, order status → slot, placeholder when no asset, PNG preferred over WebP, WebP fallback, a broken file falls back, every slot draws in light and dark, semantics label or excluded, `EmptyState`, `ReceiptCard` shows exactly the server values given, reduced motion runs no animation |
 | Demo backend | `test/demo/demo_backend_test.dart` | Demo is off without `DEMO=true`, every fixture parses with the app models, empty and offline switches, unknown order is 404 |
 
@@ -317,6 +322,8 @@ characters, stickers and receipts. `packages/flutter/fresh_theme` is not edited;
 | Help | `HELP_SUPPORT` (`HelpHero`) |
 | Error, offline, unknown route | `ERROR_GENERIC`, `OFFLINE`, `NOT_FOUND` |
 
+§15 updates this table for the Bold blocks look.
+
 **Final art:** drop `<slot_lower_snake>.png` files (for example `empty_cart.png`, `order_on_the_way.png`) into
 `apps/mobile/assets/illustrations/`. No code change is needed; WebP with the same stem is also read.
 
@@ -337,3 +344,95 @@ The page makes only same-origin requests. CanvasKit is bundled (`useLocalCanvasK
 `web/flutter_bootstrap.js` points `fontFallbackBaseUrl` at a local path. The gstatic URLs left in the
 compiled JS are the engine's defaults, and this config overrides them. Serve the folder with any static
 server. The build warns that the CupertinoIcons font is not bundled; the app does not use it.
+
+## 15. Bold blocks look (D88, D89)
+
+The owner chose look B "Bold blocks" (D88) and the fonts Baloo 2 + Inter with Dancing Script second lines
+(D89 amended). The reference is `docs/design/mockups/app-bold-blocks.html`. The app follows it closely. There
+is no halo, orbiting dot, scrolling ticker or serif mark (D88 amended; D94 withdrawn). Everything in §14 still
+applies (slots, placeholders, `Illustration`, demo mode); this section lists what changed.
+
+### Theme and fonts (`lib/theme/app_theme.dart`)
+
+- Colours come from the mockup's `:root` and `[data-theme=dark]`: page `#F4EEE3`, paper `#FFFDF8`, ink
+  `#14302F`, teal `#0B7D70` (deep `#075F55`, soft `#D8EEEA`), coral `#F07A5A`, mango `#F5B544`, ice
+  `#BFE3EE`. Dark: page `#101918`, paper `#1A2826`, ink `#F4EBDD`, teal `#2FA595`, coral `#E0714F`, mango
+  `#E0A43C`, ice `#4D93A6`.
+- **Deviation:** in dark mode the mockup puts paper text on teal `#2FA595`. That is 2.98:1, below WCAG AA, so
+  `onTeal` is dark ink `#0C1B1A` in dark mode (proposed decision).
+- Block colours: each colour-block screen has one `BlockTone` (coral, teal, mango, ice) with its background,
+  its text colour and its status-bar style.
+- **One constant per font role** (`AppFonts`):
+
+  | Role | Constant | Family | Bundled |
+  |---|---|---|---|
+  | Headings, prices, buttons on blocks | `AppFonts.display` | `Baloo2` (800) | Yes, `assets/fonts/Baloo2-*.ttf` |
+  | Body text | `AppFonts.body` | `Inter` (400–700) | Yes, `assets/fonts/Inter-*.ttf` |
+  | Handwritten second line of big headings | `AppFonts.script` | `DancingScript` (700) | **No, pending from the owner** |
+
+  Until the Dancing Script file is there, Flutter does not know the family and draws the fallback face. The
+  −3° tilt, the 1.12× size and the brush still mark the line. **To switch it on:** put
+  `DancingScript-Bold.ttf` and its `OFL.txt` in `apps/mobile/assets/fonts/` and add this to `pubspec.yaml`
+  under `flutter: fonts:`. No code change is needed.
+
+  ```yaml
+      - family: DancingScript
+        fonts:
+          - asset: assets/fonts/DancingScript-Bold.ttf
+            weight: 700
+  ```
+
+  To change a font later, change its constant and the `fonts:` entry. The app never calls Google Fonts at
+  runtime.
+- Inter is bundled up to 700. Labels the mockup sets at 800 use the 700 file.
+- Buttons: the default `FilledButton` is ink with paper text and a radius of 20. Sticky bars use the teal
+  `TealActionButton`. Chips turn ink when selected; switches and radios are teal.
+
+### Widgets (`lib/widgets/bold.dart`, `lib/widgets/heading.dart`)
+
+| Widget | What it is |
+|---|---|
+| `ColorBlockScreen` | A full colour block with an eyebrow, a big `Heading`, the character in an `AvatarCircle`, an optional sticker, and a paper sheet that rises over the circle's lower half (`EntranceMotion`, instant with reduced motion). The whole screen scrolls. Used for onboarding, location and not serviceable, OTP, empty cart, saved, orders, notifications and signed-out orders |
+| `AvatarCircle` | A ringed circle: a paper border, a 3 px ink ring and the slot cropped inside (`Illustration(inCircle: true, focus:)`). A full-scene JPEG is cropped by the circle and never shown as a pasted rectangle. `BlockTone.avatarFocus` holds the mockup's `object-position` per slot. Decorative by default; key `avatar-<SLOT>` |
+| `Heading`, `HeadingLine`, `ScriptTitle`, `BrushSwipe` | Big headings in Baloo 2 800. A `script` line is Dancing Script, tilted −3°, at 1.12×. A `brush` line sits on a painted mango swipe with ink text (paper on mango blocks). Three short dashes sit at the top corner (`doodle`). Screen readers hear one header with the lines joined. `ScriptTitle` is the inline "Your *cart*" title |
+| `Sticker` | The mockup badge: a 2 px ink outline, a 2,2 offset shadow and a slight tilt. Its colours are the same in light and dark |
+| `FoodTabBar`, `FoodTab` | Home, Shop, Cart, Orders, Account: icon over label, a teal notch and a teal-soft pill on the active tab, and the cart's line count on a coral pip ("Cart, 2 items"). Keys `tab-<label>` |
+| `ViewCartBar` | A floating teal bar above the tabs on Home and Shop while the cart has lines: "2 ITEMS ADDED", the server's subtotal and "View cart". Key `viewCartBar` |
+| `ProductCard` + `CardCartControl` | Paper card with a tinted picture. The ADD pill sits on the picture's bottom edge (inside the card's bounds so it can be tapped). In the cart it becomes a − n + stepper; with several cuts in the cart it reads "n IN CART" and opens the cart |
+| `CategoryBubble`, `FilterPill` | Round category bubbles (ink ring when chosen) and small filter pills (ink when on) |
+| `CompactStepper` | The − n + stepper for cards, cart lines and the product bar. The label is the server's quantity |
+| `SlotButton`, `SegmentedPills`, `SectionBox`, `SectionTitle`, `MenuCard`, `MenuRow`, `ProgressSteps`, `StickyActionBar`, `TealActionButton`, `RoundIconButton`, `PageDots` | Slot choice, EN / తెలుగు / हिं and Light / Auto / Dark controls, paper boxes, menus, four tracking bars and the sticky pay bar |
+
+### Screens
+
+| Screen | Look |
+|---|---|
+| Splash | Teal with `HOME_HERO` in the circle |
+| Onboarding ×3 | Coral "Straight off / *the boats*", teal "Cleaned / *your way*", mango "At your / *door*". Stickers: Morning catch, Your cut, Kept cold. Skip, dots, Next / Get started |
+| Location, not serviceable | Ice block: "Where do we / *deliver?*" with the pincode field; "Not here / *yet*" with the Coming soon sticker |
+| OTP | Mango block, six OTP boxes over one real text field (SMS autofill still works) |
+| Home | Greeting and "What's cooking *today?*", then a bento: today's catch (teal, wide), cleaned your way (coral), kept cold (mango). Each tile peeks at its `ONBOARDING_*` character. Then category bubbles, offers and "Popular today" cards with ADD |
+| Shop | "Shop *fresh*", search, bubbles, pills (Sort, In stock, Wild caught, Farmed; the filter sheet is kept), grid with ADD |
+| Product | Teal-soft hero with back and save, name and local names, price, "Choose your cut" tiles (the server's charge: Free, +₹40/kg, or Not available here), and a sticky bar with the stepper and Add to cart |
+| Cart | "Your *cart*", lines with steppers and remove, the coupon strip (mango-soft), up to three open slots, server notes, bill details, and a sticky bar ("Pay on delivery · Cash / UPI", Checkout + the server's estimated total). Empty: coral "Basket's / *empty*" |
+| Checkout | Steps in paper boxes, slots as buttons (it starts with the slot picked in the cart when the address offers it), and a pay bar with the payment method and Place order + the server's `expectedTotalPaise` |
+| Orders, tracking, order placed | Orders: cards with the status circle. Empty: mango "No orders / *yet*". Tracking: a teal block with the status and its character, a "Code ####" sticker while out for delivery, then a paper sheet with the slot, four progress bars, the delivery code, rider, timeline, receipt and actions. No moving dot. Order placed: a teal block with `ORDER_PLACED` and the receipt |
+| Saved, notifications | Coral "*Nothing* / saved yet"; ice "*All* / quiet" |
+| Account, settings | "My *account*", a mango profile card, quick tiles (Orders, Saved, Addresses) and a menu. Settings (`/account/settings`, open when signed out too): notification switches, Language EN / తెలుగు / हिं, Theme Light / Auto / Dark, Privacy and terms, Log out, Delete my account |
+
+Slot changes since §14: the home bento uses `ONBOARDING_FRESH`, `ONBOARDING_CLEANED` and
+`ONBOARDING_DELIVERY` peeks; `HOME_HERO` appears only on the splash; the four `FEATURE_*` slots are no longer on
+Home (the `FeatureCard` widget stays).
+
+### Rules kept
+
+- **Server values only (rule 4).** Card prices, line totals, the bill, the View cart amount (cart
+  `subtotalPaise`), the Checkout amount (`estimatedTotalPaise`) and the Place order amount
+  (`expectedTotalPaise`) are server values, only formatted. The app shows no "% off": the API sends no
+  discount percentage, and working one out would be a client calculation.
+- **ADD on a card** (`CartController.quickAdd`) reads the product detail and adds the first priced, orderable
+  size with the server's default orderable preparation and the server's `minOrder`. When nothing fits, it
+  opens the product page. The snack bar offers "Change cut". The card's − / + (`stepLine`) reads the product's
+  limits for that size and cut first (cart lines carry none). Below the minimum, − removes the line.
+- **Language** is stored (`fo.language`) but the app is English only for now; choosing తెలుగు or हिं says so.
+- `DEMO=true` works as before; the Demo panel stays at the top of Account.

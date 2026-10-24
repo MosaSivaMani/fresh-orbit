@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../state/location_state.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 
 /// First screen: decides where to go (onboarding → pincode → home). Tokens and preferences are already
 /// loaded in main(); the session is refreshed lazily by the first authenticated request.
@@ -36,9 +38,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final c = illustratedColors(context);
     return Scaffold(
-      backgroundColor: scheme.primary,
+      backgroundColor: BlockTone.teal.background(c),
       body: Center(
         child: Semantics(
           label: 'Fresh Orbit, loading',
@@ -46,12 +48,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Illustration(slot: IllustrationSlot.homeHero, size: 160, excludeFromSemantics: true),
-                const SizedBox(height: FreshSpacing.s4),
-                Text(
-                  'Fresh Orbit',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: scheme.onPrimary),
-                ),
+                const AvatarCircle(slot: IllustrationSlot.homeHero, size: 170),
+                const SizedBox(height: FreshSpacing.s5),
+                Text('Fresh Orbit', style: AppText.blockTitle(BlockTone.teal.foreground(c))),
               ],
             ),
           ),

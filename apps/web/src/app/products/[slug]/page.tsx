@@ -1,6 +1,6 @@
 import { formatDayShort, formatRupees, formatTime, isApiError } from "@fresh/core";
-import { Badge, Tabs, TabsContent, TabsList, TabsTrigger } from "@fresh/ui";
-import { Truck } from "lucide-react";
+import { Heading, Script, Sticker, Tabs, TabsContent, TabsList, TabsTrigger } from "@fresh/ui";
+import { Clock, Fish, MapPin, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -13,6 +13,7 @@ import { LocationBanner } from "@/components/location-banner";
 import { Gallery } from "@/components/product/gallery";
 import { PurchasePanel } from "@/components/product/purchase-panel";
 import { WishlistButton } from "@/components/product/wishlist-button";
+import { GetTheApp } from "@/components/get-the-app";
 import { Container, Section } from "@/components/section";
 import { productJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { settle } from "@/lib/settle";
@@ -84,7 +85,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
   const area = serviceability?.ok ? serviceability.value : null;
 
   return (
-    <Container className="flex flex-col gap-10 py-8 pb-28 sm:pb-8">
+    <Container className="flex flex-col gap-10 py-6 pb-32 sm:py-8 md:pb-8">
       <script
         type="application/ld+json"
         // Built from server values only; "<" is escaped so the data cannot close the script element.
@@ -100,24 +101,51 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
       />
       <LocationBanner pincode={api.pincode} pincodeRefused={located.pincodeRefused} />
 
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <Gallery images={product.images} name={product.name} />
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2">
-              <Badge tone="accent">
-                {sourceTypeLabels[product.sourceType] ?? product.sourceType}
-              </Badge>
-              {product.sourceRegion && <Badge>{product.sourceRegion}</Badge>}
-            </div>
-            <h1 className="text-text text-3xl font-bold sm:text-4xl">{product.name}</h1>
-            {product.localNames.length > 0 && (
-              <p className="text-text-muted">Also known as {product.localNames.join(", ")}</p>
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        {/* The tinted picture panel (D95), as on the cards. */}
+        <div className="bg-ice-soft relative self-start rounded-[28px] p-3 sm:p-4">
+          <Gallery images={product.images} name={product.name} />
+          <Sticker tone="mango" size="sm" className="absolute top-5 left-5 z-[1]">
+            {sourceTypeLabels[product.sourceType] ?? product.sourceType}
+          </Sticker>
+        </div>
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <Heading level={1} size="page" className="text-text sm:text-[2.5rem]">
+              {product.name}
+              {product.localNames[0] && (
+                <>
+                  {" "}
+                  <Script tone="accent">{product.localNames[0]}</Script>
+                </>
+              )}
+            </Heading>
+            {product.localNames.length > 1 && (
+              <p className="text-text-muted">
+                Also known as {product.localNames.slice(1).join(", ")}
+              </p>
             )}
             {product.speciesScientificName && (
               <p className="text-text-muted text-sm italic">{product.speciesScientificName}</p>
             )}
           </div>
+
+          <ul className="grid grid-cols-3 gap-2" aria-label="About this product">
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
+              <Fish aria-hidden="true" className="text-accent-text size-[18px]" />
+              {sourceTypeLabels[product.sourceType] ?? product.sourceType}
+            </li>
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
+              <MapPin aria-hidden="true" className="text-accent-text size-[18px]" />
+              {product.sourceRegion ?? product.category.name}
+            </li>
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
+              <Clock aria-hidden="true" className="text-accent-text size-[18px]" />
+              {area?.nextSlot
+                ? `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)}`
+                : "Pick a slot at checkout"}
+            </li>
+          </ul>
 
           <PurchasePanel product={product} />
 
@@ -126,10 +154,13 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           </div>
 
           {area?.serviceable && area.serviceArea && (
-            <div className="border-border bg-surface flex gap-3 rounded-xl border p-4 text-sm">
+            <div className="bg-surface-sand flex gap-3 rounded-[18px] p-4 text-sm">
               <Truck aria-hidden="true" className="text-accent-text mt-0.5 size-5 shrink-0" />
               <div className="flex flex-col gap-1">
-                <p className="text-text font-semibold">Delivery to {area.pincode}</p>
+                <p className="text-text font-semibold">
+                  Delivery to {area.pincode}
+                  {area.city ? `, ${area.city.name}` : ""}
+                </p>
                 {area.nextSlot && (
                   <p className="text-text-muted">
                     Next available slot: {formatDayShort(area.nextSlot.startAt)},{" "}
@@ -168,12 +199,21 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
 
       {relatedItems.length > 0 && (
         <Section
-          title={`More ${product.category.name.toLowerCase()}`}
+          title="More"
+          script={product.category.name.toLowerCase()}
           action={{ href: `/shop/${product.category.slug}`, label: "See all" }}
         >
-          <ProductGrid products={relatedItems} />
+          <ProductGrid
+            products={relatedItems}
+            {...(area?.nextSlot
+              ? {
+                  freshness: `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)} – ${formatTime(area.nextSlot.endAt)}`,
+                }
+              : {})}
+          />
         </Section>
       )}
+      <GetTheApp />
     </Container>
   );
 }

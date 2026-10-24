@@ -54,6 +54,8 @@ class Illustration extends StatefulWidget {
     this.size = 160,
     this.semanticLabel,
     this.excludeFromSemantics = false,
+    this.inCircle = false,
+    this.focus = Alignment.center,
   });
 
   final IllustrationSlot slot;
@@ -66,6 +68,13 @@ class Illustration extends StatefulWidget {
 
   /// Set when the text next to the illustration already says the same thing.
   final bool excludeFromSemantics;
+
+  /// Drawn inside a circle that clips it ([AvatarCircle]): a JPEG scene then fills the square with no rounded
+  /// frame of its own, cropped around [focus], so it is never shown as a pasted rectangle.
+  final bool inCircle;
+
+  /// The point of a JPEG scene kept in view when it is cropped (CSS `object-position`).
+  final Alignment focus;
 
   @override
   State<Illustration> createState() => _IllustrationState();
@@ -94,10 +103,11 @@ class _IllustrationState extends State<Illustration> {
           width: widget.size,
           height: widget.size,
           fit: scene ? BoxFit.cover : BoxFit.contain,
+          alignment: scene ? widget.focus : Alignment.center,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) => placeholder,
         );
-        if (!scene) return picture;
+        if (!scene || widget.inCircle) return picture;
         return ClipRRect(borderRadius: BorderRadius.circular(widget.size * 0.12), child: picture);
       },
     );

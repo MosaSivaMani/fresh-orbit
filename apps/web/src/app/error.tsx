@@ -1,9 +1,11 @@
 "use client";
 
-import { ErrorState } from "@fresh/ui";
+import { Button, CharacterState } from "@fresh/ui";
+import { RotateCw } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
-/** Route error boundary: a calm message, the reference for support, and a retry. */
+/** Route error boundary (D95): the ERROR_GENERIC character, a calm message, the reference for support and a retry. */
 export default function RouteError({
   error,
   reset,
@@ -15,12 +17,34 @@ export default function RouteError({
     console.error(error);
   }, [error]);
   return (
-    <div className="mx-auto max-w-xl px-4 py-16">
-      <ErrorState
+    <div role="alert" className="mx-auto max-w-xl px-4">
+      <CharacterState
+        slot="ERROR_GENERIC"
+        avatarSize="sm"
+        headingLevel={1}
+        className="py-14 sm:py-20"
         title="Something went wrong"
-        description="We could not show this page. Please try again; if it keeps happening, contact support with the reference below."
-        traceId={error.digest}
-        onRetry={reset}
+        description={
+          <>
+            <p>
+              We could not show this page. Please try again; if it keeps happening, contact support
+              with the reference below.
+            </p>
+            {error.digest && (
+              <p className="mt-1 font-mono text-xs break-all">Reference: {error.digest}</p>
+            )}
+          </>
+        }
+        actions={
+          <>
+            <Button size="lg" onClick={reset} leadingIcon={<RotateCw aria-hidden="true" />}>
+              Try again
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/">Go home</Link>
+            </Button>
+          </>
+        }
       />
     </div>
   );

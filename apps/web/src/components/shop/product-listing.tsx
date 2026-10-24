@@ -1,9 +1,11 @@
-import { Fish } from "lucide-react";
+import { formatDayShort, formatTime } from "@fresh/core";
+import { Button, CharacterState } from "@fresh/ui";
 import Link from "next/link";
-import { listProducts } from "@/api/endpoints/catalog";
+import { getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
 import { type RequestApi, loadWithLocation } from "@/api/server";
 import { type CategoryRef } from "@/api/types/catalog";
-import { ProductGrid } from "@/components/catalog/product-card";
+import { CategoryRail } from "@/components/catalog/category-rail";
+import { ProductGrid, categoryOffer, offersBySlug } from "@/components/catalog/product-card";
 import { LocationBanner } from "@/components/location-banner";
 import { SectionError } from "@/components/section";
 import {
@@ -15,7 +17,7 @@ import {
 import { settle } from "@/lib/settle";
 import { sourceTypeLabels } from "@/lib/status-maps";
 import { LinkPagination } from "./link-pagination";
-import { type ActiveChip, ShopFilters, ShopToolbar } from "./shop-filters";
+import { type ActiveChip, ShopToolbar } from "./shop-filters";
 
 const numberFormat = new Intl.NumberFormat("en-IN");
 
@@ -27,6 +29,9 @@ export async function ProductListing({
   basePath,
   filterCategories,
   categoryNames,
+  navCategories,
+  currentCategory,
+  offerCategoryIds,
 }: {
   api: RequestApi;
   filters: Filters;
@@ -35,11 +40,27 @@ export async function ProductListing({
   /** Category checkboxes (omitted on a category page). */
   filterCategories?: CategoryRef[];
   categoryNames?: Record<string, string>;
+  /** The round category row above the chips (D95). */
+  navCategories?: (CategoryRef & { imageUrl?: string | null })[];
+  currentCategory?: string;
+  /** Category ids whose promotion banner puts its offer line on every card (a category page and its parent). */
+  offerCategoryIds?: string[];
 }) {
   const hasLocation = api.pincode !== null;
-  const result = await settle(
-    loadWithLocation(api, (http) => listProducts(http, toListParams(filters, hasLocation))),
-  );
+  const [result, promotions, serviceability] = await Promise.all([
+    settle(loadWithLocation(api, (http) => listProducts(http, toListParams(filters, hasLocation)))),
+    settle(loadWithLocation(api, getPromotions)),
+    api.pincode ? settle(getServiceability(api.anonymous, api.pincode)) : null,
+  ]);
+  const offers = promotions.ok ? offersBySlug(promotions.value.data) : {};
+  const sharedOffer =
+    promotions.ok && offerCategoryIds
+      ? categoryOffer(promotions.value.data, offerCategoryIds)
+      : undefined;
+  const nextSlot = serviceability?.ok ? serviceability.value.nextSlot : null;
+  const freshness = nextSlot
+    ? `Next slot ${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
+    : undefined;
   const located = result.ok && !result.value.pincodeRefused && hasLocation;
 
   const chips: ActiveChip[] = [
@@ -70,56 +91,52 @@ export async function ProductListing({
         pincode={api.pincode}
         pincodeRefused={result.ok && result.value.pincodeRefused}
       />
-      <div className="grid gap-8 lg:grid-cols-[15rem_1fr]">
-        <aside aria-label="Filters">
-          <ShopFilters
-            filters={filters}
-            hasLocation={located}
-            {...(filterCategories ? { categories: filterCategories } : {})}
+      {navCategories && navCategories.length > 0 && (
+        <CategoryRail categories={navCategories} current={currentCategory} />
+      )}
+      <div className="flex min-w-0 flex-col gap-5">
+        <ShopToolbar
+          chips={chips}
+          filters={filters}
+          hasLocation={located}
+          hasQuery={filters.q !== undefined}
+          {...(filterCategories ? { categories: filterCategories } : {})}
+        />
+        {!result.ok ? (
+          <SectionError message={result.message} traceId={result.traceId} />
+        ) : result.value.data.items.length === 0 ? (
+          <CharacterState
+            slot="NO_SEARCH_RESULTS"
+            title="No products match these filters"
+            description={`Try removing a filter${filters.q ? " or searching for another name" : ""}.`}
+            actions={
+              <Button asChild>
+                <Link href={basePath}>Clear all filters</Link>
+              </Button>
+            }
           />
-        </aside>
-        <div className="flex min-w-0 flex-col gap-5">
-          <ShopToolbar
-            chips={chips}
-            sort={filters.sort}
-            hasLocation={located}
-            hasQuery={filters.q !== undefined}
-          />
-          {!result.ok ? (
-            <SectionError message={result.message} traceId={result.traceId} />
-          ) : result.value.data.items.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <span className="bg-accent-subtle text-accent-text flex size-12 items-center justify-center rounded-full">
-                <Fish aria-hidden="true" className="size-6" />
-              </span>
-              <p className="text-text font-semibold">No products match these filters.</p>
-              <p className="text-text-muted text-sm">
-                Try removing a filter{filters.q ? " or searching for another name" : ""}.
-              </p>
-              <Link
-                href={basePath}
-                className="text-accent-text text-sm font-semibold underline-offset-4 hover:underline"
-              >
-                Clear all filters
-              </Link>
-            </div>
-          ) : (
-            <>
-              <p className="text-text-muted text-sm" aria-live="polite">
-                {numberFormat.format(result.value.data.totalCount)}{" "}
-                {result.value.data.totalCount === 1 ? "product" : "products"}
-              </p>
-              <ProductGrid products={result.value.data.items} priorityCount={2} />
-              <LinkPagination
-                basePath={basePath}
-                searchParams={searchParams}
-                page={result.value.data.page}
-                pageSize={result.value.data.pageSize || PAGE_SIZE}
-                totalCount={result.value.data.totalCount}
-              />
-            </>
-          )}
-        </div>
+        ) : (
+          <>
+            <p className="text-text-muted text-sm" aria-live="polite">
+              {numberFormat.format(result.value.data.totalCount)}{" "}
+              {result.value.data.totalCount === 1 ? "product" : "products"}
+            </p>
+            <ProductGrid
+              products={result.value.data.items}
+              priorityCount={2}
+              offers={offers}
+              {...(sharedOffer ? { offer: sharedOffer } : {})}
+              {...(freshness ? { freshness } : {})}
+            />
+            <LinkPagination
+              basePath={basePath}
+              searchParams={searchParams}
+              page={result.value.data.page}
+              pageSize={result.value.data.pageSize || PAGE_SIZE}
+              totalCount={result.value.data.totalCount}
+            />
+          </>
+        )}
       </div>
     </div>
   );

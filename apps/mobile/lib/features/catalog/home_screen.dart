@@ -1,3 +1,6 @@
+// Home (D88): pincode, a greeting, the bento grid with characters peeking from the tile corners, category
+// bubbles, offers and the popular products with ADD buttons.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -5,14 +8,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../core/format.dart';
-import '../../illustrations/illustration.dart';
+import '../../state/account_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/location_state.dart';
+import '../../state/session.dart';
 import '../../theme/app_theme.dart';
-import '../../widgets/commerce.dart';
+import '../../widgets/bold.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
-import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
+import 'product_grid.dart';
 
 /// Pincode chip for app bars: "Delivering to 600041" → change pincode.
 class PincodeChip extends ConsumerWidget {
@@ -58,32 +63,31 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final home = ref.watch(homeProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: const PincodeChip(),
-        actions: [
-          IconButton(tooltip: 'Search', icon: const Icon(Icons.search), onPressed: () => context.push('/search')),
-          IconButton(
-            tooltip: 'Wishlist',
-            icon: const Icon(Icons.favorite_border),
-            onPressed: () => context.push('/wishlist'),
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(currentServiceabilityProvider);
+            return ref.refresh(homeProvider.future);
+          },
+          child: AsyncValueView<HomeData>(
+            value: home,
+            onRetry: () => ref.invalidate(homeProvider),
+            loading: const GridSkeleton(),
+            data: (data) => _HomeBody(data: data),
           ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(currentServiceabilityProvider);
-          return ref.refresh(homeProvider.future);
-        },
-        child: AsyncValueView<HomeData>(
-          value: home,
-          onRetry: () => ref.invalidate(homeProvider),
-          loading: const GridSkeleton(),
-          data: (data) => _HomeBody(data: data),
         ),
       ),
     );
   }
 }
+
+/// "Good morning" from the device clock: wording only, not a business value.
+String greeting(DateTime now) => now.hour < 12
+    ? 'Good morning'
+    : now.hour < 17
+    ? 'Good afternoon'
+    : 'Good evening';
 
 class _HomeBody extends ConsumerWidget {
   const _HomeBody({required this.data});
@@ -92,77 +96,145 @@ class _HomeBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final c = illustratedColors(context);
     final service = ref.watch(currentServiceabilityProvider).value;
+    final signedIn = ref.watch(sessionProvider.select((s) => s.signedIn));
+    final name = signedIn ? ref.watch(profileProvider).value?.fullName?.trim().split(' ').first : null;
+    final nextSlot = service?.nextSlot;
+    final catchLine = data.featuredProducts.isEmpty
+        ? 'Fish, prawns and crabs'
+        : data.featuredProducts.take(3).map((p) => p.name).join(', ');
+    final tints = softTints(c);
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          sliver: SliverList.list(
-            children: [
-              // Search field look-alike that opens the search screen.
-              Semantics(
-                button: true,
-                label: 'Search fish, prawns, crabs',
-                excludeSemantics: true,
-                child: InkWell(
-                  onTap: () => context.push('/search'),
-                  borderRadius: BorderRadius.circular(AppRadius.field),
-                  child: InputDecorator(
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search)),
-                    child: Text(
-                      'Search fish, prawns, crabs…',
-                      style: theme.textTheme.bodyLarge?.copyWith(color: freshColors(context).textMuted),
+          padding: const EdgeInsets.fromLTRB(14, 4, 6, 0),
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              children: [
+                const Expanded(child: PincodeChip()),
+                RoundIconButton(
+                  icon: Icons.search_rounded,
+                  tooltip: 'Search',
+                  onPressed: () => context.push('/search'),
+                ),
+                RoundIconButton(
+                  icon: Icons.favorite_border_rounded,
+                  tooltip: 'Saved',
+                  onPressed: () => context.push('/wishlist'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(18, 2, 18, 0),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name == null || name.isEmpty ? greeting(DateTime.now()) : '${greeting(DateTime.now())}, $name',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.muted),
+                ),
+                const ScriptTitle(text: 'What’s cooking', script: 'today?', size: 27),
+              ],
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              children: [
+                if (data.locationRequired)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: InfoBanner(
+                      text: 'Set your pincode to see prices and availability.',
+                      tone: BannerTone.warning,
                     ),
                   ),
+                _BentoTile(
+                  key: const Key('bentoCatch'),
+                  wide: true,
+                  color: c.tealText,
+                  foreground: c.onTeal,
+                  chip: nextSlot == null ? null : 'Next slot ${formatTimeRange(nextSlot.startAt, nextSlot.endAt)}',
+                  title: 'Today’s catch is in',
+                  subtitle: catchLine,
+                  slot: IllustrationSlot.onboardingFresh,
+                  onTap: () => context.go('/shop'),
                 ),
-              ),
-              const SizedBox(height: FreshSpacing.s4),
-              const _HomeHero(),
-              const SizedBox(height: FreshSpacing.s4),
-              if (data.locationRequired)
-                const InfoBanner(text: 'Set your pincode to see prices and availability.', tone: BannerTone.warning)
-              else if (service?.nextSlot != null)
-                InfoBanner(
-                  tone: BannerTone.success,
-                  text: 'Next delivery: ${formatSlotWindow(service!.nextSlot!.startAt, service.nextSlot!.endAt)}',
-                ),
-              if (data.featuredCategories.isNotEmpty) ...[
-                const SizedBox(height: FreshSpacing.s5),
-                Semantics(header: true, child: Text('Categories', style: theme.textTheme.titleLarge)),
-                const SizedBox(height: FreshSpacing.s2),
-                Wrap(
-                  spacing: FreshSpacing.s2,
-                  runSpacing: FreshSpacing.s2,
+                const SizedBox(height: 10),
+                Row(
                   children: [
-                    for (final c in data.featuredCategories)
-                      ActionChip(
-                        label: Text(c.name),
-                        onPressed: () =>
-                            context.go(Uri(path: '/shop', queryParameters: {'category': c.slug}).toString()),
+                    Expanded(
+                      child: _BentoTile(
+                        color: c.coral,
+                        foreground: BlockInk.ink,
+                        title: 'Cleaned your way',
+                        subtitle: 'Pick your cut',
+                        slot: IllustrationSlot.onboardingCleaned,
+                        onTap: () => context.go('/shop'),
                       ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _BentoTile(
+                        color: c.mango,
+                        foreground: BlockInk.ink,
+                        title: 'Kept cold',
+                        subtitle: 'Pick a delivery slot',
+                        slot: IllustrationSlot.onboardingDelivery,
+                        onTap: () => context.go('/shop'),
+                      ),
+                    ),
                   ],
                 ),
               ],
-              if (data.banners.isNotEmpty) ...[
-                const SizedBox(height: FreshSpacing.s5),
-                SizedBox(
-                  height: 140,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: data.banners.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: FreshSpacing.s3),
-                    itemBuilder: (context, i) => _OfferCard(banner: data.banners[i]),
-                  ),
-                ),
-              ],
-              const SizedBox(height: FreshSpacing.s6),
-              Semantics(header: true, child: Text('Why Fresh Orbit', style: theme.textTheme.titleLarge)),
-              const SizedBox(height: FreshSpacing.s2),
-              const _Features(),
-              const SizedBox(height: FreshSpacing.s5),
-              Semantics(header: true, child: Text('Popular today', style: theme.textTheme.titleLarge)),
-            ],
+            ),
+          ),
+        ),
+        if (data.featuredCategories.isNotEmpty)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 92,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                itemCount: data.featuredCategories.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, i) {
+                  final cat = data.featuredCategories[i];
+                  return CategoryBubble(
+                    label: cat.name,
+                    imageUrl: cat.imageUrl,
+                    tint: tints[i % tints.length],
+                    selected: false,
+                    onTap: () => context.go(Uri(path: '/shop', queryParameters: {'category': cat.slug}).toString()),
+                  );
+                },
+              ),
+            ),
+          ),
+        if (data.banners.isNotEmpty)
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 130,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                itemCount: data.banners.length,
+                separatorBuilder: (_, _) => const SizedBox(width: FreshSpacing.s3),
+                itemBuilder: (context, i) => _OfferCard(banner: data.banners[i]),
+              ),
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+          sliver: SliverToBoxAdapter(
+            child: Semantics(header: true, child: Text('Popular today', style: AppText.display(c.ink, 20))),
           ),
         ),
         if (data.featuredProducts.isEmpty)
@@ -175,18 +247,114 @@ class _HomeBody extends ConsumerWidget {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
             sliver: SliverGrid.builder(
               gridDelegate: productGridDelegate,
               itemCount: data.featuredProducts.length,
-              itemBuilder: (context, i) {
-                final p = data.featuredProducts[i];
-                return ProductCard(product: p, onTap: () => context.push('/product/${p.slug}'));
-              },
+              itemBuilder: (context, i) => ShopProductCard(product: data.featuredProducts[i], index: i),
             ),
           ),
         const SliverToBoxAdapter(child: SizedBox(height: FreshSpacing.s6)),
       ],
+    );
+  }
+}
+
+/// A bento tile: a colour, a bold title, a short line, an optional chip and a character peeking from the
+/// bottom-right corner in a small ringed circle.
+class _BentoTile extends StatelessWidget {
+  const _BentoTile({
+    super.key,
+    required this.color,
+    required this.foreground,
+    required this.title,
+    required this.subtitle,
+    required this.slot,
+    required this.onTap,
+    this.chip,
+    this.wide = false,
+  });
+
+  final Color color;
+  final Color foreground;
+  final String title;
+  final String subtitle;
+  final IllustrationSlot slot;
+  final VoidCallback onTap;
+  final String? chip;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final peek = wide ? 150.0 : 96.0;
+    return Semantics(
+      button: true,
+      label: [title, subtitle, ?chip].join(', '),
+      excludeSemantics: true,
+      child: Material(
+        color: color,
+        borderRadius: BorderRadius.circular(24),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: wide ? 150 : 130),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: wide ? -18 : -22,
+                  bottom: wide ? -30 : -22,
+                  child: AvatarCircle(slot: slot, size: peek),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: FractionallySizedBox(
+                    widthFactor: wide ? 0.58 : 0.75,
+                    alignment: Alignment.topLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (chip != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5B544),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              chip!,
+                              style: const TextStyle(
+                                fontFamily: AppFonts.body,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: BlockInk.ink,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        Text(title, style: AppText.display(foreground, wide ? 22 : 17, height: 1)),
+                        SizedBox(height: wide ? 14 : 22),
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: AppFonts.body,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -201,97 +369,17 @@ class _OfferCard extends StatelessWidget {
     final theme = Theme.of(context);
     return SizedBox(
       width: 260,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (banner.badge != null) Sticker(label: banner.badge!),
-              const SizedBox(height: FreshSpacing.s2),
-              Text(banner.title, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
-              if (banner.subtitle != null)
-                Text(banner.subtitle!, style: theme.textTheme.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis),
-            ],
-          ),
+      child: SectionBox(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (banner.badge != null) Sticker(label: banner.badge!, tone: StickerTone.mango),
+            const SizedBox(height: FreshSpacing.s2),
+            Text(banner.title, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
+            if (banner.subtitle != null)
+              Text(banner.subtitle!, style: theme.textTheme.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-class _HomeHero extends StatelessWidget {
-  const _HomeHero();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ill = illustratedColors(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s3, FreshSpacing.s5),
-      decoration: BoxDecoration(color: ill.tealSoft, borderRadius: BorderRadius.circular(AppRadius.hero)),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Sticker(label: 'Kept cold', tone: StickerTone.coral, icon: Icons.ac_unit_rounded),
-                const SizedBox(height: FreshSpacing.s3),
-                Semantics(
-                  header: true,
-                  child: Text('Fresh from the morning catch', style: theme.textTheme.headlineSmall),
-                ),
-                const SizedBox(height: FreshSpacing.s1),
-                Text(
-                  'Cleaned the way you cook and brought to your door.',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: freshColors(context).textMuted),
-                ),
-              ],
-            ),
-          ),
-          const EntranceMotion(
-            child: Illustration(slot: IllustrationSlot.homeHero, size: 140, excludeFromSemantics: true),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Features extends StatelessWidget {
-  const _Features();
-
-  static const _items = [
-    (
-      IllustrationSlot.featureHonestWeight,
-      'Honest weight',
-      'You pay for the net weight after cleaning, never for the waste.',
-    ),
-    (
-      IllustrationSlot.featureCleanedYourWay,
-      'Cleaned your way',
-      'Choose whole, steaks, fillets or cleaned for every item.',
-    ),
-    (IllustrationSlot.featureColdChain, 'Cold all the way', 'Kept chilled from our store to your door.'),
-    (IllustrationSlot.featureSameDay, 'Same-day slots', 'Order now and pick a slot today when one is open.'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(1);
-    return SizedBox(
-      height: 300 * scale.clamp(1.0, 2.0),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        clipBehavior: Clip.none,
-        padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s2),
-        itemCount: _items.length,
-        separatorBuilder: (_, _) => const SizedBox(width: FreshSpacing.s3),
-        itemBuilder: (context, i) {
-          final (slot, title, message) = _items[i];
-          return FeatureCard(slot: slot, number: i + 1, title: title, message: message);
-        },
       ),
     );
   }

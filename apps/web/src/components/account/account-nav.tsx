@@ -1,9 +1,9 @@
 "use client";
 
-import { Bell, Heart, MapPin, Package, User } from "lucide-react";
+import { FilterChip } from "@fresh/ui";
+import { Bell, Heart, MapPin, Package, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cx } from "@/lib/cx";
 
 const LINKS = [
   { href: "/account", label: "Profile", icon: User },
@@ -11,28 +11,25 @@ const LINKS = [
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
   { href: "/account/wishlist", label: "Saved items", icon: Heart },
   { href: "/account/notifications", label: "Notifications", icon: Bell },
+  { href: "/account/settings", label: "Settings", icon: Settings },
 ] as const;
 
+/** Account sections as a row of food-app chips, the current one filled with ink; the same row at every width. */
 export function AccountNav() {
   const pathname = usePathname();
   return (
     <nav aria-label="Account">
-      <ul className="flex gap-1 overflow-x-auto md:flex-col">
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         {LINKS.map(({ href, label, icon: Icon }) => {
           const active = href === "/account" ? pathname === href : pathname.startsWith(href);
           return (
             <li key={href} className="shrink-0">
-              <Link
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={cx(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium",
-                  active ? "bg-accent-subtle text-accent-text" : "text-text hover:bg-muted",
-                )}
-              >
-                <Icon aria-hidden="true" className="size-4" />
-                {label}
-              </Link>
+              <FilterChip asChild pressed={active}>
+                <Link href={href} aria-current={active ? "page" : undefined}>
+                  <Icon aria-hidden="true" />
+                  {label}
+                </Link>
+              </FilterChip>
             </li>
           );
         })}

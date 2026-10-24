@@ -88,6 +88,10 @@ Tailwind utilities use the kebab role name: `bg-surface`, `text-text-muted`, `bo
 | highlight (+hover, on-, subtle, text) | #E9AD55 | #E9AD55 | Offers, bestseller, attention |
 | success / warning / danger / info (+on-, subtle, text) | see JSON | see JSON | Status |
 | overlay | #04161D | #000000 | Dialog backdrop at 60% |
+| canvas | #F4EEE3 | #101918 | Warm app page (D88); the website page is `surface` (D95) |
+| mangoSoft / iceSoft | #FBEBC8 / #E4F3F8 | #3A2F17 / #1D3940 | Soft fills (offer cards, get-the-app band, picture tints) |
+| blockCoral / blockTeal / blockMango / blockIce (+ on-) | #F07A5A / #0B7D70 / #F5B544 / #BFE3EE | #E0714F / #2FA595 / #E0A43C / #4D93A6 | Colour blocks: website header, hero and page bands are `block-coral` with ink `on-block-coral` text |
+| onOutlineInk | #FFFDF8 | #0C1B1A | Text on `outline-ink` (cart pill, dark footer, pressed chips) |
 
 Note: white text on brand sea green `#0E9384` is 3.8:1 (fails AA for normal text), so the text-bearing accent
 role uses a deeper `#0B7D70` (5.0:1); `#0E9384` stays as the focus ring and decorative colour.
@@ -99,7 +103,7 @@ Adding a role means adding its pairs there.
 ### 3.3 Scale
 | Group | Values |
 |---|---|
-| Fonts | sans Inter → Noto Sans → system; display Baloo 2 → Inter (D53); mono JetBrains Mono (OFL; `@fresh/ui/fonts.css` self-hosts Baloo 2 and Inter) |
+| Fonts | sans Inter → Noto Sans → system; display Baloo 2 → Inter (D53); script Dancing Script → Segoe Script → cursive (D89, `font-script`, `--fo-font-script`); mono JetBrains Mono (OFL; `@fresh/ui/fonts.css` self-hosts Baloo 2, Inter and Dancing Script 700) |
 | Type (px size/line) | xs 12/16 · sm 14/20 · base 16/24 · lg 18/28 · xl 20/28 · 2xl 24/32 · 3xl 30/36 · 4xl 36/44 · 5xl 48/56 |
 | Spacing | 4 px unit (Tailwind `p-4` = 16 px); named 0…24 in JSON |
 | Radius | sm 6 · md 8 (inputs) · lg 12 · xl 16 (menus, tables) · 2xl 24 · 3xl 32 (dialogs, hero frames) · full (buttons, stickers). Cards 24, feature cards 28 |
@@ -167,6 +171,21 @@ Dark mode: set `document.documentElement.dataset.theme = "dark"` (or add class `
 | AppShell | Admin layout | collapsible sidebar, mobile drawer, top bar start/end, `renderLink` for routers, `embedded` | Skip link, `main`, `nav`, `aria-current`, `aria-expanded` on toggles |
 | DataTable | Admin lists (TanStack Table) | server sorting + paging, row selection + bulk actions, loading skeleton, refetch dimming, empty, error, compact/comfortable, `meta.align` | `caption`, `th scope`, `aria-sort`, `aria-busy`, labelled checkboxes |
 | FilterBar | Search + filters + active chips | actions slot, clear all | `role=search`; chip remove buttons named |
+| Heading, Script, Brush | Display headings with an optional handwritten (Dancing Script, −3°, 1.12×) word or line, an optional mango or paper brush swipe and dash doodle (D89) | level 1–4, size display/page/section/card, `line1`/`line2`, script line, brush tone, doodle | Real heading element; decorative swipe and doodle are CSS only |
+| AvatarCircle | Character in a ringed circle (paper border, ink ring) | xs/sm/md/lg, focus (object-position) | Decorative by default |
+| ColourBlockScreen, BentoTile, CategoryBubble, ProductCard, FloatingCartBar, TabBar | App look "Bold blocks" (D88); kept for the playground and the mobile reference; the website uses the food-app set below | see `bold-blocks.tsx` | Tab bar `nav` with `aria-current`; cart count in sr-only text |
+| CartAddControl | ADD button → − n + stepper → unavailable label, shared by `ProductCard` and `FoodCard` | `onAdd` or `addHref` ("Choose options for X"), bounds from the server, pending | "Add X to cart"; stepper names from QuantityStepper |
+| FilterChip | Filter toggle or link chip | `pressed` (ink fill, `aria-pressed` only when set), `asChild`, icon | Toggle state announced |
+| OptionTile | Radio drawn as a tile (cut choice, slot) | look teal / ink, description, disabled | Native radio; name from the label, description linked |
+| CouponStrip | Dashed mango coupon strip | icon, action | Text only; server's saving as given |
+| FoodHero | Website home hero (D95): coral block, tilted side photos from `lg` | `leftSlot`/`rightSlot` + focus | Photos decorative; children carry the heading |
+| PromiseCard | White promise card in the hero | title, line, coral caps label | Text |
+| CategoryCircle | "What's on your mind?" circle | selected (ink ring, `aria-current`), `asChild` | Link named by the label |
+| FoodCard | Website picture card: offer line on a dark gradient, freshness, meta, price, `CartAddControl` | tones ice/teal/coral/mango; offer optional | Name link covers the card; ADD and stepper sit above it |
+| AppBand | "Get the app" band | configured store links or fallback text, character circle | Real links only |
+| PageBand | Coral band on inner pages | eyebrow (breadcrumbs), title, description, aside, full-width child (search) | `h1` by default |
+| CharacterState | Empty / error / not-found state with a character circle | slot, avatar size, actions | Heading level configurable; picture decorative |
+
 
 ## 6. Usage rules
 

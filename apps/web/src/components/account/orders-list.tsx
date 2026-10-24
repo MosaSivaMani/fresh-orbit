@@ -1,19 +1,21 @@
 "use client";
 
 import { formatDayShort, formatRupees, formatTime, pageCount } from "@fresh/core";
-import { Button, EmptyState, ErrorState, Pagination, Skeleton, StatusBadge } from "@fresh/ui";
+import { AvatarCircle, Button, Pagination, Skeleton, StatusBadge, cn, focusRing } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Package } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { listOrders } from "@/api/endpoints/orders";
-import { asApiError, describeError } from "@/lib/errors";
+import { EmptyPage, LoadError } from "@/components/states";
+import { orderSlot } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";
 import { orderStatusMap } from "@/lib/status-maps";
 
 const PAGE_SIZE = 10;
 
+/** Orders as food-app cards (D95): the status character, number, status, slot, item count and the server's total. */
 export function OrdersList() {
   const [page, setPage] = useState(1);
   const orders = useQuery({
@@ -26,29 +28,28 @@ export function OrdersList() {
     return (
       <div className="flex flex-col gap-3">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-20 rounded-xl" />
+          <Skeleton key={i} className="h-24 rounded-[22px]" />
         ))}
       </div>
     );
   }
   if (orders.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your orders"
-        description={describeError(orders.error)}
-        traceId={asApiError(orders.error)?.traceId}
+        error={orders.error}
         onRetry={() => void orders.refetch()}
       />
     );
   }
   if (orders.data.items.length === 0) {
     return (
-      <EmptyState
-        icon={<Package aria-hidden="true" />}
+      <EmptyPage
+        slot="EMPTY_ORDERS"
         title="No orders yet"
-        description="Your orders will appear here."
-        action={
-          <Button asChild>
+        description="Your orders will appear here, with tracking from the boat to your door."
+        actions={
+          <Button asChild size="lg">
             <Link href="/shop">Start shopping</Link>
           </Button>
         }
@@ -59,16 +60,30 @@ export function OrdersList() {
   const pages = pageCount(orders.data);
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-col gap-3" aria-busy={orders.isFetching}>
+      <ul
+        className="grid gap-3 lg:grid-cols-2"
+        aria-busy={orders.isFetching}
+        aria-label="Your orders"
+      >
         {orders.data.items.map((o) => (
           <li key={o.id}>
             <Link
               href={`/orders/${encodeURIComponent(o.id)}`}
-              className="border-border bg-surface hover:border-border-strong flex items-center gap-4 rounded-xl border p-4"
+              className={cn(
+                "border-border bg-surface-paper hover:border-border-strong flex items-center gap-4 rounded-[22px] border p-4 transition-transform hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+                focusRing,
+              )}
             >
+              <AvatarCircle
+                slot={orderSlot(o.status)}
+                size="xs"
+                className="size-16 border-2 sm:size-20"
+              />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-text font-semibold">{o.orderNumber}</span>
+                  <span className="font-display text-text text-lg font-extrabold">
+                    {o.orderNumber}
+                  </span>
                   <StatusBadge code={o.status} map={orderStatusMap} />
                 </div>
                 <span className="text-text-muted text-sm">
@@ -76,10 +91,10 @@ export function OrdersList() {
                   {` · ${o.itemCount} ${o.itemCount === 1 ? "item" : "items"}`}
                 </span>
               </div>
-              <span className="text-text font-semibold tabular-nums">
+              <span className="font-display text-text text-lg font-extrabold tabular-nums">
                 {formatRupees(o.finalTotalPaise ?? o.totalPaise)}
               </span>
-              <ChevronRight aria-hidden="true" className="text-text-muted size-5" />
+              <ChevronRight aria-hidden="true" className="text-text-muted size-5 shrink-0" />
             </Link>
           </li>
         ))}

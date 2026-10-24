@@ -1,25 +1,41 @@
-/** Wordmark: an orbit ring around a dot, then the name. Decorative SVG; the link around it carries the name. */
-export function Logo({ inverse = false }: { inverse?: boolean }) {
+import Image from "next/image";
+
+import { Script } from "@fresh/ui";
+
+export type LogoTone = "default" | "coral" | "inverse";
+
+const word: Record<LogoTone, string> = {
+  default: "text-text",
+  coral: "text-on-block-coral",
+  inverse: "text-on-outline-ink",
+};
+
+/**
+ * Wordmark: the owner's fish, crab and hen mark (D119, `docs/design/brand/`) in a white circle with an ink ring, then
+ * "Fresh Orbit" with "Orbit" handwritten (D89). `coral` sits on the coral header, `inverse` on the dark footer. Decorative; the link around
+ * it carries the name.
+ */
+export function Logo({ tone = "default" }: { tone?: LogoTone }) {
   return (
-    <span className="flex items-center gap-2">
-      <svg viewBox="0 0 32 32" aria-hidden="true" className="size-8">
-        <circle cx="16" cy="16" r="15" className={inverse ? "fill-on-primary" : "fill-primary"} />
-        <ellipse
-          cx="16"
-          cy="16"
-          rx="11"
-          ry="5"
-          transform="rotate(-25 16 16)"
-          fill="none"
-          strokeWidth="1.8"
-          className="stroke-highlight"
-        />
-        <circle cx="16" cy="16" r="4" className={inverse ? "fill-primary" : "fill-on-primary"} />
-      </svg>
+    <span className="flex items-center gap-2 whitespace-nowrap">
       <span
-        className={`font-display text-lg font-bold tracking-tight ${inverse ? "text-on-primary" : "text-primary"}`}
+        aria-hidden="true"
+        className="border-outline-ink size-9 shrink-0 overflow-hidden rounded-full border-[3px] bg-white"
       >
-        Fresh Orbit
+        <Image
+          src="/brand/mark.png"
+          alt=""
+          width={64}
+          height={64}
+          className="size-full object-cover"
+          priority
+        />
+      </span>
+      <span className={`font-display text-[1.4375rem] leading-none font-extrabold ${word[tone]}`}>
+        Fresh{" "}
+        <Script tone={tone === "default" ? "accent" : "inherit"} className="text-[1.1em]">
+          Orbit
+        </Script>
       </span>
     </span>
   );

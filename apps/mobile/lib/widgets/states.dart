@@ -7,14 +7,16 @@ import 'package:fresh_theme/fresh_theme.dart';
 import '../api/api_error.dart';
 import '../illustrations/illustration.dart';
 import '../theme/app_theme.dart';
+import 'bold.dart';
 import 'motion.dart';
 
 export '../illustrations/illustration.dart' show IllustrationSlot;
 
 FreshColors freshColors(BuildContext context) => Theme.of(context).extension<FreshColors>()!;
 
-/// Illustrated empty state: the slot's character, a title, an optional line and an optional action. The
-/// illustration is decorative here because the title says the same thing.
+/// Inline empty state: the slot's character in a ringed circle avatar, a title, an optional line and an
+/// optional action. The illustration is decorative here because the title says the same thing. Full-screen
+/// empty states use [ColorBlockScreen] instead.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,
@@ -43,7 +45,7 @@ class EmptyState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               EntranceMotion(
-                child: Illustration(slot: slot, size: illustrationSize, excludeFromSemantics: true),
+                child: AvatarCircle(slot: slot, size: illustrationSize),
               ),
               const SizedBox(height: FreshSpacing.s4),
               Semantics(
@@ -98,7 +100,7 @@ class ErrorState extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!compact) ...[
-          EntranceMotion(child: Illustration(slot: slot, size: 168, excludeFromSemantics: true)),
+          EntranceMotion(child: AvatarCircle(slot: slot, size: 160)),
           const SizedBox(height: FreshSpacing.s4),
         ],
         Text(
@@ -251,7 +253,7 @@ const productGridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
   maxCrossAxisExtent: 240,
   mainAxisSpacing: FreshSpacing.s3,
   crossAxisSpacing: FreshSpacing.s3,
-  childAspectRatio: 0.58,
+  childAspectRatio: 0.72,
 );
 
 /// Renders an AsyncValue with the standard loading, error (with retry) and data states. While refreshing with

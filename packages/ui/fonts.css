@@ -1,15 +1,15 @@
 /*
- * Self-hosted fonts for the illustrated look (D53), all SIL Open Font License 1.1, served from the app's own
- * origin (no Google Fonts request). Each weight file covers every subset with unicode-range, so browsers
- * download only the subsets a page uses.
+ * Self-hosted fonts (D84, D89), all SIL Open Font License 1.1, served from the app's own origin (no Google Fonts
+ * request, CSP font-src 'self'). Each weight file covers every subset with unicode-range, so browsers download
+ * only the subsets a page uses.
  *
- *   Baloo 2 (display: headings, numbers on feature cards, stickers) 500 / 600 / 700 / 800
- *   Inter (body)                                                     400 / 500 / 600 / 700
+ *   Baloo 2 (display: headings, prices, stickers)               500 / 600 / 700 / 800
+ *   Inter (body)                                                 400 / 500 / 600 / 700
+ *   Dancing Script (handwritten second line of big headings)     700
  *
  * Import once in the app stylesheet, before "tailwindcss":
  *   @import "@fresh/ui/fonts.css";
- * Apps that load fonts another way (next/font) can skip this file and point --fo-font-display and
- * --fo-font-sans at their own families.
+ * The token stacks --fo-font-display, --fo-font-sans and --fo-font-script name these families.
  */
 @import "@fontsource/baloo-2/500.css";
 @import "@fontsource/baloo-2/600.css";
@@ -19,3 +19,4 @@
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
 @import "@fontsource/inter/700.css";
+@import "@fontsource/dancing-script/700.css";

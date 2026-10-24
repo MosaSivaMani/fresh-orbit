@@ -17,7 +17,14 @@ type TypeSize = { size: number; lineHeight: number };
 interface Tokens {
   brand: Record<string, string>;
   color: { light: Record<string, string>; dark: Record<string, string> };
-  font: { sans: string; display: string; mono: string; weight: Record<string, number> };
+  font: {
+    sans: string;
+    display: string;
+    /** Handwritten second line of big headings (D89). */
+    script: string;
+    mono: string;
+    weight: Record<string, number>;
+  };
   typeScale: Record<string, TypeSize>;
   spacing: Record<string, number | string>;
   radius: Record<string, number>;
@@ -61,6 +68,7 @@ function buildCss(): string {
   for (const [k, v] of entries(tokens.brand)) shared.push(`  --fo-brand-${kebab(k)}: ${v};`);
   shared.push(`  --fo-font-sans: ${tokens.font.sans};`);
   shared.push(`  --fo-font-display: ${tokens.font.display};`);
+  shared.push(`  --fo-font-script: ${tokens.font.script};`);
   shared.push(`  --fo-font-mono: ${tokens.font.mono};`);
   for (const [k, v] of entries(tokens.font.weight)) shared.push(`  --fo-font-weight-${k}: ${v};`);
   for (const [k, v] of entries(tokens.typeScale)) {
@@ -108,6 +116,7 @@ function buildTailwindCss(): string {
     lines.push(`  --color-brand-${kebab(k)}: var(--fo-brand-${kebab(k)});`);
   lines.push("  --font-sans: var(--fo-font-sans);");
   lines.push("  --font-display: var(--fo-font-display);");
+  lines.push("  --font-script: var(--fo-font-script);");
   lines.push("  --font-mono: var(--fo-font-mono);");
   for (const k of Object.keys(tokens.typeScale)) {
     lines.push(`  --text-${k}: var(--fo-text-${k});`);
@@ -156,6 +165,7 @@ function tailwindThemeObject(): Record<string, unknown> {
     fontFamily: {
       sans: "var(--fo-font-sans)",
       display: "var(--fo-font-display)",
+      script: "var(--fo-font-script)",
       mono: "var(--fo-font-mono)",
     },
     fontSize,
@@ -322,6 +332,7 @@ abstract final class FreshFonts {
   static const List<String> sansFallback = <String>[${fallback(tokens.font.sans)}];
   static const String display = '${firstFamily(tokens.font.display)}';
   static const List<String> displayFallback = <String>[${fallback(tokens.font.display)}];
+  static const String script = '${firstFamily(tokens.font.script)}';
   static const String mono = '${firstFamily(tokens.font.mono)}';
 }
 

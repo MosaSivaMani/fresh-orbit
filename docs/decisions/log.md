@@ -110,3 +110,22 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D104 | 2026-10-24 | EF history table created before migrating | The Migrations host creates EF's history table with EF's idempotent script before `MigrateAsync`; Error-level EF events are never filtered |
 | D105 | 2026-10-24 | Website city and category cache 300 s | Public city and category lists revalidate after 300 s; on-demand revalidation only if the owner wants instant changes |
 | D106 | 2026-10-24 | deploy.sh on macOS | Supports bash 3.2 with a `mkdir` lock fallback; servers keep `flock`; refuses `sh` and older bash |
+| D107 | 2026-10-24 | Mobile dark mode: ink text on teal | In dark mode, text on teal is dark ink `#0C1B1A`; paper on `#2FA595` is 2.98:1, below WCAG AA |
+| D108 | 2026-10-24 | Mobile cart then checkout | Cart's sticky bar is Checkout with the server's estimated total; checkout has the Place order bar; a slot picked in the cart is pre-selected when the address offers it |
+| D109 | 2026-10-24 | ADD on a product card uses server defaults | First priced orderable size, default orderable cut, minimum quantity; if none fits, open the product page; snack bar offers "Change cut" |
+| D110 | 2026-10-24 | Language choice stored only (for now) | EN / తెలుగు / हिं is saved; the app stays English until translations exist and says so |
+| D111 | 2026-10-24 | Settings reachable signed out | Notification switches and log out show only when signed in |
+| D112 | 2026-10-24 | Legal policy drafts (proposed, LG) | Policies live in `docs/legal/` (one Markdown file each, `{{OWNER: …}}` placeholders, **Check with lawyer:** marks) and supersede the policy drafts in `docs/content/`; the website support pages are filled from them only after owner and lawyer approval. Each policy states only behaviour the system has; unbuilt items it relies on are listed in `docs/legal/README.md` |
+| D113 | 2026-10-24 | Website header replaces tab bar | On the web the coral header (logo, pincode chip, Offers, Help, Orders, account, Cart pill with server line count) replaces the tab bar and floating cart bar at every width; phones show icons only |
+| D114 | 2026-10-24 | Offer lines on website cards | Only from promotion banners that link to the product or its category; never invented |
+| D115 | 2026-10-24 | ADD on a website list card | Reads the product first; adds directly (minimum quantity, default cut) when there is one size, else opens the product page |
+| D116 | 2026-10-24 | Website serves `/media/*` from the API | `app/media/[...path]/route.ts` proxies API image paths so pictures load on the website origin |
+| D117 | 2026-10-24 | Website hero text ink on coral | Ink headline on coral with the handwritten words on a paper brush, because white on coral is about 2.6:1 (fails contrast) |
+| D118 | 2026-10-24 | Web font loading and Heading API | Canvas, block and script tokens; `Heading` with script line and brush; fonts via `@fontsource` (Baloo 2, Inter, Dancing Script) instead of next/font |
+| D119 | 2026-10-24 | Brand logo | Owner's flat logo (fish, hen, crab in a blue wave) stored as `docs/design/brand/logo-master.png` (never edited), replacing an earlier 3D logo the same day; its fish-hen-crab mark (`mark.png`) sits in a white ink-ringed circle beside the wordmark in the website header and footer; full logo where there is room. Name stays "Fresh Orbit" in code until the owner confirms the logo's "Orbitt" spelling |
+| D120 | 2026-10-24 | Cart slot carried to checkout | The cart's chosen slot goes to checkout as `?slot=`; the server's preview decides whether it still holds, so `/checkout` is server-rendered |
+| D121 | 2026-10-24 | Cart stepper bounds until W4 closes | Each cart line reads its product for minimum, maximum and step (one read per line, cached 60 s); the stepper stays disabled until they arrive |
+| D122 | 2026-10-24 | Website account Settings page | `/account/settings` holds contact preferences, sign out and delete account; Profile is details only, Notifications is the inbox only |
+| D123 | 2026-10-24 | Website order tracking steps | Five usual steps (Confirmed → Delivered) lit up to the server's status; a cancelled, returned or failed order shows its recorded timeline |
+| D124 | 2026-10-24 | Website load-error characters | OFFLINE character for network or 503 failures, ERROR_GENERIC otherwise, always with the trace id |
+| D125 | 2026-10-24 | Sticky Place order bar | Sits at the bottom of the page grid at every width, not in a side column |

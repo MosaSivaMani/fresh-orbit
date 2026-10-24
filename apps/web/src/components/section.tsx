@@ -1,3 +1,5 @@
+import { Heading, Script } from "@fresh/ui";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode } from "react";
 
@@ -11,33 +13,49 @@ export function Container({ children, className, ...rest }: ComponentProps<"div"
 
 export function Section({
   title,
+  script,
   description,
   action,
   children,
   id,
 }: {
   title: string;
+  /** A handwritten word after the title (D89), e.g. title "Fresh this" + script "morning". */
+  script?: string;
   description?: string;
   action?: { href: string; label: string };
   children: ReactNode;
   id?: string;
 }) {
-  const headingId = `${id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-heading`;
+  const headingId = `${
+    id ??
+    `${title} ${script ?? ""}`
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+  }-heading`;
   return (
-    <section aria-labelledby={headingId} className="flex flex-col gap-5">
+    <section aria-labelledby={headingId} id={id} className="flex scroll-mt-24 flex-col gap-5">
       <div className="flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 id={headingId} className="text-text text-2xl font-bold sm:text-3xl">
+          <Heading id={headingId} level={2} size="section" className="text-text">
             {title}
-          </h2>
+            {script && (
+              <>
+                {" "}
+                <Script tone="accent">{script}</Script>
+              </>
+            )}
+          </Heading>
           {description && <p className="text-text-muted">{description}</p>}
         </div>
         {action && (
           <Link
             href={action.href}
-            className="text-accent-text shrink-0 text-sm font-semibold underline-offset-4 hover:underline"
+            className="text-accent-text inline-flex shrink-0 items-center gap-0.5 text-sm font-bold underline-offset-4 hover:underline"
           >
             {action.label}
+            <ChevronRight aria-hidden="true" className="size-4" />
           </Link>
         )}
       </div>
@@ -49,7 +67,7 @@ export function Section({
 /** Server-safe failure notice for a section whose data did not load. */
 export function SectionError({ message, traceId }: { message: string; traceId?: string }) {
   return (
-    <div role="alert" className="bg-danger-subtle text-danger-text rounded-xl p-4 text-sm">
+    <div role="alert" className="bg-danger-subtle text-danger-text rounded-2xl p-4 text-sm">
       <p>{message}</p>
       {traceId && <p className="mt-1 font-mono text-xs opacity-80">Reference: {traceId}</p>}
     </div>
