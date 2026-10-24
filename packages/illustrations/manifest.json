@@ -1,0 +1,458 @@
+{
+  "$description": "Fresh Orbit illustration slots (D53). Every image the apps show fills one slot. Edit scene, alt, characters or style here, then run `pnpm --filter @fresh/illustrations prompts` to rebuild the prompts and `pnpm --filter @fresh/illustrations validate`. To use a final image: save assets/<name>.webp, set file to it and status to FINAL. See README.md.",
+  "stylePrompt": "Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject",
+  "promptSuffix": "no text, no letters, no logos, no watermark",
+  "backgrounds": {
+    "SAND": "Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery",
+    "TRANSPARENT": "Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency"
+  },
+  "aspects": {
+    "1:1": "Square 1:1 framing, subject centred, full body or three-quarter view",
+    "4:3": "Landscape 4:3 framing, subject slightly off centre with room on one side"
+  },
+  "characters": {
+    "FISHMONGER": {
+      "role": "The fishmonger (our lead)",
+      "description": "A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture"
+    },
+    "RIDER": {
+      "role": "The delivery rider",
+      "description": "A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture"
+    },
+    "SUPPORT_AGENT": {
+      "role": "The support agent",
+      "description": "A kind man in his thirties with medium brown skin, short neat wavy black hair and a trimmed full beard, gentle eyes and a warm smile; wears a coral half-sleeve collared shirt and a teal over-ear headset with a small microphone; his prop is a slim tablet; same face, hair and clothes in every picture"
+    },
+    "HOME_COOK": {
+      "role": "The home cook",
+      "description": "A warm grandfather in his sixties with light brown skin, rounded cheeks, short silver hair and a thick silver moustache; wears a cream half-sleeve shirt with a fine teal check and a white veshti with a coral border, with a striped kitchen towel over one shoulder; his props are a round clay cooking pot and a steel ladle; same face, hair and clothes in every picture"
+    },
+    "POMFRET": {
+      "role": "The pomfret sidekick",
+      "description": "A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture"
+    }
+  },
+  "slots": [
+    {
+      "slot": "ONBOARDING_FRESH",
+      "file": "assets/onboarding-fresh.svg",
+      "placeholder": "assets/onboarding-fresh.svg",
+      "alt": "A smiling fishmonger holds up a basket of fresh fish on ice.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger stands at a simple seaside market stall in early morning light and proudly holds up a woven basket of glistening whole fish on crushed ice, while the pomfret peeks over the rim of the basket",
+      "aspect": "4:3",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger stands at a simple seaside market stall in early morning light and proudly holds up a woven basket of glistening whole fish on crushed ice, while the pomfret peeks over the rim of the basket. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ONBOARDING_CLEANED",
+      "file": "assets/onboarding-cleaned.svg",
+      "placeholder": "assets/onboarding-cleaned.svg",
+      "alt": "A fishmonger in gloves cleans and cuts fish at a spotless counter.",
+      "character": "FISHMONGER",
+      "scene": "The fishmonger wears teal food-safe gloves and neatly cuts a cleaned fish into even curry pieces on a spotless stainless steel counter, a bowl of finished pieces beside her",
+      "aspect": "4:3",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger wears teal food-safe gloves and neatly cuts a cleaned fish into even curry pieces on a spotless stainless steel counter, a bowl of finished pieces beside her. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ONBOARDING_DELIVERY",
+      "file": "assets/onboarding-delivery.svg",
+      "placeholder": "assets/onboarding-delivery.svg",
+      "alt": "A delivery rider on a scooter carries a cold box of fish.",
+      "character": "RIDER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The rider sits on her scooter and gives a thumbs up, the insulated cold box strapped on the back with a little frost on its lid, the pomfret riding happily on top of the box",
+      "aspect": "4:3",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider sits on her scooter and gives a thumbs up, the insulated cold box strapped on the back with a little frost on its lid, the pomfret riding happily on top of the box. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "LOCATION_PICK",
+      "file": "assets/location-pick.svg",
+      "placeholder": "assets/location-pick.svg",
+      "alt": "A delivery rider holds a big map pin to find your address.",
+      "character": "RIDER",
+      "scene": "The rider stands beside her scooter and holds up a large rounded teal map pin with both hands, looking hopeful",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider stands beside her scooter and holds up a large rounded teal map pin with both hands, looking hopeful. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "NOT_SERVICEABLE",
+      "file": "assets/not-serviceable.svg",
+      "placeholder": "assets/not-serviceable.svg",
+      "alt": "A delivery rider stops at a barrier at the end of the road.",
+      "character": "RIDER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The rider stands next to a soft striped coral and white road barrier where a short road ends, one hand on her helmet with an apologetic smile, the pomfret giving a small shrug",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider stands next to a soft striped coral and white road barrier where a short road ends, one hand on her helmet with an apologetic smile, the pomfret giving a small shrug. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "EMPTY_CART",
+      "file": "assets/empty-cart.svg",
+      "placeholder": "assets/empty-cart.svg",
+      "alt": "A fishmonger peeks into an empty shopping basket.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger holds an empty woven shopping basket and peers into it with a playful surprised look, the pomfret sitting inside the basket looking up at her",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger holds an empty woven shopping basket and peers into it with a playful surprised look, the pomfret sitting inside the basket looking up at her. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "EMPTY_WISHLIST",
+      "file": "assets/empty-wishlist.svg",
+      "placeholder": "assets/empty-wishlist.svg",
+      "alt": "A home cook holds a heart and thinks about what to save.",
+      "character": "HOME_COOK",
+      "scene": "The home cook holds a soft coral heart-shaped cushion in one hand and taps his chin with the other, thinking about what to cook next",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The home cook holds a soft coral heart-shaped cushion in one hand and taps his chin with the other, thinking about what to cook next. The home cook: A warm grandfather in his sixties with light brown skin, rounded cheeks, short silver hair and a thick silver moustache; wears a cream half-sleeve shirt with a fine teal check and a white veshti with a coral border, with a striped kitchen towel over one shoulder; his props are a round clay cooking pot and a steel ladle; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "EMPTY_ORDERS",
+      "file": "assets/empty-orders.svg",
+      "placeholder": "assets/empty-orders.svg",
+      "alt": "A delivery rider waits beside an empty cold box.",
+      "character": "RIDER",
+      "scene": "The rider sits on the seat of her parked scooter with her chin in her hand, the insulated cold box open and empty beside her, waiting patiently",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider sits on the seat of her parked scooter with her chin in her hand, the insulated cold box open and empty beside her, waiting patiently. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "EMPTY_NOTIFICATIONS",
+      "file": "assets/empty-notifications.svg",
+      "placeholder": "assets/empty-notifications.svg",
+      "alt": "A small pomfret rests beside a quiet bell.",
+      "character": "POMFRET",
+      "scene": "The pomfret floats calmly with its eyes half closed next to a large rounded teal bell that is resting quietly on the ground",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The pomfret floats calmly with its eyes half closed next to a large rounded teal bell that is resting quietly on the ground. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "EMPTY_ADDRESSES",
+      "file": "assets/empty-addresses.svg",
+      "placeholder": "assets/empty-addresses.svg",
+      "alt": "A home cook stands at his front door holding a blank map card.",
+      "character": "HOME_COOK",
+      "scene": "The home cook stands at the open teal door of a small coastal house with a terracotta roof, holding up a blank folded map card with a friendly smile",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The home cook stands at the open teal door of a small coastal house with a terracotta roof, holding up a blank folded map card with a friendly smile. The home cook: A warm grandfather in his sixties with light brown skin, rounded cheeks, short silver hair and a thick silver moustache; wears a cream half-sleeve shirt with a fine teal check and a white veshti with a coral border, with a striped kitchen towel over one shoulder; his props are a round clay cooking pot and a steel ladle; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "NO_SEARCH_RESULTS",
+      "file": "assets/no-search-results.svg",
+      "placeholder": "assets/no-search-results.svg",
+      "alt": "A fishmonger looks through a magnifying glass at an empty patch of ice.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger leans forward and looks through a big rounded teal magnifying glass at an empty patch of crushed ice, the pomfret peeking from behind her shoulder",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger leans forward and looks through a big rounded teal magnifying glass at an empty patch of crushed ice, the pomfret peeking from behind her shoulder. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "OUT_OF_STOCK",
+      "file": "assets/out-of-stock.svg",
+      "placeholder": "assets/out-of-stock.svg",
+      "alt": "A fishmonger shows an empty ice tray with an apologetic smile.",
+      "character": "FISHMONGER",
+      "scene": "The fishmonger holds out an empty steel tray of crushed ice with an apologetic smile, her other hand resting on her heart",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger holds out an empty steel tray of crushed ice with an apologetic smile, her other hand resting on her heart. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "LOGIN_OTP",
+      "file": "assets/login-otp.svg",
+      "placeholder": "assets/login-otp.svg",
+      "alt": "A home cook holds his phone, ready to enter the code he received.",
+      "character": "HOME_COOK",
+      "scene": "The home cook holds a smartphone with a softly glowing blank screen, a small rounded coral padlock floating above it, and smiles as he gets ready to type",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The home cook holds a smartphone with a softly glowing blank screen, a small rounded coral padlock floating above it, and smiles as he gets ready to type. The home cook: A warm grandfather in his sixties with light brown skin, rounded cheeks, short silver hair and a thick silver moustache; wears a cream half-sleeve shirt with a fine teal check and a white veshti with a coral border, with a striped kitchen towel over one shoulder; his props are a round clay cooking pot and a steel ladle; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ORDER_PLACED",
+      "file": "assets/order-placed.svg",
+      "placeholder": "assets/order-placed.svg",
+      "alt": "A fishmonger cheers among confetti because the order is placed.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger cheers with both arms raised while the pomfret does a happy flip, small rounded coral, teal and sand confetti shapes floating around them",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger cheers with both arms raised while the pomfret does a happy flip, small rounded coral, teal and sand confetti shapes floating around them. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ORDER_PACKING",
+      "file": "assets/order-packing.svg",
+      "placeholder": "assets/order-packing.svg",
+      "alt": "A fishmonger packs fish into an insulated box with ice packs.",
+      "character": "FISHMONGER",
+      "scene": "The fishmonger carefully places a neatly wrapped parcel of fish into an open insulated box lined with blue ice packs",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger carefully places a neatly wrapped parcel of fish into an open insulated box lined with blue ice packs. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ORDER_ON_THE_WAY",
+      "file": "assets/order-on-the-way.svg",
+      "placeholder": "assets/order-on-the-way.svg",
+      "alt": "A delivery rider is on her way with your order.",
+      "character": "RIDER",
+      "scene": "The rider rides her scooter forward with a happy determined face, the cold box on the back, a few soft motion lines behind the scooter",
+      "aspect": "4:3",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider rides her scooter forward with a happy determined face, the cold box on the back, a few soft motion lines behind the scooter. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ORDER_DELIVERED",
+      "file": "assets/order-delivered.svg",
+      "placeholder": "assets/order-delivered.svg",
+      "alt": "A delivery rider hands a parcel to a smiling home cook at his door.",
+      "character": "RIDER",
+      "supporting": [
+        "HOME_COOK"
+      ],
+      "scene": "At the doorstep of a small coastal house the rider hands a sealed fish parcel to the home cook, both smiling warmly",
+      "aspect": "4:3",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "At the doorstep of a small coastal house the rider hands a sealed fish parcel to the home cook, both smiling warmly. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. The home cook: A warm grandfather in his sixties with light brown skin, rounded cheeks, short silver hair and a thick silver moustache; wears a cream half-sleeve shirt with a fine teal check and a white veshti with a coral border, with a striped kitchen towel over one shoulder; his props are a round clay cooking pot and a steel ladle; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ORDER_CANCELLED",
+      "file": "assets/order-cancelled.svg",
+      "placeholder": "assets/order-cancelled.svg",
+      "alt": "A small pomfret holds a closed parcel and looks a little sad.",
+      "character": "POMFRET",
+      "scene": "The pomfret hugs a small closed teal parcel with an untied ribbon and looks a little sad but calm",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The pomfret hugs a small closed teal parcel with an untied ribbon and looks a little sad but calm. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "COMPLAINT_RECEIVED",
+      "file": "assets/complaint-received.svg",
+      "placeholder": "assets/complaint-received.svg",
+      "alt": "A support agent nods kindly and notes down your complaint.",
+      "character": "SUPPORT_AGENT",
+      "scene": "The support agent nods kindly while holding his tablet, a rounded clipboard with a large teal tick shape floating beside him",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The support agent nods kindly while holding his tablet, a rounded clipboard with a large teal tick shape floating beside him. The support agent: A kind man in his thirties with medium brown skin, short neat wavy black hair and a trimmed full beard, gentle eyes and a warm smile; wears a coral half-sleeve collared shirt and a teal over-ear headset with a small microphone; his prop is a slim tablet; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "HELP_SUPPORT",
+      "file": "assets/help-support.svg",
+      "placeholder": "assets/help-support.svg",
+      "alt": "A friendly support agent with a headset waves hello.",
+      "character": "SUPPORT_AGENT",
+      "scene": "Half-body portrait of the support agent waving hello with one hand, headset on, facing the viewer, centred so the picture can sit inside a coloured circle",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Half-body portrait of the support agent waving hello with one hand, headset on, facing the viewer, centred so the picture can sit inside a coloured circle. The support agent: A kind man in his thirties with medium brown skin, short neat wavy black hair and a trimmed full beard, gentle eyes and a warm smile; wears a coral half-sleeve collared shirt and a teal over-ear headset with a small microphone; his prop is a slim tablet; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ERROR_GENERIC",
+      "file": "assets/error-generic.svg",
+      "placeholder": "assets/error-generic.svg",
+      "alt": "A fishmonger untangles a fishing net with a puzzled smile.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger holds up a tangled teal fishing net with a puzzled but reassuring smile, the pomfret playfully caught in one corner of the net",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger holds up a tangled teal fishing net with a puzzled but reassuring smile, the pomfret playfully caught in one corner of the net. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "OFFLINE",
+      "file": "assets/offline.svg",
+      "placeholder": "assets/offline.svg",
+      "alt": "A delivery rider holds up her phone to find a signal under a small cloud.",
+      "character": "RIDER",
+      "scene": "The rider holds her phone up high looking for a signal, a small rounded grey rain cloud above her, her expression calm and patient",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider holds her phone up high looking for a signal, a small rounded grey rain cloud above her, her expression calm and patient. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "NOT_FOUND",
+      "file": "assets/not-found.svg",
+      "placeholder": "assets/not-found.svg",
+      "alt": "A small pomfret looks through a spyglass across calm sea waves.",
+      "character": "POMFRET",
+      "scene": "The pomfret floats above calm rounded sea waves and looks into the distance through a tiny brass spyglass, a small empty wooden boat bobbing nearby",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The pomfret floats above calm rounded sea waves and looks into the distance through a tiny brass spyglass, a small empty wooden boat bobbing nearby. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "HOME_HERO",
+      "file": "assets/home-hero.svg",
+      "placeholder": "assets/home-hero.svg",
+      "alt": "A fishmonger hands fresh fish to a delivery rider at a seaside stall.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "RIDER",
+        "POMFRET"
+      ],
+      "scene": "At her seaside market stall the fishmonger hands a basket of fresh fish to the rider, who is loading her insulated cold box, the pomfret floating happily between them, a calm harbour with two rounded fishing boats far behind",
+      "aspect": "4:3",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "At her seaside market stall the fishmonger hands a basket of fresh fish to the rider, who is loading her insulated cold box, the pomfret floating happily between them, a calm harbour with two rounded fishing boats far behind. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "FEATURE_HONEST_WEIGHT",
+      "file": "assets/feature-honest-weight.svg",
+      "placeholder": "assets/feature-honest-weight.svg",
+      "alt": "A fishmonger weighs a fish on a scale with a clear dial.",
+      "character": "FISHMONGER",
+      "scene": "The fishmonger hangs a fish on her stainless steel scale and points proudly at its large clean dial, which has only simple tick marks and a needle",
+      "aspect": "1:1",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger hangs a fish on her stainless steel scale and points proudly at its large clean dial, which has only simple tick marks and a needle. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "FEATURE_CLEANED_YOUR_WAY",
+      "file": "assets/feature-cleaned-your-way.svg",
+      "placeholder": "assets/feature-cleaned-your-way.svg",
+      "alt": "A fishmonger shows a whole fish, steaks and curry cuts on a tray.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger presents a steel tray with three neat portions side by side, a whole cleaned fish, round steaks and small curry cuts, while the pomfret points at its favourite",
+      "aspect": "1:1",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger presents a steel tray with three neat portions side by side, a whole cleaned fish, round steaks and small curry cuts, while the pomfret points at its favourite. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "FEATURE_COLD_CHAIN",
+      "file": "assets/feature-cold-chain.svg",
+      "placeholder": "assets/feature-cold-chain.svg",
+      "alt": "A small pomfret sits happily inside a frosty cold box.",
+      "character": "POMFRET",
+      "supporting": [
+        "RIDER"
+      ],
+      "scene": "The pomfret sits happily inside an open insulated cold box surrounded by blue ice packs and soft frost, while the rider holds the lid open and smiles",
+      "aspect": "1:1",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The pomfret sits happily inside an open insulated cold box surrounded by blue ice packs and soft frost, while the rider holds the lid open and smiles. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "FEATURE_SAME_DAY",
+      "file": "assets/feature-same-day.svg",
+      "placeholder": "assets/feature-same-day.svg",
+      "alt": "A delivery rider waves beside a big clock and a rising sun.",
+      "character": "RIDER",
+      "scene": "The rider waves next to a big rounded teal clock with no numbers, only two hands, with a soft coral morning sun rising behind it",
+      "aspect": "1:1",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "The rider waves next to a big rounded teal clock with no numbers, only two hands, with a soft coral morning sun rising behind it. The delivery rider: A confident young woman in her mid twenties with deep brown skin and a wide friendly smile; long black hair in a single side braid that shows below her helmet; wears a rounded teal scooter helmet with one coral stripe, a teal zip jacket with silver reflective bands over a sand t-shirt, dark grey cargo trousers and sturdy shoes; her props are a chunky insulated cold box in white and teal with a frosty lid and a small rounded teal scooter; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ADMIN_LOGIN",
+      "file": "assets/admin-login.svg",
+      "placeholder": "assets/admin-login.svg",
+      "alt": "A fishmonger holds up a key in the store's back office.",
+      "character": "FISHMONGER",
+      "scene": "In a tidy back office with steel shelves and a closed laptop the fishmonger holds up a brass key on a teal lanyard with a welcoming smile",
+      "aspect": "4:3",
+      "background": "SAND",
+      "status": "PLACEHOLDER",
+      "prompt": "In a tidy back office with steel shelves and a closed laptop the fishmonger holds up a brass key on a teal lanyard with a welcoming smile. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Full warm pale sand backdrop with a gentle gradient and a soft floor shadow, no busy scenery. Landscape 4:3 framing, subject slightly off centre with room on one side. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ADMIN_EMPTY",
+      "file": "assets/admin-empty.svg",
+      "placeholder": "assets/admin-empty.svg",
+      "alt": "A small pomfret looks into an empty box on a shelf.",
+      "character": "POMFRET",
+      "scene": "The pomfret floats beside an open empty cardboard box resting on a steel shelf and peers inside curiously",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The pomfret floats beside an open empty cardboard box resting on a steel shelf and peers inside curiously. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ADMIN_ALL_CAUGHT_UP",
+      "file": "assets/admin-all-caught-up.svg",
+      "placeholder": "assets/admin-all-caught-up.svg",
+      "alt": "A fishmonger relaxes with a cup of tea because all the work is done.",
+      "character": "FISHMONGER",
+      "supporting": [
+        "POMFRET"
+      ],
+      "scene": "The fishmonger relaxes on a stool with a steaming cup of tea and her feet up on a wooden crate, the pomfret napping on top of the crate",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The fishmonger relaxes on a stool with a steaming cup of tea and her feet up on a wooden crate, the pomfret napping on top of the crate. The fishmonger (our lead): A cheerful woman in her early forties from coastal Andhra Pradesh with warm brown skin, a round face with laugh lines and bright dark eyes; dark hair in a low bun wrapped with a small string of white jasmine flowers; a small red dot bindi and small gold stud earrings; wears a teal cotton saree with a thin coral border, sleeves rolled to the elbow, under a sand-coloured canvas apron with one front pocket; her props are a woven bamboo basket and a small stainless steel hanging scale; same face, hair and clothes in every picture. The pomfret sidekick: A small round silver pomfret fish about the size of a hand, glossy pearl-silver body with a faint teal sheen on the fins, large friendly dark eyes, rosy coral cheeks and tiny fins it uses like hands; it floats in the air beside the others and is always cute, never food; same look in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    },
+    {
+      "slot": "ADMIN_NO_ACCESS",
+      "file": "assets/admin-no-access.svg",
+      "placeholder": "assets/admin-no-access.svg",
+      "alt": "A support agent stands by a locked door and gently raises a hand.",
+      "character": "SUPPORT_AGENT",
+      "scene": "The support agent stands beside a closed rounded teal door with a chunky coral padlock and gently raises one open hand, polite and friendly",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "The support agent stands beside a closed rounded teal door with a chunky coral padlock and gently raises one open hand, polite and friendly. The support agent: A kind man in his thirties with medium brown skin, short neat wavy black hair and a trimmed full beard, gentle eyes and a warm smile; wears a coral half-sleeve collared shirt and a teal over-ear headset with a small microphone; his prop is a slim tablet; same face, hair and clothes in every picture. Stylised 3D cartoon illustration, soft clay render, rounded chunky shapes, smooth matte materials, gentle studio lighting with soft contact shadows, warm sand background, teal and coral accents, friendly expressive faces with simple eyes, cheerful and calm mood, coastal Andhra Pradesh, India, clean composition with generous empty space around the subject. Subject isolated on a plain flat very light sand background with nothing else, so the background can be removed cleanly and the image saved with transparency. Square 1:1 framing, subject centred, full body or three-quarter view. no text, no letters, no logos, no watermark"
+    }
+  ]
+}
