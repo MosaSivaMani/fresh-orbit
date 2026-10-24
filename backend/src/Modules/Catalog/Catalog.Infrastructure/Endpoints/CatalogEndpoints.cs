@@ -35,14 +35,19 @@ internal static class CatalogEndpoints
 
     private static void MapStorefront(RouteGroupBuilder group)
     {
-        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
+        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, IEnumerable<FreshOrbit.Catalog.Public.IHomeBannerSource> bannerSources, IClock clock, CancellationToken ct) =>
         {
             var location = await ResolveAsync(http, service, required: false, ct);
             var categories = await reads.GetCategoryTreeAsync(ct);
             var query = new ProductListQuery([], null, [], [], null, null, null, ProductSort.Featured, 0, 12) { FeaturedOnly = true };
             var (products, _) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
-            return TypedResults.Ok(new HomeResponse([], categories, products, location is null));
-        }).RequireRateLimiting(RateLimitPolicies.Public);
+            var source = bannerSources.FirstOrDefault();
+            var banners = source is null ? [] : await source.GetHomeBannersAsync(location?.FulfillmentLocationId, clock.UtcNow, ct);
+            return TypedResults.Ok(new HomeResponse(banners, categories, products, location is null));
+        })
+            .Produces<HomeResponse>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/categories", async (IStorefrontReads reads, CancellationToken ct) => TypedResults.Ok(await reads.GetCategoryTreeAsync(ct)))
             .RequireRateLimiting(RateLimitPolicies.Public);

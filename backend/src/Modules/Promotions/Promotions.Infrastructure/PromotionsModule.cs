@@ -13,6 +13,8 @@ using FreshOrbit.Promotions.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
+using FreshOrbit.SharedKernel.Web.Storage;
+using FreshOrbit.Catalog.Public;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +45,8 @@ public sealed class PromotionsModule : IModule
         services.AddEventHandler<OrderCancelled, PromotionsOrderCancelledHandler>();
         services.AddEventHandler<OrderPaymentFailed, PromotionsOrderPaymentFailedHandler>();
         services.AddScoped<IPromotionsApi, PromotionsApi>();
+        services.AddFreshOrbitFileStorage();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IHomeBannerSource, PromotionsHomeBannerSource>());
 
         services.AddScoped<ExpireCouponsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PromotionsJobs>());

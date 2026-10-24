@@ -120,8 +120,8 @@ public sealed record StorefrontCategory(Guid Id, string Slug, string Name, strin
 
 public sealed record StorefrontCategoryDetail(Guid Id, string Slug, string Name, string? Description, string? ImageUrl, CategoryRef? Parent, IReadOnlyList<StorefrontCategory> Children);
 
-/// <param name="Banners">Home banners belong to Promotions; empty until that module serves them.</param>
-public sealed record HomeResponse(IReadOnlyList<object> Banners, IReadOnlyList<StorefrontCategory> FeaturedCategories, IReadOnlyList<ProductListItem> FeaturedProducts, bool LocationRequired);
+/// <param name="Banners">Home banners from Promotions through <see cref="FreshOrbit.Catalog.Public.IHomeBannerSource"/> (W11), the same items as <c>GET /promotions</c>.</param>
+public sealed record HomeResponse(IReadOnlyList<FreshOrbit.Catalog.Public.HomeBanner> Banners, IReadOnlyList<StorefrontCategory> FeaturedCategories, IReadOnlyList<ProductListItem> FeaturedProducts, bool LocationRequired);
 
 public sealed record AvailabilityItem(Guid VariantId, AvailabilityStatus Status, string? PreparationCode, QuantityValue? MaxOrderableNow, long? UnitPricePaise, string? Message);
 
