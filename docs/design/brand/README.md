@@ -2,27 +2,23 @@
 
 | File | What |
 |---|---|
-| `logo-master.png` | Owner's logo, 1774 × 887 PNG with transparency, received 2026-10-24 (D119). Never edit; make new sizes from it |
-| `logo-640.png` | 640 px wide copy for docs, mockups and the website footer/hero |
+| `logo-master.png` | Owner's logo (flat style: fish, hen and crab in a blue wave, "Fresh Orbitt" in navy and blue, green leaf), 1774 × 887 PNG on white, received 2026-10-24 (D119). Never edit; make new sizes from it |
+| `logo-640.png` | 640 px wide copy for docs, mockups, emails |
+| `mark.png` | The fish, hen and crab cropped from the master, 560 × 560 on white. Interim small mark: website header and footer (`apps/web/public/brand/mark.png`, 128 px), later favicon and app icon |
 
-## Where the full logo is used
-Places with room for detail: website hero and footer, the app splash and sign-in screens, emails, invoices, social posts. It is
-a detailed illustration (fish, crab, chicken, splashes), so below about 200 px wide the words stop being readable.
+An earlier detailed 3D-style logo (fish, crab, chicken with splashes) was replaced by this one the same day at the owner's word.
 
-## Small mark still needed (owner to generate)
-The header (about 40 px tall), favicon, app icon and notification icon need a simple mark. Prompt for the owner:
+## Colours in the logo
+Navy `#0E3F57` ("Fresh"), sea blue `#1B9AD0` ("Orbit", the wave), coral-red `#E8512A` (hen, crab), leaf green `#6AA341`.
+They sit well with the app palette (D88): coral matches our coral, the blue goes with teal.
 
-> Simple flat app icon for a seafood and chicken delivery brand called "Fresh Orbit". A single blue fish curving in a circle
-> around a small orange crab, on a solid deep-blue (#0E4F8B) rounded square. Thick clean shapes, at most 4 colours, no
-> gradients, no splashes, no small details, no text, no letters. Must read clearly at 48 × 48 px. 1024 × 1024 PNG.
-
-And a one-line wordmark: the same lettering as the logo, "Fresh Orbit" on one line, blue, no pictures, transparent background,
-2000 × 500 PNG.
+## Where it is used
+- Full logo where there is room: website hero and footer, app splash and sign-in, emails, invoices, social posts.
+- The mark in a white circle with an ink ring next to the "Fresh Orbit" wordmark: website header and footer (`components/logo.tsx`).
+- Still to do: favicon and Android/iOS app icon from `mark.png` (the owner may give a clean square version with transparency).
 
 ## Open questions for the owner
-- The logo reads **"Fresh Orbitt"** (double t); the code, docs and domain plan use **"Fresh Orbit"**. The app keeps "Fresh Orbit"
-  until the owner confirms which spelling is right.
-- The logo shows **chicken**; the catalogue so far is seafood only. Chicken needs its own categories, prices and
-  storage rules before it is sold (configuration, rule 7).
-- The logo is blue; the app palette is coral, teal and mango (D88). Blue sits well on the white sheet and the dark footer;
-  on the coral header the small mark should use its own blue tile.
+- The logo reads **"Fresh Orbitt"** (double t); code, docs and the domain plan use **"Fresh Orbit"**. The wordmark in the app
+  keeps "Fresh Orbit" until the owner confirms the spelling.
+- The logo shows a **hen**: the catalogue so far is seafood only. Chicken needs its own categories, prices and storage rules
+  (configuration, rule 7) before it is sold.
