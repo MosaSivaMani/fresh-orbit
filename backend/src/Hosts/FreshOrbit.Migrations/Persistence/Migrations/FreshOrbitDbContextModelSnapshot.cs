@@ -954,6 +954,59 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.ToTable("customers", "customers");
                 });
 
+            modelBuilder.Entity("FreshOrbit.Customers.Domain.StockAlerts.StockAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<Guid>("FulfillmentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_location_id");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_at");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<Guid>("VariantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("variant_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stock_alerts");
+
+                    b.HasIndex("VariantId", "FulfillmentLocationId")
+                        .HasDatabaseName("ix_stock_alerts_variant_id_fulfillment_location_id");
+
+                    b.HasIndex("CustomerId", "VariantId", "FulfillmentLocationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_stock_alerts_customer_id_variant_id_fulfillment_location_id");
+
+                    b.ToTable("stock_alerts", "customers");
+                });
+
             modelBuilder.Entity("FreshOrbit.Customers.Domain.Wishlist.WishlistItem", b =>
                 {
                     b.Property<Guid>("CustomerId")
@@ -5699,6 +5752,11 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("character varying(254)")
                         .HasColumnName("support_email");
 
+                    b.Property<string>("SupportHours")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("support_hours");
+
                     b.Property<string>("SupportPhone")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -6199,6 +6257,16 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_addresses_customer_customer_id");
+                });
+
+            modelBuilder.Entity("FreshOrbit.Customers.Domain.StockAlerts.StockAlert", b =>
+                {
+                    b.HasOne("FreshOrbit.Customers.Domain.Customers.Customer", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_stock_alerts_customers_customer_id");
                 });
 
             modelBuilder.Entity("FreshOrbit.Customers.Domain.Wishlist.WishlistItem", b =>
