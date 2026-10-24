@@ -81,6 +81,22 @@ public sealed class StaffLookupTests(LocationsDatabase database) : LocationsTest
     }
 
     [Fact]
+    public async Task Admin_city_list_filters_by_upper_snake_status_codes()
+    {
+        var setup = await CreateServedSetupAsync();
+
+        var drafts = await AllPagesAsync(Admin, "/api/v1/admin/cities?status=DRAFT");
+        drafts.Select(c => c.GetProperty("id").GetGuid()).Should().Contain(setup.CityId);
+        drafts.Should().OnlyContain(c => c.GetProperty("status").GetString() == "DRAFT");
+
+        var active = await AllPagesAsync(Admin, "/api/v1/admin/cities?status=ACTIVE&status=PAUSED");
+        active.Select(c => c.GetProperty("id").GetGuid()).Should().NotContain(setup.CityId);
+
+        var unknown = await Admin.GetAsync("/api/v1/admin/cities?status=OPEN", Ct);
+        unknown.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
     public async Task Retirement_blocked_problem_has_the_documented_shape()
     {
         var setup = await CreateServedSetupAsync();

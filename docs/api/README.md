@@ -1152,7 +1152,7 @@ attemptedAt }], version }`. The delivery code is never shown to staff; the custo
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/admin/cities` | locations.manage | | All cities with status |
+| GET | `/api/v1/admin/cities` | locations.manage | | All cities with status; `status` (repeatable codes, e.g. `?status=DRAFT`; unknown code 422 on `status`) |
 | GET | `/api/v1/admin/cities/lookup` | any staff (§3) | | City lookup (G2): `status` (repeatable codes); paged items `{ id, code, name, status }` by name |
 | GET | `/api/v1/admin/me/locations` | any staff (§3) | | The caller's own fulfillment locations (G1; every location for all-locations staff); paged items `{ id, cityId, code, name, status }` by code |
 | POST | `/api/v1/admin/cities` | locations.manage | | Create (`DRAFT`) |
