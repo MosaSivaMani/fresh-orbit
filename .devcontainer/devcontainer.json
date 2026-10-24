@@ -1,0 +1,44 @@
+// Fresh Orbit in GitHub Codespaces: the whole stack (website, admin, API, Worker, Postgres, Mailpit) with the
+// sample store. After the Codespace opens, run: bash infra/scripts/codespace-up.sh
+// Owner steps: docs/runbooks/owner-testing.md
+{
+  "name": "Fresh Orbit",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    // Same SDK as backend/global.json.
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0.102" },
+    // Node 22 (>= 22.18 runs the packages' .ts build scripts); pnpm 10 comes from corepack (package.json
+    // "packageManager"), enabled in post-create.sh.
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    // Postgres and Mailpit run from infra/compose/docker-compose.dev.yml inside the Codespace.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  // A 4-core machine (16 GB) runs everything comfortably; a personal account's free monthly quota covers about
+  // 30 hours of it. 2 cores is too slow for the .NET build plus Next.js dev.
+  "hostRequirements": { "cpus": 4, "memory": "8gb", "storage": "32gb" },
+  "containerEnv": {
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1",
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  "forwardPorts": [3000, 5173, 5080, 8025],
+  "portsAttributes": {
+    "3000": { "label": "Website (customer)", "onAutoForward": "notify" },
+    "5173": { "label": "Admin (staff)", "onAutoForward": "notify" },
+    "5080": { "label": "API (sign-in codes at /api/v1/dev/sms)", "onAutoForward": "silent" },
+    "8025": { "label": "E-mails (Mailpit)", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "ignore" },
+    "1025": { "label": "Mailpit SMTP", "onAutoForward": "ignore" }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postAttachCommand": "echo 'Fresh Orbit: start everything with   bash infra/scripts/codespace-up.sh'",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["docs/runbooks/owner-testing.md"]
+    },
+    "vscode": {
+      "extensions": ["ms-dotnettools.csharp", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
