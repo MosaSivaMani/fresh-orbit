@@ -159,3 +159,4 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D153 | 2026-10-24 | Order needs location time zone | Placing an order requires it (422 `CONFIGURATION_MISSING`); rule ORD-R65 (Track E, PR #6) |
 | D154 | 2026-10-24 | Delivery ETA | Extends `nextSlot` (date, cutoffAt) instead of a new field (Track E, PR #6) |
 | D155 | 2026-10-24 | Stock-alert rate limit | Public per-IP limit until a customer limiter exists (Track E, PR #6) |
+| D156 | 2026-10-24 | Rich onboarding pages | Owner approved the three intro screens in the style of their reference (`design/mockups/onboarding-reference-owner.jpg`, preview `design/mockups/app-onboarding-rich.html`): bold two-line heading with brush, Dancing Script tagline, code-drawn boat/board/scooter, birds, rays, clouds and waves, three picture tiles, a food banner with a handwritten line, dots and Next pinned at the bottom; 12 new owner images (9 tiles, 3 banners); Dancing Script bundled in the app |
