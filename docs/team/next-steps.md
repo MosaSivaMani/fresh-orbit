@@ -4,7 +4,8 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 
 ## 0. Owner rules since 2026-10-24 (read first)
 - Nothing runs on the dev Mac (company laptop; owner: "dont run anything here"): edit and git only. Verification is GitHub CI (push a branch, open a draft PR, `gh pr checks`); designs are shown as artifacts.
-- Hosting (D127): Oracle sign-up failed; test with Codespaces and the demo APK, rent Hostinger KVM 2 only near launch. Earlier note: Oracle sign-up hit "Forbidden – number of requests exceeded"; retry later from a personal device and network, or fall back to Hostinger KVM 2. First deploy also needs DLT approval (API refuses to start without the SMS values).
+- Hosting (D127), owner's choice 2026-10-24: testing now with Option A (Codespaces + demo APK) and Option B (free Render + Neon demo link); later Option C (retry Oracle Always Free) and Option D (Hostinger KVM 1/2 at launch).
+- Hosting detail (D127): Oracle sign-up failed; test with Codespaces and the demo APK, rent Hostinger KVM 2 only near launch. Earlier note: Oracle sign-up hit "Forbidden – number of requests exceeded"; retry later from a personal device and network, or fall back to Hostinger KVM 2. First deploy also needs DLT approval (API refuses to start without the SMS values).
 - CI uses SDK 10.0.102 with `rollForward: latestPatch`, so it can pick up a newer analyser than the laptop: CA1873 (log arguments) broke main's Release build; fixed in SmsSenders, HostRunner, MigrationRunner and DltSms.
 
 ## 1. State of `main` (434a8dd and later)
