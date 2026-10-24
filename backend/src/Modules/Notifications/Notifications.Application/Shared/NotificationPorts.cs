@@ -19,8 +19,11 @@ public sealed class NotificationsOptions
     public int BatchSize { get; set; } = 50;
 }
 
-/// <param name="DltTemplateId">Operator DLT template id; required by real Indian SMS providers, ignored by the dev sender.</param>
-public sealed record SmsMessage(string Phone, string Text, string? DltTemplateId);
+/// <param name="Phone">E.164 phone number.</param>
+/// <param name="TemplateCode">Our template code (e.g. <c>OTP_LOGIN</c>); the DLT sender maps it to the operator's DLT template id.</param>
+/// <param name="Text">The rendered text; it must match the DLT-approved text with each variable filled in.</param>
+/// <param name="Variables">The variable values in the order their placeholders appear in the template (the DLT-approved order).</param>
+public sealed record SmsMessage(string Phone, string TemplateCode, string Text, IReadOnlyList<string> Variables);
 
 public sealed record EmailMessage(string To, string Subject, string Body);
 
@@ -32,7 +35,8 @@ public sealed record PushResult(string? ProviderMessageId, IReadOnlyList<string>
 
 /// <summary>
 /// SMS adapter: a DLT-registered provider outside Development and Testing (refused at startup otherwise, SEC-1).
-/// Implementations never log the text or the full phone number. Throws on a provider error.
+/// Implementations never log the text or the full phone number. Throws <see cref="SmsDeliveryException"/> when the
+/// message cannot be sent (other exceptions are bugs).
 /// </summary>
 public interface ISmsSender
 {

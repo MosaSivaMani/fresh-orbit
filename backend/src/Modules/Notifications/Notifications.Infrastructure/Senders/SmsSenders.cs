@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using FreshOrbit.Notifications.Application.Shared;
+using FreshOrbit.Notifications.Infrastructure.Senders.Dlt;
 using FreshOrbit.SharedKernel.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -9,7 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace FreshOrbit.Notifications.Infrastructure.Senders;
 
-/// <summary>Configuration section <c>Notifications:Sms</c> (SEC-1).</summary>
+/// <summary>Configuration section <c>Notifications:Sms</c> (SEC-1, E2E-1).</summary>
 public sealed class SmsOptions
 {
     public const string SectionName = "Notifications:Sms";
@@ -17,7 +18,7 @@ public sealed class SmsOptions
     /// <summary>Development-only sender: keeps messages in memory, never sends.</summary>
     public const string DevelopmentProvider = "DEVELOPMENT";
 
-    /// <summary>A TRAI DLT-registered SMS provider (<see cref="DltSmsSender"/>).</summary>
+    /// <summary>A TRAI DLT-registered SMS provider (<see cref="DltSmsSender"/> through an <see cref="IDltSmsGateway"/>).</summary>
     public const string DltProvider = "DLT";
 
     /// <summary>
@@ -32,16 +33,28 @@ public sealed class SmsOptions
 /// <summary>Section <c>Notifications:Sms:Dlt</c>. Secrets come from the environment, never from appsettings.</summary>
 public sealed class DltSmsOptions
 {
-    /// <summary>Provider API endpoint (HTTPS).</summary>
+    /// <summary>The provider adapter (<see cref="DltGateways"/>), e.g. <c>FAST2SMS</c>.</summary>
+    public string? Gateway { get; set; }
+
+    /// <summary>Provider API base URL (HTTPS). Empty = the gateway's documented public endpoint.</summary>
     public string? BaseUrl { get; set; }
 
     public string? ApiKey { get; set; }
 
-    /// <summary>The 6-character DLT sender id (header).</summary>
+    /// <summary>The DLT-registered sender id (header), 3 to 6 letters or digits.</summary>
     public string? SenderId { get; set; }
 
-    /// <summary>The DLT principal entity id of the business.</summary>
+    /// <summary>The DLT principal entity id of the business (digits).</summary>
     public string? PrincipalEntityId { get; set; }
+
+    /// <summary>Seconds to wait for the provider before the send counts as failed (1 to 60).</summary>
+    public int TimeoutSeconds { get; set; } = 10;
+
+    /// <summary>
+    /// Our SMS template code → the DLT content template id registered for its text (digits). Every code of
+    /// <see cref="DltTemplateCodes.All"/> is required at start-up.
+    /// </summary>
+    public Dictionary<string, string?> Templates { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>A sender that never delivers anything; allowed only in Development and Testing.</summary>
@@ -69,94 +82,50 @@ public sealed class DevelopmentSmsOutbox
         => [.. _messages.Where(m => string.Equals(m.Phone, phone, StringComparison.Ordinal)).Reverse()];
 }
 
+/// <param name="DltTemplateId">The id configured in <c>Notifications:Sms:Dlt:Templates</c> for the code, if any.</param>
 public sealed record DevelopmentSms(string Phone, string Text, string? DltTemplateId, DateTimeOffset SentAt);
 
 /// <summary>
 /// Development and Testing SMS sender: keeps each message in <see cref="DevelopmentSmsOutbox"/> (read it with
 /// <c>GET /api/v1/dev/sms?phone=…</c>) and logs only the masked phone and the length, never the text (SEC-1).
 /// </summary>
-public sealed partial class DevelopmentSmsSender(DevelopmentSmsOutbox outbox, IClock clock, ILogger<DevelopmentSmsSender> logger) : ISmsSender, IDevelopmentOnlySender
+public sealed partial class DevelopmentSmsSender(DevelopmentSmsOutbox outbox, IOptionsMonitor<SmsOptions> options, IClock clock, ILogger<DevelopmentSmsSender> logger) : ISmsSender, IDevelopmentOnlySender
 {
     public Task<string?> SendAsync(SmsMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(message);
-        outbox.Add(new DevelopmentSms(message.Phone, message.Text, message.DltTemplateId, clock.UtcNow));
-        LogSms(PhoneMasking.Mask(message.Phone), message.DltTemplateId ?? "-", message.Text.Length);
+        var dltTemplateId = options.CurrentValue.Dlt.Templates.GetValueOrDefault(message.TemplateCode);
+        outbox.Add(new DevelopmentSms(message.Phone, message.Text, string.IsNullOrWhiteSpace(dltTemplateId) ? null : dltTemplateId, clock.UtcNow));
+        LogSms(PhoneMasking.Mask(message.Phone), message.TemplateCode, message.Text.Length);
         return Task.FromResult<string?>(null);
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "DEV SMS to {Phone} (DLT {DltTemplateId}, {Length} characters) kept in the development outbox")]
-    private partial void LogSms(string phone, string dltTemplateId, int length);
-}
-
-/// <summary>
-/// Adapter stub for a TRAI DLT-registered SMS provider (SEC-1). It refuses to send when <c>Notifications:Sms:Dlt</c>
-/// is incomplete or the message has no DLT template id. The provider HTTP call is not implemented until a provider is
-/// chosen: sending throws, so a failure is never silent.
-/// </summary>
-public sealed class DltSmsSender(IOptionsMonitor<SmsOptions> options) : ISmsSender
-{
-    /// <summary>Names of the missing <c>Notifications:Sms:Dlt</c> settings; empty when configured.</summary>
-    public IReadOnlyList<string> MissingSettings() => MissingSettings(options.CurrentValue.Dlt);
-
-    /// <summary>Names of the settings missing from <paramref name="dlt"/>; empty when configured.</summary>
-    public static IReadOnlyList<string> MissingSettings(DltSmsOptions dlt)
-    {
-        ArgumentNullException.ThrowIfNull(dlt);
-        var missing = new List<string>();
-        if (!Uri.TryCreate(dlt.BaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
-        {
-            missing.Add($"{SmsOptions.SectionName}:Dlt:BaseUrl (https)");
-        }
-
-        if (string.IsNullOrWhiteSpace(dlt.ApiKey))
-        {
-            missing.Add($"{SmsOptions.SectionName}:Dlt:ApiKey");
-        }
-
-        if (string.IsNullOrWhiteSpace(dlt.SenderId))
-        {
-            missing.Add($"{SmsOptions.SectionName}:Dlt:SenderId");
-        }
-
-        if (string.IsNullOrWhiteSpace(dlt.PrincipalEntityId))
-        {
-            missing.Add($"{SmsOptions.SectionName}:Dlt:PrincipalEntityId");
-        }
-
-        return missing;
-    }
-
-    public Task<string?> SendAsync(SmsMessage message, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        var missing = MissingSettings();
-        if (missing.Count > 0)
-        {
-            throw new InvalidOperationException($"The DLT SMS provider is not configured; set {string.Join(", ", missing)}.");
-        }
-
-        if (string.IsNullOrWhiteSpace(message.DltTemplateId))
-        {
-            throw new InvalidOperationException("The SMS template has no DLT template id; register it with the operator and set dltTemplateId.");
-        }
-
-        throw new NotSupportedException("The DLT SMS provider client is not implemented yet; implement DltSmsSender.SendAsync for the chosen provider.");
-    }
+    [LoggerMessage(Level = LogLevel.Information, Message = "DEV SMS {TemplateCode} to {Phone} ({Length} characters) kept in the development outbox")]
+    private partial void LogSms(string phone, string templateCode, int length);
 }
 
 public static class SmsSenderRegistration
 {
     /// <summary>
     /// Registers the <see cref="ISmsSender"/> named by <c>Notifications:Sms:Provider</c> (read when first resolved, so
-    /// hosts and tests can override configuration; a sender registered earlier wins). The settings are validated at
-    /// host start, before any hosted service runs.
+    /// hosts and tests can override configuration; a sender registered earlier wins), the DLT gateways and their
+    /// HTTP clients. The settings are validated at host start, before any hosted service runs.
     /// </summary>
     public static IServiceCollection AddFreshOrbitSms(this IServiceCollection services)
     {
         services.AddOptions<SmsOptions>().BindConfiguration(SmsOptions.SectionName).ValidateOnStart();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<SmsOptions>, SmsOptionsValidator>());
         services.TryAddSingleton<DevelopmentSmsOutbox>();
+
+        // One adapter per provider (E2E-1). Each uses a named client from IHttpClientFactory, so handlers rotate.
+        services.AddHttpClient(Fast2SmsGateway.HttpClientName)
+            .ConfigureHttpClient((provider, client) =>
+            {
+                var timeout = provider.GetRequiredService<IOptions<SmsOptions>>().Value.Dlt.TimeoutSeconds;
+                client.Timeout = TimeSpan.FromSeconds(Math.Clamp(timeout, 1, 60));
+            });
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IDltSmsGateway, Fast2SmsGateway>());
+
         services.TryAdd(ServiceDescriptor.Singleton<ISmsSender>(provider =>
         {
             var configured = provider.GetRequiredService<IOptions<SmsOptions>>().Value.Provider.Trim();
@@ -172,8 +141,9 @@ public static class SmsSenderRegistration
 }
 
 /// <summary>
-/// Rule 7 / SEC-1: the Api and Worker refuse to start outside Development and Testing with the development sender
-/// (which never delivers), and refuse an unknown provider or an incomplete DLT configuration everywhere.
+/// Rule 7 / SEC-1 / E2E-1: the Api and Worker refuse to start outside Development and Testing with the development
+/// sender (which never delivers), and refuse an unknown provider or an incomplete DLT configuration (including a
+/// missing DLT template id for any SMS template code) everywhere.
 /// </summary>
 internal sealed class SmsOptionsValidator(IHostEnvironment environment) : IValidateOptions<SmsOptions>
 {
@@ -189,10 +159,10 @@ internal sealed class SmsOptionsValidator(IHostEnvironment environment) : IValid
             case "" or SmsOptions.DevelopmentProvider:
                 return ValidateOptionsResult.Success;
             case SmsOptions.DltProvider:
-                var missing = DltSmsSender.MissingSettings(options.Dlt);
-                return missing.Count == 0
+                var problems = DltSmsSettings.Problems(options.Dlt);
+                return problems.Count == 0
                     ? ValidateOptionsResult.Success
-                    : ValidateOptionsResult.Fail($"The DLT SMS provider is not configured; set {string.Join(", ", missing)}.");
+                    : ValidateOptionsResult.Fail($"The DLT SMS provider is not configured; set {string.Join(", ", problems)}.");
             default:
                 return ValidateOptionsResult.Fail(
                     $"{SmsOptions.SectionName}:Provider '{provider}' is unknown; use {SmsOptions.DltProvider} (or {SmsOptions.DevelopmentProvider} in Development).");

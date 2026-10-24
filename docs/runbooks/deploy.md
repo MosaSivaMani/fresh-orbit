@@ -14,8 +14,11 @@ proves migrations + reference data + idempotency, health behind Caddy, the Produ
 removes everything. Last result (2026-10-24): all green; findings in `docs/research/e2e-deploy-check-2026-10.md`.
 
 Notes from that check that matter on a server:
-- In Production, OTP sign-in returns 500 until the DLT provider client is written (`security-configuration.md` §2);
-  `smoke.sh` against a Production server therefore needs `SMOKE_STOP_BEFORE_OTP=true`.
+- In Production, OTP SMS go through the DLT sender and the Fast2SMS adapter (E2E-1). Before the first deploy, the
+  owner completes the DLT registration in `security-configuration.md` §2.1 and fills every `SMS_DLT_*` value
+  (including the 13 `SMS_DLT_TEMPLATE_*` ids); without them the Api and Worker exit 1 at start-up. A failed send
+  answers 503 `SMS_PROVIDER_UNAVAILABLE`. `smoke.sh` against a Production server still needs
+  `SMOKE_STOP_BEFORE_OTP=true`, because it cannot read the SMS.
 - `smoke.sh` follows the absolute image URLs the API returns behind Caddy (`FileStorage__PublicBaseUrl`).
 - `deploy.sh` now prunes only `${IMAGE_REGISTRY}/fresh-orbit-*` images (`SKIP_IMAGE_PRUNE=true` to skip pruning);
   `FO_PROJECT` / `FO_COMPOSE_OVERRIDE` exist only for the e2e check, leave them unset on servers.

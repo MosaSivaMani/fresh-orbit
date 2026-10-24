@@ -86,7 +86,7 @@ Merged to `main` (D64–D77; status table in `security/review-2026-10.md` §7): 
 - No agents of `fresh-orbit-3a` are running; nothing is in flight.
 
 ## 9. Open items from the end-to-end deploy check (`runbooks/e2e-check.md`)
-- E2E-1 Notifications: DLT SMS sender is a stub, so OTP sign-in returns 500 in Production until a provider is chosen and wired.
+- E2E-1 Notifications: done on `backend/deploy-gaps-sms` (DLT sender + Fast2SMS adapter; failed send → 503 `SMS_PROVIDER_UNAVAILABLE`; all 13 SMS templates need a DLT template id at start-up). Owner: DLT registration in `runbooks/security-configuration.md` §2.1. Decisions proposed, not yet numbered.
 - E2E-2 Api: done on `security/round-2` (`HostRunner.RunFreshOrbitAsync`: Api and Worker log one Critical line and exit 1).
 - E2E-3 Data Protection keys are not persisted; persist them or confirm unused.
 - E2E-4 Identity: done on `security/round-2` (staff loads use split queries).
