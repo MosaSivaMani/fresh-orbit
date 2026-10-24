@@ -1,0 +1,203 @@
+<title>Fresh Orbit Website Styles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--page:#FFFFFF;--soft:#F7F3EC;--paper:#FFFDF8;--ink:#14302F;--muted:#5B6F6B;--line:#ECE3D3;--teal:#0B7D70;--teal-deep:#075F55;--teal-soft:#DDF1ED;--coral:#F07A5A;--coral-soft:#FDE7DF;--coral-deep:#D9542F;--mango:#F5B544;--mango-soft:#FDF1D6;--ice:#BFE3EE;--ice-soft:#E8F5F9;--shadow:0 1px 2px rgb(40 30 10 / .06),0 8px 22px rgb(40 30 10 / .09);--display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--scr:"Dancing Script","Segoe Script",cursive}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0F1817;--soft:#15211F;--paper:#1A2826;--ink:#F4EBDD;--muted:#A9B8B3;--line:#2C3E3B;--teal:#2FA595;--teal-deep:#7FD9CB;--teal-soft:#16413C;--coral-soft:#3D2620;--mango-soft:#3A2F17;--ice-soft:#1D3940;--shadow:0 1px 2px rgb(0 0 0 / .3),0 8px 22px rgb(0 0 0 / .35);color-scheme:dark}}
+:root[data-theme="dark"]{--page:#0F1817;--soft:#15211F;--paper:#1A2826;--ink:#F4EBDD;--muted:#A9B8B3;--line:#2C3E3B;--teal:#2FA595;--teal-deep:#7FD9CB;--teal-soft:#16413C;--coral-soft:#3D2620;--mango-soft:#3A2F17;--ice-soft:#1D3940;--shadow:0 1px 2px rgb(0 0 0 / .3),0 8px 22px rgb(0 0 0 / .35);color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--soft);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:800;margin:0;line-height:1.05;text-wrap:balance}
+p{margin:0}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.scr{font-family:var(--scr);font-weight:700;font-size:1.12em;color:var(--teal);display:inline-block;transform:rotate(-2deg)}
+.art{width:78%;height:78%;display:block}
+.art.sm{width:76%;height:76%}
+.logo{display:flex;align-items:center;gap:8px;font:800 23px var(--display);white-space:nowrap}
+.logo i{width:28px;height:28px;border-radius:50%;background:var(--coral);border:3px solid var(--ink);box-shadow:inset -6px -4px 0 var(--mango)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--soft);padding:8px 0}
+.tabs button{font:700 14px var(--body);color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tabs button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--soft)}
+.lede{color:var(--muted);max-width:70ch}
+.browser{border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgb(40 30 10 / .16);border:1px solid var(--line);background:var(--page)}
+.chrome{display:flex;align-items:center;gap:6px;background:#E8E0D2;padding:10px 14px}
+.chrome i{width:11px;height:11px;border-radius:50%;background:#FFFDF8}
+.chrome span{margin-left:12px;background:#FFFDF8;color:#5B6F6B;border-radius:8px;padding:3px 12px;font-size:12px;min-width:0;max-width:340px;flex:1}
+/* v1 store */
+.v1{background:var(--page);padding-bottom:0}
+.util{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--teal);color:#EAF7F4;font-size:12.5px;padding:7px 28px}
+.util span{display:flex;align-items:center;gap:6px}.util .ic{width:14px;height:14px}.util a{text-decoration:underline;color:#fff}
+.h1{display:flex;align-items:center;gap:18px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cat-btn{font:600 14px var(--body);padding:9px 14px;border-radius:10px;background:var(--soft)}
+.srch{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--muted);font-size:14px}
+.hl,.hc{display:flex;align-items:center;gap:6px;font:600 14px var(--body)}
+.hc{position:relative;background:var(--coral-deep);color:#fff;border-radius:12px;padding:9px 16px}
+.hc b{background:#fff;color:var(--coral-deep);border-radius:999px;font-size:11px;min-width:18px;height:18px;display:grid;place-items:center}
+.slider{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;padding:18px 28px 30px}
+.slide{grid-column:span 2;display:grid;grid-template-columns:1.1fr 1fr;border-radius:22px;overflow:hidden;background:linear-gradient(120deg,#0B7D70,#0A5C55);color:#fff;min-height:290px}
+.st{padding:30px 32px;display:grid;gap:12px;align-content:center}
+.kick{font:700 11.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--mango)}
+.st h2{font-size:42px;color:#fff}.st h2 .scr{color:var(--mango);display:block}
+.st p{color:#D6EEEA;max-width:34ch}
+.cta{justify-self:start;display:flex;align-items:center;gap:4px;background:var(--mango);color:#14302F;font:800 15px var(--body);border-radius:12px;padding:11px 18px}
+.si img{width:100%;height:100%;object-fit:cover;display:block}
+.side{display:grid;gap:14px}
+.mini{position:relative;border-radius:22px;overflow:hidden;padding:18px;display:grid;align-content:start;gap:2px;min-height:138px;color:#14302F}
+.mini b{font:800 24px var(--display);position:relative;z-index:1}.mini span{font-size:13px;font-weight:600;position:relative;z-index:1;max-width:55%}
+.mini img{position:absolute;right:0;top:0;width:52%;height:100%;object-fit:cover;-webkit-mask:linear-gradient(90deg,transparent,#000 35%);mask:linear-gradient(90deg,transparent,#000 35%)}
+.m1{background:var(--mango)}.m2{background:var(--coral)}
+.arr{position:absolute;top:44%;width:38px;height:38px;border-radius:50%;background:#fff;color:#14302F;box-shadow:var(--shadow);display:grid;place-items:center}
+.arr.l{left:14px}.arr.r{right:14px}
+.dots{position:absolute;left:0;right:0;bottom:10px;display:flex;gap:6px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:999px;background:var(--line)}.dots i.on{width:22px;background:var(--teal)}
+.sh{display:flex;justify-content:space-between;align-items:baseline;padding:8px 28px 12px}
+.sh h3{font-size:28px}
+.sh a{display:flex;align-items:center;gap:2px;font:700 14px var(--body);color:var(--coral-deep)}
+.cats1{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;padding:0 28px 26px}
+.c1{display:grid;justify-items:center;gap:8px;font:600 13.5px var(--body);text-align:center}
+.cp{width:100%;aspect-ratio:1;max-width:120px;border-radius:22px;display:grid;place-items:center}
+.row1{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:18px;padding:0 28px 28px}
+.pc{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:grid}
+.ph{position:relative;aspect-ratio:4/3;display:grid;place-items:center}
+.tag{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:4px;background:#fff;color:#14302F;font:600 11px var(--body);border-radius:999px;padding:4px 9px}
+.tag .ic{width:12px;height:12px}
+.best{position:absolute;left:10px;top:10px;background:var(--mango);color:#14302F;font:800 11px var(--body);border-radius:6px;padding:3px 8px}
+.pb{padding:12px 14px 14px;display:grid;gap:4px}
+.pb b{font:700 15px/1.3 var(--body)}
+.mt{font-size:12.5px;color:var(--muted)}
+.pr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.pr span:first-child{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.rs{font:800 19px var(--display)!important}
+.pr s{font-size:12.5px;color:var(--muted)}
+.off{font:700 12px var(--body);color:var(--teal-deep)}
+.add{display:flex;align-items:center;gap:4px;background:var(--coral-deep);color:#fff;font:700 13.5px var(--body);border-radius:10px;padding:8px 14px}
+.add .ic{width:14px;height:14px;stroke-width:3}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:0 28px 30px;background:var(--soft);border-radius:22px;padding:18px}
+.why div{display:grid;grid-template-columns:44px 1fr;column-gap:12px;align-items:center}
+.why .ic{grid-row:span 2;width:44px;height:44px;padding:10px;border-radius:14px;background:var(--paper);color:var(--teal)}
+.why b{font:800 16px var(--display)}.why span{font-size:12.5px;color:var(--muted)}
+.ft,.ft2{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#14302F;color:#CFE0DC;font-size:13px;padding:20px 28px}
+.ft .logo,.ft2 .logo{color:#FFFDF8}
+/* v2 food app */
+.v2{background:var(--page)}
+.h2{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 32px;background:#F07A5A;color:#14302F;flex-wrap:wrap}
+.h2 nav{display:flex;gap:22px;align-items:center;font:600 14.5px var(--body)}
+.h2 nav a{display:flex;align-items:center;gap:6px}
+.cartp{background:#14302F;color:#FFFDF8;border-radius:12px;padding:8px 14px}
+.hero2{position:relative;background:#F07A5A;padding:30px 32px 56px;overflow:hidden;text-align:center}
+.hero2 .fl,.hero2 .fr{position:absolute;width:220px;height:300px;object-fit:cover;border-radius:28px;top:30px;box-shadow:0 18px 40px rgb(0 0 0 / .2)}
+.hero2 .fl{left:-40px;transform:rotate(-8deg)}.hero2 .fr{right:-40px;transform:rotate(8deg)}
+.hc2{position:relative;z-index:1;max-width:760px;margin:0 auto;display:grid;gap:22px;justify-items:center}
+.hc2 h2{font-size:clamp(34px,4.4vw,52px);color:#FFFDF8;text-shadow:0 2px 0 rgb(0 0 0 / .08)}
+.hc2 h2 .scr{color:#14302F}
+.hs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%}
+.hs span{display:flex;align-items:center;gap:8px;background:#fff;color:#5B6F6B;border-radius:16px;padding:15px 18px;font-size:14px;box-shadow:0 6px 16px rgb(0 0 0 / .12)}
+.hs .loc{min-width:230px}.hs .q{flex:1;min-width:260px}
+.hs .ic{color:#F07A5A}
+.pills{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px;width:100%}
+.pills span{display:grid;text-align:left;background:#fff;color:#14302F;border-radius:22px;padding:16px 18px;font:800 15px/1.15 var(--display);min-height:120px;align-content:start;box-shadow:0 8px 18px rgb(0 0 0 / .12)}
+.pills b{font-size:22px}
+.pills small{font:700 11px var(--body);color:#F07A5A;margin-top:6px;letter-spacing:.06em}
+.wrap2{padding:26px 32px 30px;display:grid;gap:16px}
+.wrap2 hr{border:0;border-top:1px solid var(--line);margin:8px 0}
+.sh2{display:flex;justify-content:space-between;align-items:center}
+.sh2 h3{font-size:26px}
+.ar{display:flex;gap:8px}.ar .ic{width:34px;height:34px;padding:8px;border-radius:50%;background:var(--soft)}
+.wom{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
+.wom div{display:grid;justify-items:center;gap:6px}
+.wom b{font:600 14px var(--body);color:var(--muted)}
+.cc{width:110px;height:110px;max-width:100%;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.row2,.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:22px}
+.fc{display:grid;gap:10px;transition:transform .15s}
+.fp{position:relative;aspect-ratio:16/11;border-radius:20px;overflow:hidden;display:grid;place-items:center}
+.ov{position:absolute;inset:auto 0 0 0;padding:28px 14px 10px;background:linear-gradient(transparent,rgb(0 0 0 / .72));color:#fff;font:800 20px var(--display);letter-spacing:.01em}
+.fb{display:grid;gap:2px;padding:0 6px}
+.fb b{font:700 16.5px/1.25 var(--body)}
+.rt{display:flex;align-items:center;gap:6px;font:600 13px var(--body)}
+.rt i{width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center}.rt .ic{width:12px;height:12px}
+.fb .pr{justify-content:flex-start}
+.addg{margin-left:auto;font:800 13.5px var(--body);color:var(--teal-deep);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:6px 18px;box-shadow:var(--shadow)}
+.flt{display:flex;flex-wrap:wrap;gap:8px}
+.flt span{border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;font:600 13px var(--body);background:var(--paper)}
+.appband{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;background:var(--mango-soft);border-radius:26px;padding:24px 28px;margin-top:12px;overflow:hidden}
+.appband h3{font-size:30px}
+.appband p{color:var(--muted);margin:6px 0 14px}
+.stores{display:flex;gap:10px;flex-wrap:wrap}
+.stores span{display:flex;align-items:center;gap:6px;background:#14302F;color:#fff;border-radius:12px;padding:10px 16px;font:600 13.5px var(--body)}
+.appband img{width:160px;height:160px;border-radius:50%;object-fit:cover;border:5px solid #fff;box-shadow:0 0 0 3px #14302F}
+@media (max-width:760px){.slide{grid-column:auto;grid-template-columns:1fr}.si{height:200px}.hero2 .fl,.hero2 .fr{display:none}.appband{grid-template-columns:1fr}.appband img{width:110px;height:110px}}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="gSeer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E6E86"/><stop offset=".45" stop-color="#9DBBC9"/><stop offset=".7" stop-color="#E8EEF1"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+<linearGradient id="gPom" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E9AA3"/><stop offset=".5" stop-color="#D9DFE3"/><stop offset="1" stop-color="#FAFBFC"/></linearGradient>
+<linearGradient id="gPrawn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB089"/><stop offset=".6" stop-color="#F0764E"/><stop offset="1" stop-color="#C9532E"/></linearGradient>
+<linearGradient id="gCrab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5603D"/><stop offset="1" stop-color="#A93A1F"/></linearGradient>
+<linearGradient id="gFin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C9A24A"/><stop offset="1" stop-color="#8E7A3E"/></linearGradient>
+<symbol id="a-seer" viewBox="0 0 240 100"><path d="M200 50 236 18c2 10 2 22-2 32 4 10 4 22 2 32z" fill="#4E7A8F"/><path d="M8 52C30 26 80 16 130 20c30 3 55 14 72 30-17 16-42 27-72 30C80 84 30 76 8 52z" fill="url(#gSeer)"/><path d="M95 22c10-10 26-14 38-12l-8 12z" fill="#4E7A8F"/><path d="M110 78c8 8 18 10 26 8l-8-8z" fill="#9DBBC9"/><g fill="#2E5568" opacity=".55"><circle cx="80" cy="40" r="2.6"/><circle cx="100" cy="36" r="2.6"/><circle cx="120" cy="38" r="2.6"/><circle cx="140" cy="40" r="2.4"/><circle cx="160" cy="43" r="2.2"/><circle cx="90" cy="46" r="2.2"/><circle cx="130" cy="46" r="2.2"/></g><path d="M48 34c-4 10-4 26 0 36" stroke="#5F7F8D" stroke-width="2" fill="none" opacity=".6"/><circle cx="28" cy="46" r="5" fill="#fff"/><circle cx="28" cy="46" r="2.6" fill="#1C2B33"/><path d="M8 52h12" stroke="#5F7F8D" stroke-width="1.6"/></symbol>
+<symbol id="a-pom" viewBox="0 0 200 140"><path d="M150 70 196 40c-6 20-6 40 0 60z" fill="#9AA6AE"/><path d="M10 70C30 20 90 6 130 26c18 9 26 26 26 44s-8 35-26 44C90 134 30 120 10 70z" fill="url(#gPom)"/><path d="M60 22c30-14 60-10 80 6l-30 6z" fill="#B6C0C7"/><path d="M60 118c30 14 60 10 80-6l-30-6z" fill="#C8D0D5"/><circle cx="36" cy="62" r="6" fill="#fff"/><circle cx="36" cy="62" r="3" fill="#1C2B33"/><path d="M58 48c-6 14-6 30 0 44" stroke="#8A969E" stroke-width="2" fill="none" opacity=".6"/><g stroke="#AEB8BF" stroke-width="1" opacity=".5"><path d="M70 40 120 60M70 60 130 75M70 80 120 90"/></g></symbol>
+<symbol id="a-prawn" viewBox="0 0 200 140"><path d="M40 40C80 0 160 10 176 64c10 34-18 62-52 60-26-2-38-24-26-40 8 16 30 20 40 6 10-14 4-42-26-50C88 32 62 44 48 56z" fill="url(#gPrawn)"/><g stroke="#B04624" stroke-width="2" fill="none" opacity=".55"><path d="M88 28c4 10 4 20 0 30M112 26c6 12 6 24 0 36M134 32c6 12 6 26 0 38M152 46c4 12 2 26-4 36"/></g><path d="M124 124c-8 6-20 10-30 8 6-6 14-10 22-10z" fill="#F0764E"/><circle cx="54" cy="50" r="4" fill="#1C2B33"/><path d="M48 52C30 40 14 22 6 6M50 56C30 52 14 44 2 30" stroke="#E0603A" stroke-width="2" fill="none" stroke-linecap="round"/><g stroke="#E8826A" stroke-width="2" stroke-linecap="round"><path d="M80 66l-6 14M96 72l-4 14M112 76l-2 14"/></g></symbol>
+<symbol id="a-crab" viewBox="0 0 220 150"><g stroke="#B9472A" stroke-width="7" stroke-linecap="round" fill="none"><path d="M60 98 30 120M66 108 44 138M154 108 176 138M160 98 190 120M58 86 26 96M162 86 194 96"/></g><path d="M40 60 18 38" stroke="#C24A2B" stroke-width="8" stroke-linecap="round"/><path d="M180 60 202 38" stroke="#C24A2B" stroke-width="8" stroke-linecap="round"/><path d="M4 30c4-22 30-26 34-8-12-2-18 4-16 14z" fill="#D65535"/><path d="M216 30c-4-22-30-26-34-8 12-2 18 4 16 14z" fill="#D65535"/><ellipse cx="110" cy="84" rx="64" ry="40" fill="url(#gCrab)"/><path d="M60 70c30-16 70-16 100 0" stroke="#F08A68" stroke-width="3" fill="none" opacity=".6"/><circle cx="96" cy="50" r="5" fill="#1C2B33"/><circle cx="124" cy="50" r="5" fill="#1C2B33"/><path d="M96 54v8M124 54v8" stroke="#A93A1F" stroke-width="3"/></symbol>
+<symbol id="a-squid" viewBox="0 0 220 120"><path d="M20 60 70 20h80c20 0 30 20 30 40s-10 40-30 40H70z" fill="#F3D9CF"/><path d="M70 20h80c20 0 30 20 30 40H40z" fill="#EBC4B5" opacity=".7"/><g stroke="#E2B1A0" stroke-width="5" stroke-linecap="round" fill="none"><path d="M180 50c16-4 26-10 36-20M182 60h34M180 70c16 4 26 10 36 20"/></g><circle cx="160" cy="52" r="5" fill="#1C2B33"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><path d="M3.5 4.5h2.5l2 11h10l2-8H7"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></symbol>
+<symbol id="i-me" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+<symbol id="i-chevl" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="M5 20h14l-2-11H7z"/><circle cx="12" cy="6" r="2.5"/><path d="M10 14h4"/></symbol>
+<symbol id="i-knife" viewBox="0 0 24 24"><path d="M4 20 16 8l3 3c-3 5-7 8-12 9z"/><path d="M16 8l3-3"/></symbol>
+<symbol id="i-boat" viewBox="0 0 24 24"><path d="M3 15h18l-3 5H6zM12 4v11M12 5l6 8h-6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.3"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></symbol>
+</defs></svg>
+<div class="wrap">
+<header style="display:grid;gap:6px"><h1 style="font-size:clamp(32px,4vw,46px)">Two website <span class="scr">styles</span></h1><p class="lede">Version 1 is a fish-and-meat store (busy, offer slider, category tiles, product rows with red Add buttons). Version 2 is a food-delivery website (big coloured hero with pincode and search, round “what’s on your mind” row, picture cards with offers). Same brand colours and fonts as the app. Fish pictures are drawn placeholders until real product photos.</p></header>
+<div class="tabs" role="tablist"><button role="tab" id="t1" aria-selected="true" data-p="p1">Version 1 · Store style</button><button role="tab" id="t2" aria-selected="false" data-p="p2">Version 2 · Food-app style</button></div>
+<section id="p1" class="browser"><div class="chrome"><i></i><i></i><i></i><span>freshorbit.in</span></div><div class="v1">
+<div class="util"><span><svg class="ic"><use href="#i-pin"/></svg>Delivering to <b>530017 · MVP Colony</b> <a>Change</a></span><span>Cash or UPI on delivery · Cleaning free</span></div>
+<header class="h1"><span class="logo"><i></i>Fresh <span class="scr">Orbit</span></span><span class="cat-btn">Categories ▾</span><span class="srch"><svg class="ic"><use href="#i-search"/></svg><span>Search for seer fish, prawns, crab…</span></span><span class="hl"><svg class="ic"><use href="#i-me"/></svg>Login</span><span class="hc"><svg class="ic"><use href="#i-cart"/></svg>Cart <b>2</b></span></header>
+<section class="slider"><div class="slide s1"><div class="st"><span class="kick">Fresh catch · today only</span><h2>Seer fish steaks <span class="scr">₹590</span></h2><p>Caught at 5:40 am, cleaned free, at your door by evening.</p><span class="cta">Order now <svg class="ic"><use href="#i-chev"/></svg></span></div><div class="si"><img src="../characters/generated/onboarding_fresh.jpg" alt="Padma holding a fresh seer fish at the harbour"></div></div>
+<div class="side"><div class="mini m1"><b>Flat ₹100 off</b><span>first order · WELCOME100</span><img src="../characters/generated/empty_cart.jpg" alt=""></div><div class="mini m2"><b>Prawn fest</b><span>10% off all prawns</span><img src="../characters/generated/onboarding_cleaned.jpg" alt=""></div></div>
+<span class="arr l"><svg class="ic"><use href="#i-chevl"/></svg></span><span class="arr r"><svg class="ic"><use href="#i-chev"/></svg></span><div class="dots"><i class="on"></i><i></i><i></i><i></i></div></section>
+<div class="sh"><h3>Shop by <span class="scr">category</span></h3></div>
+<section class="cats1"><div class="c1"><div class="cp" style="background:var(--ice-soft)"><svg class="art sm"><use href="#a-seer"/></svg></div><span>Fish</span></div><div class="c1"><div class="cp" style="background:var(--coral-soft)"><svg class="art sm"><use href="#a-prawn"/></svg></div><span>Prawns</span></div><div class="c1"><div class="cp" style="background:var(--mango-soft)"><svg class="art sm"><use href="#a-crab"/></svg></div><span>Crabs</span></div><div class="c1"><div class="cp" style="background:var(--teal-soft)"><svg class="art sm"><use href="#a-squid"/></svg></div><span>Squid</span></div><div class="c1"><div class="cp" style="background:var(--ice-soft)"><svg class="art sm"><use href="#a-pom"/></svg></div><span>Pomfret</span></div><div class="c1"><div class="cp" style="background:var(--coral-soft)"><svg class="art sm"><use href="#a-seer"/></svg></div><span>Steaks</span></div><div class="c1"><div class="cp" style="background:var(--mango-soft)"><svg class="art sm"><use href="#a-prawn"/></svg></div><span>Ready to cook</span></div><div class="c1"><div class="cp" style="background:var(--teal-soft)"><svg class="art sm"><use href="#a-pom"/></svg></div><span>Combos</span></div></section>
+<div class="sh"><h3>Bestsellers</h3><a>View all <svg class="ic"><use href="#i-chev"/></svg></a></div>
+<section class="row1"><article class="pc"><div class="ph" style="background:var(--ice-soft)"><svg class="art"><use href="#a-seer"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span><span class="best">Bestseller</span></div><div class="pb"><b>Seer fish (Vanjaram) steaks</b><span class="mt">500 g · 6–8 pcs · serves 3</span><div class="pr"><span><b class="rs">₹590</b><s>₹680</s><span class="off">13% off</span></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--teal-soft)"><svg class="art"><use href="#a-pom"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Silver pomfret, whole cleaned</b><span class="mt">1 pc · 350–400 g · serves 2</span><div class="pr"><span><b class="rs">₹420</b></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--coral-soft)"><svg class="art"><use href="#a-prawn"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span><span class="best">Bestseller</span></div><div class="pb"><b>Tiger prawns, peeled & deveined</b><span class="mt">500 g · 22–26 pcs · serves 3</span><div class="pr"><span><b class="rs">₹749</b><s>₹820</s><span class="off">9% off</span></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--mango-soft)"><svg class="art"><use href="#a-crab"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Mud crab, cleaned</b><span class="mt">1 kg · 3–4 pcs · serves 4</span><div class="pr"><span><b class="rs">₹880</b></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article></section>
+<section class="why"><div><svg class="ic"><use href="#i-boat"/></svg><b>Straight off the boats</b><span>Bought at dawn from partner boats</span></div><div><svg class="ic"><use href="#i-knife"/></svg><b>Cleaned free</b><span>Steaks, curry cut, fillet</span></div><div><svg class="ic"><use href="#i-scale"/></svg><b>Honest weight</b><span>Weighed after cleaning, 10% cap</span></div><div><svg class="ic"><use href="#i-snow"/></svg><b>Iced all the way</b><span>0–4 °C from harbour to door</span></div></section>
+<div class="sh"><h3>Today’s <span class="scr">catch</span></h3><a>View all <svg class="ic"><use href="#i-chev"/></svg></a></div>
+<section class="row1"><article class="pc"><div class="ph" style="background:var(--coral-soft)"><svg class="art"><use href="#a-prawn"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Tiger prawns, peeled & deveined</b><span class="mt">500 g · 22–26 pcs · serves 3</span><div class="pr"><span><b class="rs">₹749</b><s>₹820</s><span class="off">9% off</span></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--mango-soft)"><svg class="art"><use href="#a-crab"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Mud crab, cleaned</b><span class="mt">1 kg · 3–4 pcs · serves 4</span><div class="pr"><span><b class="rs">₹880</b></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--ice-soft)"><svg class="art"><use href="#a-squid"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Squid rings</b><span class="mt">500 g · serves 3</span><div class="pr"><span><b class="rs">₹360</b><s>₹399</s><span class="off">10% off</span></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article><article class="pc"><div class="ph" style="background:var(--teal-soft)"><svg class="art"><use href="#a-seer"/></svg><span class="tag"><svg class="ic"><use href="#i-clock"/></svg>Today in 90 min</span></div><div class="pb"><b>Seer fish curry cut</b><span class="mt">500 g · 10–12 pcs · serves 3</span><div class="pr"><span><b class="rs">₹560</b></span><span class="add">Add <svg class="ic"><use href="#i-plus"/></svg></span></div></div></article></section>
+<footer class="ft"><span class="logo"><i></i>Fresh <span class="scr">Orbit</span></span><span>About · Help · Refund policy · Terms</span><span>© 2026 Fresh Orbit, Visakhapatnam</span></footer>
+</div></section>
+<section id="p2" class="browser" hidden><div class="chrome"><i></i><i></i><i></i><span>freshorbit.in</span></div><div class="v2">
+<header class="h2"><span class="logo"><i></i>Fresh <span class="scr">Orbit</span></span><nav><a>Offers</a><a>Help</a><a><svg class="ic"><use href="#i-me"/></svg>Sign in</a><a class="cartp"><svg class="ic"><use href="#i-cart"/></svg>Cart</a></nav></header>
+<section class="hero2"><img class="fl" src="../characters/generated/onboarding_cleaned.jpg" alt=""><img class="fr" src="../characters/generated/onboarding_delivery.jpg" alt="">
+<div class="hc2"><h2>Fresh fish. <span class="scr">Cleaned your way.</span><br>At your door today.</h2>
+<div class="hs"><span class="loc"><svg class="ic"><use href="#i-pin"/></svg>Enter pincode, e.g. 530017</span><span class="q"><svg class="ic"><use href="#i-search"/></svg>Search for seer fish, prawns and more</span></div>
+<div class="pills"><span><b>FISH</b>FROM THE BOATS<small>CAUGHT TODAY</small></span><span><b>READY</b>TO COOK<small>CLEANED FREE</small></span><span><b>DINE-IN</b>TONIGHT<small>SAME-DAY SLOTS</small></span></div></div></section>
+<div class="wrap2">
+<div class="sh2"><h3>What’s on your <span class="scr">mind?</span></h3><span class="ar"><svg class="ic"><use href="#i-chevl"/></svg><svg class="ic"><use href="#i-chev"/></svg></span></div>
+<section class="wom"><div><span class="cc"><svg class="art sm"><use href="#a-seer"/></svg></span><b>Seer</b></div><div><span class="cc"><svg class="art sm"><use href="#a-prawn"/></svg></span><b>Prawns</b></div><div><span class="cc"><svg class="art sm"><use href="#a-crab"/></svg></span><b>Crab</b></div><div><span class="cc"><svg class="art sm"><use href="#a-pom"/></svg></span><b>Pomfret</b></div><div><span class="cc"><svg class="art sm"><use href="#a-squid"/></svg></span><b>Squid</b></div><div><span class="cc"><svg class="art sm"><use href="#a-seer"/></svg></span><b>Steaks</b></div><div><span class="cc"><svg class="art sm"><use href="#a-prawn"/></svg></span><b>Peeled</b></div><div><span class="cc"><svg class="art sm"><use href="#a-pom"/></svg></span><b>Combos</b></div></section>
+<hr>
+<div class="sh2"><h3>Top picks in <span class="scr">Visakhapatnam</span></h3><span class="ar"><svg class="ic"><use href="#i-chevl"/></svg><svg class="ic"><use href="#i-chev"/></svg></span></div>
+<section class="row2"><article class="fc"><div class="fp" style="background:var(--ice-soft)"><svg class="art"><use href="#a-seer"/></svg><span class="ov">₹90 OFF</span></div><div class="fb"><b>Seer fish (Vanjaram) steaks</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · 6–8 pcs · serves 3</span><div class="pr"><b class="rs">₹590</b><s>₹680</s><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--teal-soft)"><svg class="art"><use href="#a-pom"/></svg><span class="ov">ITEMS AT ₹420</span></div><div class="fb"><b>Silver pomfret, whole cleaned</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">1 pc · 350–400 g · serves 2</span><div class="pr"><b class="rs">₹420</b><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--coral-soft)"><svg class="art"><use href="#a-prawn"/></svg><span class="ov">10% OFF</span></div><div class="fb"><b>Tiger prawns, peeled & deveined</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · 22–26 pcs · serves 3</span><div class="pr"><b class="rs">₹749</b><s>₹820</s><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--mango-soft)"><svg class="art"><use href="#a-crab"/></svg><span class="ov">FREE CLEANING</span></div><div class="fb"><b>Mud crab, cleaned</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">1 kg · 3–4 pcs · serves 4</span><div class="pr"><b class="rs">₹880</b><span class="addg">ADD</span></div></div></article></section>
+<hr>
+<div class="sh2"><h3>Filter and <span class="scr">pick</span></h3></div>
+<div class="flt"><span>Sort by ▾</span><span>Cleaned free</span><span>Under ₹500</span><span>Boneless</span><span>Fast delivery</span><span>Bestsellers</span></div>
+<section class="grid2"><article class="fc"><div class="fp" style="background:var(--ice-soft)"><svg class="art"><use href="#a-seer"/></svg><span class="ov">₹90 OFF</span></div><div class="fb"><b>Seer fish (Vanjaram) steaks</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · 6–8 pcs · serves 3</span><div class="pr"><b class="rs">₹590</b><s>₹680</s><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--teal-soft)"><svg class="art"><use href="#a-pom"/></svg><span class="ov">ITEMS AT ₹420</span></div><div class="fb"><b>Silver pomfret, whole cleaned</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">1 pc · 350–400 g · serves 2</span><div class="pr"><b class="rs">₹420</b><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--coral-soft)"><svg class="art"><use href="#a-prawn"/></svg><span class="ov">10% OFF</span></div><div class="fb"><b>Tiger prawns, peeled & deveined</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · 22–26 pcs · serves 3</span><div class="pr"><b class="rs">₹749</b><s>₹820</s><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--mango-soft)"><svg class="art"><use href="#a-crab"/></svg><span class="ov">FREE CLEANING</span></div><div class="fb"><b>Mud crab, cleaned</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">1 kg · 3–4 pcs · serves 4</span><div class="pr"><b class="rs">₹880</b><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--ice-soft)"><svg class="art"><use href="#a-squid"/></svg><span class="ov">₹39 OFF</span></div><div class="fb"><b>Squid rings</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · serves 3</span><div class="pr"><b class="rs">₹360</b><s>₹399</s><span class="addg">ADD</span></div></div></article><article class="fc"><div class="fp" style="background:var(--teal-soft)"><svg class="art"><use href="#a-seer"/></svg><span class="ov">CURRY CUT</span></div><div class="fb"><b>Seer fish curry cut</b><span class="rt"><i><svg class="ic"><use href="#i-clock"/></svg></i>Caught 5:40 am · 60–90 min</span><span class="mt">500 g · 10–12 pcs · serves 3</span><div class="pr"><b class="rs">₹560</b><span class="addg">ADD</span></div></div></article></section>
+<section class="appband"><div><h3>For better experience, <span class="scr">get the app</span></h3><p>Track Ravi live, reorder in one tap.</p><div class="stores"><span><svg class="ic"><use href="#i-phone"/></svg>Google Play</span><span><svg class="ic"><use href="#i-phone"/></svg>App Store</span></div></div><img src="../characters/generated/onboarding_delivery.jpg" alt=""></section>
+</div>
+<footer class="ft2"><span class="logo"><i></i>Fresh <span class="scr">Orbit</span></span><span>Company · Contact · Legal · Cities we deliver to</span><span>© 2026 Fresh Orbit</span></footer>
+</div></section>
+</div>
+<script>
+const tabs=[...document.querySelectorAll('[role=tab]')];
+function show(id){tabs.forEach(t=>{const on=t.dataset.p===id;t.setAttribute('aria-selected',on);document.getElementById(t.dataset.p).hidden=!on;});}
+tabs.forEach(t=>t.addEventListener('click',()=>show(t.dataset.p)));
+if(['p1','p2'].includes(location.hash.slice(1)))show(location.hash.slice(1));
+</script>

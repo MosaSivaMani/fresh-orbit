@@ -4,6 +4,7 @@ Newest first. Every phase result, merge and verification is recorded here.
 
 | Date | Phase | Event | Verified by manager |
 |---|---|---|---|
+| 2026-10-24 | UI | Owner rejected the widened-app website; picked website "Version 2 · food-app style" (D95), mockup `docs/design/mockups/web-food-app.html`; B1 redirected to build it for real on the sample store | Decided |
 | 2026-10-24 | UI | Owner picked fonts "6 + E": Baloo 2 headings + Dancing Script handwritten second lines with mango brush swipes, Inter body (D89 amended); mockup updated | Decided |
 | 2026-10-24 | UI | Owner rejected the D94 typography experiment; mockup restored to chosen version B (Bricolage Grotesque + DM Sans, no motion, no decorative marks); D94 records the withdrawal | Decided |
 | 2026-10-24 | UI | Typography system D94 (two-line headings, Instrument Serif italic accents, marker / wave / italic marks) across app, web and admin; orbit halo and ticker removed at owner request (D88 amended) | Decided |
