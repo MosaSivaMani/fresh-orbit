@@ -25,11 +25,16 @@ class CastPainter extends CustomPainter {
   /// Adds a small Chanduva next to a person.
   final bool sidekick;
 
-  static const _skin = Color(0xFFE9B78E);
-  static const _skinShade = Color(0xFFC08158);
-  static const _hair = Color(0xFF2F2622);
-  static const _silver = Color(0xFFE7EEF0);
-  static const _silverShade = Color(0xFF97ADB5);
+  // Fixed character colours from the approved sheet; the circle behind them follows the theme.
+  static const _skin = Color(0xFFDDA57A);
+  static const _skinShade = Color(0xFFA9683F);
+  static const _hair = Color(0xFF241C18);
+  static const _kurta = Color(0xFFF4EFE6);
+  static const _jacket = Color(0xFF14958A);
+  static const _iceBox = Color(0xFF8CC8E4);
+  static const _silver = Color(0xFFEEF2F5);
+  static const _silverShade = Color(0xFF8FA3B4);
+  static const _finSilver = Color(0xFFB7C4D2);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -80,143 +85,191 @@ class CastPainter extends CustomPainter {
     final hr = s * 0.15;
     final body = Rect.fromCenter(center: Offset(s * 0.5, s * 0.95), width: s * 0.64, height: s * 0.52);
 
+    // Clothes follow the approved character sheet (docs/design/characters).
     final shirt = switch (member) {
-      CastMember.padma => colors.mango,
-      CastMember.ravi => colors.tealDeep,
-      CastMember.anil => colors.mango,
-      CastMember.ammamma => colors.coral,
-      CastMember.chanduva => colors.mango,
+      CastMember.padma => _kurta,
+      CastMember.ravi => _jacket,
+      CastMember.anil => _jacket,
+      CastMember.ammamma => colors.mango,
+      CastMember.chanduva => _silver,
     };
+
+    // Ravi's ice-blue backpack box peeks out behind his shoulder.
+    if (member == CastMember.ravi) {
+      final box = RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(s * 0.22, s * 0.74), width: s * 0.26, height: s * 0.3),
+        Radius.circular(s * 0.04),
+      );
+      canvas
+        ..drawRRect(box, _clay(box.outerRect, _lighter(_iceBox), _darker(_iceBox)))
+        ..drawRRect(box, _outline(s));
+      _snowflake(canvas, box.center, s * 0.07);
+    }
 
     // Neck and body.
     final neck = Rect.fromCenter(center: Offset(s * 0.5, s * 0.62), width: s * 0.1, height: s * 0.1);
-    canvas.drawRRect(RRect.fromRectAndRadius(neck, Radius.circular(s * 0.03)), Paint()..color = _skinShade);
-    canvas.drawOval(body, _clay(body, _lighter(shirt), _darker(shirt)));
+    canvas
+      ..drawRRect(RRect.fromRectAndRadius(neck, Radius.circular(s * 0.03)), Paint()..color = _skinShade)
+      ..drawOval(body, _clay(body, _lighter(shirt), _darker(shirt)));
 
     switch (member) {
       case CastMember.padma:
-        // Teal apron: a bib and a skirt over the shirt.
+        // Glossy teal apron over a white kurta.
         final apron = RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(s * 0.5, s * 0.9), width: s * 0.3, height: s * 0.36),
+          Rect.fromCenter(center: Offset(s * 0.5, s * 0.9), width: s * 0.32, height: s * 0.36),
           Radius.circular(s * 0.06),
         );
-        canvas.drawRRect(apron, _clay(apron.outerRect, _lighter(colors.tealText), colors.tealDeep));
+        canvas.drawRRect(apron, _clay(apron.outerRect, _lighter(_jacket), _darker(_jacket)));
         final strap = Paint()
-          ..color = colors.tealDeep
+          ..color = _darker(_jacket)
           ..strokeWidth = s * 0.025
           ..strokeCap = StrokeCap.round;
         canvas
-          ..drawLine(Offset(s * 0.38, s * 0.74), Offset(s * 0.43, s * 0.67), strap)
-          ..drawLine(Offset(s * 0.62, s * 0.74), Offset(s * 0.57, s * 0.67), strap);
+          ..drawLine(Offset(s * 0.37, s * 0.74), Offset(s * 0.43, s * 0.66), strap)
+          ..drawLine(Offset(s * 0.63, s * 0.74), Offset(s * 0.57, s * 0.66), strap);
       case CastMember.ravi:
-        // Ice-blue cold box held in front.
-        final box = RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(s * 0.66, s * 0.84), width: s * 0.3, height: s * 0.22),
-          Radius.circular(s * 0.04),
-        );
-        final ice = Color.lerp(colors.ice, const Color(0xFF9FD3E3), 0.5)!;
-        canvas.drawRRect(box, _clay(box.outerRect, _lighter(ice), _darker(ice)));
-        canvas.drawRRect(box, _outline(s));
+        // Reflective stripe and a backpack strap on the teal jacket.
+        final stripe = Paint()
+          ..color = const Color(0xFFDDE7E6)
+          ..strokeWidth = s * 0.018;
+        canvas.drawLine(Offset(s * 0.2, s * 0.86), Offset(s * 0.8, s * 0.86), stripe);
         canvas.drawLine(
-          Offset(box.left + s * 0.03, box.top + s * 0.06),
-          Offset(box.right - s * 0.03, box.top + s * 0.06),
-          _outline(s),
+          Offset(s * 0.36, s * 0.7),
+          Offset(s * 0.33, s * 0.98),
+          Paint()
+            ..color = const Color(0xFF26302F)
+            ..strokeWidth = s * 0.03,
         );
-      case CastMember.ammamma:
-        // Saree border.
-        final border = Paint()
-          ..color = colors.mango
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = s * 0.035;
-        canvas.drawArc(body.deflate(s * 0.05), math.pi * 1.1, math.pi * 0.55, false, border);
       case CastMember.anil:
+        // Polo collar.
+        final collar = Path()
+          ..moveTo(s * 0.42, s * 0.68)
+          ..lineTo(s * 0.5, s * 0.75)
+          ..lineTo(s * 0.58, s * 0.68)
+          ..close();
+        canvas.drawPath(collar, Paint()..color = _darker(_jacket));
+      case CastMember.ammamma:
+        // Coral saree border across the shoulder.
+        final border = Paint()
+          ..color = colors.coral
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s * 0.04;
+        canvas.drawLine(Offset(s * 0.36, s * 0.7), Offset(s * 0.66, s * 1.0), border);
       case CastMember.chanduva:
         break;
     }
 
     // Hair behind the head.
     switch (member) {
-      case CastMember.ammamma:
-        canvas.drawCircle(
-          head + Offset(0, -hr * 0.95),
-          hr * 0.45,
-          _clay(_r(head, hr), const Color(0xFFE6E2DC), const Color(0xFFA9A39B)),
-        );
-        canvas.drawCircle(
-          head + Offset(0, -hr * 0.1),
-          hr * 1.06,
-          _clay(_r(head, hr), const Color(0xFFE6E2DC), const Color(0xFFA9A39B)),
-        );
-      case CastMember.anil:
-        canvas.drawCircle(head + Offset(0, -hr * 0.12), hr * 1.05, _clay(_r(head, hr), _lighter(_hair), _hair));
       case CastMember.padma:
+        canvas.drawCircle(head + Offset(-hr * 0.85, hr * 0.55), hr * 0.32, Paint()..color = _hair);
+        canvas.drawCircle(head + Offset(0, -hr * 0.05), hr * 1.06, Paint()..color = _hair);
+      case CastMember.ammamma:
+        final silver = _clay(_r(head, hr), const Color(0xFFEDEBE7), const Color(0xFFA9A39B));
+        canvas
+          ..drawCircle(head + Offset(0, -hr * 0.95), hr * 0.42, silver)
+          ..drawCircle(head + Offset(0, -hr * 0.1), hr * 1.08, silver);
+      case CastMember.anil:
+        // Wavy black hair: a few overlapping curls on top.
+        final hair = Paint()..color = _hair;
+        canvas.drawCircle(head + Offset(0, -hr * 0.12), hr * 1.04, hair);
+        for (final dx in [-0.55, -0.15, 0.25, 0.6]) {
+          canvas.drawCircle(head + Offset(hr * dx, -hr * 0.9), hr * 0.32, hair);
+        }
       case CastMember.ravi:
       case CastMember.chanduva:
         break;
     }
 
     // Head and ears.
-    final skin = _clay(_r(head, hr), _lighter(_skin), _skinShade);
     canvas
       ..drawCircle(head + Offset(-hr, hr * 0.1), hr * 0.22, Paint()..color = _skinShade)
       ..drawCircle(head + Offset(hr, hr * 0.1), hr * 0.22, Paint()..color = _skinShade)
-      ..drawCircle(head, hr, skin);
+      ..drawCircle(head + Offset(0, hr * 0.08), hr * 0.98, _clay(_r(head, hr), _skin, _skinShade));
 
-    // Headwear.
+    // Headwear, beard, glasses.
     switch (member) {
       case CastMember.padma:
-        // Coral headscarf over the top of the head with a knot at the side.
+        // Coral headscarf over the top of the head, knotted at the side.
         final scarf = Path()
-          ..addArc(Rect.fromCircle(center: head, radius: hr * 1.08), math.pi * 1.1, math.pi * 0.8)
+          ..addArc(Rect.fromCircle(center: head, radius: hr * 1.1), math.pi * 1.08, math.pi * 0.84)
           ..close();
-        canvas.drawPath(scarf, _clay(_r(head, hr), _lighter(colors.coral), _darker(colors.coral)));
-        canvas.drawCircle(head + Offset(hr * 0.98, -hr * 0.3), hr * 0.24, Paint()..color = _darker(colors.coral));
+        canvas
+          ..drawPath(scarf, _clay(_r(head, hr), _lighter(colors.coral), _darker(colors.coral)))
+          ..drawCircle(head + Offset(hr * 1.0, -hr * 0.32), hr * 0.24, Paint()..color = _darker(colors.coral));
+        canvas.drawCircle(head + Offset(0, -hr * 0.42), hr * 0.07, Paint()..color = const Color(0xFFB3261E));
       case CastMember.ravi:
-        // Teal helmet with a dark visor band.
+        // Short beard, then the teal helmet with a clear visor.
+        canvas.drawArc(
+          Rect.fromCircle(center: head + Offset(0, hr * 0.12), radius: hr * 0.9),
+          math.pi * 0.12,
+          math.pi * 0.76,
+          false,
+          Paint()
+            ..color = _hair
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = hr * 0.22,
+        );
         final helmet = Path()
-          ..addArc(Rect.fromCircle(center: head + Offset(0, -hr * 0.05), radius: hr * 1.15), math.pi * 1.06, math.pi * 0.88)
+          ..addArc(
+            Rect.fromCircle(center: head + Offset(0, -hr * 0.05), radius: hr * 1.18),
+            math.pi * 1.04,
+            math.pi * 0.92,
+          )
           ..close();
-        canvas.drawPath(helmet, _clay(_r(head, hr), _lighter(colors.tealText), colors.tealDeep));
+        canvas.drawPath(helmet, _clay(_r(head, hr), _lighter(_jacket), _darker(_jacket)));
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromCenter(center: head + Offset(0, -hr * 0.3), width: hr * 2.2, height: hr * 0.22),
-            Radius.circular(hr * 0.1),
+            Rect.fromCenter(center: head + Offset(0, -hr * 0.28), width: hr * 2.1, height: hr * 0.3),
+            Radius.circular(hr * 0.15),
           ),
-          Paint()..color = colors.tealDeep,
+          Paint()..color = Colors.white.withValues(alpha: 0.45),
         );
       case CastMember.anil:
-        // Headset: band over the head, ear pads and a microphone.
+        _glasses(canvas, head, hr);
+        // Slim headset: band, ear pad and a microphone.
         final band = Paint()
-          ..color = const Color(0xFF3A3F44)
+          ..color = const Color(0xFF2B2F33)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = hr * 0.16
+          ..strokeWidth = hr * 0.1
           ..strokeCap = StrokeCap.round;
-        canvas.drawArc(Rect.fromCircle(center: head, radius: hr * 1.12), math.pi * 1.05, math.pi * 0.9, false, band);
-        final pad = Paint()..color = colors.tealText;
         canvas
-          ..drawCircle(head + Offset(-hr * 1.08, hr * 0.1), hr * 0.3, pad)
-          ..drawCircle(head + Offset(hr * 1.08, hr * 0.1), hr * 0.3, pad);
+          ..drawArc(Rect.fromCircle(center: head, radius: hr * 1.12), math.pi * 1.05, math.pi * 0.9, false, band)
+          ..drawCircle(head + Offset(hr * 1.06, hr * 0.1), hr * 0.24, Paint()..color = const Color(0xFF2B2F33));
         final mic = Path()
           ..moveTo(head.dx + hr * 1.05, head.dy + hr * 0.3)
-          ..quadraticBezierTo(head.dx + hr * 0.9, head.dy + hr * 0.95, head.dx + hr * 0.25, head.dy + hr * 0.75);
-        canvas
-          ..drawPath(mic, band..strokeWidth = hr * 0.1)
-          ..drawCircle(head + Offset(hr * 0.22, hr * 0.75), hr * 0.12, Paint()..color = const Color(0xFF3A3F44));
+          ..quadraticBezierTo(head.dx + hr * 0.9, head.dy + hr * 0.9, head.dx + hr * 0.3, head.dy + hr * 0.72);
+        canvas.drawPath(mic, band..strokeWidth = hr * 0.07);
       case CastMember.ammamma:
-        // Bindi and round glasses.
-        canvas.drawCircle(head + Offset(0, -hr * 0.45), hr * 0.08, Paint()..color = colors.coralText);
-        final glasses = Paint()
-          ..color = const Color(0xFF5A4A40)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = hr * 0.07;
-        canvas
-          ..drawCircle(head + Offset(-hr * 0.38, -hr * 0.05), hr * 0.24, glasses)
-          ..drawCircle(head + Offset(hr * 0.38, -hr * 0.05), hr * 0.24, glasses);
+        canvas.drawCircle(head + Offset(0, -hr * 0.42), hr * 0.09, Paint()..color = const Color(0xFFB3261E));
       case CastMember.chanduva:
         break;
     }
 
     _face(canvas, head, hr);
+  }
+
+  void _glasses(Canvas canvas, Offset head, double hr) {
+    final frame = Paint()
+      ..color = const Color(0xFF2B2F33)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = hr * 0.06;
+    canvas
+      ..drawCircle(head + Offset(-hr * 0.38, -hr * 0.05), hr * 0.26, frame)
+      ..drawCircle(head + Offset(hr * 0.38, -hr * 0.05), hr * 0.26, frame)
+      ..drawLine(head + Offset(-hr * 0.12, -hr * 0.08), head + Offset(hr * 0.12, -hr * 0.08), frame);
+  }
+
+  void _snowflake(Canvas canvas, Offset c, double r) {
+    final p = Paint()
+      ..color = Colors.white
+      ..strokeWidth = r * 0.22
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 3; i++) {
+      final a = i * math.pi / 3;
+      final d = Offset(math.cos(a) * r, math.sin(a) * r);
+      canvas.drawLine(c - d, c + d, p);
+    }
   }
 
   void _face(Canvas canvas, Offset head, double hr) {
@@ -275,7 +328,7 @@ class CastPainter extends CustomPainter {
       ..quadraticBezierTo(c.dx + w * 0.05, c.dy + h * 0.72, c.dx + w * 0.16, c.dy + h * 0.36)
       ..close();
     final bounds = Rect.fromCenter(center: c, width: w, height: h);
-    final fin = _clay(bounds, _lighter(colors.mango), _darker(colors.mango));
+    final fin = _clay(bounds, _lighter(_finSilver), _darker(_finSilver));
     final outline = _outline(w * 0.9);
     for (final p in [tail, finTop, finBottom]) {
       canvas
@@ -303,17 +356,19 @@ class CastPainter extends CustomPainter {
       ..drawCircle(eye, w * 0.075, Paint()..color = Colors.white)
       ..drawCircle(eye + Offset(-w * 0.012, w * 0.01), w * 0.042, Paint()..color = const Color(0xFF14302F))
       ..drawCircle(eye + Offset(-w * 0.025, -w * 0.015), w * 0.014, Paint()..color = Colors.white);
-    canvas.drawArc(
-      Rect.fromCenter(center: c + Offset(-w * 0.3, h * 0.12), width: w * 0.12, height: h * 0.1 * mood),
-      0.2,
-      math.pi * 0.8,
-      false,
-      Paint()
-        ..color = const Color(0xFF14302F)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.022
-        ..strokeCap = StrokeCap.round,
+    // Rosy cheek and an open, happy smile.
+    canvas.drawOval(
+      Rect.fromCenter(center: c + Offset(-w * 0.12, h * 0.1), width: w * 0.12, height: w * 0.07),
+      Paint()..color = colors.coral.withValues(alpha: 0.45),
     );
+    final mouth = Path()
+      ..moveTo(c.dx - w * 0.37, c.dy + h * 0.08)
+      ..quadraticBezierTo(c.dx - w * 0.3, c.dy + h * 0.1, c.dx - w * 0.22, c.dy + h * 0.06)
+      ..quadraticBezierTo(c.dx - w * 0.27, c.dy + h * 0.26 * mood, c.dx - w * 0.37, c.dy + h * 0.08)
+      ..close();
+    canvas
+      ..drawPath(mouth, Paint()..color = const Color(0xFF5A1E1E))
+      ..drawCircle(c + Offset(-w * 0.29, h * 0.15), w * 0.025, Paint()..color = const Color(0xFFF08A8A));
   }
 
   Paint _outline(double s) => Paint()
