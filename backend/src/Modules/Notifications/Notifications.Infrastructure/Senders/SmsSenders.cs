@@ -98,7 +98,8 @@ public sealed partial class DevelopmentSmsSender(DevelopmentSmsOutbox outbox, IO
         outbox.Add(new DevelopmentSms(message.Phone, message.Text, string.IsNullOrWhiteSpace(dltTemplateId) ? null : dltTemplateId, clock.UtcNow));
         if (logger.IsEnabled(LogLevel.Information))
         {
-            LogSms(PhoneMasking.Mask(message.Phone), message.TemplateCode, message.Text.Length);
+            var maskedPhone = PhoneMasking.Mask(message.Phone);
+            LogSms(maskedPhone, message.TemplateCode, message.Text.Length);
         }
 
         return Task.FromResult<string?>(null);
