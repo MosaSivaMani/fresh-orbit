@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/token_store.dart';
 import 'package:fresh_orbit_app/core/app_prefs.dart';
 import 'package:fresh_orbit_app/state/core_providers.dart';
-import 'package:fresh_theme/fresh_theme.dart';
+import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'fakes.dart';
@@ -77,7 +77,7 @@ Future<GoRouter> pumpScreen(
     ProviderScope(
       overrides: deps.overrides,
       retry: (_, _) => null,
-      child: MaterialApp.router(theme: FreshTheme.light(), routerConfig: router),
+      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     ),
   );
   return router;

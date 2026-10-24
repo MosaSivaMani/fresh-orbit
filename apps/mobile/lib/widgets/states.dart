@@ -1,20 +1,35 @@
-// Loading skeletons, empty and error states, and an AsyncValue view that uses them.
+// Loading skeletons, illustrated empty and error states, and an AsyncValue view that uses them.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 import '../api/api_error.dart';
+import '../illustrations/illustration.dart';
+import '../theme/app_theme.dart';
+import 'motion.dart';
+
+export '../illustrations/illustration.dart' show IllustrationSlot;
 
 FreshColors freshColors(BuildContext context) => Theme.of(context).extension<FreshColors>()!;
 
+/// Illustrated empty state: the slot's character, a title, an optional line and an optional action. The
+/// illustration is decorative here because the title says the same thing.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.icon, required this.title, this.message, this.action});
+  const EmptyState({
+    super.key,
+    required this.slot,
+    required this.title,
+    this.message,
+    this.action,
+    this.illustrationSize = 180,
+  });
 
-  final IconData icon;
+  final IllustrationSlot slot;
   final String title;
   final String? message;
   final Widget? action;
+  final double illustrationSize;
 
   @override
   Widget build(BuildContext context) {
@@ -22,22 +37,41 @@ class EmptyState extends StatelessWidget {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(FreshSpacing.s6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ExcludeSemantics(child: Icon(icon, size: 56, color: freshColors(context).textMuted)),
-            const SizedBox(height: FreshSpacing.s4),
-            Text(title, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
-            if (message != null) ...[
-              const SizedBox(height: FreshSpacing.s2),
-              Text(message!, style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              EntranceMotion(
+                child: Illustration(slot: slot, size: illustrationSize, excludeFromSemantics: true),
+              ),
+              const SizedBox(height: FreshSpacing.s4),
+              Semantics(
+                header: true,
+                child: Text(title, style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+              ),
+              if (message != null) ...[
+                const SizedBox(height: FreshSpacing.s2),
+                Text(
+                  message!,
+                  style: theme.textTheme.bodyLarge?.copyWith(color: freshColors(context).textMuted),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (action != null) ...[const SizedBox(height: FreshSpacing.s5), action!],
             ],
-            if (action != null) ...[const SizedBox(height: FreshSpacing.s5), action!],
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// The error illustration for an API error: offline for network failures, not found for 404, else generic.
+IllustrationSlot slotForError(ApiError e) {
+  if (e.status == 0 && (e.code == ApiError.networkError || e.code == 'TIMEOUT')) return IllustrationSlot.offline;
+  if (e.status == 404) return IllustrationSlot.notFound;
+  return IllustrationSlot.errorGeneric;
 }
 
 /// Failed load: the server's sentence, its trace id ("Reference: …") and a retry button. Announced to
@@ -54,14 +88,22 @@ class ErrorState extends StatelessWidget {
     final apiError = ApiError.from(error);
     final theme = Theme.of(context);
     final colors = freshColors(context);
+    final slot = slotForError(apiError);
+    final title = switch (slot) {
+      IllustrationSlot.offline => 'You are offline',
+      IllustrationSlot.notFound => 'We could not find this',
+      _ => 'Could not load this',
+    };
     final body = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!compact) ExcludeSemantics(child: Icon(Icons.cloud_off_outlined, size: 56, color: colors.dangerText)),
-        if (!compact) const SizedBox(height: FreshSpacing.s4),
+        if (!compact) ...[
+          EntranceMotion(child: Illustration(slot: slot, size: 168, excludeFromSemantics: true)),
+          const SizedBox(height: FreshSpacing.s4),
+        ],
         Text(
-          apiError.status == 0 && apiError.code == ApiError.networkError ? 'You are offline' : 'Could not load this',
-          style: theme.textTheme.titleMedium,
+          title,
+          style: compact ? theme.textTheme.titleMedium : theme.textTheme.headlineSmall,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: FreshSpacing.s2),
@@ -90,9 +132,29 @@ class ErrorState extends StatelessWidget {
   }
 }
 
+/// Unknown route (go_router errorBuilder).
+class NotFoundScreen extends StatelessWidget {
+  const NotFoundScreen({super.key, this.onHome});
+
+  final VoidCallback? onHome;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(),
+    body: SafeArea(
+      child: EmptyState(
+        slot: IllustrationSlot.notFound,
+        title: 'This page swam away',
+        message: 'The link may be old or mistyped.',
+        action: onHome == null ? null : FilledButton(onPressed: onHome, child: const Text('Go to home')),
+      ),
+    ),
+  );
+}
+
 /// Grey placeholder block. Hidden from screen readers; the container announces "Loading".
 class SkeletonBox extends StatelessWidget {
-  const SkeletonBox({super.key, this.width, required this.height, this.radius = FreshRadius.md});
+  const SkeletonBox({super.key, this.width, required this.height, this.radius = 12});
 
   final double? width;
   final double height;
@@ -172,7 +234,7 @@ class GridSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: SkeletonBox(height: double.infinity, radius: FreshRadius.lg),
+            child: SkeletonBox(height: double.infinity, radius: AppRadius.card),
           ),
           SizedBox(height: FreshSpacing.s2),
           SkeletonBox(height: 16),
@@ -237,7 +299,7 @@ class InfoBanner extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(FreshSpacing.s3),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshRadius.md)),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshRadius.xl)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
