@@ -1,3 +1,5 @@
+> **Superseded (2026-10-24, D107):** the current draft is `docs/legal/privacy-policy.md`. Kept for history; do not edit.
+
 > **DRAFT — needs legal review. Not published. Not legal advice.** This is a structure filled from what the system
 > actually collects (`docs/database/README.md`, `docs/product/identity.md`, `customers.md`, `notifications.md`,
 > `payments.md`). A lawyer must review it before launch, in particular against the **Digital Personal Data Protection

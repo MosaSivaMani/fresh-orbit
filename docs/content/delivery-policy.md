@@ -1,3 +1,5 @@
+> **Superseded (2026-10-24, D107):** the current draft is `docs/legal/shipping-delivery-policy.md`. Kept for history; do not edit.
+
 > **DRAFT — for owner review. Not published.** Written from the rules the system enforces today
 > (`docs/product/delivery.md`, `docs/product/locations.md`, `docs/product/ordering.md`, decisions D12, D17, D26).
 > Values marked *configurable* are set per city or area in the admin and may differ from the examples here; the
