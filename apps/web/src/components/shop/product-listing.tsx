@@ -1,10 +1,11 @@
-import { Button, ColourBlockScreen } from "@fresh/ui";
+import { formatDayShort, formatTime } from "@fresh/core";
+import { Button, CharacterState } from "@fresh/ui";
 import Link from "next/link";
-import { listProducts } from "@/api/endpoints/catalog";
+import { getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
 import { type RequestApi, loadWithLocation } from "@/api/server";
 import { type CategoryRef } from "@/api/types/catalog";
 import { CategoryRail } from "@/components/catalog/category-rail";
-import { ProductGrid } from "@/components/catalog/product-card";
+import { ProductGrid, offersBySlug } from "@/components/catalog/product-card";
 import { LocationBanner } from "@/components/location-banner";
 import { SectionError } from "@/components/section";
 import {
@@ -38,14 +39,21 @@ export async function ProductListing({
   /** Category checkboxes (omitted on a category page). */
   filterCategories?: CategoryRef[];
   categoryNames?: Record<string, string>;
-  /** Round category bubbles above the chips (the app shop). */
+  /** The round category row above the chips (D95). */
   navCategories?: (CategoryRef & { imageUrl?: string | null })[];
   currentCategory?: string;
 }) {
   const hasLocation = api.pincode !== null;
-  const result = await settle(
-    loadWithLocation(api, (http) => listProducts(http, toListParams(filters, hasLocation))),
-  );
+  const [result, promotions, serviceability] = await Promise.all([
+    settle(loadWithLocation(api, (http) => listProducts(http, toListParams(filters, hasLocation)))),
+    settle(loadWithLocation(api, getPromotions)),
+    api.pincode ? settle(getServiceability(api.anonymous, api.pincode)) : null,
+  ]);
+  const offers = promotions.ok ? offersBySlug(promotions.value.data) : {};
+  const nextSlot = serviceability?.ok ? serviceability.value.nextSlot : null;
+  const freshness = nextSlot
+    ? `Next slot ${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
+    : undefined;
   const located = result.ok && !result.value.pincodeRefused && hasLocation;
 
   const chips: ActiveChip[] = [
@@ -90,33 +98,28 @@ export async function ProductListing({
         {!result.ok ? (
           <SectionError message={result.message} traceId={result.traceId} />
         ) : result.value.data.items.length === 0 ? (
-          <ColourBlockScreen
-            tone="ice"
-            framed
-            eyebrow={filters.q ? `Search “${filters.q}”` : "Shop"}
-            title="Nothing"
-            title2="found"
-            titleScript="line1"
-            titleBrush="line2"
-            headingLevel={2}
+          <CharacterState
             slot="NO_SEARCH_RESULTS"
-            avatarSize="sm"
-            sheetTitle="No products match these filters"
-          >
-            <p className="text-text-muted text-sm">
-              Try removing a filter{filters.q ? " or searching for another name" : ""}.
-            </p>
-            <Button asChild>
-              <Link href={basePath}>Clear all filters</Link>
-            </Button>
-          </ColourBlockScreen>
+            title="No products match these filters"
+            description={`Try removing a filter${filters.q ? " or searching for another name" : ""}.`}
+            actions={
+              <Button asChild>
+                <Link href={basePath}>Clear all filters</Link>
+              </Button>
+            }
+          />
         ) : (
           <>
             <p className="text-text-muted text-sm" aria-live="polite">
               {numberFormat.format(result.value.data.totalCount)}{" "}
               {result.value.data.totalCount === 1 ? "product" : "products"}
             </p>
-            <ProductGrid products={result.value.data.items} priorityCount={2} />
+            <ProductGrid
+              products={result.value.data.items}
+              priorityCount={2}
+              offers={offers}
+              {...(freshness ? { freshness } : {})}
+            />
             <LinkPagination
               basePath={basePath}
               searchParams={searchParams}

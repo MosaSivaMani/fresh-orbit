@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { AdminTablePage } from "./pages/AdminTablePage";
 import { BoldBlocksPage } from "./pages/BoldBlocksPage";
 import { ComponentsPage } from "./pages/ComponentsPage";
+import { FoodAppPage } from "./pages/FoodAppPage";
 import { IllustratedPage } from "./pages/IllustratedPage";
 import { ProductPage } from "./pages/ProductPage";
 import { TokensPage } from "./pages/TokensPage";
@@ -93,15 +94,19 @@ export function App() {
       </header>
 
       <main className="mx-auto max-w-[1600px] px-4 py-6">
-        <Tabs defaultValue="bold">
+        <Tabs defaultValue="food">
           <TabsList aria-label="Playground sections" className="mb-2 w-full overflow-x-auto">
-            <TabsTrigger value="bold">Bold blocks</TabsTrigger>
+            <TabsTrigger value="food">Website (food app)</TabsTrigger>
+            <TabsTrigger value="bold">Bold blocks (app)</TabsTrigger>
             <TabsTrigger value="components">Components</TabsTrigger>
             <TabsTrigger value="illustrated">Illustrated</TabsTrigger>
             <TabsTrigger value="tokens">Tokens</TabsTrigger>
             <TabsTrigger value="admin">Admin table</TabsTrigger>
             <TabsTrigger value="product">Product card</TabsTrigger>
           </TabsList>
+          <TabsContent value="food">
+            <Themed view={view}>{() => <FoodAppPage />}</Themed>
+          </TabsContent>
           <TabsContent value="bold">
             <Themed view={view}>{() => <BoldBlocksPage />}</Themed>
           </TabsContent>

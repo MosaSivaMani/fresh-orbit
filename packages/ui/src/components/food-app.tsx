@@ -427,8 +427,9 @@ export function PageBand({
           )}
         </div>
         {aside}
+        {/* Full-width row under the title (e.g. the search box), inside the same page width. */}
+        {children && <div className="basis-full">{children}</div>}
       </div>
-      {children}
     </section>
   );
 }

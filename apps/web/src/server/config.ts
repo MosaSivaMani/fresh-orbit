@@ -21,4 +21,13 @@ export function getSiteUrl(): string | null {
   return value ? value.replace(/\/+$/, "") : null;
 }
 
+/** Store pages of the customer app, for the "get the app" band; an unset one is simply not shown. */
+export function getAppStoreLinks(): { label: string; href: string }[] {
+  const links = [
+    { label: "Google Play", href: process.env.FRESH_PLAY_STORE_URL?.trim() },
+    { label: "App Store", href: process.env.FRESH_APP_STORE_URL?.trim() },
+  ];
+  return links.filter((l): l is { label: string; href: string } => Boolean(l.href));
+}
+
 export const isProduction = process.env.NODE_ENV === "production";

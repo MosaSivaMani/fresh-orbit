@@ -1,5 +1,5 @@
 import { isApiError } from "@fresh/core";
-import { FilterChip, Heading, Script } from "@fresh/ui";
+import { FilterChip, PageBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -44,43 +44,47 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
   if (!detail) notFound();
   const filters = parseShopFilters(searchParams, detail.slug);
   return (
-    <Container className="flex flex-col gap-5 py-6 sm:py-8">
-      <Breadcrumbs
-        items={[
-          { href: "/", label: "Home" },
-          { href: "/shop", label: "Shop" },
-          ...(detail.parent
-            ? [{ href: `/shop/${detail.parent.slug}`, label: detail.parent.name }]
-            : []),
-          { label: detail.name },
-        ]}
-      />
-      <div className="flex flex-col gap-2">
-        <Heading level={1} size="page" className="text-text">
-          {detail.name} <Script tone="accent">today</Script>
-        </Heading>
-        {detail.description && <p className="text-text-muted max-w-2xl">{detail.description}</p>}
-      </div>
-      <PageSearch />
-      {detail.children.length > 0 && (
-        <ul className="flex flex-wrap gap-2" aria-label="Sub-categories">
-          {detail.children.map((child) => (
-            <li key={child.id}>
-              <FilterChip asChild>
-                <Link href={`/shop/${child.slug}`}>{child.name}</Link>
-              </FilterChip>
-            </li>
-          ))}
-        </ul>
-      )}
-      <ProductListing
-        api={api}
-        filters={filters}
-        searchParams={searchParams}
-        basePath={`/shop/${detail.slug}`}
-        navCategories={roots.ok ? roots.value : []}
-        currentCategory={detail.parent?.slug ?? detail.slug}
-      />
-    </Container>
+    <>
+      <PageBand
+        eyebrow={
+          <Breadcrumbs
+            tone="band"
+            items={[
+              { href: "/", label: "Home" },
+              { href: "/shop", label: "Shop" },
+              ...(detail.parent
+                ? [{ href: `/shop/${detail.parent.slug}`, label: detail.parent.name }]
+                : []),
+              { label: detail.name },
+            ]}
+          />
+        }
+        title={detail.name}
+        description={detail.description ?? undefined}
+      >
+        <PageSearch />
+      </PageBand>
+      <Container className="flex flex-col gap-5 py-6 sm:py-8">
+        {detail.children.length > 0 && (
+          <ul className="flex flex-wrap gap-2" aria-label="Sub-categories">
+            {detail.children.map((child) => (
+              <li key={child.id}>
+                <FilterChip asChild>
+                  <Link href={`/shop/${child.slug}`}>{child.name}</Link>
+                </FilterChip>
+              </li>
+            ))}
+          </ul>
+        )}
+        <ProductListing
+          api={api}
+          filters={filters}
+          searchParams={searchParams}
+          basePath={`/shop/${detail.slug}`}
+          navCategories={roots.ok ? roots.value : []}
+          currentCategory={detail.parent?.slug ?? detail.slug}
+        />
+      </Container>
+    </>
   );
 }

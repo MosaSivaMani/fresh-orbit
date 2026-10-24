@@ -1,12 +1,13 @@
-import { type BubbleTone, CategoryBubble } from "@fresh/ui";
+import { CategoryCircle } from "@fresh/ui";
 import { Fish } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { type CategoryRef } from "@/api/types/catalog";
 
-const tones: BubbleTone[] = ["teal", "mango", "ice", "coral"];
-
-/** Round category bubbles in a horizontally scrolling row (D88). The current category is marked. */
+/**
+ * The round "What's on your mind?" row (D95): one circle per category from the API, scrolling sideways on phones
+ * and wrapping from sm up. The current category is marked.
+ */
 export function CategoryRail({
   categories,
   current,
@@ -19,24 +20,23 @@ export function CategoryRail({
   if (categories.length === 0) return null;
   return (
     <nav aria-label={label}>
-      <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-1 pb-2 sm:mx-0 sm:flex-wrap sm:px-0">
-        {categories.map((category, i) => (
+      <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-1 pb-2 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0">
+        {categories.map((category) => (
           <li key={category.slug}>
-            <CategoryBubble
+            <CategoryCircle
               asChild
               label={category.name}
-              tone={tones[i % tones.length]}
               selected={category.slug === current}
               icon={
                 category.imageUrl ? (
-                  <Image src={category.imageUrl} alt="" width={60} height={60} />
+                  <Image src={category.imageUrl} alt="" width={110} height={110} />
                 ) : (
                   <Fish className="text-accent-text" />
                 )
               }
             >
               <Link href={`/shop/${category.slug}`} />
-            </CategoryBubble>
+            </CategoryCircle>
           </li>
         ))}
       </ul>

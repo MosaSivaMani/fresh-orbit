@@ -1,4 +1,4 @@
-import { Heading, Script } from "@fresh/ui";
+import { PageBand, Script } from "@fresh/ui";
 import type { Metadata } from "next";
 import { getCategories } from "@/api/endpoints/catalog";
 import { publicHttp, requestApi } from "@/api/server";
@@ -25,21 +25,31 @@ export default async function ShopPage(props: PageProps<"/shop">) {
   const roots = categories.ok ? categories.value : [];
   const filters = parseShopFilters(searchParams);
   return (
-    <Container className="flex flex-col gap-5 py-6 sm:py-8">
-      <Breadcrumbs items={[{ href: "/", label: "Home" }, { label: "Shop" }]} />
-      <Heading level={1} size="page" className="text-text">
-        Shop <Script tone="accent">fresh</Script>
-      </Heading>
-      <PageSearch />
-      <ProductListing
-        api={api}
-        filters={filters}
-        searchParams={searchParams}
-        basePath="/shop"
-        filterCategories={roots.map((c) => ({ slug: c.slug, name: c.name }))}
-        categoryNames={Object.fromEntries(roots.map((c) => [c.slug, c.name]))}
-        navCategories={roots}
-      />
-    </Container>
+    <>
+      <PageBand
+        eyebrow={
+          <Breadcrumbs tone="band" items={[{ href: "/", label: "Home" }, { label: "Shop" }]} />
+        }
+        title={
+          <>
+            All <Script>seafood</Script>
+          </>
+        }
+        description="Fish, prawns, crabs and shellfish, cleaned and cut the way you choose."
+      >
+        <PageSearch />
+      </PageBand>
+      <Container className="py-6 sm:py-8">
+        <ProductListing
+          api={api}
+          filters={filters}
+          searchParams={searchParams}
+          basePath="/shop"
+          filterCategories={roots.map((c) => ({ slug: c.slug, name: c.name }))}
+          categoryNames={Object.fromEntries(roots.map((c) => [c.slug, c.name]))}
+          navCategories={roots}
+        />
+      </Container>
+    </>
   );
 }
