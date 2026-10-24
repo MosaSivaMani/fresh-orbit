@@ -78,7 +78,7 @@ export async function SiteFooter() {
       </div>
       <div className="border-on-outline-ink/20 border-t">
         <p className="mx-auto max-w-7xl px-4 py-4 text-xs opacity-80 lg:px-8">
-          © {new Date().getFullYear()} Fresh Orbit. Prices include GST.
+          © {new Date().getFullYear()} Fresh Orbitt. Prices include GST.
         </p>
       </div>
     </footer>

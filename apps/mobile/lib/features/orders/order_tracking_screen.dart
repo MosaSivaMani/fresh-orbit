@@ -417,7 +417,7 @@ class _OrderReceipt extends StatelessWidget {
       if (order.amountRefundedPaise > 0) ReceiptRow('Refunded', formatRupees(order.amountRefundedPaise)),
     ];
     return ReceiptCard(
-      title: 'Fresh Orbit',
+      title: 'Fresh Orbitt',
       subtitle: 'Order ${order.orderNumber} · placed ${formatDateTime(order.placedAt)}',
       rows: rows,
       total: order.amountDuePaise > 0

@@ -9,7 +9,7 @@ public sealed class NotificationsOptions
     /// Common template variables (NOT-R1) used only while the Settings business profile has not been saved; the
     /// profile's trade name and support contacts win once it exists.
     /// </summary>
-    public string BusinessName { get; set; } = "Fresh Orbit";
+    public string BusinessName { get; set; } = "Fresh Orbitt";
 
     public string SupportPhone { get; set; } = string.Empty;
 

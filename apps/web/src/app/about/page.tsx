@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <ContentPage
-      title="About Fresh Orbit"
+      title="About Fresh Orbitt"
       intro="Seafood cleaned and cut to your order, delivered in a slot you choose."
       breadcrumbs={[{ href: "/", label: "Home" }, { label: "About us" }]}
     >

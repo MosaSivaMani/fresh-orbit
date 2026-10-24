@@ -25,7 +25,7 @@ public sealed class SmtpOptions
 
     public string FromAddress { get; set; } = "no-reply@freshorbit.local";
 
-    public string FromName { get; set; } = "Fresh Orbit";
+    public string FromName { get; set; } = "Fresh Orbitt";
 }
 
 /// <summary>Used when no SMTP host is configured.</summary>

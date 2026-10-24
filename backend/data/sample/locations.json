@@ -9,14 +9,14 @@
       "stateCode": "AP",
       "timeZone": "Asia/Kolkata",
       "targetStatus": "ACTIVE",
-      "sampleNote": "[SAMPLE] Real city, fictional Fresh Orbit operation. Activated last, after every module has loaded (LOC-R6)."
+      "sampleNote": "[SAMPLE] Real city, fictional Fresh Orbitt operation. Activated last, after every module has loaded (LOC-R6)."
     }
   ],
   "fulfillmentLocations": [
     {
       "code": "VSKP-MVP",
       "cityCode": "VISAKHAPATNAM",
-      "name": "Fresh Orbit MVP Colony Store",
+      "name": "Fresh Orbitt MVP Colony Store",
       "addressLine": "Plot 0, Sample Commercial Complex, Sector 4, MVP Colony, Visakhapatnam",
       "pincode": "530017",
       "phone": "+919999900100",

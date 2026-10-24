@@ -1,4 +1,4 @@
-# Fresh Orbit FREE PUBLIC DEMO on Render (Blueprint). Sample data only: the Visakhapatnam sample store, for testers.
+# Fresh Orbitt FREE PUBLIC DEMO on Render (Blueprint). Sample data only: the Visakhapatnam sample store, for testers.
 # NOT for real customers: every SMS (OTP codes too) is readable at <api>/api/v1/dev/sms.
 # Owner steps in plain English: docs/runbooks/render-demo.md. Production stays docker-compose.prod.yml (D25, D127).
 #
@@ -50,7 +50,7 @@ services:
       - key: FileStorage__PublicBaseUrl
         value: https://fresh-orbit-demo-api.onrender.com/media
       - key: Notifications__BusinessName
-        value: Fresh Orbit (demo)
+        value: Fresh Orbitt (demo)
 
   - type: web
     name: fresh-orbit-demo-web

@@ -30,7 +30,7 @@ class SessionController extends Notifier<SessionState> {
           phone: phone,
           code: code,
           guestCartToken: tokens.guestCartToken,
-          deviceLabel: 'Fresh Orbit app',
+          deviceLabel: 'Fresh Orbitt app',
         );
     await tokens.saveTokens(result.tokens);
     await tokens.clearGuestCartToken();
