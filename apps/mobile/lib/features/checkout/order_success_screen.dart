@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/orders_state.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/illustrated.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 class OrderSuccessScreen extends ConsumerWidget {
@@ -30,32 +33,35 @@ class OrderSuccessScreen extends ConsumerWidget {
             data: (order) => ListView(
               padding: const EdgeInsets.all(FreshSpacing.s6),
               children: [
-                ExcludeSemantics(child: Icon(Icons.check_circle, size: 72, color: freshColors(context).success)),
-                const SizedBox(height: FreshSpacing.s4),
+                const Center(
+                  child: EntranceMotion(
+                    child: Illustration(slot: IllustrationSlot.orderPlaced, size: 180, excludeFromSemantics: true),
+                  ),
+                ),
+                const SizedBox(height: FreshSpacing.s3),
                 Semantics(
                   header: true,
                   liveRegion: true,
-                  child: Text('Order placed', style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+                  child: Text('Order placed', style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
                 ),
-                const SizedBox(height: FreshSpacing.s2),
-                Text('Order ${order.orderNumber}', style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
                 const SizedBox(height: FreshSpacing.s1),
                 Center(child: OrderStatusBadge(status: order.status)),
                 const SizedBox(height: FreshSpacing.s5),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(FreshSpacing.s4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (order.slot != null)
-                          Text('Delivery ${formatSlotWindow(order.slot!.startAt, order.slot!.endAt)}'),
-                        Text('Payment: ${paymentMethodLabel(order.paymentMethod)}'),
-                        Text('Estimated total: ${formatRupees(order.estimate.totalPaise)}'),
-                        if (order.address != null) Text('To: ${order.address!.oneLine}'),
-                      ],
-                    ),
+                // Every value is the server's order, only formatted (rule 4).
+                ReceiptCard(
+                  title: 'Order ${order.orderNumber}',
+                  rows: [
+                    if (order.slot != null)
+                      ReceiptRow('Delivery', formatSlotWindow(order.slot!.startAt, order.slot!.endAt)),
+                    ReceiptRow('Payment', paymentMethodLabel(order.paymentMethod)),
+                    if (order.address != null) ReceiptRow('Deliver to', order.address!.oneLine),
+                  ],
+                  total: ReceiptRow(
+                    'Estimated total',
+                    formatRupees(order.estimate.totalPaise),
+                    semanticsLabel: 'Estimated total ${formatRupees(order.estimate.totalPaise)}',
                   ),
+                  footnote: 'The final total is set when your order is weighed and packed.',
                 ),
                 const SizedBox(height: FreshSpacing.s3),
                 const InfoBanner(

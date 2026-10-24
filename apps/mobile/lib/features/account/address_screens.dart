@@ -51,7 +51,7 @@ class AddressesScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(addressesProvider),
         data: (list) => list.isEmpty
             ? const EmptyState(
-                icon: Icons.home_outlined,
+                slot: IllustrationSlot.emptyAddresses,
                 title: 'No saved addresses',
                 message: 'Add an address to choose it quickly at checkout.',
               )
@@ -243,7 +243,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
           appBar: AppBar(title: const Text('Edit address')),
           body: list.hasError
               ? ErrorState(error: list.error!, onRetry: () => ref.invalidate(addressesProvider))
-              : const EmptyState(icon: Icons.location_off_outlined, title: 'Address not found'),
+              : const EmptyState(slot: IllustrationSlot.notFound, title: 'Address not found'),
         );
       } else {
         return Scaffold(

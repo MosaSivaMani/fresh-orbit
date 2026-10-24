@@ -26,7 +26,7 @@ class ProductGrid extends ConsumerWidget {
         if (list.items.isEmpty) {
           return empty ??
               const EmptyState(
-                icon: Icons.search_off,
+                slot: IllustrationSlot.noSearchResults,
                 title: 'No products found',
                 message: 'Try another category or fewer filters.',
               );

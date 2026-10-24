@@ -12,10 +12,12 @@ import 'package:go_router/go_router.dart';
 import '../../api/api_error.dart';
 import '../../api/models/auth.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
 import '../../state/session.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -144,11 +146,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: ListView(
             padding: const EdgeInsets.all(FreshSpacing.s4),
             children: [
+              const Center(
+                child: EntranceMotion(
+                  child: Illustration(slot: IllustrationSlot.loginOtp, size: 168, excludeFromSemantics: true),
+                ),
+              ),
+              const SizedBox(height: FreshSpacing.s3),
               Semantics(
                 header: true,
                 child: Text(
                   challenge == null ? 'Sign in with your mobile number' : 'Enter the code',
-                  style: theme.textTheme.headlineSmall,
+                  style: theme.textTheme.headlineMedium,
                 ),
               ),
               const SizedBox(height: FreshSpacing.s2),

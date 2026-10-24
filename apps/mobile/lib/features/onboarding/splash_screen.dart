@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../state/location_state.dart';
 
@@ -45,7 +46,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.set_meal, size: 72, color: scheme.onPrimary),
+                const Illustration(slot: IllustrationSlot.homeHero, size: 160, excludeFromSemantics: true),
                 const SizedBox(height: FreshSpacing.s4),
                 Text(
                   'Fresh Orbit',

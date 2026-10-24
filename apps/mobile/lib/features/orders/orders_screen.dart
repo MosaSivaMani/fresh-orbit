@@ -19,7 +19,7 @@ class OrdersScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('My orders')),
       body: !signedIn
           ? EmptyState(
-              icon: Icons.receipt_long_outlined,
+              slot: IllustrationSlot.loginOtp,
               title: 'Sign in to see your orders',
               action: FilledButton(
                 onPressed: () => context.push(Uri(path: '/login', queryParameters: {'from': '/orders'}).toString()),
@@ -33,7 +33,7 @@ class OrdersScreen extends ConsumerWidget {
                 onRetry: () => ref.invalidate(ordersProvider),
                 data: (orders) => orders.items.isEmpty
                     ? EmptyState(
-                        icon: Icons.receipt_long_outlined,
+                        slot: IllustrationSlot.emptyOrders,
                         title: 'No orders yet',
                         message: 'Your orders and their delivery status will appear here.',
                         action: FilledButton(onPressed: () => context.go('/shop'), child: const Text('Start shopping')),

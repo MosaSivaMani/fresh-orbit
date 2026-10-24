@@ -10,6 +10,7 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../app.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
 import '../../widgets/commerce.dart';
@@ -33,9 +34,13 @@ class AccountScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Center(
+                    child: Illustration(slot: IllustrationSlot.loginOtp, size: 140, excludeFromSemantics: true),
+                  ),
+                  const SizedBox(height: FreshSpacing.s3),
                   Text(
                     'Sign in to see your orders, addresses and wishlist.',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: FreshSpacing.s3),
                   FilledButton(
@@ -235,7 +240,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         value: profile,
         onRetry: () => ref.invalidate(profileProvider),
         data: (p) {
-          if (p == null) return const EmptyState(icon: Icons.person_outline, title: 'Sign in to see your profile');
+          if (p == null) return const EmptyState(slot: IllustrationSlot.loginOtp, title: 'Sign in to see your profile');
           _fill(p);
           return ListView(
             padding: const EdgeInsets.all(FreshSpacing.s4),
@@ -308,7 +313,7 @@ class NotificationsScreen extends ConsumerWidget {
           value: inbox,
           onRetry: () => ref.invalidate(inboxProvider),
           data: (page) => page.items.isEmpty
-              ? const EmptyState(icon: Icons.notifications_none, title: 'No notifications yet')
+              ? const EmptyState(slot: IllustrationSlot.emptyNotifications, title: 'No notifications yet')
               : ListView.separated(
                   itemCount: page.items.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
@@ -350,7 +355,7 @@ class PreferencesScreen extends ConsumerWidget {
         value: prefs,
         onRetry: () => ref.invalidate(preferencesProvider),
         data: (list) => list.isEmpty
-            ? const EmptyState(icon: Icons.tune, title: 'No preferences to set')
+            ? const EmptyState(slot: IllustrationSlot.emptyNotifications, title: 'No preferences to set')
             : ListView(
                 children: [
                   for (final p in list)

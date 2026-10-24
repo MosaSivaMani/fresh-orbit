@@ -15,9 +15,13 @@ import '../../api/api_error.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../core/launch.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../state/orders_state.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/illustrated.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 const _terminal = {'DELIVERED', 'CANCELLED', 'PAYMENT_FAILED', 'RETURNED'};
@@ -106,6 +110,8 @@ class _TrackingBody extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(FreshSpacing.s4),
       children: [
+        _StatusHero(status: status),
+        const SizedBox(height: FreshSpacing.s4),
         Row(
           children: [
             Expanded(
@@ -189,6 +195,54 @@ class _TrackingBody extends ConsumerWidget {
         _Actions(order: order),
         if (order.status == 'DELIVERED') _Complaints(orderId: order.id),
       ],
+    );
+  }
+}
+
+/// The illustration follows the server's status (placed → packing → on the way → delivered, or cancelled). The
+/// status text sits next to it, so the picture is decorative for screen readers.
+class _StatusHero extends StatelessWidget {
+  const _StatusHero({required this.status});
+
+  final String status;
+
+  static String _line(String status) => switch (status) {
+    'PREPARING' || 'PACKED' => 'We are cleaning and packing your order.',
+    'OUT_FOR_DELIVERY' => 'Your order is on the way, kept cold.',
+    'DELIVERED' => 'Delivered. Enjoy your meal!',
+    'CANCELLED' || 'PAYMENT_FAILED' || 'RETURNED' => 'This order is closed.',
+    'DELIVERY_FAILED' => 'We could not deliver this time.',
+    _ => 'We have your order.',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ill = illustratedColors(context);
+    final slot = slotForOrderStatus(status);
+    final image = Illustration(key: ValueKey(slot), slot: slot, size: 120, excludeFromSemantics: true);
+    return Container(
+      padding: const EdgeInsets.all(FreshSpacing.s4),
+      decoration: BoxDecoration(color: ill.tealSoft, borderRadius: BorderRadius.circular(AppRadius.hero)),
+      child: Row(
+        children: [
+          if (motionAllowed(context)) AnimatedSwitcher(duration: FreshDurations.slow, child: image) else image,
+          const SizedBox(width: FreshSpacing.s3),
+          Expanded(
+            child: Semantics(
+              liveRegion: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Sticker(label: orderStatusLabel(status), tone: StickerTone.coral),
+                  const SizedBox(height: FreshSpacing.s2),
+                  Text(_line(status), style: theme.textTheme.titleMedium),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -351,12 +405,15 @@ class _Actions extends ConsumerWidget {
           OutlinedButton.icon(
             icon: const Icon(Icons.report_problem_outlined),
             label: const Text('Report a problem'),
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              showDragHandle: true,
-              builder: (_) => _ComplaintSheet(order: order),
-            ),
+            onPressed: () async {
+              final sent = await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => _ComplaintSheet(order: order),
+              );
+              if (sent == true && context.mounted) await showComplaintReceived(context);
+            },
           ),
         if (a.reorder)
           OutlinedButton.icon(
@@ -574,10 +631,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                           idempotencyKey: key,
                         ),
                   );
-                  if (ok && context.mounted) {
-                    Navigator.pop(context);
-                    showInfoSnack(context, 'Thank you. Our team will get back to you.');
-                  }
+                  if (ok && context.mounted) Navigator.pop(context, true);
                 },
               ),
             ],
@@ -587,6 +641,21 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
     );
   }
 }
+
+/// "Complaint received" with the COMPLAINT_RECEIVED character, after the server accepted the complaint.
+Future<void> showComplaintReceived(BuildContext context) => showDialog<void>(
+  context: context,
+  builder: (context) => AlertDialog(
+    icon: const Illustration(slot: IllustrationSlot.complaintReceived, size: 140, excludeFromSemantics: true),
+    title: const Text('We have your report', textAlign: TextAlign.center),
+    content: const Text(
+      'Thank you for telling us. Our team will look into it and get back to you.',
+      textAlign: TextAlign.center,
+    ),
+    actionsAlignment: MainAxisAlignment.center,
+    actions: [FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))],
+  ),
+);
 
 class _Complaints extends ConsumerWidget {
   const _Complaints({required this.orderId});
