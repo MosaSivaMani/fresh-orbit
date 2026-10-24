@@ -455,7 +455,9 @@ class _CardControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ill = illustratedColors(context);
+    // Its own node, so the card's tap and the ADD are separate for screen readers.
     Widget pill(String text, String semantics, VoidCallback? onTap) => Semantics(
+      container: true,
       button: true,
       enabled: onTap != null,
       label: semantics,
