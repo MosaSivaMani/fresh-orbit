@@ -14,7 +14,7 @@ export type AddressInput = RequestBody<
   Coded<Schema<"SaveAddressRequest">, { label: AddressLabel }>
 >;
 
-export type PaymentMethod = Schema<"PaymentMethod">;
+export type PaymentMethod = Schema<"PaymentsPaymentMethod">;
 
 export type SubstitutionPreference = "CALL_ME" | "AUTO_SIMILAR" | "NONE";
 

@@ -8256,7 +8256,7 @@ export interface components {
             sku: string;
             name: string;
             sellUnit: components["schemas"]["SellUnit"];
-            stockUnit: components["schemas"]["StockUnit"];
+            stockUnit: components["schemas"]["CatalogStockUnit"];
             /** Format: int32 */
             packSizeGrams: null | number;
             /** Format: int32 */
@@ -8372,8 +8372,8 @@ export interface components {
             caughtOrHarvestedOn: null | string;
             /** Format: date-time */
             receivedAt: string;
-            receivedQuantity: components["schemas"]["QuantityDto"];
-            remainingQuantity: components["schemas"]["QuantityDto"];
+            receivedQuantity: components["schemas"]["InventoryQuantityDto"];
+            remainingQuantity: components["schemas"]["InventoryQuantityDto"];
             /** Format: date-time */
             bestBeforeAt: string;
             /** Format: double */
@@ -8589,6 +8589,15 @@ export interface components {
         };
         /** @enum {string} */
         CashSettlementStatus: "OPEN" | "SETTLED" | "DISPUTED";
+        /** @enum {string} */
+        CatalogQuantityUnit: "GRAM" | "PIECE" | "PACK";
+        /** @enum {string} */
+        CatalogStockUnit: "GRAM" | "PIECE";
+        CatalogVariantAvailability: {
+            status: components["schemas"]["AvailabilityStatus"];
+            maxOrderableNow: null | components["schemas"]["QuantityValue"];
+            message: null | string;
+        };
         CategoryRef: {
             slug: string;
             name: string;
@@ -8991,7 +9000,7 @@ export interface components {
         CustomerPaymentResponse: {
             /** Format: uuid */
             id: string;
-            method: components["schemas"]["PaymentMethod"];
+            method: components["schemas"]["PaymentsPaymentMethod"];
             provider: string;
             status: components["schemas"]["PaymentStatus"];
             /** Format: int64 */
@@ -9238,12 +9247,19 @@ export interface components {
             /** Format: date-time */
             expiresAt: null | string;
         };
+        InventoryQuantityDto: {
+            /** Format: int32 */
+            value: number;
+            unit: components["schemas"]["InventoryStockUnit"];
+        };
+        /** @enum {string} */
+        InventoryStockUnit: "GRAM" | "PIECE";
         InvoiceLineDto: {
             /** Format: int32 */
             lineNo: number;
             description: string;
             hsnCode: string;
-            quantity: components["schemas"]["QuantityDto"];
+            quantity: components["schemas"]["OrderingQuantityDto"];
             /** Format: int64 */
             unitPricePaise: number;
             /** Format: int64 */
@@ -9322,7 +9338,7 @@ export interface components {
             /** Format: uuid */
             batchId: null | string;
             kind: components["schemas"]["MovementKind"];
-            quantity: components["schemas"]["QuantityDto"];
+            quantity: components["schemas"]["InventoryQuantityDto"];
             /** Format: int64 */
             costPaise: number;
             reasonCode: null | string;
@@ -9443,10 +9459,10 @@ export interface components {
             variantName: string;
             preparationName: null | string;
             imageKey: null | string;
-            orderedQuantity: components["schemas"]["QuantityDto"];
-            maxChargeableQuantity: components["schemas"]["QuantityDto"];
-            packedQuantity: null | components["schemas"]["QuantityDto"];
-            chargedQuantity: null | components["schemas"]["QuantityDto"];
+            orderedQuantity: components["schemas"]["OrderingQuantityDto"];
+            maxChargeableQuantity: components["schemas"]["OrderingQuantityDto"];
+            packedQuantity: null | components["schemas"]["OrderingQuantityDto"];
+            chargedQuantity: null | components["schemas"]["OrderingQuantityDto"];
             /** Format: int64 */
             unitPricePaise: number;
             /** Format: int64 */
@@ -9465,7 +9481,7 @@ export interface components {
             /** Format: uuid */
             variantId: string;
             preparationCode: null | string;
-            grossQuantity: components["schemas"]["QuantityDto"];
+            grossQuantity: components["schemas"]["OrderingQuantityDto"];
             /** Format: int32 */
             yieldBp: number;
         };
@@ -9536,6 +9552,11 @@ export interface components {
             /** Format: int64 */
             amountDuePaise: number;
         };
+        OrderingQuantityDto: {
+            /** Format: int32 */
+            value: number;
+            unit: string;
+        };
         OtpRequestRequest: {
             phone: string;
             /**
@@ -9565,7 +9586,7 @@ export interface components {
         PackLineRequest: {
             /** Format: uuid */
             orderItemId: string;
-            packedQuantity: null | components["schemas"]["QuantityDto"];
+            packedQuantity: null | components["schemas"]["OrderingQuantityDto"];
         };
         PackOrderRequest: {
             lines: null | components["schemas"]["PackLineRequest"][];
@@ -9587,8 +9608,8 @@ export interface components {
         PackedLineDto: {
             /** Format: uuid */
             orderItemId: string;
-            packed: components["schemas"]["QuantityDto"];
-            charged: components["schemas"]["QuantityDto"];
+            packed: components["schemas"]["OrderingQuantityDto"];
+            charged: components["schemas"]["OrderingQuantityDto"];
             capped: boolean;
             /** Format: int64 */
             finalTotalPaise: number;
@@ -9870,8 +9891,6 @@ export interface components {
             note: null | string;
             version: string;
         };
-        /** @enum {string} */
-        PaymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
         PaymentMethodOption: {
             method: string;
             enabled: boolean;
@@ -9886,7 +9905,7 @@ export interface components {
             customerId: string;
             /** Format: uuid */
             fulfillmentLocationId: string;
-            method: components["schemas"]["PaymentMethod"];
+            method: components["schemas"]["PaymentsPaymentMethod"];
             provider: string;
             status: components["schemas"]["PaymentStatus"];
             /** Format: int64 */
@@ -9928,6 +9947,8 @@ export interface components {
             /** Format: int64 */
             refundablePaise: number;
         };
+        /** @enum {string} */
+        PaymentsPaymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
         PermissionListResponse: {
             items: components["schemas"]["PermissionResponse"][];
         };
@@ -10110,7 +10131,7 @@ export interface components {
             variantId: string;
             /** Format: uuid */
             preparationMethodId: null | string;
-            quantity: null | components["schemas"]["QuantityDto"];
+            quantity: null | components["schemas"]["OrderingQuantityDto"];
         };
         PublicCityResponse: {
             /** Format: uuid */
@@ -10118,11 +10139,6 @@ export interface components {
             code: string;
             name: string;
             stateCode: string;
-        };
-        QuantityDto: {
-            /** Format: int32 */
-            value: number;
-            unit: components["schemas"]["StockUnit"];
         };
         QuantityInput: {
             /** Format: int32 */
@@ -10134,12 +10150,10 @@ export interface components {
             value: number;
             unit: string;
         };
-        /** @enum {string} */
-        QuantityUnit: "GRAM" | "PIECE" | "PACK";
         QuantityValue: {
             /** Format: int32 */
             value: number;
-            unit: components["schemas"]["QuantityUnit"];
+            unit: components["schemas"]["CatalogQuantityUnit"];
         };
         QuantityView: {
             /** Format: int32 */
@@ -10314,7 +10328,7 @@ export interface components {
             orderId: string;
             /** Format: uuid */
             orderItemId: string;
-            quantity: components["schemas"]["QuantityDto"];
+            quantity: components["schemas"]["InventoryQuantityDto"];
             status: components["schemas"]["ReservationStatus"];
             /** Format: date-time */
             expiresAt: null | string;
@@ -10655,17 +10669,15 @@ export interface components {
             fulfillmentLocationId: string;
             /** Format: uuid */
             variantId: string;
-            stockUnit: components["schemas"]["StockUnit"];
-            onHand: components["schemas"]["QuantityDto"];
-            reserved: components["schemas"]["QuantityDto"];
-            available: components["schemas"]["QuantityDto"];
+            stockUnit: components["schemas"]["InventoryStockUnit"];
+            onHand: components["schemas"]["InventoryQuantityDto"];
+            reserved: components["schemas"]["InventoryQuantityDto"];
+            available: components["schemas"]["InventoryQuantityDto"];
             /** Format: int32 */
             lowStockThreshold: number;
             isLowStock: boolean;
             batches: null | components["schemas"]["BatchResponse"][];
         };
-        /** @enum {string} */
-        StockUnit: "GRAM" | "PIECE";
         StorefrontCategory: {
             /** Format: uuid */
             id: string;
@@ -10745,7 +10757,7 @@ export interface components {
             /** Format: int64 */
             compareAtPaise: null | number;
             preparations: components["schemas"]["StorefrontPreparation"][];
-            availability: null | components["schemas"]["VariantAvailability"];
+            availability: null | components["schemas"]["CatalogVariantAvailability"];
         };
         SubstitutionDto: {
             /** Format: uuid */
@@ -10753,7 +10765,7 @@ export interface components {
             /** Format: uuid */
             orderItemId: string;
             proposedName: string;
-            proposedQuantity: components["schemas"]["QuantityDto"];
+            proposedQuantity: components["schemas"]["OrderingQuantityDto"];
             /** Format: int64 */
             priceDifferencePaise: number;
             status: string;
@@ -10905,11 +10917,6 @@ export interface components {
             subject: null | string;
             body: string;
             isActive: boolean;
-        };
-        VariantAvailability: {
-            status: components["schemas"]["AvailabilityStatus"];
-            maxOrderableNow: null | components["schemas"]["QuantityValue"];
-            message: null | string;
         };
         VariantPreparationRequest: {
             code: null | string;

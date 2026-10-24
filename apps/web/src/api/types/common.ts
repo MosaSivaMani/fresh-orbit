@@ -6,7 +6,7 @@ import { type Schema } from "@fresh/api-client";
 export type { Page } from "@fresh/core";
 
 /** `GRAM` for KG variants, `PIECE`, `PACK` (docs/api §1.1). */
-export type QuantityUnit = Schema<"QuantityUnit">;
+export type QuantityUnit = Schema<"CatalogQuantityUnit">;
 
 export type Quantity = Schema<"QuantityValue">;
 

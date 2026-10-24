@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using FreshOrbit.SharedKernel.Codes;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
@@ -11,14 +12,44 @@ namespace FreshOrbit.Api;
 /// </summary>
 internal static class OpenApiSetup
 {
+    private static readonly Lazy<HashSet<string>> SharedNames = new(FindNamesSharedByModules);
+
     public static void Configure(OpenApiOptions options)
     {
+        options.CreateSchemaReferenceId = SchemaReferenceId;
         options.AddSchemaTransformer((schema, context, _) =>
         {
             DescribeEnumCodes(schema, context.JsonTypeInfo.Type);
             DropNumberAsString(schema);
             return Task.CompletedTask;
         });
+    }
+
+    /// <summary>
+    /// Schema ids are type names, so two modules' types with one name (Ordering and Inventory <c>QuantityDto</c>)
+    /// collapse into one schema. A name used by more than one module gets the module as prefix
+    /// (<c>OrderingQuantityDto</c>, <c>InventoryQuantityDto</c>).
+    /// </summary>
+    private static string? SchemaReferenceId(JsonTypeInfo typeInfo)
+    {
+        var id = OpenApiOptions.CreateDefaultSchemaReferenceId(typeInfo);
+        var type = Nullable.GetUnderlyingType(typeInfo.Type) ?? typeInfo.Type;
+        return id is not null && SharedNames.Value.Contains(type.Name) ? ModuleOf(type) + id : id;
+    }
+
+    private static HashSet<string> FindNamesSharedByModules()
+        => [.. AppDomain.CurrentDomain.GetAssemblies()
+            .Where(assembly => !assembly.IsDynamic && assembly.GetName().Name?.StartsWith("FreshOrbit.", StringComparison.Ordinal) == true)
+            .SelectMany(assembly => assembly.GetExportedTypes())
+            .GroupBy(type => type.Name, StringComparer.Ordinal)
+            .Where(group => group.Select(ModuleOf).Distinct(StringComparer.Ordinal).Skip(1).Any())
+            .Select(group => group.Key)];
+
+    /// <summary><c>FreshOrbit.Ordering.Application.Orders.QuantityDto</c> → <c>Ordering</c>.</summary>
+    private static string ModuleOf(Type type)
+    {
+        var parts = (type.Namespace ?? string.Empty).Split('.');
+        return parts.Length > 1 ? parts[1] : string.Empty;
     }
 
     /// <summary>

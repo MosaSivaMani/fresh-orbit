@@ -8905,7 +8905,7 @@
             "$ref": "#/components/schemas/SellUnit"
           },
           "stockUnit": {
-            "$ref": "#/components/schemas/StockUnit"
+            "$ref": "#/components/schemas/CatalogStockUnit"
           },
           "packSizeGrams": {
             "type": [
@@ -9348,10 +9348,10 @@
             "format": "date-time"
           },
           "receivedQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "remainingQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "bestBeforeAt": {
             "type": "string",
@@ -10167,6 +10167,50 @@
           "DISPUTED"
         ],
         "type": "string"
+      },
+      "CatalogQuantityUnit": {
+        "enum": [
+          "GRAM",
+          "PIECE",
+          "PACK"
+        ],
+        "type": "string"
+      },
+      "CatalogStockUnit": {
+        "enum": [
+          "GRAM",
+          "PIECE"
+        ],
+        "type": "string"
+      },
+      "CatalogVariantAvailability": {
+        "required": [
+          "status",
+          "maxOrderableNow",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/AvailabilityStatus"
+          },
+          "maxOrderableNow": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QuantityValue"
+              }
+            ]
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "CategoryRef": {
         "required": [
@@ -11764,7 +11808,7 @@
             "format": "uuid"
           },
           "method": {
-            "$ref": "#/components/schemas/PaymentMethod"
+            "$ref": "#/components/schemas/PaymentsPaymentMethod"
           },
           "provider": {
             "type": "string"
@@ -12653,6 +12697,29 @@
           }
         }
       },
+      "InventoryQuantityDto": {
+        "required": [
+          "value",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/InventoryStockUnit"
+          }
+        }
+      },
+      "InventoryStockUnit": {
+        "enum": [
+          "GRAM",
+          "PIECE"
+        ],
+        "type": "string"
+      },
       "InvoiceLineDto": {
         "required": [
           "lineNo",
@@ -12680,7 +12747,7 @@
             "type": "string"
           },
           "quantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "unitPricePaise": {
             "type": "integer",
@@ -12966,7 +13033,7 @@
             "$ref": "#/components/schemas/MovementKind"
           },
           "quantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "costPaise": {
             "type": "integer",
@@ -13447,10 +13514,10 @@
             ]
           },
           "orderedQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "maxChargeableQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "packedQuantity": {
             "oneOf": [
@@ -13458,7 +13525,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/QuantityDto"
+                "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
           },
@@ -13468,7 +13535,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/QuantityDto"
+                "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
           },
@@ -13528,7 +13595,7 @@
             ]
           },
           "grossQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "yieldBp": {
             "type": "integer",
@@ -13773,6 +13840,22 @@
           }
         }
       },
+      "OrderingQuantityDto": {
+        "required": [
+          "value",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      },
       "OtpRequestRequest": {
         "required": [
           "phone"
@@ -13870,7 +13953,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/QuantityDto"
+                "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
           }
@@ -13956,10 +14039,10 @@
             "format": "uuid"
           },
           "packed": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "charged": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "capped": {
             "type": "boolean"
@@ -14870,14 +14953,6 @@
           }
         }
       },
-      "PaymentMethod": {
-        "enum": [
-          "COD",
-          "UPI_ON_DELIVERY",
-          "ONLINE"
-        ],
-        "type": "string"
-      },
       "PaymentMethodOption": {
         "required": [
           "method",
@@ -14947,7 +15022,7 @@
             "format": "uuid"
           },
           "method": {
-            "$ref": "#/components/schemas/PaymentMethod"
+            "$ref": "#/components/schemas/PaymentsPaymentMethod"
           },
           "provider": {
             "type": "string"
@@ -15099,6 +15174,14 @@
             "format": "int64"
           }
         }
+      },
+      "PaymentsPaymentMethod": {
+        "enum": [
+          "COD",
+          "UPI_ON_DELIVERY",
+          "ONLINE"
+        ],
+        "type": "string"
       },
       "PermissionListResponse": {
         "required": [
@@ -15872,7 +15955,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/QuantityDto"
+                "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
           }
@@ -15899,22 +15982,6 @@
           },
           "stateCode": {
             "type": "string"
-          }
-        }
-      },
-      "QuantityDto": {
-        "required": [
-          "value",
-          "unit"
-        ],
-        "type": "object",
-        "properties": {
-          "value": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "unit": {
-            "$ref": "#/components/schemas/StockUnit"
           }
         }
       },
@@ -15950,14 +16017,6 @@
           }
         }
       },
-      "QuantityUnit": {
-        "enum": [
-          "GRAM",
-          "PIECE",
-          "PACK"
-        ],
-        "type": "string"
-      },
       "QuantityValue": {
         "required": [
           "value",
@@ -15970,7 +16029,7 @@
             "format": "int32"
           },
           "unit": {
-            "$ref": "#/components/schemas/QuantityUnit"
+            "$ref": "#/components/schemas/CatalogQuantityUnit"
           }
         }
       },
@@ -16626,7 +16685,7 @@
             "format": "uuid"
           },
           "quantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "status": {
             "$ref": "#/components/schemas/ReservationStatus"
@@ -17921,16 +17980,16 @@
             "format": "uuid"
           },
           "stockUnit": {
-            "$ref": "#/components/schemas/StockUnit"
+            "$ref": "#/components/schemas/InventoryStockUnit"
           },
           "onHand": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "reserved": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "available": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/InventoryQuantityDto"
           },
           "lowStockThreshold": {
             "type": "integer",
@@ -17949,13 +18008,6 @@
             }
           }
         }
-      },
-      "StockUnit": {
-        "enum": [
-          "GRAM",
-          "PIECE"
-        ],
-        "type": "string"
       },
       "StorefrontCategory": {
         "required": [
@@ -18324,7 +18376,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/VariantAvailability"
+                "$ref": "#/components/schemas/CatalogVariantAvailability"
               }
             ]
           }
@@ -18356,7 +18408,7 @@
             "type": "string"
           },
           "proposedQuantity": {
-            "$ref": "#/components/schemas/QuantityDto"
+            "$ref": "#/components/schemas/OrderingQuantityDto"
           },
           "priceDifferencePaise": {
             "type": "integer",
@@ -19018,35 +19070,6 @@
           },
           "isActive": {
             "type": "boolean"
-          }
-        }
-      },
-      "VariantAvailability": {
-        "required": [
-          "status",
-          "maxOrderableNow",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/AvailabilityStatus"
-          },
-          "maxOrderableNow": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/QuantityValue"
-              }
-            ]
-          },
-          "message": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },

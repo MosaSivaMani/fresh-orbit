@@ -36,7 +36,7 @@ export type Preparation = Omit<Schema<"StorefrontPreparation">, "chargeBasis"> &
   chargeBasis: PreparationChargeBasis | null;
 };
 
-export type VariantAvailability = Schema<"VariantAvailability">;
+export type VariantAvailability = Schema<"CatalogVariantAvailability">;
 
 export type Variant = Omit<Schema<"StorefrontVariant">, "preparations"> & {
   preparations: Preparation[];
