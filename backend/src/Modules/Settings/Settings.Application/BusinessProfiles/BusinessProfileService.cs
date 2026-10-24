@@ -16,7 +16,8 @@ public sealed record SaveBusinessProfileRequest(
     string Address,
     string SupportPhone,
     string SupportEmail,
-    string TimeZone);
+    string TimeZone,
+    string? SupportHours = null);
 
 public sealed record BusinessProfileResponse(
     string LegalName,
@@ -27,7 +28,26 @@ public sealed record BusinessProfileResponse(
     string SupportPhone,
     string SupportEmail,
     string TimeZone,
-    string Version);
+    string Version)
+{
+    public string? SupportHours { get; init; }
+}
+
+/// <summary>
+/// <c>GET /api/v1/business-profile</c> (public, W7): who the seller is and how to reach support. GSTIN, FSSAI licence
+/// number, legal name and address are printed on every invoice and the FSSAI number must be shown to e-commerce
+/// customers, so they are public; nothing else of the profile (version, internal fields) is exposed.
+/// </summary>
+public sealed record PublicBusinessProfileResponse(
+    string LegalName,
+    string TradeName,
+    string? Gstin,
+    string? FssaiLicenseNo,
+    string Address,
+    string SupportPhone,
+    string SupportEmail,
+    string? SupportHours,
+    string TimeZone);
 
 public sealed class SaveBusinessProfileRequestValidator : AbstractValidator<SaveBusinessProfileRequest>
 {
@@ -41,6 +61,7 @@ public sealed class SaveBusinessProfileRequestValidator : AbstractValidator<Save
         RuleFor(x => x.SupportEmail).NotEmpty().EmailAddress().MaximumLength(254);
         RuleFor(x => x.FssaiLicenseNo).Matches("^[0-9]{14}$").When(x => !string.IsNullOrWhiteSpace(x.FssaiLicenseNo))
             .WithErrorCode("FSSAI_INVALID").WithMessage("The fssaiLicenseNo must be 14 digits.");
+        RuleFor(x => x.SupportHours).MaximumLength(200);
         RuleFor(x => x.TimeZone).NotEmpty().Must(BeKnownTimeZone).WithErrorCode("TIME_ZONE_INVALID")
             .WithMessage("The timeZone must be an IANA time zone id such as Asia/Kolkata.");
     }
@@ -51,6 +72,9 @@ public sealed class SaveBusinessProfileRequestValidator : AbstractValidator<Save
 public interface IBusinessProfileService
 {
     Task<BusinessProfileResponse> GetAsync(CancellationToken cancellationToken);
+
+    /// <summary>The public part (W7); 404 BUSINESS_PROFILE_NOT_CONFIGURED until an admin saves the profile (rule 7).</summary>
+    Task<PublicBusinessProfileResponse> GetPublicAsync(CancellationToken cancellationToken);
 
     Task<BusinessProfileResponse> SaveAsync(SaveBusinessProfileRequest request, WriteCondition condition, CancellationToken cancellationToken);
 }
@@ -64,12 +88,28 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
         return ToResponse(profile);
     }
 
+    public async Task<PublicBusinessProfileResponse> GetPublicAsync(CancellationToken cancellationToken)
+    {
+        var profile = await repository.GetBusinessProfileAsync(cancellationToken)
+            ?? throw new NotFoundException(SettingsErrors.BusinessProfileNotConfigured, "The business profile has not been entered yet.");
+        return new PublicBusinessProfileResponse(
+            profile.LegalName,
+            profile.TradeName,
+            profile.Gstin,
+            profile.FssaiLicenseNo,
+            profile.Address,
+            profile.SupportPhone,
+            profile.SupportEmail,
+            profile.SupportHours,
+            profile.TimeZone);
+    }
+
     public async Task<BusinessProfileResponse> SaveAsync(SaveBusinessProfileRequest request, WriteCondition condition, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(condition);
         var existing = await repository.GetBusinessProfileAsync(cancellationToken);
-        var data = new BusinessProfileData(request.LegalName, request.TradeName, request.Gstin, request.FssaiLicenseNo, request.Address, request.SupportPhone, request.SupportEmail, request.TimeZone);
+        var data = new BusinessProfileData(request.LegalName, request.TradeName, request.Gstin, request.FssaiLicenseNo, request.Address, request.SupportPhone, request.SupportEmail, request.TimeZone, request.SupportHours);
         var before = existing is null ? null : ToResponse(existing);
         BusinessProfile profile;
         if (condition.ShouldCreate(existing, unitOfWork, "business profile"))
@@ -100,6 +140,9 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
             profile.SupportPhone,
             profile.SupportEmail,
             profile.TimeZone,
-            profile.Version.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            profile.Version.ToString(System.Globalization.CultureInfo.InvariantCulture))
+        {
+            SupportHours = profile.SupportHours,
+        };
     }
 }

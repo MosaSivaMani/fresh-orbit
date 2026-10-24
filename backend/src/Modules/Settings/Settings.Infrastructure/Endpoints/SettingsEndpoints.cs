@@ -5,6 +5,7 @@ using FreshOrbit.Settings.Application.Shared;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Errors;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,13 @@ internal static class SettingsEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapGet("/business-profile", async (IBusinessProfileService service, CancellationToken ct) => TypedResults.Ok(await service.GetPublicAsync(ct)))
+            .AllowAnonymous()
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .WithTags("Settings")
+            .Produces<PublicBusinessProfileResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         var group = endpoints.MapGroup("/admin/settings").RequirePermission(Permission).WithTags("Settings");
 
         group.MapGet("/business-profile", async (IBusinessProfileService service, HttpResponse response, CancellationToken ct) =>
