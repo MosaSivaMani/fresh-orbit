@@ -26,7 +26,7 @@ public interface IStockAlertService
 }
 
 /// <summary>
-/// CUS-R9 back-in-stock alerts. Read (customer, alerts, variant, location, stock) → Decide → one save. The alert is
+/// CUS-R10 back-in-stock alerts. Read (customer, alerts, variant, location, stock) → Decide → one save. The alert is
 /// refused for a variant that is not sold, a location that does not exist, or stock that is available now (the alert
 /// could never fire until it ran out again).
 /// </summary>

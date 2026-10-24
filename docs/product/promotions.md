@@ -97,6 +97,7 @@ Order `DELIVERED`, `RETURNED`, `DELIVERY_FAILED` keep the redemption `APPLIED` (
 | PROMO-R23 | PUT, pause, resume need `If-Match`; every admin write audited. |
 | PROMO-R24 | `GET /coupons` lists `ACTIVE`, started, not expired, city-matching coupons that are marked listed (gap: `is_listed`) and not exhausted for the customer. |
 | PROMO-R25 | Banners: `link_type COUPON` target must be an existing coupon code; `CATEGORY`/`PRODUCT` target must exist (Catalog.Public). Permission `catalog.manage` (API §4.11). |
+| PROMO-R27 | Banner responses (`GET /promotions`, `/home` banners) carry `imageUrl`, the public URL of `imageKey` from file storage, or null when there is no valid key. Clients use the URL as given. Promotions supplies `/home` banners through `IHomeBannerSource` (Catalog.Public). |
 
 ## 4. Events
 

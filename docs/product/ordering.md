@@ -196,6 +196,7 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 | ORD-R58 | Goodwill (`refunds.request`, `If-Match`): negative amount, allowed `PACKED`, `OUT_FOR_DELIVERY`, `DELIVERED`; Σ goodwill ≤ final total. Before collection (COD) reduces `amount_due`; otherwise `OrderAdjusted` → Payments refund request (Q12). |
 | ORD-R59 | Reorder adds the order's lines (variant, preparation, ordered quantity) via `ICartApi.AddLines`; unsellable lines skipped and named. |
 | ORD-R60 | Pick list: `CONFIRMED`/`PREPARING` orders of the slot, `ACTIVE` lines, Σ gross `ceil(net × 10000 / yield)` per variant × preparation, one query. |
+| ORD-R61 | An order keeps the IANA time zone of its fulfillment location; placing an order whose location has no time zone is refused (422 `CONFIGURATION_MISSING`, field `deliveryAddressId`). Order detail, list and tracking return `timeZone` so clients show slot times in the store's local time (W10). |
 
 ## 4. Events
 

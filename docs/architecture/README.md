@@ -22,7 +22,7 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Module | Schema | Owns | Uses (.Public) |
 |---|---|---|---|
 | Identity | `identity` | users, OTP, refresh tokens, staff, roles, permissions | Audit |
-| Customers | `customers` | customers, addresses, wishlist | Identity, Catalog, Audit, Locations |
+| Customers | `customers` | customers, addresses, wishlist, stock alerts | Identity, Catalog, Audit, Locations, Inventory (events) |
 | Locations | `locations` | cities, fulfillment locations, service areas, pincodes, hours, closures | — |
 | Catalog | `catalog` | categories, products, images, variants, preparation methods | — |
 | Pricing | `pricing` | variant prices, preparation charges, tax rules | Catalog, Locations |
@@ -71,6 +71,7 @@ backend/
 | Catalog browse shows price and stock | Read-only SQL view `catalog.storefront_offers` joining pricing and inventory tables; no project reference |
 | City readiness, retirement and next-slot need modules that depend on Locations | Interfaces in `Locations.Public` (`ICityActivationCheck`, `ICityRetirementCheck`, `INextSlotProvider`) implemented by Pricing, Inventory, Delivery, Ordering |
 | Delivery needs `max_delivery_attempts` from the order policy but does not use Settings | `IDeliveryAttemptPolicy` in `Delivery.Public`, implemented by Settings (same pattern as D4) |
+| `/home` shows banners but Catalog does not use Promotions | `IHomeBannerSource` in `Catalog.Public`, implemented by Promotions |
 | Customer deletion must be refused while orders are open | `ICustomerDeletionCheck` in `Customers.Public`, implemented by Ordering |
 | Events another module consumes (D30) | Sealed records in `<Module>.Public/Events`; the consumer's `IEventHandler<T>` adapter lives in its `.Application/Handlers` and calls the module's own service (no SaveChanges; the outbox dispatcher saves) |
 | Images | SkiaSharp (MIT), WebP at 320/640/1280 px, MinIO first, cleanup job for orphans |

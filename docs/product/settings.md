@@ -32,6 +32,7 @@ Owner: E1. Schema `settings`. Uses no other module's `.Public`. Endpoints: `docs
 | SET-R5 | A missing series row → 422 `CONFIGURATION_MISSING`. Numbers are gapless: drawn only inside the caller's transaction, a rollback returns the number. |
 | SET-R6 | Admin `PUT /number-series/{code}/{period}` creates a row (`If-None-Match: *`) or changes `prefix`, `padWidth`, `nextValue` (If-Match). Once a number was issued (`last_issued_at` set) → 409 `NUMBER_SERIES_IN_USE`. Code is ORDER or INVOICE; period matches `^\d{4}-\d{2}$` with consecutive years. |
 | SET-R7 | Reference data: `order-policies.json` and `number-series.json` INSERT_IF_MISSING (never overwrite admin edits or issued series). |
+| SET-R8 | `GET /api/v1/business-profile` (anonymous, public rate limit) returns the legal footer and contact block: legal and trade name, GSTIN, FSSAI licence, address, support phone, e-mail and hours, time zone. Not configured yet → 404 `BUSINESS_PROFILE_NOT_CONFIGURED` (never a guessed default). `supportHours` (free text, ≤ 200, e.g. `7 am – 9 pm, all days`) is optional and saved with the admin `PUT /admin/settings/business-profile`. |
 
 ## 3. Events
 

@@ -98,6 +98,7 @@ Stock items and cold-chain logs have no status.
 | INV-R23 | Commands without `If-Match` (receipt, waste: `Idempotency-Key` only; cold chain; stock item create): on `ConcurrentSaveException` clear the change tracker and retry from Read, max 3, then 409 `CONCURRENT_SAVE`. |
 | INV-R24 | Checkout: `Inventory.Public.Reserve` only tracks changes on the caller's DbContext, never saves; Ordering's single `SaveChangesAsync` writes all StockItems with their `xmin`; lost race → Ordering retries the whole checkout from Read (max 3). `Reserve` is side-effect free so a retry re-reads. DB check is the last line. Deadlock `40P01` is treated as a lost race. |
 | INV-R25 | Event handlers: lost race → handler throws, outbox retries it (inbox row is written in the same transaction, so success happens once); after max attempts → `platform.dead_letters`. |
+| INV-R26 | `StockAvailableAgain(stockItemId, fulfillmentLocationId, variantId, available)` (Inventory.Public/Events) is raised in the same save whenever a stock item's available quantity goes from ≤ 0 to > 0 (receipt, adjustment, count, released or expired reservation). Customers consumes it for back-in-stock alerts (CUS-R10). |
 
 ### Events raised
 

@@ -4,12 +4,12 @@ using FreshOrbit.SharedKernel.Domain;
 namespace FreshOrbit.Customers.Domain.StockAlerts;
 
 /// <summary>
-/// "Notify me when back in stock" (CUS-R9): one per customer, variant and fulfillment location. Removed when it fires
+/// "Notify me when back in stock" (CUS-R10): one per customer, variant and fulfillment location. Removed when it fires
 /// (the stock came back) or when the customer removes it; never edited.
 /// </summary>
 public sealed class StockAlert : AggregateRoot
 {
-    /// <summary>Most alerts one customer may hold at a time (CUS-R9).</summary>
+    /// <summary>Most alerts one customer may hold at a time (CUS-R10).</summary>
     public const int MaxPerCustomer = 50;
 
     private StockAlert()

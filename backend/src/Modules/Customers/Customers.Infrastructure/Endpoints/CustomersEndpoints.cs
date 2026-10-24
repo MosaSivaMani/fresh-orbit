@@ -89,7 +89,7 @@ internal static class CustomersEndpoints
             return TypedResults.NoContent();
         });
 
-        // CUS-R9 back-in-stock alerts; the public per-IP limit (docs/api §1.9) until the customer limiter exists (SEC-3).
+        // CUS-R10 back-in-stock alerts; the public per-IP limit (docs/api §1.9) until the customer limiter exists (SEC-3).
         me.MapGet("/stock-alerts", async (IStockAlertService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)))
             .RequireRateLimiting(RateLimitPolicies.Public)
             .Produces<IReadOnlyList<StockAlertResponse>>();

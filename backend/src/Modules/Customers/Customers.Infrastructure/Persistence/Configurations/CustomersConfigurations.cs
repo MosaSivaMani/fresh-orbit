@@ -69,7 +69,7 @@ internal sealed class StockAlertConfiguration : IEntityTypeConfiguration<StockAl
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
 
-        // CUS-R9: one alert per customer, variant and location; the second index serves the back-in-stock handler.
+        // CUS-R10: one alert per customer, variant and location; the second index serves the back-in-stock handler.
         builder.HasIndex(x => new { x.CustomerId, x.VariantId, x.FulfillmentLocationId }).IsUnique();
         builder.HasIndex(x => new { x.VariantId, x.FulfillmentLocationId });
     }

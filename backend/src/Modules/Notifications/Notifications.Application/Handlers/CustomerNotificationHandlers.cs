@@ -339,7 +339,7 @@ public sealed class DropDeviceTokensOnCustomerDeleted(INotificationsRepository r
 }
 
 /// <summary>
-/// <c>StockAlertTriggered</c> (CUS-R9): the product the customer asked about is back at their location. Push, in-app
+/// <c>StockAlertTriggered</c> (CUS-R10): the product the customer asked about is back at their location. Push, in-app
 /// and e-mail only (BACK_IN_STOCK has no SMS template, so no DLT id is needed).
 /// </summary>
 public sealed class NotifyStockAlertTriggered(CustomerNotifier notifier) : IEventHandler<StockAlertTriggered>

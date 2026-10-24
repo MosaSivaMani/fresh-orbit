@@ -46,6 +46,8 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | CUS-R7 | Delete account: refused while any `ICustomerDeletionCheck` reports a reason → 409 `INVALID_STATUS_TRANSITION`; otherwise status DELETED, name/email cleared, marketing off, **every** address of the customer (active or removed earlier) deactivated and anonymised as in CUS-R9, wishlist removed, user anonymised (phone cleared, DISABLED, tokens revoked). |
 | CUS-R8 | Admin block/unblock (customers.manage, If-Match on the customer): user DISABLED / ACTIVE; blocking revokes refresh tokens; a DELETED customer cannot be unblocked (409 `INVALID_STATUS_TRANSITION`). |
 | CUS-R9 | Removing an address anonymises it straight away, in the same save as the deactivation (D34, SEC-8): recipientName, line1 and locality become `Deleted`, phone `+910000000000`, line2, landmark, latitude and longitude null. Label, cityName, stateCode and pincode stay (coarse, identify no one alone). An open order is not affected: it reads its own snapshot, never the address row. Repeating the removal is a no-op (204). |
+| CUS-R10 | Back-in-stock alerts ("notify me"), owned by Customers in `customers.stock_alerts`: `POST /me/stock-alerts {variantId, fulfillmentLocationId}` creates one per customer + variant + location (unique index; a repeat or a lost race returns the existing alert with 200, a new one 201). Refused: unknown location → 400 `VALIDATION_FAILED` (`fulfillmentLocationId`); variant not sold → 422 `PRODUCT_NOT_AVAILABLE`; available stock > 0 now → 422 `STOCK_AVAILABLE`; 50 alerts already → 422 `STOCK_ALERT_LIMIT_REACHED`. `DELETE` of an unknown or another customer's id is 204. When Inventory raises `StockAvailableAgain` (available went from ≤ 0 to > 0 at that location), the handler reads every alert for the variant + location once, raises `StockAlertTriggered` per alert and removes it in the same save (one notification, then gone). Deleting the account removes its alerts. Rate limit: the public per-IP policy until the customer limiter exists (SEC-3). |
+| CUS-R11 | Wishlist items carry `product` (slug, name, small image URL, `isAvailable`, `price` = lowest current unit price and compare-at with `perUnit`) read in one batch through `ICatalogApi.GetProductCardsAsync`; `price` is set only when a location is known (`?pincode=` or `X-Pincode`; unknown/unserved pincode → 422 `PINCODE_NOT_SERVICEABLE`); `product` is null when the product is no longer visible (draft/archived). The server computes the price; clients render it. |
 
 ### Retention (D34, DPDP Act s.8(7), s.12)
 
@@ -62,6 +64,8 @@ Nothing else personal is kept after deletion. Known gaps owned elsewhere: OTP ch
 webhook payloads (SEC-13). The order-snapshot purge after 72 months is not implemented yet (Ordering).
 
 ## 4. Events
+
+`StockAlertTriggered(stockAlertId, customerId, variantId, fulfillmentLocationId, productName, productSlug, variantName)` (Customers.Public/Events, CUS-R10) is consumed by Notifications (`BACK_IN_STOCK`). Customers consumes Inventory's `StockAvailableAgain`.
 
 | Event | Payload | Consumers |
 |---|---|---|

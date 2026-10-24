@@ -79,6 +79,8 @@ Error codes: `docs/api/README.md` §2 (Catalog, Common).
 | CAT-R18 | Image URLs are public and cacheable (`https://img.freshorbit.in/{key}`); no signed URLs for product images. |
 | CAT-R19 | `localNames`: up to 10 names, each ≤ 40 chars, de-duplicated case-insensitively. |
 | CAT-R20 | Admin product list includes all statuses; customer endpoints never return DRAFT or ARCHIVED (404). |
+| CAT-R28 | `/home` banners are typed (`id, title, subtitle, imageKey, imageUrl, linkType, linkTarget, startsAt, endsAt, sortOrder`) and come from the `IHomeBannerSource` port in `Catalog.Public`, implemented by Promotions; with no source registered the list is empty. |
+| CAT-R29 | `ICatalogApi.GetProductCardsAsync(productIds, fulfillmentLocationId?, at)` returns a priced card per product in two queries (products + `storefront_offers`): lowest current unit price at the location, compare-at, `isAvailable` (any offer with stock), small image URL, `isVisible` (ACTIVE). Used by the wishlist (CUS-R11). |
 
 ## 4. Events
 

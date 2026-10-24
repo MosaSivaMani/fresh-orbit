@@ -101,6 +101,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 | CART-R28 | Target = customer's `ACTIVE` cart, created if absent. Matching variant + preparation → quantities added, capped at `maxOrder`; other lines appended until 30 lines; dropped lines counted. |
 | CART-R29 | Pincode: guest cart pincode wins when both have one (latest intent); unsellable lines are kept and shown with issues (not removed). |
 | CART-R30 | Guest cart → `CONVERTED` in the same transaction. Unknown or already `CONVERTED` token → no-op, `mergedLineCount = 0` (idempotent). |
+| CART-R31 | Each cart line view carries the variant's order rules `minOrder`, `maxOrder` and `orderStep` (`{ value, unit }`, the same values the cart validates with), null when the variant is gone, so clients size the quantity stepper without their own rules (W4). |
 
 ## 4. Events
 
