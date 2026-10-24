@@ -181,7 +181,7 @@ CI: the backend job in `.github/workflows/ci.yml` runs the validator (step "Vali
 
 ## 7. Decisions (manager, 2026-10-24)
 
-Logged in `docs/decisions/log.md` as D54 (S-D1) to D61 (S-D8); S-D7 (D60) is still a proposal.
+Logged in `docs/decisions/log.md` as D54 (S-D1) to D61 (S-D8); all accepted.
 
 | # | Question | Decision |
 |---|---|---|
