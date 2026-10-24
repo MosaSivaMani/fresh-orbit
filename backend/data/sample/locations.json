@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "module": "locations",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "cities": [
+    {
+      "code": "VISAKHAPATNAM",
+      "name": "Visakhapatnam",
+      "stateCode": "AP",
+      "timeZone": "Asia/Kolkata",
+      "targetStatus": "ACTIVE",
+      "sampleNote": "[SAMPLE] Real city, fictional Fresh Orbit operation. Activated last, after every module has loaded (LOC-R6)."
+    }
+  ],
+  "fulfillmentLocations": [
+    {
+      "code": "VSKP-MVP",
+      "cityCode": "VISAKHAPATNAM",
+      "name": "Fresh Orbit MVP Colony Store",
+      "addressLine": "Plot 0, Sample Commercial Complex, Sector 4, MVP Colony, Visakhapatnam",
+      "pincode": "530017",
+      "phone": "+919999900100",
+      "latitude": 17.7425,
+      "longitude": 83.3365,
+      "hasColdStorage": true,
+      "fssaiLicenseNo": "SAMPLE-FSSAI-0001",
+      "targetStatus": "ACTIVE",
+      "sampleNote": "[SAMPLE] Fictional address, phone and FSSAI number. Coordinates approximate the neighbourhood only."
+    }
+  ],
+  "operatingHours": [
+    {
+      "locationCode": "VSKP-MVP",
+      "days": [
+        {
+          "dayOfWeek": "MONDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "TUESDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "WEDNESDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "THURSDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "FRIDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "SATURDAY",
+          "opensAt": "06:30",
+          "closesAt": "20:30"
+        },
+        {
+          "dayOfWeek": "SUNDAY",
+          "opensAt": "06:00",
+          "closesAt": "14:00"
+        }
+      ],
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ],
+  "closures": [
+    {
+      "locationCode": "VSKP-MVP",
+      "closedOnOffsetDays": 10,
+      "reason": "Cold-room maintenance",
+      "sampleNote": "[SAMPLE] Date is relative to the city-local load date so it is always in the future (LOC-R14)."
+    }
+  ],
+  "serviceAreas": [
+    {
+      "key": "VSKP-SA-CENTRAL",
+      "cityCode": "VISAKHAPATNAM",
+      "locationCode": "VSKP-MVP",
+      "name": "Central",
+      "deliveryFeePaise": 3000,
+      "freeDeliveryAbovePaise": 59900,
+      "minOrderPaise": 19900,
+      "pincodes": [
+        "530002",
+        "530003",
+        "530004",
+        "530013",
+        "530016",
+        "530017",
+        "530020"
+      ],
+      "sampleNote": "[SAMPLE] Pincodes are real-format Visakhapatnam pincodes; the grouping into areas is illustrative and must be checked against India Post before real use."
+    },
+    {
+      "key": "VSKP-SA-NORTH",
+      "cityCode": "VISAKHAPATNAM",
+      "locationCode": "VSKP-MVP",
+      "name": "North",
+      "deliveryFeePaise": 4000,
+      "freeDeliveryAbovePaise": 79900,
+      "minOrderPaise": 29900,
+      "pincodes": [
+        "530022",
+        "530040",
+        "530041",
+        "530043",
+        "530045",
+        "530048"
+      ],
+      "sampleNote": "[SAMPLE] Pincodes are real-format Visakhapatnam pincodes; the grouping into areas is illustrative and must be checked against India Post before real use."
+    },
+    {
+      "key": "VSKP-SA-SOUTHWEST",
+      "cityCode": "VISAKHAPATNAM",
+      "locationCode": "VSKP-MVP",
+      "name": "South-West",
+      "deliveryFeePaise": 5000,
+      "freeDeliveryAbovePaise": 99900,
+      "minOrderPaise": 39900,
+      "pincodes": [
+        "530005",
+        "530009",
+        "530011",
+        "530012",
+        "530026",
+        "530027",
+        "530032"
+      ],
+      "sampleNote": "[SAMPLE] Pincodes are real-format Visakhapatnam pincodes; the grouping into areas is illustrative and must be checked against India Post before real use."
+    }
+  ]
+}

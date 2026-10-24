@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "module": "customers",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "customers": [
+    {
+      "key": "CUST-1",
+      "phone": "+919999900301",
+      "fullName": "Anjali Rao",
+      "email": "anjali.rao@customer.example",
+      "marketingOptIn": true,
+      "addresses": [
+        {
+          "label": "HOME",
+          "recipientName": "Anjali Rao",
+          "phone": "+919999900301",
+          "line1": "Flat 101, Sample Residency",
+          "line2": "Road No. 2",
+          "landmark": "Near the bus stop",
+          "locality": "Dwaraka Nagar",
+          "cityName": "Visakhapatnam",
+          "stateCode": "AP",
+          "pincode": "530016",
+          "latitude": null,
+          "longitude": null,
+          "isDefault": true
+        },
+        {
+          "label": "WORK",
+          "recipientName": "Anjali Rao",
+          "phone": "+919999900301",
+          "line1": "Floor 3, Sample Tech Park",
+          "line2": null,
+          "landmark": null,
+          "locality": "Madhurawada",
+          "cityName": "Visakhapatnam",
+          "stateCode": "AP",
+          "pincode": "530048",
+          "latitude": null,
+          "longitude": null,
+          "isDefault": false
+        }
+      ],
+      "sampleNote": "[SAMPLE] Fictional customer. Phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md); email on the reserved .example domain."
+    },
+    {
+      "key": "CUST-2",
+      "phone": "+919999900302",
+      "fullName": "Kiran Varma",
+      "email": "kiran.varma@customer.example",
+      "marketingOptIn": false,
+      "addresses": [
+        {
+          "label": "HOME",
+          "recipientName": "Kiran Varma",
+          "phone": "+919999900302",
+          "line1": "House 12-3-45, Sample Street",
+          "line2": null,
+          "landmark": "Opposite the park",
+          "locality": "Gajuwaka",
+          "cityName": "Visakhapatnam",
+          "stateCode": "AP",
+          "pincode": "530026",
+          "latitude": null,
+          "longitude": null,
+          "isDefault": true
+        }
+      ],
+      "sampleNote": "[SAMPLE] Fictional customer. Phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md); email on the reserved .example domain."
+    },
+    {
+      "key": "CUST-3",
+      "phone": "+919999900303",
+      "fullName": "Farhan Sheikh",
+      "email": null,
+      "marketingOptIn": false,
+      "addresses": [
+        {
+          "label": "HOME",
+          "recipientName": "Farhan Sheikh",
+          "phone": "+919999900303",
+          "line1": "Flat 5B, Sample Towers",
+          "line2": "Beach Road",
+          "landmark": null,
+          "locality": "MVP Colony",
+          "cityName": "Visakhapatnam",
+          "stateCode": "AP",
+          "pincode": "530017",
+          "latitude": null,
+          "longitude": null,
+          "isDefault": true
+        },
+        {
+          "label": "OTHER",
+          "recipientName": "Farhan Sheikh",
+          "phone": "+919999900303",
+          "line1": "Door 7, Sample Lane",
+          "line2": null,
+          "landmark": null,
+          "locality": "Anakapalli",
+          "cityName": "Visakhapatnam",
+          "stateCode": "AP",
+          "pincode": "531001",
+          "latitude": null,
+          "longitude": null,
+          "isDefault": false
+        }
+      ],
+      "sampleNote": "[SAMPLE] Fictional customer. Second address is deliberately outside the service areas (isServiceable false demo)."
+    }
+  ]
+}

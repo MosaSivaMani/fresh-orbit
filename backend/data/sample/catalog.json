@@ -1,0 +1,1576 @@
+{
+  "version": 1,
+  "module": "catalog",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "categories": [
+    {
+      "slug": "fish",
+      "parentSlug": null,
+      "name": "Fish",
+      "description": "Whole sea and freshwater fish, cleaned and cut to order.",
+      "sortOrder": 10,
+      "isActive": true,
+      "imageKey": "sample/categories/fish.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "sea-fish",
+      "parentSlug": "fish",
+      "name": "Sea Fish",
+      "description": "Fish landed at coastal harbours.",
+      "sortOrder": 11,
+      "isActive": true,
+      "imageKey": "sample/categories/sea-fish.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "freshwater-fish",
+      "parentSlug": "fish",
+      "name": "Freshwater Fish",
+      "description": "Farmed river and pond fish.",
+      "sortOrder": 12,
+      "isActive": true,
+      "imageKey": "sample/categories/freshwater-fish.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "prawns-shrimp",
+      "parentSlug": null,
+      "name": "Prawns & Shrimp",
+      "description": "Sea prawns, farmed prawns and scampi.",
+      "sortOrder": 20,
+      "isActive": true,
+      "imageKey": "sample/categories/prawns-shrimp.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "crabs",
+      "parentSlug": null,
+      "name": "Crabs",
+      "description": "Mud crab and blue swimmer crab.",
+      "sortOrder": 30,
+      "isActive": true,
+      "imageKey": "sample/categories/crabs.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "shellfish",
+      "parentSlug": null,
+      "name": "Shellfish",
+      "description": "Squid, mussels, clams and lobster.",
+      "sortOrder": 40,
+      "isActive": true,
+      "imageKey": "sample/categories/shellfish.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "fillets-steaks",
+      "parentSlug": null,
+      "name": "Fillets & Steaks",
+      "description": "Boneless fillets and steaks in fixed packs.",
+      "sortOrder": 50,
+      "isActive": true,
+      "imageKey": "sample/categories/fillets-steaks.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "ready-to-cook",
+      "parentSlug": null,
+      "name": "Ready to Cook",
+      "description": "Marinated packs; cook straight from the pack.",
+      "sortOrder": 60,
+      "isActive": true,
+      "imageKey": "sample/categories/ready-to-cook.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ],
+  "products": [
+    {
+      "slug": "seer-fish",
+      "categorySlug": "sea-fish",
+      "name": "Seer Fish (Vanjaram)",
+      "localNames": [
+        "Vanjaram",
+        "Surmai",
+        "Neymeen",
+        "Konemu"
+      ],
+      "localNameLanguages": {
+        "Vanjaram": "ta",
+        "Surmai": "hi, mr",
+        "Neymeen": "ml",
+        "Konemu": "te"
+      },
+      "speciesScientificName": "Scomberomorus commerson",
+      "description": "Firm, mild-flavoured fish with few bones; the usual choice for fry, steaks and curry. Cut from whole fish of about 2–4 kg. Priced and charged by net weight after cutting.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Steaks and curry cut include the centre bone. Rinse briefly and pat dry before marinating.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 1,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SEER-WHOLE-KG",
+          "name": "Medium fish (2–4 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8800,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 7000,
+              "isDefault": false
+            },
+            {
+              "code": "STEAK",
+              "yieldBp": 7200,
+              "isDefault": true
+            },
+            {
+              "code": "FRY_CUT",
+              "yieldBp": 6800,
+              "isDefault": false
+            },
+            {
+              "code": "FILLET_SKINLESS",
+              "yieldBp": 5000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "silver-pomfret",
+      "categorySlug": "sea-fish",
+      "name": "Silver Pomfret",
+      "localNames": [
+        "Vavval",
+        "Avoli",
+        "Paplet",
+        "Chanduva",
+        "Rupchanda"
+      ],
+      "localNameLanguages": {
+        "Vavval": "ta",
+        "Avoli": "ml",
+        "Paplet": "hi, mr",
+        "Chanduva": "te",
+        "Rupchanda": "bn"
+      },
+      "speciesScientificName": "Pampus argenteus",
+      "description": "Flat, soft-textured fish with a delicate taste; popular whole for tawa fry or in curry. Sold by weight (medium) or as single large fish.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Whole fry: score both sides 2–3 times before marinating.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 2,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "POMFRET-MED-KG",
+          "name": "Medium (200–300 g each)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CLEANED",
+              "yieldBp": 8500,
+              "isDefault": true
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6800,
+              "isDefault": false
+            }
+          ]
+        },
+        {
+          "sku": "POMFRET-LARGE-PC",
+          "name": "Large, single fish (approx. 450 g)",
+          "sellUnit": "PIECE",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": null,
+          "avgPieceGrams": 450,
+          "minOrder": 1,
+          "maxOrder": 4,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CLEANED",
+              "yieldBp": 10000,
+              "isDefault": true
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 10000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "rohu",
+      "categorySlug": "freshwater-fish",
+      "name": "Rohu",
+      "localNames": [
+        "Rui",
+        "Rohu",
+        "Seelavathi"
+      ],
+      "localNameLanguages": {
+        "Rui": "bn",
+        "Rohu": "hi",
+        "Seelavathi": "te"
+      },
+      "speciesScientificName": "Labeo rohita",
+      "description": "Freshwater carp with soft, sweet flesh; the classic fish for Bengali and Andhra curries. Cut from fish of about 1.5–2.5 kg.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Pond farms, Krishna and Godavari delta",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Curry cut is scaled and bone-in; the head is kept separately on request through the order note.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "ROHU-KG",
+          "name": "Medium fish (1.5–2.5 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8000,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6500,
+              "isDefault": true
+            },
+            {
+              "code": "STEAK",
+              "yieldBp": 6800,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "katla",
+      "categorySlug": "freshwater-fish",
+      "name": "Katla",
+      "localNames": [
+        "Katla",
+        "Bocha"
+      ],
+      "localNameLanguages": {
+        "Katla": "hi, bn",
+        "Bocha": "te"
+      },
+      "speciesScientificName": "Labeo catla",
+      "description": "Large freshwater carp with a big head and rich flesh; suited to curry and kalia. Cut from fish of about 2–4 kg.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Pond farms, Krishna and Godavari delta",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "The head is heavy, so curry-cut yield is lower than for rohu.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "KATLA-KG",
+          "name": "Large fish (2–4 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 7800,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6000,
+              "isDefault": true
+            },
+            {
+              "code": "STEAK",
+              "yieldBp": 6500,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "yellowfin-tuna",
+      "categorySlug": "sea-fish",
+      "name": "Yellowfin Tuna",
+      "localNames": [
+        "Soorai",
+        "Choora"
+      ],
+      "localNameLanguages": {
+        "Soorai": "ta",
+        "Choora": "ml"
+      },
+      "speciesScientificName": "Thunnus albacares",
+      "description": "Dense, meaty dark-red flesh; best as steaks or cubes for pepper fry and cutlets. Cook through; not sold for raw eating.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Remove the dark bloodline before cooking for a milder taste.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "TUNA-YF-KG",
+          "name": "Loin cut from large fish",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "STEAK",
+              "yieldBp": 7000,
+              "isDefault": true
+            },
+            {
+              "code": "BONELESS_CUBES",
+              "yieldBp": 5000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "indian-mackerel",
+      "categorySlug": "sea-fish",
+      "name": "Indian Mackerel (Bangda)",
+      "localNames": [
+        "Bangda",
+        "Ayala",
+        "Kanangeluthi",
+        "Kanagurta"
+      ],
+      "localNameLanguages": {
+        "Bangda": "hi, mr",
+        "Ayala": "ml",
+        "Kanangeluthi": "ta",
+        "Kanagurta": "te"
+      },
+      "speciesScientificName": "Rastrelliger kanagurta",
+      "description": "Oily, full-flavoured small fish (6–10 per kg); ideal for masala fry and tangy curries.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Oily fish: cook on the day of delivery for the best flavour.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 4,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "MACKEREL-KG",
+          "name": "Medium (6–10 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CLEANED",
+              "yieldBp": 8000,
+              "isDefault": true
+            },
+            {
+              "code": "CLEANED_HEADLESS",
+              "yieldBp": 6800,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "oil-sardine",
+      "categorySlug": "sea-fish",
+      "name": "Oil Sardine (Mathi)",
+      "localNames": [
+        "Mathi",
+        "Chaala",
+        "Kavalu"
+      ],
+      "localNameLanguages": {
+        "Mathi": "ml, ta",
+        "Chaala": "ml",
+        "Kavalu": "te"
+      },
+      "speciesScientificName": "Sardinella longiceps",
+      "description": "Small, oily fish (15–25 per kg) with a strong flavour; a coastal favourite for fry and curry.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Small bones soften when fried crisp or cooked in tamarind curry.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SARDINE-KG",
+          "name": "Small (15–25 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CLEANED",
+              "yieldBp": 7500,
+              "isDefault": true
+            },
+            {
+              "code": "CLEANED_HEADLESS",
+              "yieldBp": 6500,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "red-snapper",
+      "categorySlug": "sea-fish",
+      "name": "Red Snapper",
+      "localNames": [
+        "Sankara",
+        "Chempalli",
+        "Rane"
+      ],
+      "localNameLanguages": {
+        "Sankara": "ta",
+        "Chempalli": "ml",
+        "Rane": "mr"
+      },
+      "speciesScientificName": "Lutjanus argentimaculatus",
+      "description": "Lean white fish with a sweet taste; good for curry, grilling and fillets. Cut from fish of about 1–2 kg.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Skin-on pieces hold together better in curry.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SNAPPER-RED-KG",
+          "name": "Medium fish (1–2 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8500,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6200,
+              "isDefault": true
+            },
+            {
+              "code": "FILLET",
+              "yieldBp": 4500,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "barramundi",
+      "categorySlug": "sea-fish",
+      "name": "Barramundi (Bhetki)",
+      "localNames": [
+        "Bhetki",
+        "Koduva",
+        "Kalanji",
+        "Pandugappa"
+      ],
+      "localNameLanguages": {
+        "Bhetki": "bn",
+        "Koduva": "ta",
+        "Kalanji": "ml",
+        "Pandugappa": "te"
+      },
+      "speciesScientificName": "Lates calcarifer",
+      "description": "Mild, flaky white fish; the Bengali choice for fish fry and paturi. Boneless fillets cut to order.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Brackish-water farms, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Skinless fillets cook in 3–4 minutes per side; do not overcook.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 5,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "BARRAMUNDI-KG",
+          "name": "Medium fish (1–2 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8500,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6200,
+              "isDefault": false
+            },
+            {
+              "code": "FILLET_SKINLESS",
+              "yieldBp": 4000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "tiger-prawns",
+      "categorySlug": "prawns-shrimp",
+      "name": "Tiger Prawns",
+      "localNames": [
+        "Bagda chingri",
+        "Royyalu",
+        "Era",
+        "Chemmeen",
+        "Jhinga"
+      ],
+      "localNameLanguages": {
+        "Bagda chingri": "bn",
+        "Royyalu": "te",
+        "Era": "ta",
+        "Chemmeen": "ml",
+        "Jhinga": "hi"
+      },
+      "speciesScientificName": "Penaeus monodon",
+      "description": "Large, firm prawns with a sweet taste; good for fry, roast and biryani. Sizes are counts per kg before cleaning.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Brackish-water farms, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Peeled prawns cook in 2–3 minutes; remove from heat as soon as they curl and turn opaque.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 3,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "PRAWN-TIGER-L-KG",
+          "name": "Large (20–30 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "DEVEINED_SHELL_ON",
+              "yieldBp": 6500,
+              "isDefault": false
+            },
+            {
+              "code": "PEELED_TAIL_ON",
+              "yieldBp": 5800,
+              "isDefault": false
+            },
+            {
+              "code": "PEELED_DEVEINED",
+              "yieldBp": 5500,
+              "isDefault": true
+            }
+          ]
+        },
+        {
+          "sku": "PRAWN-TIGER-J-KG",
+          "name": "Jumbo (10–15 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "BUTTERFLY",
+              "yieldBp": 6000,
+              "isDefault": false
+            },
+            {
+              "code": "PEELED_TAIL_ON",
+              "yieldBp": 6000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "white-prawns",
+      "categorySlug": "prawns-shrimp",
+      "name": "White Prawns",
+      "localNames": [
+        "Vella era",
+        "Naran chemmeen",
+        "Royyalu"
+      ],
+      "localNameLanguages": {
+        "Vella era": "ta",
+        "Naran chemmeen": "ml",
+        "Royyalu": "te"
+      },
+      "speciesScientificName": "Penaeus indicus",
+      "description": "Medium sea prawns with a delicate flavour; the everyday prawn for curry and fry. Sizes are counts per kg before cleaning.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Small prawns overcook quickly; add them in the last few minutes of a curry.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "PRAWN-WHITE-M-KG",
+          "name": "Medium (40–60 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "PEELED_DEVEINED",
+              "yieldBp": 5200,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "scampi",
+      "categorySlug": "prawns-shrimp",
+      "name": "Scampi (Freshwater Prawn)",
+      "localNames": [
+        "Golda chingri",
+        "Konju",
+        "Aatru era"
+      ],
+      "localNameLanguages": {
+        "Golda chingri": "bn",
+        "Konju": "ml",
+        "Aatru era": "ta"
+      },
+      "speciesScientificName": "Macrobrachium rosenbergii",
+      "description": "Large freshwater prawn with a big head and long claws; prized for malai curry. The head is heavy, so cleaned yield is low.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Freshwater farms, Andhra Pradesh",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Keep the head on for malai curry; the head fat carries the flavour.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SCAMPI-KG",
+          "name": "Large (10–15 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": true
+            },
+            {
+              "code": "DEVEINED_SHELL_ON",
+              "yieldBp": 4500,
+              "isDefault": false
+            },
+            {
+              "code": "PEELED_DEVEINED",
+              "yieldBp": 3800,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "mud-crab",
+      "categorySlug": "crabs",
+      "name": "Mud Crab",
+      "localNames": [
+        "Nandu",
+        "Njandu",
+        "Peetha",
+        "Kakra",
+        "Kekda"
+      ],
+      "localNameLanguages": {
+        "Nandu": "ta",
+        "Njandu": "ml",
+        "Peetha": "te",
+        "Kakra": "bn",
+        "Kekda": "hi"
+      },
+      "speciesScientificName": "Scylla serrata",
+      "description": "Heavy, meaty crab with large claws; for crab masala and pepper fry. Delivered whole (claws tied) or cleaned and cut.",
+      "sourceType": "WILD",
+      "sourceRegion": "Mangrove creeks, Andhra Pradesh coast",
+      "storageInstructions": "Refrigerate in the box at 2–6 °C with a damp cloth on top; do not seal airtight or keep in water. Cook the same day. Discard any with cracked shells or that stay open when tapped.",
+      "handlingNotes": "Whole crabs are delivered with claws tied; handle by the back of the shell.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "CRAB-MUD-KG",
+          "name": "Medium (300–500 g each)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CRAB_CLEANED_CUT",
+              "yieldBp": 7000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "blue-swimmer-crab",
+      "categorySlug": "crabs",
+      "name": "Blue Swimmer Crab",
+      "localNames": [
+        "Neela nandu",
+        "Peetha"
+      ],
+      "localNameLanguages": {
+        "Neela nandu": "ta",
+        "Peetha": "te"
+      },
+      "speciesScientificName": "Portunus pelagicus",
+      "description": "Sea crab with sweet, delicate meat; for crab rasam, curry and soups.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Less meat per crab than mud crab; best in curries and soups.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "CRAB-BLUE-KG",
+          "name": "Medium (6–10 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 3000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CRAB_CLEANED_CUT",
+              "yieldBp": 6500,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "squid",
+      "categorySlug": "shellfish",
+      "name": "Squid",
+      "localNames": [
+        "Kanava",
+        "Koonthal"
+      ],
+      "localNameLanguages": {
+        "Kanava": "ta",
+        "Koonthal": "ml"
+      },
+      "speciesScientificName": "Uroteuthis duvaucelii",
+      "description": "Tender squid for rings, roast and stir-fry. Cleaned or cut into rings.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Cook very briefly (under 2 minutes) or slowly for over 30 minutes; anything in between turns rubbery.",
+      "hsnCode": "0307",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SQUID-KG",
+          "name": "Medium tubes",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "SQUID_CLEANED",
+              "yieldBp": 7000,
+              "isDefault": true
+            },
+            {
+              "code": "SQUID_RINGS",
+              "yieldBp": 6000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "green-mussels",
+      "categorySlug": "shellfish",
+      "name": "Green Mussels",
+      "localNames": [
+        "Kallumakkaya"
+      ],
+      "localNameLanguages": {
+        "Kallumakkaya": "ml"
+      },
+      "speciesScientificName": "Perna viridis",
+      "description": "Green-shelled mussels, sold in the shell; for steaming, roast and kallumakkaya fry.",
+      "sourceType": "WILD",
+      "sourceRegion": "Indian coast",
+      "storageInstructions": "Refrigerate in the box at 2–6 °C with a damp cloth on top; do not seal airtight or keep in water. Cook the same day. Discard any with cracked shells or that stay open when tapped.",
+      "handlingNotes": "Scrub shells and pull off the beard just before cooking; discard any that do not open after cooking.",
+      "hsnCode": "0307",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "MUSSEL-GREEN-KG",
+          "name": "In shell",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 3000,
+          "orderStep": 500,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "clams",
+      "categorySlug": "shellfish",
+      "name": "Clams",
+      "localNames": [
+        "Kakka",
+        "Matti",
+        "Tisrya"
+      ],
+      "localNameLanguages": {
+        "Kakka": "ml",
+        "Matti": "ta",
+        "Tisrya": "mr"
+      },
+      "speciesScientificName": "Meretrix meretrix",
+      "description": "Hard-shell clams sold in the shell; for clam fry, sukka and soups.",
+      "sourceType": "WILD",
+      "sourceRegion": "Estuaries, Indian coast",
+      "storageInstructions": "Refrigerate in the box at 2–6 °C with a damp cloth on top; do not seal airtight or keep in water. Cook the same day. Discard any with cracked shells or that stay open when tapped.",
+      "handlingNotes": "Soak in salted water for 20 minutes to release sand before cooking.",
+      "hsnCode": "0307",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "CLAM-KG",
+          "name": "In shell",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 3000,
+          "orderStep": 500,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "spiny-lobster",
+      "categorySlug": "shellfish",
+      "name": "Spiny Lobster",
+      "localNames": [
+        "Singi era",
+        "Kadal konju"
+      ],
+      "localNameLanguages": {
+        "Singi era": "ta",
+        "Kadal konju": "ml"
+      },
+      "speciesScientificName": "Panulirus homarus",
+      "description": "Sea lobster sold as single pieces; for butter-garlic grill and masala. Weight per piece varies; the price is per piece.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Butterflied lobster grills in 6–8 minutes, shell side down first.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "LOBSTER-SPINY-PC",
+          "name": "Single lobster (approx. 300 g)",
+          "sellUnit": "PIECE",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": null,
+          "avgPieceGrams": 300,
+          "minOrder": 1,
+          "maxOrder": 4,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": true
+            },
+            {
+              "code": "BUTTERFLY",
+              "yieldBp": 10000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "basa-fillet",
+      "categorySlug": "fillets-steaks",
+      "name": "Basa Fillet",
+      "localNames": [
+        "Pangas"
+      ],
+      "localNameLanguages": {
+        "Pangas": "bn, hi"
+      },
+      "speciesScientificName": "Pangasianodon hypophthalmus",
+      "description": "Boneless, skinless white fillets with a mild taste; for fish fingers, grills and curries. Frozen packs.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Farmed (origin printed on each pack)",
+      "storageInstructions": "Keep frozen at −18 °C or below. Thaw in the refrigerator, not at room temperature. Do not refreeze after thawing.",
+      "handlingNotes": "Cook from thawed; pat dry first so it browns instead of steaming.",
+      "hsnCode": "0304",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FROZEN",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "BASA-FILLET-500G",
+          "name": "Frozen pack, 500 g net",
+          "sellUnit": "PACK",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": 500,
+          "avgPieceGrams": null,
+          "minOrder": 1,
+          "maxOrder": 10,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "FILLET_SKINLESS",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "atlantic-salmon-fillet",
+      "categorySlug": "fillets-steaks",
+      "name": "Atlantic Salmon Fillet",
+      "localNames": [],
+      "localNameLanguages": {},
+      "speciesScientificName": "Salmo salar",
+      "description": "Skin-on, boneless portions of imported farmed Atlantic salmon. Frozen packs. Not to be confused with Indian salmon (Rawas).",
+      "sourceType": "FARMED",
+      "sourceRegion": "Imported (country of origin printed on each pack)",
+      "storageInstructions": "Keep frozen at −18 °C or below. Thaw in the refrigerator, not at room temperature. Do not refreeze after thawing.",
+      "handlingNotes": "Start skin side down in a hot pan for crisp skin.",
+      "hsnCode": "0304",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FROZEN",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SALMON-FILLET-250G",
+          "name": "Frozen pack, 250 g net",
+          "sellUnit": "PACK",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": 250,
+          "avgPieceGrams": null,
+          "minOrder": 1,
+          "maxOrder": 6,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "FILLET",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "anchovy",
+      "categorySlug": "sea-fish",
+      "name": "Anchovy (Nethili)",
+      "localNames": [
+        "Nethili",
+        "Netholi",
+        "Nethallu"
+      ],
+      "localNameLanguages": {
+        "Nethili": "ta",
+        "Netholi": "ml",
+        "Nethallu": "te"
+      },
+      "speciesScientificName": "Stolephorus indicus",
+      "description": "Tiny silver fish (80–120 per kg) for crisp fry and tangy curry.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Headless cleaned anchovy fries crisp in a few minutes.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "ANCHOVY-KG",
+          "name": "Small (80–120 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "WHOLE",
+              "yieldBp": 10000,
+              "isDefault": false
+            },
+            {
+              "code": "CLEANED_HEADLESS",
+              "yieldBp": 6000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "ribbon-fish",
+      "categorySlug": "sea-fish",
+      "name": "Ribbon Fish",
+      "localNames": [
+        "Vaalai",
+        "Vaala",
+        "Savalu"
+      ],
+      "localNameLanguages": {
+        "Vaalai": "ta",
+        "Vaala": "ml",
+        "Savalu": "te"
+      },
+      "speciesScientificName": "Trichiurus lepturus",
+      "description": "Long, thin silver fish with soft flesh; for fry and curry.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Soft flesh: turn pieces only once while frying.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "RIBBONFISH-KG",
+          "name": "Medium",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED_HEADLESS",
+              "yieldBp": 7500,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 7000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "indian-halibut",
+      "categorySlug": "sea-fish",
+      "name": "Indian Halibut",
+      "localNames": [],
+      "localNameLanguages": {},
+      "speciesScientificName": "Psettodes erumei",
+      "description": "Flatfish with firm white flesh; for steaks, fry and curry. Local names to be supplied by the owner.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Firm flesh holds well in curry.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "HALIBUT-IN-KG",
+          "name": "Medium fish (1–2 kg), cut to order",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 500,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8500,
+              "isDefault": false
+            },
+            {
+              "code": "CURRY_CUT",
+              "yieldBp": 6500,
+              "isDefault": false
+            },
+            {
+              "code": "STEAK",
+              "yieldBp": 7000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "tongue-sole",
+      "categorySlug": "sea-fish",
+      "name": "Tongue Sole",
+      "localNames": [
+        "Manthal",
+        "Nakku meen",
+        "Lep"
+      ],
+      "localNameLanguages": {
+        "Manthal": "ml",
+        "Nakku meen": "ta",
+        "Lep": "mr"
+      },
+      "speciesScientificName": "Cynoglossus macrostomus",
+      "description": "Thin flatfish with delicate flesh; for shallow fry and fillets.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Fry whole cleaned sole on medium heat; fillets cook in about 2 minutes per side.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SOLE-KG",
+          "name": "Medium (8–12 per kg)",
+          "sellUnit": "KG",
+          "stockUnit": "GRAM",
+          "isWeightVariable": true,
+          "packSizeGrams": null,
+          "avgPieceGrams": null,
+          "minOrder": 250,
+          "maxOrder": 5000,
+          "orderStep": 250,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "CLEANED",
+              "yieldBp": 8000,
+              "isDefault": true
+            },
+            {
+              "code": "FILLET_SKINLESS",
+              "yieldBp": 4000,
+              "isDefault": false
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "seer-fish-steaks",
+      "categorySlug": "fillets-steaks",
+      "name": "Seer Fish Steaks (Pack)",
+      "localNames": [
+        "Vanjaram",
+        "Surmai"
+      ],
+      "localNameLanguages": {
+        "Vanjaram": "ta",
+        "Surmai": "hi, mr"
+      },
+      "speciesScientificName": "Scomberomorus commerson",
+      "description": "Ready-cut seer fish steaks (about 1 cm, centre bone in) in a fixed 500 g net pack, chilled.",
+      "sourceType": "WILD",
+      "sourceRegion": "Bay of Bengal, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery, or freeze at −18 °C or below on the day of delivery.",
+      "handlingNotes": "Pat dry before marinating; fry 3–4 minutes per side.",
+      "hsnCode": "0302",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "featuredRank": 6,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "SEER-STEAK-500G",
+          "name": "Chilled pack, 500 g net",
+          "sellUnit": "PACK",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": 500,
+          "avgPieceGrams": null,
+          "minOrder": 1,
+          "maxOrder": 6,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "STEAK",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    },
+    {
+      "slug": "marinated-prawns-andhra-fry",
+      "categorySlug": "ready-to-cook",
+      "name": "Andhra Fry Marinated Prawns",
+      "localNames": [
+        "Royyala vepudu"
+      ],
+      "localNameLanguages": {
+        "Royyala vepudu": "te"
+      },
+      "speciesScientificName": "Penaeus vannamei",
+      "description": "Peeled and deveined prawns in a red chilli, garlic and curry-leaf marinade. Chilled 250 g net pack; cook straight from the pack. Contains: crustaceans.",
+      "sourceType": "FARMED",
+      "sourceRegion": "Brackish-water farms, Andhra Pradesh coast",
+      "storageInstructions": "Keep refrigerated at 0–4 °C and cook within 24 hours of delivery. Do not freeze after opening.",
+      "handlingNotes": "Pan-fry on medium-high heat for 5–6 minutes until the prawns curl and the masala dries.",
+      "hsnCode": "0306",
+      "hsnNote": "Placeholder HSN heading — confirm with CA before go-live.",
+      "taxCategoryCode": "SEAFOOD_MARINATED",
+      "featuredRank": null,
+      "targetStatus": "ACTIVE",
+      "variants": [
+        {
+          "sku": "PRAWN-MARINATED-250G",
+          "name": "Chilled pack, 250 g net",
+          "sellUnit": "PACK",
+          "stockUnit": "PIECE",
+          "isWeightVariable": false,
+          "packSizeGrams": 250,
+          "avgPieceGrams": null,
+          "minOrder": 1,
+          "maxOrder": 6,
+          "orderStep": 1,
+          "isActive": true,
+          "preparations": [
+            {
+              "code": "PEELED_DEVEINED",
+              "yieldBp": 10000,
+              "isDefault": true
+            }
+          ]
+        }
+      ],
+      "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
+    }
+  ]
+}

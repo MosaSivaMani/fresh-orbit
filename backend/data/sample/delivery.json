@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "module": "delivery",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "slotTemplates": [
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 1,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 1,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 1,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 2,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 2,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 2,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 3,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 3,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 3,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 4,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 4,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 4,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 5,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 5,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 5,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 6,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 6,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 6,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 7,
+      "startTime": "07:00",
+      "endTime": "09:00",
+      "capacity": 20,
+      "cutoffMinutes": 600,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 7,
+      "startTime": "11:00",
+      "endTime": "13:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    },
+    {
+      "locationCode": "VSKP-MVP",
+      "dayOfWeek": 7,
+      "startTime": "17:00",
+      "endTime": "19:00",
+      "capacity": 25,
+      "cutoffMinutes": 120,
+      "sampleNote": "[SAMPLE] Morning slot cut-off 600 min = 21:00 the evening before."
+    }
+  ],
+  "riders": [
+    {
+      "key": "RIDER-1",
+      "locationCode": "VSKP-MVP",
+      "fullName": "Ravi Teja",
+      "phone": "+919999900201",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
+    },
+    {
+      "key": "RIDER-2",
+      "locationCode": "VSKP-MVP",
+      "fullName": "Suresh Babu",
+      "phone": "+919999900202",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
+    },
+    {
+      "key": "RIDER-3",
+      "locationCode": "VSKP-MVP",
+      "fullName": "Lakshmi Prasanna",
+      "phone": "+919999900203",
+      "sampleNote": "[SAMPLE] Fictional rider; phone in the documented fake block +91 99999 00NNN (docs/product/sample-data.md)."
+    }
+  ]
+}
