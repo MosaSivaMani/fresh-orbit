@@ -179,6 +179,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -4275,6 +4285,16 @@
                 }
               }
             }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -4354,6 +4374,37 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CustomerSlotsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dev/sms": {
+      "get": {
+        "tags": [
+          "Development"
+        ],
+        "parameters": [
+          {
+            "name": "phone",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DevelopmentSms"
+                  }
                 }
               }
             }
@@ -12312,6 +12363,33 @@
           }
         }
       },
+      "DevelopmentSms": {
+        "required": [
+          "phone",
+          "text",
+          "dltTemplateId",
+          "sentAt"
+        ],
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "dltTemplateId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "DeviceTokenResponse": {
         "required": [
           "pushToken",
@@ -19240,7 +19318,9 @@
           "status",
           "receivedAt",
           "processedAt",
-          "error"
+          "error",
+          "payloadSha256",
+          "payloadTruncated"
         ],
         "type": "object",
         "properties": {
@@ -19279,6 +19359,12 @@
               "null",
               "string"
             ]
+          },
+          "payloadSha256": {
+            "type": "string"
+          },
+          "payloadTruncated": {
+            "type": "boolean"
           }
         }
       },
@@ -19371,6 +19457,9 @@
     },
     {
       "name": "DeliveryEndpoints"
+    },
+    {
+      "name": "Development"
     },
     {
       "name": "Audit"

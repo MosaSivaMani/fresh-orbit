@@ -150,6 +150,18 @@ public sealed class WebhookTests(PaymentsDatabase database) : PaymentsTestBase(d
         smallRow.PayloadSha256.Should().Be(Convert.ToHexStringLower(SHA256.HashData(small)));
         JsonSerializer.Deserialize<string>(smallRow.Payload).Should().Be(Encoding.UTF8.GetString(small));
 
+        // Staff see the hash and the truncated flag on the admin webhook-event list.
+        var staff = Factory.CreateStaffClient(["payments.view"], allLocations: true);
+        var list = await staff.GetAsync("/api/v1/admin/webhook-events?status=REJECTED&pageSize=100", Ct);
+        list.StatusCode.Should().Be(HttpStatusCode.OK);
+        var items = (await ReadJsonAsync(list)).GetProperty("items").EnumerateArray().ToList();
+        var bigItem = items.Single(i => i.GetProperty("id").GetGuid() == bigRow.Id);
+        bigItem.GetProperty("payloadSha256").GetString().Should().Be(bigRow.PayloadSha256);
+        bigItem.GetProperty("payloadTruncated").GetBoolean().Should().BeTrue();
+        var smallItem = items.Single(i => i.GetProperty("id").GetGuid() == smallRow.Id);
+        smallItem.GetProperty("payloadSha256").GetString().Should().Be(smallRow.PayloadSha256);
+        smallItem.GetProperty("payloadTruncated").GetBoolean().Should().BeFalse();
+
         // Not JSON and with a NUL byte (jsonb refuses \u0000): still stored, found by its hash.
         var junk = Encoding.UTF8.GetBytes("junk\0" + Guid.NewGuid().ToString("N"));
         (await PostWebhookAsync(junk, "00")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);

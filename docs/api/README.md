@@ -989,7 +989,7 @@ Implementation notes (Phase 2, Cart / Promotions / Ordering):
 | GET | `/api/v1/admin/payments` | payments.view | | List: `status`, `method`, `provider`, `fromDate`, `toDate`, `fulfillmentLocationId`, `page`, `pageSize` (location-scoped) |
 | GET | `/api/v1/admin/payments/{paymentId}` | payments.view | | One payment with `summary` (`paidPaise`, `refundedPaise`, `pendingRefundPaise`, `refundablePaise`); ETag |
 | GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | `{ orderId, payments[], refunds[] }` |
-| GET | `/api/v1/admin/webhook-events` | payments.view | all-locations staff only | Received events: `provider`, `signatureValid`, `status` `RECEIVED`/`PROCESSED`/`IGNORED`/`ERROR`/`REJECTED`, `fromDate`, `toDate` |
+| GET | `/api/v1/admin/webhook-events` | payments.view | all-locations staff only | Received events: `provider`, `signatureValid`, `status` `RECEIVED`/`PROCESSED`/`IGNORED`/`ERROR`/`REJECTED`, `fromDate`, `toDate`. Rows include `payloadSha256` and `payloadTruncated` (§7) |
 | POST | `/api/v1/admin/webhook-events/{id}/reprocess` | payments.manage (D15) | | Retry a valid event in `ERROR` |
 | POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK | Create refund request (`REQUESTED`); ETag = payment version |
 | GET | `/api/v1/admin/refunds` | payments.view | | List: `status`, `reasonCode`, `fromDate`, `toDate`, `fulfillmentLocationId` |
@@ -1273,6 +1273,7 @@ needs that is not here is a missing API field, not a client calculation.
 | Refund events | `refund.processed` / `refund.failed` → refund `SUCCEEDED` / `FAILED` by `provider_refund_id` |
 | Unique event id | Enforced for valid signatures only (`signature_valid = true`), so a forged request with a real event id cannot block the genuine event |
 | Same state, new event id | Stored and processed; the payment is already in that state, so no second domain event is raised |
+| Admin view | `GET /api/v1/admin/webhook-events` rows (`WebhookEventResponse`) carry `payloadSha256` (lowercase hex SHA-256 of the whole raw body, so staff can match a provider's copy) and `payloadTruncated` (true only for a `REJECTED` body over 4 KB). The payload itself is not returned |
 | Stored headers | Only the signature and event-id headers are kept with the payload |
 | Missed webhooks | Hourly reconciliation asks the provider about attempts 15 min–72 h old and applies captures (event id `recon:{providerPaymentId}:CAPTURED`) |
 

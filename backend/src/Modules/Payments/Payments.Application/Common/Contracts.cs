@@ -116,7 +116,9 @@ public sealed record WebhookEventResponse(
     WebhookEventStatus Status,
     DateTimeOffset ReceivedAt,
     DateTimeOffset? ProcessedAt,
-    string? Error);
+    string? Error,
+    string PayloadSha256,
+    bool PayloadTruncated);
 
 public sealed record WebhookReceipt(bool Received, bool Duplicate);
 

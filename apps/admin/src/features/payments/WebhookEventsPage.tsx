@@ -84,6 +84,21 @@ export function WebhookEventsPage() {
         ),
     },
     {
+      id: "payload",
+      header: "Payload",
+      cell: ({ row }) => (
+        <span className="flex flex-col gap-1">
+          <span
+            className="text-text-muted font-mono text-xs"
+            title={`SHA-256 ${row.original.payloadSha256}`}
+          >
+            {row.original.payloadSha256.slice(0, 12)}
+          </span>
+          {row.original.payloadTruncated && <Badge tone="warning">Truncated</Badge>}
+        </span>
+      ),
+    },
+    {
       id: "status",
       header: "Status",
       cell: ({ row }) => (

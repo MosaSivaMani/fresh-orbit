@@ -196,7 +196,7 @@ Uses `.Public` of: Ordering (order facts), Delivery (shipment, rider), Identity 
 | S2 | `payments.provider` check adds `UPI_ON_DELIVERY` |
 | S3 | Replace unique `(order_id) where status in (CAPTURED, COLLECTED)` by `... and is_excess = false`; add `is_excess bool` (second capture on a paid order) |
 | S4 | `webhook_events` + `status` RECEIVED/PROCESSED/IGNORED/ERROR/REJECTED, `headers jsonb` (signature/event-id headers only); unique `(provider, provider_event_id)` only `where signature_valid` |
-| S4a | SEC-6: `payload_sha256 char(64)` (lowercase hex SHA-256 of the whole raw body, every row; synthetic `recon:` rows hash their stored payload) and `payload_truncated boolean` (true only for a REJECTED body over 4 KB) |
+| S4a | SEC-6: `payload_sha256 char(64)` (lowercase hex SHA-256 of the whole raw body, every row; synthetic `recon:` rows hash their stored payload) and `payload_truncated boolean` (true only for a REJECTED body over 4 KB). Both are returned on the admin webhook-event list (`payloadSha256`, `payloadTruncated` on `WebhookEventResponse`); the admin Webhook events screen shows the hash prefix and a Truncated badge |
 | S5 | `refunds` + `fulfillment_location_id`, `complaint_id`, `source_reference` (unique), `payee_upi_id`, `notes`, `failure_reason`, `manual_reference`, `approved_at`, `succeeded_at`, `succeeded_by`, `attempt_count`; reason adds `GOODWILL` |
 | S6 | New `payments.reconciliation_issues` (PAY-R22) |
 | S7 | `cash_settlements` + `fulfillment_location_id`, `collections_count`, `note`, `dispute_reason`, `created_by` used as creator for the resolve rule |

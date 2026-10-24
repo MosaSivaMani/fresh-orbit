@@ -8,10 +8,10 @@ Staff web app: React 19 + Vite, React Router 7 data router (lazy routes), TanSta
 
 | Concern | Implementation |
 |---|---|
-| Sign-in | `POST /admin/auth/login` (email + password). Access and refresh tokens in `sessionStorage` (`fresh-orbit.admin.session`), cleared when the tab closes. `GET /admin/auth/me` loads the profile |
+| Sign-in | `POST /admin/auth/login` (email + password). A refusal shows only `INVALID_CREDENTIALS` (D33: no locked/disabled hint; other codes show the server sentence). 429 `RATE_LIMITED` shows "Try again in …" counted down from the server's `retryAfterSeconds` (body, else `Retry-After`) and keeps Sign in disabled until then. Access and refresh tokens in `sessionStorage` (`fresh-orbit.admin.session`), cleared when the tab closes. `GET /admin/auth/me` loads the profile |
 | Refresh | `@fresh/core` `createAuthFetch`: a 401 `TOKEN_EXPIRED` refreshes once (`POST /admin/auth/refresh`) and retries. A failed refresh or any other 401 marks the session expired → `/login?reason=expired&next=…` |
 | Sign-out | `POST /admin/auth/logout` with the refresh token, then the session and query cache are cleared |
-| Permissions | JWT `perm` claim (repeated) decides menus, routes and buttons (`useCan`). A route without the permission shows "You do not have access to this page"; a 403 from the API shows the same. The API enforces everything again |
+| Permissions | JWT `perm` claim (repeated) decides menus, routes and buttons (`useCan`). A requirement is one code, a list (all of them) or `{ anyOf: [...] }`. A route without the permission shows "You do not have access to this page"; a 403 from the API shows the same. The API enforces everything again |
 | Location scope | JWT `loc` / `all_loc`. Top-bar switcher (`Fulfillment location`): "All locations" only for `all_loc`; remembered in `localStorage`. Lists send `fulfillmentLocationId` when one is chosen |
 | Lists | URL holds `page`, `pageSize`, `sort`, `q` and filters (`useListParams`); server paging/filtering only; `DataTable` + `FilterBar`; loading, empty and error (with trace id) states |
 | Writes | `If-Match` from the body `version` or `ETag` on every update; `If-None-Match: *` for first-time creates where the API says so; `Idempotency-Key` (kept across retries, `useIdempotencyKey`) where the API marks IK |
@@ -52,7 +52,7 @@ listed in §5; **left** = not built.
 | 4 | Categories | `/products/categories` | `catalog.manage` | done | categories tree, create, update (If-Match) |
 | 5 | Prices | `/pricing` | `pricing.manage` | done | `GET /admin/pricing/prices` (location required), `PUT /admin/pricing/locations/{loc}/variants/{variant}/price` (If-Match or `If-None-Match: *`) |
 | 5 | Variant prices and preparation charges | `/pricing/variants/:variantId` | `pricing.manage` | done | price schedule, stop selling (DELETE, If-Match), preparation charges |
-| 5 | Tax rules | `/pricing/tax-rules` | `pricing.manage` or `tax.manage` (list); `tax.manage` to schedule (D35) | **to update**: the screen is gated on `pricing.manage` only, so FINANCE cannot open it and store managers see a schedule action that now returns 403; also show 429 `RATE_LIMITED` (with `retryAfterSeconds`) on the login page, and drop the `ACCOUNT_LOCKED` / `ACCOUNT_DISABLED` login messages (D33: staff login answers only `INVALID_CREDENTIALS`) | list, schedule new period |
+| 5 | Tax rules | `/pricing/tax-rules` (own menu entry "Tax rules") | `pricing.manage` or `tax.manage` (list, `{ anyOf }` requirement); `tax.manage` for "New tax period" / "New rate" (D35) | done | list, schedule new period |
 | 5 | Bulk upload (dry run, then apply) | `/pricing/bulk` | `pricing.manage` | done | `POST /admin/pricing/prices/bulk` with `dryRun: true`, then apply with its own IK |
 | 5 | Coupons list / editor / redemptions | `/promotions`, `/promotions/new`, `/promotions/:id` | `promotions.manage` | done | `GET/POST /admin/coupons`, `GET/PUT /admin/coupons/{id}` (If-Match), `POST …/pause`, `…/resume`, `GET …/redemptions` |
 | 5 | Home banners | — | `catalog.manage` | **left** | `GET/POST/PUT /admin/promotions` (Promotions module not on `main`) |

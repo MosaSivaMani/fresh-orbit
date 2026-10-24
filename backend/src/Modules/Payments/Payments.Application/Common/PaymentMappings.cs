@@ -110,7 +110,9 @@ public static class PaymentMappings
             webhookEvent.Status,
             webhookEvent.ReceivedAt,
             webhookEvent.ProcessedAt,
-            webhookEvent.Error);
+            webhookEvent.Error,
+            webhookEvent.PayloadSha256,
+            webhookEvent.PayloadTruncated);
     }
 
     public static CashSettlementResponse ToResponse(this CashSettlement settlement)
