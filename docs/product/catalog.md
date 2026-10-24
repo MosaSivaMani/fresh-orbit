@@ -119,6 +119,15 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | RemoveImage | `DELETE …/images/{imageId}` (IM) | product images | ACTIVE product keeps ≥1 image | delete row | `ProductImageRemoved` |
 | Browse (query) | `GET /api/v1/products`, `/products/{slug}`, `/categories`, `/home`, `/search/suggest` | one SQL per request (Q1) | CAT-R10–R15 | — | — |
 
+### Staff lookups (G3)
+
+`GET /admin/catalog/variants` and `GET /admin/preparation-methods` are readable by any staff token (packing,
+inventory, pricing and coupon screens label variants with them); every write stays `catalog.manage`. The search
+matches part of the product name, variant name or SKU (case-insensitive, `q` ≤ 100 chars), or resolves up to 100
+`id` values; `activeOnly=true` drops inactive variants and archived products. One count and one page query; items
+`{ variantId, productId, productName, variantName, sku, sellUnit, stockUnit, productStatus, isActive }` by product
+name, then SKU.
+
 ## 6. Test scenarios
 
 ### Unit (domain)

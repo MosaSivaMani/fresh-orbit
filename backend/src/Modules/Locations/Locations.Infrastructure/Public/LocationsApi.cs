@@ -3,6 +3,7 @@ using FreshOrbit.Locations.Application.Common;
 using FreshOrbit.Locations.Application.Serviceability;
 using FreshOrbit.Locations.Domain.Cities;
 using FreshOrbit.Locations.Domain.FulfillmentLocations;
+using FreshOrbit.Locations.Domain.ServiceAreas;
 using FreshOrbit.Locations.Domain.Shared;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
@@ -112,6 +113,13 @@ public sealed class LocationsApi(FreshOrbitDbContext db, ILocationsReads reads, 
         var rows = await db.Set<City>().AsNoTracking().Where(c => wanted.Contains(c.Code)).ToListAsync(cancellationToken);
         return [.. rows.Select(c => new CitySummary(c.Id, c.Code, c.Name, c.StateCode, c.Status.ToCode(), c.TimeZone))];
     }
+
+    public async Task<IReadOnlyList<string>> GetCityPincodesAsync(Guid cityId, CancellationToken cancellationToken = default)
+        => await (from p in db.Set<Pincode>().AsNoTracking()
+                  join a in db.Set<ServiceArea>().AsNoTracking() on p.ServiceAreaId equals a.Id
+                  join l in db.Set<FulfillmentLocation>().AsNoTracking() on a.FulfillmentLocationId equals l.Id
+                  where l.CityId == cityId && p.IsActive
+                  select p.Code).Distinct().ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<OperatingHoursEntry>> GetOperatingHoursAsync(IReadOnlyCollection<Guid> fulfillmentLocationIds, CancellationToken cancellationToken = default)
     {

@@ -21,6 +21,12 @@ public interface ILocationsReads
     /// <param name="visibleIds">null = all locations; otherwise only these (staff location scope).</param>
     Task<(IReadOnlyList<FulfillmentLocationResponse> Items, int TotalCount)> ListLocationsAsync(Guid? cityId, IReadOnlySet<Guid>? visibleIds, int skip, int take, CancellationToken cancellationToken);
 
+    /// <summary>Staff city lookup: id, code, name and status, by name; <paramref name="statuses"/> empty = every status.</summary>
+    Task<(IReadOnlyList<CityLookupItem> Items, int TotalCount)> LookupCitiesAsync(IReadOnlyCollection<CityStatus> statuses, int skip, int take, CancellationToken cancellationToken);
+
+    /// <summary>Locations by code; <paramref name="visibleIds"/> null = all (staff with all-locations access).</summary>
+    Task<(IReadOnlyList<StaffLocationItem> Items, int TotalCount)> ListStaffLocationsAsync(IReadOnlySet<Guid>? visibleIds, int skip, int take, CancellationToken cancellationToken);
+
     Task<FulfillmentLocationResponse?> GetLocationAsync(Guid locationId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ClosureResponse>> ListClosuresAsync(Guid locationId, DateOnly? fromDate, CancellationToken cancellationToken);

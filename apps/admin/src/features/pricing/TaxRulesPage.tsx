@@ -157,6 +157,7 @@ function TaxRuleDialog({
   onConflict: () => unknown;
 }) {
   const schedule = useScheduleTaxRule();
+  const rules = useTaxRules();
   const form = useForm<TaxValues>({
     resolver: zodResolver(schema),
     defaultValues: { taxCategoryCode: code, rate: "", validFrom: "", replaceFuture: false },
@@ -164,11 +165,18 @@ function TaxRuleDialog({
 
   const submit = form.handleSubmit(async (values) => {
     try {
+      const taxCategoryCode = values.taxCategoryCode.trim();
+      const current = rules.data?.find(
+        (rule) => rule.taxCategoryCode.toUpperCase() === taxCategoryCode.toUpperCase(),
+      );
       await schedule.mutateAsync({
-        taxCategoryCode: values.taxCategoryCode.trim(),
-        rateBp: parsePercentToBp(values.rate) ?? 0,
-        validFrom: values.validFrom === "" ? null : istLocalToUtcIso(values.validFrom),
-        replaceFuture: values.replaceFuture,
+        body: {
+          taxCategoryCode,
+          rateBp: parsePercentToBp(values.rate) ?? 0,
+          validFrom: values.validFrom === "" ? null : istLocalToUtcIso(values.validFrom),
+          replaceFuture: values.replaceFuture,
+        },
+        version: current?.version ?? null,
       });
       notifySaved("Tax rate scheduled");
       onClose();

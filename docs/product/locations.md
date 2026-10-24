@@ -126,6 +126,18 @@ Consumed: none.
 
 `GET /serviceability` `nextSlot` comes from Delivery through an `INextSlotProvider` interface declared in `Locations.Public` and implemented by Delivery (see Q2).
 
+### Staff lookups (G1, G2, G11)
+
+| Query | Who | Returns |
+|---|---|---|
+| `GET /admin/me/locations` | any staff token | The caller's own locations (`loc` claims), every location for all-locations staff; `{ id, cityId, code, name, status }` by code, paged |
+| `GET /admin/cities/lookup` | any staff token | `{ id, code, name, status }` by name, paged; `status` filter takes the stored codes (unknown code → 422 `VALIDATION_FAILED`) |
+
+Names only (no configuration, readiness or audit fields), so they need no `locations.manage`. `ILocationsApi.GetCityPincodesAsync(cityId)` gives the
+active pincodes assigned to any service area of the city's locations (Customers' `cityId` filter).
+The retire refusal is published as `CityRetirementBlockedProblem` (422, `application/problem+json`): `blocking` lists the
+UPPER_SNAKE codes every `ICityRetirementCheck` reported (`ORDERS_OPEN` today), `errors` is empty.
+
 ## 6. Test scenarios
 
 ### Unit (domain)

@@ -24,6 +24,7 @@ internal static class CatalogEndpoints
     public const string PincodeHeader = "X-Pincode";
     public const string LocationHeader = "X-Fulfillment-Location";
     public const string ServiceAreaHeader = "X-Service-Area";
+    private const int MaxSearchLength = 100;
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -179,8 +180,34 @@ internal static class CatalogEndpoints
 
     private static void MapAdminProducts(RouteGroupBuilder admin)
     {
+        // G3: reference names every staff screen needs (substitution proposals, inventory, pricing); any staff token.
         admin.MapGet("/preparation-methods", async (ICatalogAdminReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ListPreparationMethodsAsync(ct)))
-            .RequirePermission(ManagePermission);
+            .RequireStaffActor();
+
+        admin.MapGet("/catalog/variants", async (
+                [AsParameters] PagedRequest paging,
+                string? q,
+                [FromQuery(Name = "id")] Guid[]? id,
+                bool? activeOnly,
+                ICatalogAdminReads reads,
+                CancellationToken ct) =>
+            {
+                if (q is { Length: > MaxSearchLength })
+                {
+                    throw new RefusalException(new FieldError("q", CatalogErrors.ValidationFailed, $"Search text must be at most {MaxSearchLength} characters."));
+                }
+
+                if (id is { Length: > PagedRequest.MaxPageSize })
+                {
+                    throw new RefusalException(new FieldError("id", CatalogErrors.ValidationFailed, $"Send at most {PagedRequest.MaxPageSize} id values."));
+                }
+
+                var (items, total) = await reads.SearchVariantsAsync(q, id ?? [], activeOnly ?? false, paging.Skip, paging.PageSize, ct);
+                return TypedResults.Ok(new PagedResponse<VariantLookupItem>(items, paging.Page, paging.PageSize, total));
+            })
+            .WithValidation<PagedRequest>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .RequireStaffActor();
 
         admin.MapGet("/products", async (
                 [AsParameters] PagedRequest paging,

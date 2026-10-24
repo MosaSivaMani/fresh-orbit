@@ -40,6 +40,7 @@ public sealed class CustomersModule : IModule
         services.AddScoped<ICustomerAccountDirectory, CustomerAccountDirectory>();
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
         services.AddScoped<IValidator<CustomerListRequest>, CustomerListRequestValidator>();
+        services.AddScoped<IValidator<CustomerOrdersRequest>, CustomerOrdersRequestValidator>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, CustomersSampleDataLoader>());
     }
 

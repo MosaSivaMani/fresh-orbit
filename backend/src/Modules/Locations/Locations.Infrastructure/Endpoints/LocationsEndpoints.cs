@@ -9,6 +9,7 @@ using FreshOrbit.Locations.Domain.Shared;
 using FreshOrbit.Locations.Infrastructure.Public;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.SharedKernel.Actors;
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
@@ -28,6 +29,7 @@ internal static class LocationsEndpoints
 {
     public const string ManagePermission = "locations.manage";
     public const string ActivatePermission = "cities.activate";
+    private const string ProblemContentType = "application/problem+json";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -36,6 +38,7 @@ internal static class LocationsEndpoints
         MapCities(admin);
         MapFulfillmentLocations(admin);
         MapServiceAreas(admin);
+        MapStaffLookups(admin);
     }
 
     private static void MapPublic(RouteGroupBuilder group)
@@ -113,6 +116,9 @@ internal static class LocationsEndpoints
 
         admin.MapPost("/cities/{cityId:guid}/retire", async (Guid cityId, CityService service, HttpContext http, CancellationToken ct) =>
                 Respond(http, await service.RetireAsync(cityId, IfMatch.GetRequiredVersion(http.Request), ct), c => c.Version))
+            .Produces<CityRetirementBlockedProblem>(StatusCodes.Status422UnprocessableEntity, ProblemContentType)
+            .ProducesProblem(StatusCodes.Status412PreconditionFailed)
+            .ProducesProblem(StatusCodes.Status428PreconditionRequired)
             .RequirePermission(ActivatePermission);
     }
 
@@ -220,6 +226,39 @@ internal static class LocationsEndpoints
         admin.MapDelete("/service-areas/{id:guid}/pincodes/{pincode}", async (Guid id, string pincode, ServiceAreaService service, HttpContext http, CancellationToken ct) =>
                 Respond(http, await service.RemovePincodeAsync(id, IfMatch.GetRequiredVersion(http.Request), pincode, ct), a => a.Version))
             .RequirePermission(ManagePermission);
+    }
+
+    /// <summary>
+    /// Reference lookups every staff screen needs (G1, G2): any staff token, whatever its permissions. Names only;
+    /// nothing here is a price, a stock figure or customer data.
+    /// </summary>
+    private static void MapStaffLookups(RouteGroupBuilder admin)
+    {
+        admin.MapGet("/me/locations", async ([AsParameters] PagedRequest paging, ILocationsReads reads, ICurrentActor actor, CancellationToken ct) =>
+            {
+                var (items, total) = await reads.ListStaffLocationsAsync(actor.IsAllLocations ? null : actor.LocationIds, paging.Skip, paging.PageSize, ct);
+                return TypedResults.Ok(new PagedResponse<StaffLocationItem>(items, paging.Page, paging.PageSize, total));
+            })
+            .WithValidation<PagedRequest>()
+            .WithTags("Admin lookups")
+            .RequireStaffActor();
+
+        admin.MapGet("/cities/lookup", async ([AsParameters] PagedRequest paging, [FromQuery(Name = "status")] string[]? status, ILocationsReads reads, CancellationToken ct) =>
+            {
+                var statuses = new List<CityStatus>();
+                foreach (var code in status ?? [])
+                {
+                    statuses.Add(EnumCodes.TryToEnum<CityStatus>(code, out var value)
+                        ? value
+                        : throw new RefusalException(new FieldError("status", LocationsErrors.ValidationFailed, $"Status must be one of {string.Join(", ", EnumCodes.AllCodes<CityStatus>())}.")));
+                }
+
+                var (items, total) = await reads.LookupCitiesAsync(statuses, paging.Skip, paging.PageSize, ct);
+                return TypedResults.Ok(new PagedResponse<CityLookupItem>(items, paging.Page, paging.PageSize, total));
+            })
+            .WithValidation<PagedRequest>()
+            .WithTags("Admin lookups")
+            .RequireStaffActor();
     }
 
     private static Ok<T> Respond<T>(HttpContext http, T body, Func<T, string> version)

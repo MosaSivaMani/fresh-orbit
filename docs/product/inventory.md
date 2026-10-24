@@ -204,6 +204,14 @@ Reservation expiry is not an Inventory job (Q2).
 | I15 | Staff scoped to location A lists stock | Only A; command on B → 403 `LOCATION_ACCESS_DENIED` |
 | I16 | `GET /availability` LOW_STOCK / OUT_OF_STOCK / NOT_SOLD_HERE | Status per INV-R13 |
 
+### Variant names on reads (G3)
+
+The admin GET reads (stock list and detail with its batches, batches, movements, reservations) add `productName`,
+`variantName` and `sku` from `ICatalogApi.GetVariantsAsync` — one call per page, never per row; movements also
+carry the stock item's `variantId`. Names are null when Catalog does not know the variant and in write responses.
+Inventory stores no names (Catalog owns them).
+
+
 ## 7. API gaps
 
 | # | Gap | Proposal |

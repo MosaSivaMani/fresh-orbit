@@ -39,6 +39,16 @@ public interface ICustomersRepository
     /// <summary>True when <paramref name="exception"/> is a unique-key violation from a save.</summary>
     bool IsDuplicateKey(Exception exception);
 
-    /// <summary>Admin list: <paramref name="userIds"/> narrows to those users when not null.</summary>
-    Task<(IReadOnlyList<Customer> Items, int TotalCount)> SearchAsync(string? name, IReadOnlyCollection<Guid>? userIds, CustomerStatus? status, int skip, int take, CancellationToken cancellationToken);
+    /// <summary>
+    /// Admin list: <paramref name="userIds"/> narrows to those users when not null; <paramref name="pincodes"/> narrows
+    /// to customers with an active saved address in one of those pincodes when not null.
+    /// </summary>
+    Task<(IReadOnlyList<Customer> Items, int TotalCount)> SearchAsync(
+        string? name,
+        IReadOnlyCollection<Guid>? userIds,
+        CustomerStatus? status,
+        IReadOnlyCollection<string>? pincodes,
+        int skip,
+        int take,
+        CancellationToken cancellationToken);
 }

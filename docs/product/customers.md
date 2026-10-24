@@ -66,6 +66,18 @@ item: purge with the 72-month order purge).
 Nothing else personal is kept after deletion. Known gaps owned elsewhere: OTP challenges, outbox payloads and
 webhook payloads (SEC-13). The order-snapshot purge after 72 months is not implemented yet (Ordering).
 
+### Staff view of a customer's orders (G6)
+
+| Read | Rule |
+|---|---|
+| `GET /admin/customers?cityId=` | Customers with an active saved address whose pincode is assigned to a service area of the city (`ILocationsApi.GetCityPincodesAsync`, then one query in `customers`) |
+| `GET /admin/customers/{id}` `orderCounts` | `IOrderingApi.GetCustomerOrderCountsAsync`: `total` (all but PAYMENT_FAILED), `open` (PENDING_PAYMENT … OUT_FOR_DELIVERY), `delivered`, `cancelled`, `lastPlacedAt` |
+| `GET /admin/customers/{id}/orders` | `IOrderingApi.ListCustomerOrdersAsync`, newest first, paged; needs `customers.view` and `orders.view`; 404 for an unknown customer |
+
+Counts and the order list cover only orders at the caller's locations (all for all-locations staff). Customers now
+uses `Ordering.Public` (architecture table updated).
+
+
 ## 4. Events
 
 | Event | Payload | Consumers |

@@ -75,6 +75,38 @@ public sealed class LocationsReads(FreshOrbitDbContext db) : ILocationsReads
         return ([.. items.Select(FulfillmentLocationService.ToResponse)], total);
     }
 
+    public async Task<(IReadOnlyList<CityLookupItem> Items, int TotalCount)> LookupCitiesAsync(IReadOnlyCollection<CityStatus> statuses, int skip, int take, CancellationToken cancellationToken)
+    {
+        var query = Cities;
+        if (statuses.Count > 0)
+        {
+            var list = statuses.ToList();
+            query = query.Where(c => list.Contains(c.Status));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(c => c.Name).ThenBy(c => c.Id).Skip(skip).Take(take)
+            .Select(c => new CityLookupItem(c.Id, c.Code, c.Name, c.Status))
+            .ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
+    public async Task<(IReadOnlyList<StaffLocationItem> Items, int TotalCount)> ListStaffLocationsAsync(IReadOnlySet<Guid>? visibleIds, int skip, int take, CancellationToken cancellationToken)
+    {
+        var query = Locations;
+        if (visibleIds is not null)
+        {
+            var ids = visibleIds.ToList();
+            query = query.Where(l => ids.Contains(l.Id));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(l => l.Code).ThenBy(l => l.Id).Skip(skip).Take(take)
+            .Select(l => new StaffLocationItem(l.Id, l.CityId, l.Code, l.Name, l.Status))
+            .ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
     public async Task<FulfillmentLocationResponse?> GetLocationAsync(Guid locationId, CancellationToken cancellationToken)
     {
         var location = await Locations.Include(l => l.OperatingHours).FirstOrDefaultAsync(l => l.Id == locationId, cancellationToken);

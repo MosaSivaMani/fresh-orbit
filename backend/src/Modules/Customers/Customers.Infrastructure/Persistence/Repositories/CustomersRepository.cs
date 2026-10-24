@@ -66,6 +66,7 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
         string? name,
         IReadOnlyCollection<Guid>? userIds,
         CustomerStatus? status,
+        IReadOnlyCollection<string>? pincodes,
         int skip,
         int take,
         CancellationToken cancellationToken)
@@ -85,6 +86,13 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
         if (status is { } s)
         {
             query = query.Where(c => c.Status == s);
+        }
+
+        if (pincodes is not null)
+        {
+            var codes = pincodes.Distinct(StringComparer.Ordinal).ToList();
+            var addresses = db.Set<Address>().AsNoTracking();
+            query = query.Where(c => addresses.Any(a => a.CustomerId == c.Id && a.IsActive && codes.Contains(a.Pincode)));
         }
 
         var total = await query.CountAsync(cancellationToken);

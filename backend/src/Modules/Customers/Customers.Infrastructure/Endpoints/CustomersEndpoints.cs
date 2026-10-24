@@ -17,6 +17,7 @@ internal static class CustomersEndpoints
 {
     public const string ViewPermission = "customers.view";
     public const string ManagePermission = "customers.manage";
+    public const string OrdersViewPermission = "orders.view";
     private const string CustomerActorCode = "CUSTOMER";
 
     public static void Map(IEndpointRouteBuilder endpoints)
@@ -95,7 +96,16 @@ internal static class CustomersEndpoints
             var customer = await service.GetAsync(customerId, ct);
             response.SetETag(Parse(customer.Version));
             return TypedResults.Ok(customer);
-        }).RequirePermission(ViewPermission);
+        }).RequirePermission(ViewPermission).Produces<CustomerDetailResponse>();
+
+        // G6: order history needs both customers.view and orders.view; orders at other locations are left out.
+        admin.MapGet("/{customerId:guid}/orders", async (Guid customerId, [AsParameters] CustomerOrdersRequest request, IAdminCustomerService service, CancellationToken ct)
+            => TypedResults.Ok(await service.ListOrdersAsync(customerId, request, ct)))
+            .WithValidation<CustomerOrdersRequest>()
+            .RequirePermission(ViewPermission)
+            .RequirePermission(OrdersViewPermission)
+            .Produces<CustomerOrdersResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         admin.MapPost("/{customerId:guid}/block", (Guid customerId, IAdminCustomerService service, HttpContext http, CancellationToken ct)
             => SetBlockedAsync(customerId, true, service, http, ct)).RequirePermission(ManagePermission).Produces<CustomerDetailResponse>();

@@ -22,7 +22,7 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Module | Schema | Owns | Uses (.Public) |
 |---|---|---|---|
 | Identity | `identity` | users, OTP, refresh tokens, staff, roles, permissions | Audit |
-| Customers | `customers` | customers, addresses, wishlist | Identity, Catalog, Audit, Locations |
+| Customers | `customers` | customers, addresses, wishlist | Identity, Catalog, Audit, Locations, Ordering |
 | Locations | `locations` | cities, fulfillment locations, service areas, pincodes, hours, closures | — |
 | Catalog | `catalog` | categories, products, images, variants, preparation methods | — |
 | Pricing | `pricing` | variant prices, preparation charges, tax rules | Catalog, Locations |

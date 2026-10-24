@@ -9,6 +9,22 @@ using Npgsql;
 namespace FreshOrbit.Locations.Infrastructure.Endpoints;
 
 /// <summary>
+/// OpenAPI shape of 422 <c>CITY_RETIREMENT_BLOCKED</c> (G11), as <see cref="LocationsProblemFilter"/> writes it:
+/// <see cref="Blocking"/> holds the UPPER_SNAKE codes every <c>ICityRetirementCheck</c> reported (for example
+/// <c>ORDERS_OPEN</c> from Ordering), at least one; <see cref="Errors"/> is always empty (nothing in the request to fix).
+/// </summary>
+public sealed record CityRetirementBlockedProblem(
+    string? Type,
+    string Title,
+    int Status,
+    string Detail,
+    string? Instance,
+    string Code,
+    string? TraceId,
+    IReadOnlyList<string> Blocking,
+    IReadOnlyDictionary<string, IReadOnlyList<ProblemError>> Errors);
+
+/// <summary>
 /// Problem Details the shared exception handler cannot produce: CITY_NOT_READY with <c>missing</c>,
 /// CITY_RETIREMENT_BLOCKED with <c>blocking</c>, and unique-index violations (the last
 /// line behind the command's own checks) as 409.

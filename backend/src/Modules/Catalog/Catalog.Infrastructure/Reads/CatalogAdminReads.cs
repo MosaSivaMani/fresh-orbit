@@ -79,6 +79,56 @@ public sealed class CatalogAdminReads(FreshOrbitDbContext db, IFileStorage stora
             .Select(m => new PreparationMethodResponse(m.Id, m.Code, m.Name, m.Description, m.SortOrder, m.GuidanceYieldBp))
             .ToListAsync(cancellationToken);
 
+    public async Task<(IReadOnlyList<VariantLookupItem> Items, int TotalCount)> SearchVariantsAsync(
+        string? q,
+        IReadOnlyCollection<Guid> variantIds,
+        bool activeOnly,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var query = from v in db.Set<ProductVariant>().AsNoTracking()
+                    join p in db.Set<Product>().AsNoTracking() on v.ProductId equals p.Id
+                    select new { Variant = v, Product = p };
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var pattern = $"%{Escape(q.Trim())}%";
+            query = query.Where(r => EF.Functions.ILike(r.Product.Name, pattern) || EF.Functions.ILike(r.Variant.Name, pattern) || EF.Functions.ILike(r.Variant.Sku, pattern));
+        }
+
+        if (variantIds.Count > 0)
+        {
+            var ids = variantIds.Distinct().ToList();
+            query = query.Where(r => ids.Contains(r.Variant.Id));
+        }
+
+        if (activeOnly)
+        {
+            query = query.Where(r => r.Variant.IsActive && r.Product.Status != ProductStatus.Archived);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderBy(r => r.Product.Name).ThenBy(r => r.Variant.Sku).ThenBy(r => r.Variant.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(r => new VariantLookupItem(
+                r.Variant.Id,
+                r.Product.Id,
+                r.Product.Name,
+                r.Variant.Name,
+                r.Variant.Sku,
+                r.Variant.SellUnit,
+                r.Variant.StockUnit,
+                r.Product.Status,
+                r.Variant.IsActive))
+            .ToListAsync(cancellationToken);
+        return (items, total);
+    }
+
+    private static string Escape(string value)
+        => value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal);
+
     private static AdminCategoryResponse ToResponse(Category category, IReadOnlyList<AdminCategoryResponse> children) => new(
         category.Id,
         category.ParentId,

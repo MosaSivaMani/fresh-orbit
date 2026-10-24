@@ -178,7 +178,8 @@ public sealed partial class DltSmsSender(IOptionsMonitor<SmsOptions> options, IE
         }
         catch (SmsDeliveryException failure)
         {
-            LogNotSent(message.TemplateCode, phoneEnd, gatewayName, failure.FailureCode, failure.ProviderStatus ?? "-", failure.InnerException?.GetType().Name ?? "-");
+            var innerType = failure.InnerException?.GetType().Name ?? "-";
+            LogNotSent(message.TemplateCode, phoneEnd, gatewayName, failure.FailureCode, failure.ProviderStatus ?? "-", innerType);
             throw;
         }
     }

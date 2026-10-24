@@ -3,6 +3,9 @@ namespace FreshOrbit.Ordering.Public;
 /// <summary>What other modules may ask the Ordering module (docs/product/ordering.md §1).</summary>
 public interface IOrderingApi
 {
+    // Members added after Phase 2 have default bodies so existing test doubles still compile.
+    private const string NewMemberNote = "Not implemented by this test double.";
+
     Task<OrderSummary?> GetOrderSummaryAsync(Guid orderId, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -19,6 +22,17 @@ public interface IOrderingApi
     /// <summary>Order numbers of the requested orders in one query (G16: coupon redemptions); missing ids are absent.</summary>
     Task<IReadOnlyDictionary<Guid, string>> GetOrderNumbersAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("Not implemented by this test double.");
+
+    /// <summary>
+    /// One page of a customer's orders, newest first (admin customer detail, G6). <paramref name="fulfillmentLocationIds"/>
+    /// null = every location; otherwise only orders of those locations (staff location scope).
+    /// </summary>
+    Task<CustomerOrderPage> ListCustomerOrdersAsync(Guid customerId, IReadOnlyCollection<Guid>? fulfillmentLocationIds, int skip, int take, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>Order counts per customer (customers without orders are absent); location scope as in <see cref="ListCustomerOrdersAsync"/>.</summary>
+    Task<IReadOnlyDictionary<Guid, CustomerOrderCounts>> GetCustomerOrderCountsAsync(IReadOnlyCollection<Guid> customerIds, IReadOnlyCollection<Guid>? fulfillmentLocationIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
 
 /// <summary>Stored as PENDING_PAYMENT, CONFIRMED, … (see docs/architecture).</summary>
@@ -56,6 +70,31 @@ public sealed record OrderSummary(
     long? FinalTotalPaise,
     long AmountDuePaise,
     Guid FulfillmentLocationId);
+
+/// <summary>One row of a customer's order history (staff view).</summary>
+/// <param name="TotalPaise">Estimated total at placement.</param>
+/// <param name="FinalTotalPaise">Total after packing (actual weights); null until packed.</param>
+public sealed record CustomerOrderItem(
+    Guid OrderId,
+    string OrderNumber,
+    OrderStatus Status,
+    PaymentMethod PaymentMethod,
+    Guid FulfillmentLocationId,
+    DateTimeOffset PlacedAt,
+    DateTimeOffset SlotStartAt,
+    DateTimeOffset SlotEndAt,
+    long TotalPaise,
+    long? FinalTotalPaise);
+
+public sealed record CustomerOrderPage(IReadOnlyList<CustomerOrderItem> Items, int TotalCount);
+
+/// <summary>A customer's orders by outcome. PAYMENT_FAILED orders are not counted (never placed for the customer).</summary>
+/// <param name="Total">Every order except PAYMENT_FAILED.</param>
+/// <param name="Open">PENDING_PAYMENT, CONFIRMED, PREPARING, PACKED or OUT_FOR_DELIVERY.</param>
+/// <param name="Delivered">DELIVERED.</param>
+/// <param name="Cancelled">CANCELLED.</param>
+/// <param name="LastPlacedAt">When the newest counted order was placed.</param>
+public sealed record CustomerOrderCounts(int Total, int Open, int Delivered, int Cancelled, DateTimeOffset? LastPlacedAt);
 
 /// <param name="AmountDuePaise">What the customer still owes (estimated total until packed, then final).</param>
 /// <param name="PaymentDueAt">ONLINE orders: when an unpaid order expires; null otherwise.</param>
