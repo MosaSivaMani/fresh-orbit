@@ -17,11 +17,12 @@ Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample
 | Branch | What | Waiting for |
 |---|---|---|
 | `integration/sec-sample` | `fix/security-high` (SEC-1, SEC-2, part of SEC-3; D36) and the sample data branch `worktree-agent-a68eae478be810d8f` (`backend/data/sample`, `docs/content/`, CI validator; D54–D61), adapted to Phase 3: old `RateLimiting:Otp` and `login` names gone, `coupon` limit on `PUT /cart/coupon`, `public` limit on `/cart*` and `/promotions` (D62), smoke script reads OTPs from `GET /api/v1/dev/sms` | Manager review and merge to `main`. Deployed configs must rename `RateLimiting:Otp` to `OtpRequest`/`OtpVerify` and set `Notifications:Sms:Provider` (`runbooks/security-configuration.md`) |
+| `backend/sample-loaders` | Sample-data loaders, purge participants, placeholder images, `FreshOrbit.SampleData.Tests`; branched from `main` 9501cec; 928 tests | Merge after `integration/sec-sample`; decisions proposed as D63–D65 |
 
 ## 3. Next, now that Phase 3 is merged
 1. Merge `integration/sec-sample` (§2) to `main`; `dotnet test` 926 tests expected.
 2. The initial migration now exists; check that a deploy runs migrations and the reference loader end to end.
-3. Write the sample-data loaders (`product/sample-data.md`), then run the stack with sample data.
+3. ~~Write the sample-data loaders~~ Done on `backend/sample-loaders` (L1, not merged; merge after `integration/sec-sample`). Load with `--sample`, remove with `--purge-sample` (`runbooks/local-development.md` §2); the dev database has the sample store loaded.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
 5. Close the API gaps listed in `design/web.md` §6 (W1–W10), `design/admin.md` §5 (G1–G12) and `design/mobile.md` §8.
 6. Publish clickable demo links for the website and admin running on sample data.

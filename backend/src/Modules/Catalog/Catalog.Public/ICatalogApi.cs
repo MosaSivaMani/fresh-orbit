@@ -28,6 +28,14 @@ public interface ICatalogApi
     /// </summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetCategoryLineagesAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>Category ids by slug for the slugs that exist, active or not (missing slugs are absent).</summary>
+    Task<IReadOnlyDictionary<string, Guid>> GetCategoryIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>Product ids by slug for the slugs that exist, any status (missing slugs are absent).</summary>
+    Task<IReadOnlyDictionary<string, Guid>> GetProductIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
 
 /// <summary>How a variant is sold. Stored as KG / PIECE / PACK.</summary>

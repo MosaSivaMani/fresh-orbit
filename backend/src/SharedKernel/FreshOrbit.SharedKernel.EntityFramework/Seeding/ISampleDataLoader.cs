@@ -12,7 +12,8 @@ public interface ISampleDataLoader
     Task LoadAsync(SampleDataContext context, CancellationToken cancellationToken);
 }
 
-public sealed record SampleDataContext(string DirectoryPath, ISampleRecordTracker Tracker);
+/// <param name="StartedAt">The load instant T0 (UTC), the same for every loader of a run; file offsets count from it.</param>
+public sealed record SampleDataContext(string DirectoryPath, ISampleRecordTracker Tracker, DateTimeOffset StartedAt);
 
 /// <summary>Records an inserted sample row (<c>schema.table</c> + its <c>id</c>) in <c>platform.sample_records</c>.</summary>
 public interface ISampleRecordTracker

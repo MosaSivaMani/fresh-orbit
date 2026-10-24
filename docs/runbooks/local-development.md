@@ -32,7 +32,34 @@ DOTNET_ENVIRONMENT=Development dotnet run --project src/Hosts/FreshOrbit.Migrati
   --create-admin --email admin@freshorbit.local --name "Local Admin" --password '<at least 12 characters>'
 ```
 
-The Migrations host applies EF migrations, runs every module's database objects (views, functions, exclusion constraints), loads `backend/data/reference`, then creates the first ADMIN. Run it again after pulling new migrations (without `--create-admin`; a second admin is refused). `--sample` loads `backend/data/sample` when present (never in Production).
+The Migrations host applies EF migrations, runs every module's database objects (views, functions, exclusion constraints), loads `backend/data/reference`, then creates the first ADMIN. Run it again after pulling new migrations (without `--create-admin`; a second admin is refused).
+
+### Sample data (the Visakhapatnam demo store)
+
+```bash
+# Load (additive and idempotent: a second run inserts nothing)
+FRESHORBIT_SAMPLE_STAFF_PASSWORD='<at least 12 characters>' \
+  DOTNET_ENVIRONMENT=Development dotnet run --project src/Hosts/FreshOrbit.Migrations -- --sample
+
+# Remove it again
+DOTNET_ENVIRONMENT=Development dotnet run --project src/Hosts/FreshOrbit.Migrations -- --purge-sample
+```
+
+`--sample` loads `backend/data/sample` through the module services (`product/sample-data.md` §4): 1 active city and
+store, 3 service areas with 20 pincodes (e.g. `530017`, `530016`, `530048`, `530026`), 26 published products with
+placeholder images, prices, stock, 21 slot templates and the slots of the next 7 days, 2 coupons, 2 banners, 3
+customers and 2 staff (`sample.admin@freshorbit.example` ADMIN, `sample.finance@freshorbit.example` FINANCE). Without
+`FRESHORBIT_SAMPLE_STAFF_PASSWORD` a random staff password is generated and printed once to the console; it is never
+written to a file. A sample ADMIN makes `--create-admin` refuse until the sample is purged. Images are written to the
+file storage root (`FileStorage:RootPath`, default `<local application data>/freshorbit/media`), which the Api serves
+under `/media`, so run the Api with the same root. The Api caches pincode lookups for 60 s, so the store may take up
+to a minute to appear in an Api that was already running.
+
+`--purge-sample` deletes every tracked sample row in one transaction (unbooked slots of sample templates first). It
+refuses, deleting nothing, when real rows use the sample data (orders, payments or carts at the sample store or of a
+sample customer, booked sample slots, refresh tokens of sample users after a sample staff sign-in); drop the
+development database to start clean (`docker compose … down -v`). Both flags are refused in Production (exit code 2);
+a refused purge exits with code 4.
 
 ## 3. Run the Api and the Worker
 

@@ -36,6 +36,7 @@ public sealed class SettingsModule : IModule
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDeliveryAttemptPolicy, SettingsDeliveryAttemptPolicy>());
         services.AddScoped<IValidator<SaveBusinessProfileRequest>, SaveBusinessProfileRequestValidator>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, SettingsReferenceDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, SettingsSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => SettingsEndpoints.Map(endpoints);

@@ -2,6 +2,7 @@ using FreshOrbit.Identity.Application.Bootstrap;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
 using FreshOrbit.SharedKernel.Errors;
+using FreshOrbit.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
 
 namespace FreshOrbit.Migrations;
@@ -15,7 +16,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
 {
     public async Task<int> RunAsync(MigrationCommand command, CancellationToken cancellationToken)
     {
-        if (command.LoadSample && environment.IsProduction())
+        if ((command.LoadSample || command.PurgeSample) && environment.IsProduction())
         {
             LogSampleRefused(environment.EnvironmentName);
             return 2;
@@ -68,8 +69,16 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         if (command.PurgeSample)
         {
             await using var scope = scopeFactory.CreateAsyncScope();
-            var deleted = await scope.ServiceProvider.GetRequiredService<SampleDataPurger>().PurgeAsync(cancellationToken);
-            LogPurged(deleted);
+            try
+            {
+                var deleted = await scope.ServiceProvider.GetRequiredService<SampleDataPurger>().PurgeAsync(cancellationToken);
+                LogPurged(deleted);
+            }
+            catch (SamplePurgeRefusedException exception)
+            {
+                LogPurgeRefused(exception.Message);
+                return 4;
+            }
         }
 
         if (command.LoadSample)
@@ -77,10 +86,11 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
             var samplePath = DataDirectories.Resolve(configuration, "Seeding:SampleDataPath", "sample");
             await using var scope = scopeFactory.CreateAsyncScope();
             var tracker = scope.ServiceProvider.GetRequiredService<ISampleRecordTracker>();
+            var context = new SampleDataContext(samplePath, tracker, scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
             foreach (var loader in scope.ServiceProvider.GetServices<ISampleDataLoader>().OrderBy(l => l.Order))
             {
                 LogSampleLoader(loader.GetType().Name);
-                await loader.LoadAsync(new SampleDataContext(samplePath, tracker), cancellationToken);
+                await loader.LoadAsync(context, cancellationToken);
             }
         }
 
@@ -97,6 +107,9 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
     [LoggerMessage(Level = LogLevel.Information, Message = "Purged {Count} sample rows")]
     private partial void LogPurged(int count);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "{Reason}")]
+    private partial void LogPurgeRefused(string reason);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Sample data: {Loader}")]
     private partial void LogSampleLoader(string loader);
 
@@ -106,7 +119,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
     [LoggerMessage(Level = LogLevel.Error, Message = "First admin refused: {Code} {Detail}")]
     private partial void LogAdminRefused(string code, string detail);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Sample data is refused in the {Environment} environment")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Sample data (--sample, --purge-sample) is refused in the {Environment} environment")]
     private partial void LogSampleRefused(string environment);
 }
 

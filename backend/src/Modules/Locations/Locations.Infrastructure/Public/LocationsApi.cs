@@ -105,6 +105,14 @@ public sealed class LocationsApi(FreshOrbitDbContext db, ILocationsReads reads, 
         return [.. rows.Select(c => new CitySummary(c.Id, c.Code, c.Name, c.StateCode, c.Status.ToCode(), c.TimeZone))];
     }
 
+    public async Task<IReadOnlyList<CitySummary>> GetCitiesByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(codes);
+        var wanted = codes.Distinct().ToList();
+        var rows = await db.Set<City>().AsNoTracking().Where(c => wanted.Contains(c.Code)).ToListAsync(cancellationToken);
+        return [.. rows.Select(c => new CitySummary(c.Id, c.Code, c.Name, c.StateCode, c.Status.ToCode(), c.TimeZone))];
+    }
+
     public async Task<IReadOnlyList<OperatingHoursEntry>> GetOperatingHoursAsync(IReadOnlyCollection<Guid> fulfillmentLocationIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(fulfillmentLocationIds);

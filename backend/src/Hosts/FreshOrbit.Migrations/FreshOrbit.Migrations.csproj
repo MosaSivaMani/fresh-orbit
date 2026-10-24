@@ -15,6 +15,9 @@
     <ProjectReference Include="..\FreshOrbit.Hosting\FreshOrbit.Hosting.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="FreshOrbit.SampleData.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

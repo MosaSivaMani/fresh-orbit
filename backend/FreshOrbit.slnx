@@ -104,6 +104,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/FreshOrbit.ArchitectureTests/FreshOrbit.ArchitectureTests.csproj" />
+    <Project Path="tests/FreshOrbit.SampleData.Tests/FreshOrbit.SampleData.Tests.csproj" />
     <Project Path="tests/FreshOrbit.SharedKernel.Tests/FreshOrbit.SharedKernel.Tests.csproj" />
     <Project Path="tests/FreshOrbit.Testing/FreshOrbit.Testing.csproj" />
   </Folder>

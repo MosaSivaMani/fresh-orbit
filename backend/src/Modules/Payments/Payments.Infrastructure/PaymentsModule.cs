@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Payments.Infrastructure.Seeding;
 using FreshOrbit.Delivery.Public.Events;
 using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Payments.Application.Common;
@@ -91,6 +93,7 @@ public sealed class PaymentsModule : IModule
         services.AddEventHandler<RefundApproved, RefundApprovedHandler>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PaymentsJobRegistration>());
         services.TryAddScoped<ReconciliationJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, PaymentsSamplePurgeParticipant>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

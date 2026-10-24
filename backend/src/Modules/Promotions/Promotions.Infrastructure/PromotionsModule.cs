@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Promotions.Infrastructure.Seeding;
 using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Promotions.Application.Abstractions;
 using FreshOrbit.Promotions.Application.Banners;
@@ -44,6 +46,7 @@ public sealed class PromotionsModule : IModule
 
         services.AddScoped<ExpireCouponsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PromotionsJobs>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, PromotionsSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => PromotionsEndpoints.Map(endpoints);
