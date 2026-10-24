@@ -223,8 +223,8 @@ describe("manifest.json", () => {
     entry.file = `assets/${entry.slot.toLowerCase()}.jpg`;
     entry.prompt = composePrompt(m, entry);
     const facts: FileFacts = {
-      size: (p) => (p.endsWith(".jpg") ? 505 * 1024 : disk.size(p)),
-      head: (p) => (p.endsWith(".jpg") ? jpeg(1448, 1086) : disk.head(p)),
+      size: (p) => (p.endsWith(entry.file) ? 505 * 1024 : disk.size(p)),
+      head: (p) => (p.endsWith(entry.file) ? jpeg(1448, 1086) : disk.head(p)),
     };
     expect(checkManifest(m, facts)).toEqual([]);
     entry.background = "TRANSPARENT";

@@ -16,6 +16,7 @@ public sealed partial class AuditBypassTests
         ["Notifications/Notifications.Infrastructure/Persistence/Repositories/NotificationsRepository.cs"] = "Customer marks own in-app messages read (/me).",
         ["Reporting/Reporting.Infrastructure/Jobs/RefreshReportsJob.cs"] = "Worker job: advisory lock and materialized view refresh.",
         ["Payments/Payments.Infrastructure/Jobs/PaymentsJobs.cs"] = "Worker job: advisory lock release.",
+        ["Delivery/Delivery.Infrastructure/Seeding/DeliverySampleDataLoader.cs"] = "Migrations host --purge-sample: removes unbooked slots of sample templates.",
     };
 
     [Fact]

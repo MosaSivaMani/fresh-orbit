@@ -17,7 +17,7 @@ import {
   resolveIllustration,
 } from "./illustrated";
 
-/** A slot still on its placeholder (cut-out look), whatever finals have been imported. */
+/** The EMPTY_CART entry as the manifest has it now (placeholder or imported final). */
 const placeholder = illustrations.EMPTY_CART;
 
 describe("Illustration", () => {
@@ -78,7 +78,11 @@ describe("Illustration", () => {
       height: 120,
     });
     expect(isSceneIllustration("EMPTY_CART", manifest)).toBe(true);
-    expect(isSceneIllustration("EMPTY_CART", { EMPTY_CART: placeholder })).toBe(false);
+    expect(
+      isSceneIllustration("EMPTY_CART", {
+        EMPTY_CART: { ...placeholder, status: "PLACEHOLDER", background: "TRANSPARENT" },
+      }),
+    ).toBe(false);
   });
 
   it("crops a scene with object-fit cover in a rounded frame and shows anything else whole", () => {
