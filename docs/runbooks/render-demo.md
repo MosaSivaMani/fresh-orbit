@@ -101,8 +101,8 @@ Free services go to sleep, so wake them in this order:
 1. Set the pincode **530017** (Visakhapatnam). Prices, stock and delivery slots appear.
 2. Add some fish to the cart and go to checkout.
 3. Sign in with any made-up Indian mobile number, for example **98765 43210**, and tap **Send code**.
-4. Read the code: open the API address followed by `/api/v1/dev/sms?phone=919876543210` (your number with 91 in
-   front, no `+` and no spaces). The newest message is first; the 6-digit number in `"text"` is the code.
+4. Read the code: open the API address followed by `/api/v1/dev/sms?phone=%2B919876543210` (`%2B91`, then your 10 digits, no spaces;
+   `%2B` is how a browser address writes `+`). The newest message is first; the 6-digit number in `"text"` is the code.
 5. Type the code, choose **Cash on delivery** and place the order.
 
 Other sample pincodes are in `backend/data/sample/locations.json`. Sample customers already exist with the numbers
