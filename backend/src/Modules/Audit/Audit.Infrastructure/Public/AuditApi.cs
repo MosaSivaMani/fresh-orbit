@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System.Text.Json;
 using FreshOrbit.Audit.Domain.Entries;
+using FreshOrbit.Audit.Infrastructure.Recording;
 using FreshOrbit.Audit.Public;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.EntityFramework;
@@ -26,8 +26,8 @@ internal sealed class AuditApi(FreshOrbitDbContext db, ICurrentActor actor, IClo
             record.EntityId,
             Serialize(record.Before),
             Serialize(record.After),
-            httpContextAccessor?.HttpContext?.Connection.RemoteIpAddress?.ToString(),
-            Activity.Current?.TraceId.ToHexString() ?? httpContextAccessor?.HttpContext?.TraceIdentifier));
+            AuditRequestInfo.Ip(httpContextAccessor?.HttpContext),
+            AuditRequestInfo.CorrelationId(httpContextAccessor?.HttpContext)));
         db.Add(entry);
     }
 

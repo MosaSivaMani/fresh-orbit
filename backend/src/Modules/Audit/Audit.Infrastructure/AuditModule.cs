@@ -2,6 +2,7 @@ using FluentValidation;
 using FreshOrbit.Audit.Application.Entries;
 using FreshOrbit.Audit.Infrastructure.Persistence;
 using FreshOrbit.Audit.Infrastructure.Public;
+using FreshOrbit.Audit.Infrastructure.Recording;
 using FreshOrbit.Audit.Infrastructure.Reads;
 using FreshOrbit.Audit.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
@@ -11,7 +12,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using FreshOrbit.SharedKernel.Web.Modules;
 
 namespace FreshOrbit.Audit.Infrastructure;
@@ -27,6 +30,9 @@ public sealed class AuditModule : IModule
     {
         services.AddModuleModel<AuditModuleModel>();
         services.AddScoped<IAuditApi, AuditApi>();
+
+        // AUD-R6: every admin write is audited in the same SaveChanges (picked up by AddFreshOrbitPersistence).
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IInterceptor, AdminWriteAuditInterceptor>());
         services.AddScoped<IAuditReads, AuditReads>();
         services.AddScoped<IValidator<AuditListRequest>, AuditListRequestValidator>();
     }

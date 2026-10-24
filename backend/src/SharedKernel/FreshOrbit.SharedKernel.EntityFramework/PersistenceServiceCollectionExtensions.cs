@@ -4,6 +4,8 @@ using FreshOrbit.SharedKernel.EntityFramework.Seeding;
 using FreshOrbit.SharedKernel.Events;
 using FreshOrbit.SharedKernel.Persistence;
 using FreshOrbit.SharedKernel.Time;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,7 +16,7 @@ public static class PersistenceServiceCollectionExtensions
 {
     /// <summary>
     /// Registers <see cref="FreshOrbitDbContext"/> (connection string <c>ConnectionStrings:FreshOrbit</c>, read when
-    /// the context is first created), <see cref="IUnitOfWork"/>, the platform model, the outbox dispatcher and the
+    /// the context is first created) with every <see cref="IInterceptor"/> registered in DI, <see cref="IUnitOfWork"/>, the platform model, the outbox dispatcher and the
     /// sample-data helpers. The host must register an <c>ICurrentActor</c>.
     /// </summary>
     public static IServiceCollection AddFreshOrbitPersistence(this IServiceCollection services)
@@ -28,6 +30,10 @@ public static class PersistenceServiceCollectionExtensions
             }
 
             FreshOrbitDbContextOptions.Configure(options, connectionString);
+
+            // Interceptors registered by modules (e.g. Audit's admin-write recorder). The options are built per
+            // scope, so scoped interceptors see the current request.
+            options.AddInterceptors(provider.GetServices<IInterceptor>());
         });
         services.TryAddScoped<IUnitOfWork>(provider => provider.GetRequiredService<FreshOrbitDbContext>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IModuleModel, PlatformModuleModel>());
