@@ -19,3 +19,4 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 |---|---|---|
 | ONBOARDING_FRESH | `generated/onboarding_fresh.jpg` | 2026-10-24 |
 | ONBOARDING_CLEANED | `generated/onboarding_cleaned.jpg` | 2026-10-24 |
+| ONBOARDING_DELIVERY | `generated/onboarding_delivery.jpg` | 2026-10-24 |
