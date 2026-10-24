@@ -15,8 +15,7 @@ Every page shows the banner **"DEMO, test data only"**. Testers must use made-up
 What you need: your GitHub account (the one that owns the `fresh-orbit` repository) and about 45 minutes the
 first time, most of it waiting. Nothing is installed on any computer.
 
-The settings live in `render.yaml` at the top of the repository. Until the pull request "ops: free public demo on
-Render" is merged, choose the branch **`ops/render-demo`** where these steps say **main**.
+The settings live in `render.yaml` at the top of the repository (on **main** since PR #10).
 
 ---
 
