@@ -107,7 +107,9 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 The twelve onboarding pictures are all `TRANSPARENT` PNGs: save them as
 `docs/design/characters/generated/onboarding_tile_<name>.png` / `onboarding_banner_<name>.png`. Until they are
 bundled the app draws its own stand-ins (a pastel blob with an icon for a tile, a soft wave with a simple drawn
-seafood scene for a banner); the web uses the SVG placeholders.
+seafood scene for a banner); the web uses the SVG placeholders. Five finals arrived on 2026-10-24 (morning catch,
+kept chilled, net weight, cold box, cleaned banner): the mobile app bundles resized copies; the package keeps them
+PLACEHOLDER until `import` + `optimize` bring them under 600 KB (see `characters/README.md`).
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 

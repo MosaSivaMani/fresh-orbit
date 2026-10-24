@@ -27,3 +27,13 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 | EMPTY_ORDERS | `generated/empty_orders.jpg` | 2026-10-24 |
 | EMPTY_NOTIFICATIONS | `generated/empty_notifications.jpg` | 2026-10-24 |
 | EMPTY_ADDRESSES | `generated/empty_addresses.jpg` (Ravi with map and pin) | 2026-10-24 |
+| ONBOARDING_TILE_MORNING_CATCH | `generated/onboarding_tile_morning_catch.png` (transparent) | 2026-10-24 |
+| ONBOARDING_TILE_KEPT_CHILLED | `generated/onboarding_tile_kept_chilled.png` (transparent) | 2026-10-24 |
+| ONBOARDING_TILE_NET_WEIGHT | `generated/onboarding_tile_net_weight.png` (transparent) | 2026-10-24 |
+| ONBOARDING_TILE_COLD_BOX | `generated/onboarding_tile_cold_box.png` (transparent) | 2026-10-24 |
+| ONBOARDING_BANNER_CLEANED | `generated/onboarding_banner_cleaned.png` (transparent) | 2026-10-24 |
+
+The five onboarding PNGs are 1.4–2.2 MB, over the package's 600 KB limit, so they are not imported into
+`packages/illustrations` yet (their slots stay PLACEHOLDER there): run `import` and then `optimize` (sharp makes
+a WebP of at most 600 KB) on a machine where that is allowed. The mobile app already bundles copies resized with
+`sips` (tiles 512 px, banner 1024 × 512, transparency kept) in `apps/mobile/assets/illustrations/`.
