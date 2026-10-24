@@ -12,10 +12,11 @@ using SkiaSharp;
 namespace FreshOrbit.Catalog.Infrastructure.Seeding;
 
 /// <summary>
-/// Sample <c>catalog.json</c> and <c>images.json</c> (order 30), through the Catalog services: categories (with a
-/// rendered image file), products, variants, one rendered placeholder per product uploaded through
+/// Sample <c>catalog.json</c> and <c>images.json</c> (order 30), through the Catalog services: categories (with the
+/// committed picture of <see cref="SampleImageFiles"/>, else a rendered placeholder), products, variants, one rendered placeholder per product uploaded through
 /// <see cref="ProductImageService"/> (CAT-R16 renditions), then publish (<c>targetStatus: ACTIVE</c>, CAT-R3).
-/// Also writes the banner image files of images.json (the Promotions loader links them). Existing slugs are skipped.
+/// Also writes the banner image files of images.json, real pictures where committed (the Promotions loader links them).
+/// Existing slugs are skipped.
 /// </summary>
 public sealed partial class CatalogSampleDataLoader(
     CategoryService categories,
@@ -57,7 +58,7 @@ public sealed partial class CatalogSampleDataLoader(
             if (imageKey is not null)
             {
                 var placeholder = picture?.Placeholder ?? new Placeholder(1200, 800);
-                await SaveFileAsync(imageKey, placeholder, SamplePlaceholderRenderer.ShapeFor(row.Slug), cancellationToken);
+                await SaveFileAsync(context, imageKey, placeholder, SamplePlaceholderRenderer.ShapeFor(row.Slug), cancellationToken);
             }
 
             if (imageKey is not null || !row.IsActive)
@@ -75,7 +76,7 @@ public sealed partial class CatalogSampleDataLoader(
         {
             if (!await storage.ExistsAsync(banner.ImageKey, cancellationToken))
             {
-                await SaveFileAsync(banner.ImageKey, banner.Placeholder, SamplePlaceholderRenderer.ShapeFor(banner.ImageKey), cancellationToken);
+                await SaveFileAsync(context, banner.ImageKey, banner.Placeholder, SamplePlaceholderRenderer.ShapeFor(banner.ImageKey), cancellationToken);
             }
         }
 
@@ -142,11 +143,14 @@ public sealed partial class CatalogSampleDataLoader(
 
     private static uint Version(string version) => uint.Parse(version, CultureInfo.InvariantCulture);
 
-    private async Task SaveFileAsync(string key, Placeholder placeholder, PlaceholderShape shape, CancellationToken cancellationToken)
+    private async Task SaveFileAsync(SampleDataContext context, string key, Placeholder placeholder, PlaceholderShape shape, CancellationToken cancellationToken)
     {
         StorageKeys.EnsureValid(key);
         var format = key.EndsWith(".png", StringComparison.Ordinal) ? SKEncodedImageFormat.Png : SKEncodedImageFormat.Webp;
-        var bytes = SamplePlaceholderRenderer.Render(placeholder.Width, placeholder.Height, shape, format);
+        var file = SampleImageFiles.Find(context.DirectoryPath, key);
+        var bytes = file is not null
+            ? await File.ReadAllBytesAsync(file, cancellationToken)
+            : SamplePlaceholderRenderer.Render(placeholder.Width, placeholder.Height, shape, format);
         using var stream = new MemoryStream(bytes, writable: false);
         await storage.SaveAsync(key, stream, format == SKEncodedImageFormat.Png ? "image/png" : ImageRenditions.WebPContentType, cancellationToken);
     }
