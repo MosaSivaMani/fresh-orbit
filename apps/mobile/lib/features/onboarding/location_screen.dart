@@ -11,8 +11,10 @@ import 'package:go_router/go_router.dart';
 import '../../api/api_error.dart';
 import '../../api/models/locations.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/cart_state.dart';
 import '../../state/location_state.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 class LocationScreen extends ConsumerStatefulWidget {
@@ -115,7 +117,13 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
         child: ListView(
           padding: const EdgeInsets.all(FreshSpacing.s4),
           children: [
-            Semantics(header: true, child: Text('Where should we deliver?', style: theme.textTheme.headlineSmall)),
+            if (query == null)
+              const Center(
+                child: EntranceMotion(
+                  child: Illustration(slot: IllustrationSlot.locationPick, size: 180, excludeFromSemantics: true),
+                ),
+              ),
+            Semantics(header: true, child: Text('Where should we deliver?', style: theme.textTheme.headlineMedium)),
             const SizedBox(height: FreshSpacing.s2),
             Text('Prices, stock and delivery slots depend on your area.', style: theme.textTheme.bodyMedium),
             const SizedBox(height: FreshSpacing.s5),
@@ -147,10 +155,8 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
               ref
                   .watch(serviceabilityProvider(query))
                   .when(
-                    loading: () => const LoadingSemantics(
-                      label: 'Checking pincode',
-                      child: SkeletonBox(height: 160, radius: FreshRadius.lg),
-                    ),
+                    loading: () =>
+                        const LoadingSemantics(label: 'Checking pincode', child: SkeletonBox(height: 160, radius: 22)),
                     error: (e, _) => ErrorState(
                       error: e,
                       compact: true,
@@ -233,7 +239,7 @@ class _NotServiceable extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     liveRegion: true,
     child: EmptyState(
-      icon: Icons.location_off_outlined,
+      slot: IllustrationSlot.notServiceable,
       title: 'We don\'t deliver to $pincode yet',
       message: 'We are adding new areas. Try a nearby pincode, such as your office.',
       action: OutlinedButton(onPressed: onTryAnother, child: const Text('Try another pincode')),

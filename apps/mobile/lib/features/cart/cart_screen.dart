@@ -15,6 +15,7 @@ import '../../core/format.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/session.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 import 'totals_card.dart';
@@ -34,7 +35,7 @@ class CartScreen extends ConsumerWidget {
           onRetry: () => ref.invalidate(cartProvider),
           data: (c) => c.isEmpty
               ? EmptyState(
-                  icon: Icons.shopping_basket_outlined,
+                  slot: IllustrationSlot.emptyCart,
                   title: 'Your cart is empty',
                   message: 'Fresh fish, prawns and crabs are waiting.',
                   action: FilledButton(onPressed: () => context.go('/shop'), child: const Text('Browse fish')),
@@ -159,7 +160,7 @@ class _CartLineTileState extends ConsumerState<_CartLineTile> {
                 children: [
                   SizedBox(
                     width: 72,
-                    child: ProductPhoto(url: line.imageUrl, radius: FreshRadius.md),
+                    child: ProductPhoto(url: line.imageUrl, radius: AppRadius.field),
                   ),
                   const SizedBox(width: FreshSpacing.s3),
                   Expanded(
@@ -262,7 +263,7 @@ class _QuantitySheetState extends ConsumerState<_QuantitySheet> {
           data: (detail) {
             final variant = detail.variants.where((v) => v.id == line.variantId).firstOrNull;
             if (variant == null) {
-              return const EmptyState(icon: Icons.remove_shopping_cart_outlined, title: 'This item is no longer sold');
+              return const EmptyState(slot: IllustrationSlot.outOfStock, title: 'This item is no longer sold');
             }
             return Column(
               mainAxisSize: MainAxisSize.min,

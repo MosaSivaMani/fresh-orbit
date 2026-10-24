@@ -15,9 +15,13 @@ import '../../api/api_error.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../core/launch.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../state/orders_state.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/illustrated.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 const _terminal = {'DELIVERED', 'CANCELLED', 'PAYMENT_FAILED', 'RETURNED'};
@@ -102,10 +106,11 @@ class _TrackingBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final t = tracking;
     final status = t?.status ?? order.status;
-    final amounts = order.finalAmounts ?? order.estimate;
     return ListView(
       padding: const EdgeInsets.all(FreshSpacing.s4),
       children: [
+        _StatusHero(status: status),
+        const SizedBox(height: FreshSpacing.s4),
         Row(
           children: [
             Expanded(
@@ -152,43 +157,62 @@ class _TrackingBody extends ConsumerWidget {
         else
           const LoadingSemantics(child: SkeletonBox(height: 80)),
         const SizedBox(height: FreshSpacing.s5),
-        Semantics(header: true, child: Text('Items', style: theme.textTheme.titleMedium)),
-        for (final item in order.items) _ItemTile(item: item),
-        const SizedBox(height: FreshSpacing.s4),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(header: true, child: Text('Payment', style: theme.textTheme.titleMedium)),
-                const SizedBox(height: FreshSpacing.s2),
-                Text(paymentMethodLabel(order.paymentMethod)),
-                if (order.payment != null) Text('Status: ${humanizeCode(order.payment!.status)}'),
-                const Divider(height: FreshSpacing.s5),
-                Text(
-                  order.finalAmounts == null
-                      ? 'Estimated total ${formatRupees(amounts.totalPaise)}'
-                      : 'Final total ${formatRupees(amounts.totalPaise)}',
-                  style: theme.textTheme.titleSmall,
-                ),
-                if (order.finalAmounts == null)
-                  Text(
-                    'The final total is set when your order is weighed and packed.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                if (order.amountDuePaise > 0) Text('To pay on delivery: ${formatRupees(order.amountDuePaise)}'),
-                if (order.amountPaidPaise > 0) Text('Paid: ${formatRupees(order.amountPaidPaise)}'),
-                if (order.amountRefundedPaise > 0) Text('Refunded: ${formatRupees(order.amountRefundedPaise)}'),
-                if (order.couponCode != null) Text('Coupon: ${order.couponCode}'),
-              ],
-            ),
-          ),
-        ),
+        _OrderReceipt(order: order),
         const SizedBox(height: FreshSpacing.s4),
         _Actions(order: order),
         if (order.status == 'DELIVERED') _Complaints(orderId: order.id),
       ],
+    );
+  }
+}
+
+/// The illustration follows the server's status (placed → packing → on the way → delivered, or cancelled). The
+/// status text sits next to it, so the picture is decorative for screen readers.
+class _StatusHero extends StatelessWidget {
+  const _StatusHero({required this.status});
+
+  final String status;
+
+  static String _line(String status) => switch (status) {
+    'PREPARING' || 'PACKED' => 'We are cleaning and packing your order.',
+    'OUT_FOR_DELIVERY' => 'Your order is on the way, kept cold.',
+    'DELIVERED' => 'Delivered. Enjoy your meal!',
+    'CANCELLED' || 'PAYMENT_FAILED' || 'RETURNED' => 'This order is closed.',
+    'DELIVERY_FAILED' => 'We could not deliver this time.',
+    _ => 'We have your order.',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ill = illustratedColors(context);
+    final slot = slotForOrderStatus(status);
+    final image = Illustration(key: ValueKey(slot), slot: slot, size: 84, excludeFromSemantics: true);
+    return Container(
+      padding: const EdgeInsets.all(FreshSpacing.s3),
+      decoration: BoxDecoration(
+        color: ill.paper,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        boxShadow: [BoxShadow(color: ill.softShadow, blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: Row(
+        children: [
+          if (motionAllowed(context)) AnimatedSwitcher(duration: FreshDurations.slow, child: image) else image,
+          const SizedBox(width: FreshSpacing.s3),
+          Expanded(
+            child: Semantics(
+              liveRegion: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(orderStatusLabel(status), style: theme.textTheme.titleLarge),
+                  Text(_line(status), style: theme.textTheme.bodyMedium?.copyWith(color: ill.muted)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -294,31 +318,59 @@ class _Timeline extends StatelessWidget {
   }
 }
 
-class _ItemTile extends StatelessWidget {
-  const _ItemTile({required this.item});
+/// The order as a paper receipt: each item with its ordered, weighed and charged quantities, the fees, payment
+/// and the total. Every amount is the server's, only formatted (rule 4).
+class _OrderReceipt extends StatelessWidget {
+  const _OrderReceipt({required this.order});
 
-  final OrderItem item;
+  final OrderDetail order;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = <String>[
-      [item.variantName, item.preparationName].whereType<String>().join(' · '),
-      'Ordered ${formatQuantity(item.orderedQuantity)}',
-      if (item.packedQuantity != null) 'Weighed ${formatQuantity(item.packedQuantity!)}',
-      if (item.chargedQuantity != null) 'Charged for ${formatQuantity(item.chargedQuantity!)}',
-      if (item.status != 'ACTIVE') humanizeCode(item.status),
-    ].where((s) => s.isNotEmpty).join('\n');
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(item.productName),
-      subtitle: Text(subtitle),
-      isThreeLine: true,
-      trailing: Text(
-        formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise),
-        semanticsLabel: item.finalTotalPaise == null
-            ? 'Estimated ${formatRupees(item.estimatedTotalPaise)}'
-            : 'Final ${formatRupees(item.finalTotalPaise!)}',
+    final finalAmounts = order.finalAmounts;
+    final amounts = finalAmounts ?? order.estimate;
+    final totalLabel = finalAmounts == null ? 'Estimated total' : 'Final total';
+    final rows = <ReceiptRow>[
+      for (final item in order.items)
+        ReceiptRow(
+          [item.productName, item.preparationName].whereType<String>().join(', '),
+          formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise),
+          detail: [
+            'Ordered ${formatQuantity(item.orderedQuantity)}',
+            if (item.packedQuantity != null) 'weighed ${formatQuantity(item.packedQuantity!)}',
+            if (item.chargedQuantity != null) 'charged for ${formatQuantity(item.chargedQuantity!)}',
+            if (item.status != 'ACTIVE') humanizeCode(item.status),
+          ].join(', '),
+          semanticsLabel:
+              '${item.productName}, ${item.finalTotalPaise == null ? 'estimated' : 'final'} '
+              '${formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise)}',
+        ),
+      ReceiptRow('Delivery', formatRupees(amounts.deliveryFeePaise)),
+      if (amounts.discountPaise > 0)
+        ReceiptRow(
+          order.couponCode == null ? 'Discount' : 'Discount (${order.couponCode})',
+          formatRupees(-amounts.discountPaise),
+        ),
+      ReceiptRow(
+        'Payment',
+        paymentMethodLabel(order.paymentMethod),
+        detail: order.payment == null ? null : humanizeCode(order.payment!.status),
       ),
+      if (order.amountDuePaise > 0) ReceiptRow(totalLabel, formatRupees(amounts.totalPaise)),
+      if (order.amountPaidPaise > 0) ReceiptRow('Paid', formatRupees(order.amountPaidPaise)),
+      if (order.amountRefundedPaise > 0) ReceiptRow('Refunded', formatRupees(order.amountRefundedPaise)),
+    ];
+    return ReceiptCard(
+      title: 'Fresh Orbit',
+      subtitle: 'Order ${order.orderNumber} · placed ${formatDateTime(order.placedAt)}',
+      rows: rows,
+      total: order.amountDuePaise > 0
+          ? ReceiptRow('To pay at the door', formatRupees(order.amountDuePaise))
+          : ReceiptRow(totalLabel, formatRupees(amounts.totalPaise)),
+      note: finalAmounts == null
+          ? 'The final total is set when your order is weighed and packed, never above the maximum shown at '
+                'checkout.'
+          : null,
     );
   }
 }
@@ -351,12 +403,15 @@ class _Actions extends ConsumerWidget {
           OutlinedButton.icon(
             icon: const Icon(Icons.report_problem_outlined),
             label: const Text('Report a problem'),
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              showDragHandle: true,
-              builder: (_) => _ComplaintSheet(order: order),
-            ),
+            onPressed: () async {
+              final sent = await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => _ComplaintSheet(order: order),
+              );
+              if (sent == true && context.mounted) await showComplaintReceived(context);
+            },
           ),
         if (a.reorder)
           OutlinedButton.icon(
@@ -574,10 +629,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                           idempotencyKey: key,
                         ),
                   );
-                  if (ok && context.mounted) {
-                    Navigator.pop(context);
-                    showInfoSnack(context, 'Thank you. Our team will get back to you.');
-                  }
+                  if (ok && context.mounted) Navigator.pop(context, true);
                 },
               ),
             ],
@@ -587,6 +639,21 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
     );
   }
 }
+
+/// "Complaint received" with the COMPLAINT_RECEIVED character, after the server accepted the complaint.
+Future<void> showComplaintReceived(BuildContext context) => showDialog<void>(
+  context: context,
+  builder: (context) => AlertDialog(
+    icon: const Illustration(slot: IllustrationSlot.complaintReceived, size: 140, excludeFromSemantics: true),
+    title: const Text('We have your report', textAlign: TextAlign.center),
+    content: const Text(
+      'Thank you for telling us. Our team will look into it and get back to you.',
+      textAlign: TextAlign.center,
+    ),
+    actionsAlignment: MainAxisAlignment.center,
+    actions: [FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))],
+  ),
+);
 
 class _Complaints extends ConsumerWidget {
   const _Complaints({required this.orderId});

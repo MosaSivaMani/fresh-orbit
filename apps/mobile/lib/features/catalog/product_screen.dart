@@ -16,10 +16,12 @@ import '../../api/models/cart.dart';
 import '../../api/models/catalog.dart';
 import '../../api/models/common.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/account_state.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/session.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 
@@ -132,7 +134,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   padding: EdgeInsets.all(FreshSpacing.s4),
                   child: Column(
                     children: [
-                      SkeletonBox(height: 280, radius: FreshRadius.lg),
+                      SkeletonBox(height: 280, radius: AppRadius.card),
                       SizedBox(height: FreshSpacing.s4),
                       SkeletonBox(height: 24),
                       SizedBox(height: FreshSpacing.s2),
@@ -146,7 +148,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     if (detail.variants.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text(detail.name)),
-        body: const EmptyState(icon: Icons.remove_shopping_cart_outlined, title: 'Not available right now'),
+        body: const EmptyState(slot: IllustrationSlot.outOfStock, title: 'Not available right now'),
       );
     }
 
@@ -204,6 +206,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           if (v.availability?.message != null) ...[
             const SizedBox(height: FreshSpacing.s2),
             InfoBanner(text: v.availability!.message!, tone: BannerTone.warning),
+          ],
+          if (v.availability?.status == 'OUT_OF_STOCK' || v.availability?.status == 'NOT_SOLD_HERE') ...[
+            const SizedBox(height: FreshSpacing.s3),
+            _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
           ],
           if (detail.variants.length > 1) ...[
             const SizedBox(height: FreshSpacing.s5),
@@ -432,4 +438,49 @@ class ProductImageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       ProductPhoto(url: url, semanticLabel: alt == null || alt!.isEmpty ? null : alt, aspectRatio: aspectRatio);
+}
+
+/// Sold out (or not sold at the store for this pincode) for the chosen size: the OUT_OF_STOCK character and
+/// what to do next.
+class _SoldOutCard extends StatelessWidget {
+  const _SoldOutCard({required this.notSoldHere});
+
+  final bool notSoldHere;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(FreshSpacing.s4),
+        child: Row(
+          children: [
+            const Illustration(slot: IllustrationSlot.outOfStock, size: 96, excludeFromSemantics: true),
+            const SizedBox(width: FreshSpacing.s3),
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notSoldHere ? 'Not sold in your area' : 'Sold out right now',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: FreshSpacing.s1),
+                    Text(
+                      notSoldHere
+                          ? 'The store that delivers to your pincode does not sell this size.'
+                          : 'Save it to your wishlist and check again later.',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

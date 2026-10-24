@@ -25,6 +25,7 @@ import 'features/orders/order_tracking_screen.dart';
 import 'features/orders/orders_screen.dart';
 import 'state/cart_state.dart';
 import 'state/session.dart';
+import 'widgets/states.dart';
 
 /// Paths that need a signed-in customer.
 bool _needsLogin(String path) =>
@@ -41,6 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: sessionChanges,
+    errorBuilder: (context, state) => NotFoundScreen(onHome: () => context.go('/home')),
     redirect: (context, state) {
       final signedIn = ref.read(sessionProvider).signedIn;
       final path = state.uri.path;
