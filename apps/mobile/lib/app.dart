@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fresh_theme/fresh_theme.dart';
 
 import 'router.dart';
 import 'state/core_providers.dart';
+import 'theme/app_theme.dart';
 import 'widgets/states.dart';
 
 final themeModeProvider = NotifierProvider<ThemeModeController, ThemeMode>(ThemeModeController.new);
@@ -30,12 +30,12 @@ class FreshOrbitApp extends ConsumerWidget {
     if (ref.watch(apiBaseUrlProvider).isEmpty) {
       return MaterialApp(
         title: 'Fresh Orbit',
-        theme: FreshTheme.light(),
-        darkTheme: FreshTheme.dark(),
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
         home: const Scaffold(
           body: SafeArea(
             child: EmptyState(
-              icon: Icons.settings_outlined,
+              slot: IllustrationSlot.errorGeneric,
               title: 'API address not configured',
               message: 'Build the app with --dart-define=API_BASE_URL=https://your-api-host.',
             ),
@@ -46,8 +46,8 @@ class FreshOrbitApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Fresh Orbit',
       debugShowCheckedModeBanner: false,
-      theme: FreshTheme.light(),
-      darkTheme: FreshTheme.dark(),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
     );
