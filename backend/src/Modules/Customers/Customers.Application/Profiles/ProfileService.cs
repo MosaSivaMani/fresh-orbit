@@ -84,7 +84,8 @@ public sealed class ProfileService(
 
         customer.Delete(context.Now);
         customer.TouchAddresses(context.Now);
-        foreach (var address in await repository.GetActiveAddressesAsync(customer.Id, cancellationToken))
+        // D34: removed addresses too, so nothing personal survives outside the order snapshots.
+        foreach (var address in await repository.GetAllAddressesAsync(customer.Id, cancellationToken))
         {
             address.Anonymise();
         }

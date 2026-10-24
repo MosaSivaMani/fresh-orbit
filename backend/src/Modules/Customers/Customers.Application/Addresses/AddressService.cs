@@ -142,7 +142,8 @@ public sealed class AddressService(CustomerContext context, ICustomersRepository
             async () =>
             {
                 customer.TouchAddresses(context.Now);
-                address.Deactivate();
+                // D34: anonymised in the same save; orders keep their own delivery snapshot.
+                address.Anonymise();
                 if (wasDefault)
                 {
                     await repository.FlushAsync(cancellationToken);

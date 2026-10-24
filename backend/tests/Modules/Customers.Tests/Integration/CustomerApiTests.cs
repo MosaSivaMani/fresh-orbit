@@ -137,6 +137,71 @@ public sealed class CustomerApiTests(E1Database database) : E1ApiTestBase(databa
     }
 
     [Fact]
+    public async Task Removing_an_address_anonymises_it_in_the_same_save()
+    {
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        using var client = Factory.CreateClient(session.AccessToken);
+        var body = new
+        {
+            label = "WORK",
+            recipientName = "Kavya Raman",
+            phone = "+919812345678",
+            line1 = "4 Beach Road",
+            line2 = "Flat 2B",
+            landmark = "Near the lighthouse",
+            locality = "Besant Nagar",
+            cityName = "Chennai",
+            stateCode = "TN",
+            pincode = "600090",
+            latitude = 13.0003m,
+            longitude = 80.2667m,
+        };
+        var added = await ReadJsonAsync(await client.PostAsJsonAsync("/api/v1/me/addresses", body, Ct));
+        var addressId = added.GetProperty("addressId").GetGuid();
+
+        (await client.DeleteAsync($"/api/v1/me/addresses/{addressId}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var address = await QueryAsync(db => db.Set<Address>().SingleAsync(a => a.Id == addressId, Ct));
+        address.IsActive.Should().BeFalse();
+        address.IsDefault.Should().BeFalse();
+        address.RecipientName.Should().Be("Deleted");
+        address.Phone.Should().Be("+910000000000");
+        address.Line1.Should().Be("Deleted");
+        address.Line2.Should().BeNull();
+        address.Landmark.Should().BeNull();
+        address.Locality.Should().Be("Deleted");
+        address.Latitude.Should().BeNull();
+        address.Longitude.Should().BeNull();
+        address.Pincode.Should().Be("600090");
+        (await ReadJsonAsync(await client.GetAsync("/api/v1/me/addresses", Ct))).GetArrayLength().Should().Be(0);
+        (await client.DeleteAsync($"/api/v1/me/addresses/{addressId}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Account_deletion_anonymises_every_address_including_ones_removed_before()
+    {
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        using var client = Factory.CreateClient(session.AccessToken);
+        var kept = (await ReadJsonAsync(await client.PostAsJsonAsync("/api/v1/me/addresses", AddressBody("Kept Person"), Ct))).GetProperty("addressId").GetGuid();
+        var removed = (await ReadJsonAsync(await client.PostAsJsonAsync("/api/v1/me/addresses", AddressBody("Removed Person"), Ct))).GetProperty("addressId").GetGuid();
+        (await client.DeleteAsync($"/api/v1/me/addresses/{removed}", Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // An address removed before D34 was only deactivated; put one back in that state to prove deletion still reaches it.
+        var customerId = await QueryAsync(db => db.Set<Customer>().Where(c => c.UserId == session.UserId).Select(c => c.Id).SingleAsync(Ct));
+        var legacy = (await ReadJsonAsync(await client.PostAsJsonAsync("/api/v1/me/addresses", AddressBody("Legacy Person"), Ct))).GetProperty("addressId").GetGuid();
+        await QueryAsync(db => db.Database.ExecuteSqlInterpolatedAsync($"update customers.addresses set is_active = false, is_default = false where id = {legacy}", Ct));
+
+        var me = await client.GetAsync("/api/v1/me", Ct);
+        var delete = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/me");
+        delete.Headers.IfMatch.Add(me.Headers.ETag!);
+        (await client.SendAsync(delete, Ct)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var addresses = await QueryAsync(db => db.Set<Address>().Where(a => a.CustomerId == customerId).ToListAsync(Ct));
+        addresses.Select(a => a.Id).Should().BeEquivalentTo([kept, removed, legacy]);
+        addresses.Should().OnlyContain(a => !a.IsActive && a.RecipientName == "Deleted" && a.Phone == "+910000000000" && a.Line1 == "Deleted" && a.Locality == "Deleted" && a.Landmark == null && a.Latitude == null);
+    }
+
+    [Fact]
     public async Task Wishlist_add_is_idempotent_and_remove_of_missing_item_succeeds()
     {
         var session = await Factory.SignInCustomerAsync(null, Ct);

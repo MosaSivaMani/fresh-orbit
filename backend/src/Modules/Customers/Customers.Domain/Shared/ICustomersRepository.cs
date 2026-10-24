@@ -15,6 +15,9 @@ public interface ICustomersRepository
     /// <summary>Active addresses, default first then newest first.</summary>
     Task<IReadOnlyList<Address>> GetActiveAddressesAsync(Guid customerId, CancellationToken cancellationToken);
 
+    /// <summary>Every address of the customer, active or removed (account deletion anonymises them all).</summary>
+    Task<IReadOnlyList<Address>> GetAllAddressesAsync(Guid customerId, CancellationToken cancellationToken);
+
     Task<Address?> GetAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken);
 
     void Add(Address address);
