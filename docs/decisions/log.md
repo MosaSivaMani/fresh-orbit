@@ -129,3 +129,4 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D123 | 2026-10-24 | Website order tracking steps | Five usual steps (Confirmed → Delivered) lit up to the server's status; a cancelled, returned or failed order shows its recorded timeline |
 | D124 | 2026-10-24 | Website load-error characters | OFFLINE character for network or 503 failures, ERROR_GENERIC otherwise, always with the trace id |
 | D125 | 2026-10-24 | Sticky Place order bar | Sits at the bottom of the page grid at every width, not in a side column |
+| D126 | 2026-10-24 | Times kept at microsecond precision | `IClock` (`SystemClock`, `TestClock`) and client instants the domain compares (pricing `validFrom`) are cut to whole microseconds with `StoredPrecision.TruncateToMicroseconds`, so a value read back from Postgres equals the one written on Linux too; fixed in the clock, not with test tolerances, because the mismatch caused a real pricing 500 |

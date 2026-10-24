@@ -1,5 +1,6 @@
 using FreshOrbit.Pricing.Domain.Shared;
 using FreshOrbit.SharedKernel.Errors;
+using FreshOrbit.SharedKernel.Time;
 
 namespace FreshOrbit.Pricing.Domain.Periods;
 
@@ -24,6 +25,7 @@ public static class PeriodSchedule
     /// <summary>
     /// PRC-R3: omitted = now; more than 60 s ago → PRICE_IN_PAST; within the last 60 s → now; beyond now + 90 days →
     /// VALIDATION_FAILED. Errors are added under <paramref name="field"/>; the result is now when there is an error.
+    /// The start is cut to whole microseconds, the precision Postgres stores.
     /// </summary>
     public static DateTimeOffset ResolveStart(DateTimeOffset? requested, DateTimeOffset now, string field, List<FieldError> errors)
     {
@@ -33,7 +35,9 @@ public static class PeriodSchedule
             return now;
         }
 
-        start = start.ToUniversalTime();
+        // Cut to the stored precision first: a start with sub-microsecond ticks would not equal the same start read
+        // back from Postgres, so a repeated request would close the period it had opened (an empty range, a 500).
+        start = start.ToUniversalTime().TruncateToMicroseconds();
         if (start < now - PastTolerance)
         {
             errors.Add(new FieldError(field, PricingErrors.PriceInPast, "The start time is in the past; omit validFrom to start now."));

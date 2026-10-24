@@ -219,8 +219,9 @@ Not supported by the loaders: staff `locationCodes` (fails the run if non-empty;
 Host: `--sample` and `--purge-sample` are refused in Production (exit 2) before any database work; a refused purge
 exits 4.
 
-Tests: `backend/tests/FreshOrbit.SampleData.Tests` (Testcontainers): load → counts per table and every row tracked,
-7 slot dates, banner link is the category id; second load inserts nothing; `GET /api/v1/products?pincode=530017`
+Tests: `backend/tests/FreshOrbit.SampleData.Tests` (Testcontainers): load (at a fixed clock, 00:00 UTC of today =
+05:30 local, before the 11:00 slot's 09:00 cut-off; with the real clock today has no slot after 15:00 local) → counts
+per table and every row tracked, 7 slot dates, banner link is the category id; second load inserts nothing; `GET /api/v1/products?pincode=530017`
 returns 26 priced products in stock with images; a booked slot blocks the purge and nothing is deleted; purge
 leaves every sample table empty; Production refusal of both flags.
 

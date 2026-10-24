@@ -3,6 +3,7 @@ using FreshOrbit.SharedKernel.EntityFramework.Outbox;
 using FreshOrbit.SharedKernel.EntityFramework.Platform;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Tests.TestModule;
+using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.Testing;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,6 +71,23 @@ public sealed class DbContextTests(SharedKernelDatabase database)
         loaded.Status.Should().Be(WidgetStatus.InReview);
         loaded.ReviewedAt.Should().Be(reviewedAt);
         loaded.ReviewedAt!.Value.Offset.Should().Be(TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task A_time_from_the_system_clock_reads_back_equal()
+    {
+        // Linux clocks fill all 100 ns ticks; Postgres keeps microseconds, so the clock cuts them (StoredPrecision).
+        var reviewedAt = new SystemClock().UtcNow;
+        var widget = Widget.Create("precision");
+        widget.SubmitForReview(reviewedAt);
+        await using (var db = database.CreateDbContext())
+        {
+            db.Add(widget);
+            await db.SaveChangesAsync(Ct);
+        }
+
+        await using var read = database.CreateDbContext();
+        (await read.Set<Widget>().SingleAsync(w => w.Id == widget.Id, Ct)).ReviewedAt.Should().Be(reviewedAt);
     }
 
     [Fact]

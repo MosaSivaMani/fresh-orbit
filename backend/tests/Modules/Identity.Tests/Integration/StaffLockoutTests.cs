@@ -41,7 +41,7 @@ public sealed class StaffLockoutTests : E1ApiTestBase
         (await ErrorCodeAsync(login)).Should().Be("INVALID_CREDENTIALS");
         var user = await FindUserAsync(email);
         user.Status.Should().Be(UserStatus.Locked);
-        user.LockedUntil.Should().BeCloseTo(Factory.Clock.UtcNow.AddMinutes(15), TimeSpan.FromMicroseconds(1));
+        user.LockedUntil.Should().Be(Factory.Clock.UtcNow.AddMinutes(15));
         user.LockoutCount.Should().Be(1);
     }
 
@@ -56,7 +56,7 @@ public sealed class StaffLockoutTests : E1ApiTestBase
 
         Factory.Clock.Advance(TimeSpan.FromMinutes(1));
         await LockAsync(email);
-        (await FindUserAsync(email)).LockedUntil.Should().BeCloseTo(Factory.Clock.UtcNow.AddMinutes(30), TimeSpan.FromMicroseconds(1));
+        (await FindUserAsync(email)).LockedUntil.Should().Be(Factory.Clock.UtcNow.AddMinutes(30));
 
         Factory.Clock.Advance(TimeSpan.FromMinutes(30));
         var login = await LoginAsync(email, password, IpC);
