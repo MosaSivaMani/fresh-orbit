@@ -424,29 +424,31 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
 | Saved, notifications | Coral "*Nothing* / saved yet"; ice "*All* / quiet" |
 | Account, settings | "My *account*", a mango profile card, quick tiles (Orders, Saved, Addresses) and a menu. Settings (`/account/settings`, open when signed out too): notification switches, Language EN / తెలుగు / हिं, Theme Light / Auto / Dark, Privacy and terms, Log out, Delete my account |
 
-### Onboarding (owner's reference)
+### Onboarding (owner's reference, D156)
 
-The owner redesigned onboarding page 1 (`docs/design/mockups/onboarding-reference-owner.jpg`); all three pages
-follow it (`lib/features/onboarding/onboarding_screen.dart`, drawings in `onboarding_art.dart`).
+The owner redesigned onboarding page 1 (`docs/design/mockups/onboarding-reference-owner.jpg`) and approved a
+preview of all three pages (D156, `docs/design/mockups/app-onboarding-rich.html`, drawn at 390 × 873). The app
+follows the preview's numbers (`lib/features/onboarding/onboarding_screen.dart`; drawings traced from the
+preview's SVG in `onboarding_art.dart`).
 
 | Part | What it is |
 |---|---|
-| Colour block | Skip (top right), eyebrow "STEP n OF 3" (Inter 600, letter-spaced, ink 80%), a two-line Baloo 2 800 heading whose second line sits on the brush (paper brush on mango), sun-ray sparks by the brush line, and a Dancing Script tagline (paper on coral and teal, ink on mango) with an underline swoosh |
-| Drawn scene | `BlockScenePainter`, behind everything and excluded from semantics, static: a sun glow behind the circle's top-right edge, two cloud puffs, a teal-ish wave strip where the block meets the sheet, and per page: coral a fishing boat (hull, cabin, masts, flag) on a wave band plus gulls; teal a cutting board and knife, bubbles, a fish outline and sparkles; mango a scooter with a cold box, two small houses, a dotted route to a map pin and gulls. Silhouettes are the block colour about 30% darker (`blockShade`) so they read clearly but stay behind the text |
-| Circle and sticker | The `ONBOARDING_*` character in the ringed `AvatarCircle` on the right, overlapping the sheet by 18% of its size; the sticker on its upper-left edge with small sparks under it |
-| Sheet | Gulls in the top-left corner, the title (Baloo 2 800, 25), one body line (Inter 400, 14, muted, line height 1.4), three feature tiles and the food banner |
-| Feature tiles | `ONBOARDING_TILE_*` picture on a pastel blob (`BlobPainter`), a bold label (Inter 700, 14) and a muted caption (Inter 400, 12). One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`) |
-| Food banner | `ONBOARDING_BANNER_*` (2:1) on a soft teal wave, with a Dancing Script line in ink tilted −6° and a small arrow. Read as one line ("From today's catch to your kitchen"). Until the PNG is bundled a simple drawn seafood scene stands in (`BannerFoodPainter`) |
-| Bottom | Page dots and the full-width ink "Next →" (stadium shape, Inter 700, 16) stay pinned below the pages; the last page says "Get started →" |
+| Colour block | Skip (Inter 700, 17), eyebrow "STEP n OF 3" (Inter 700, 12.5, letter-spaced, 78%), a two-line Baloo 2 800 heading (44) whose second line sits on the yellow brush (`#F5D04A`, −1.5°), a spark after each line (cream on coral and mango, yellow on teal), and a Dancing Script tagline (23, two lines, −6°) with an underline swoosh: paper on coral and teal, ink on mango |
+| Drawn scene | `BlockScenePainter`, static and excluded from semantics: three pale clouds, darker hills behind the circle, the silhouette (coral: a trawler with hull, cabin with a window row, wheelhouse, mast, flag and rigging; teal: a cutting board with a knife and bubbles; mango: a scooter with a cold box and a dotted route to a map pin), three birds, and teal / pale sea bands with a white wave line running under the sheet's corner. Shades: coral `#C65A3F`, teal `#075E54`, mango `#CF8E22` |
+| Circle and sticker | The `ONBOARDING_*` character in a 252 px circle (7 px ink ring inside a 6 px paper ring), 20 px from the right, overlapping the sheet by 41 px; the sticker (Inter 800, 14, ink outline, 3 px ink drop shadow, −8°) on its upper-left edge with a yellow spark below it |
+| Sheet | Radius 30; grey-teal birds in both top corners; title Inter 800, 25; body Inter 400, 14.5, muted, line height 1.42 |
+| Feature tiles | The `ONBOARDING_TILE_*` picture (96 × 84) popping out of a 98 × 66 pastel blob (green, blue, peach), a spark on the corner (coral; a blue snowflake on the blue tile; coral or teal), a bold label (Inter 700, 13.5) and a muted caption (Inter 400, 12). One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`) |
+| Food banner | Full width, 150 px: two teal wave layers, the `ONBOARDING_BANNER_*` picture (2:1, 126 px tall) on the left, the Dancing Script line (22, −8°) on the right with a coral underline and a coral arrow towards the food. Read as one line. Until the PNG is bundled a drawn still life stands in (`BannerFoodPainter`) |
+| Bottom | 8 px page dots (the current one a 26 px ink pill) and the full-width ink "Next →" (54 px, stadium, Inter 700, 18) stay pinned below the pages; the last page says "Get started →" |
 
 Copy per page: tiles Morning catch / Kept chilled / Delivered fresh, Your cut / Cleaned by hand / Pay net weight,
-Pick a slot / Cold box / Cash or UPI; banner lines "From today's catch / to your kitchen", "Ready for / your pan",
-"From our store / to your door".
+Pick a slot / Cold box / Cash or UPI; banner lines "From / today's catch / to your kitchen", "Ready / for your
+pan", "From our store / to your door".
 
-Responsive: the circle is 30% of the page height (at most 58% of the width), between 128 and 236 px; the banner is
-17% of the page height (100–136 px) and is left out when the page area is under 600 px tall (a 360 × 640 phone).
-Headings drop to 31 px on narrow or short screens. The page scrolls if text scaling needs more room; the dots and
-the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
+Responsive: every size is the preview's times a scale = min(1, width / 390, page height / 776), at least 0.62.
+The banner is left out when the page area is under 600 px tall (a 360 × 640 phone) and headings drop to 36 there.
+The tagline and banner line shrink to fit their boxes. The page scrolls if text scaling needs more room; the dots
+and the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
 Next / Get started, Skip, reduced motion and no overflow at 360 × 640 and 390 × 844 with text scale 1.0 and 1.3.
 
 Slot changes since §14: the home bento uses `ONBOARDING_FRESH`, `ONBOARDING_CLEANED` and

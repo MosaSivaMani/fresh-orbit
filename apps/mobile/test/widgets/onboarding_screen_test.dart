@@ -13,7 +13,7 @@ const _pages = [
       ('Kept chilled', 'On ice all the way'),
       ('Delivered fresh', 'From our store to your door'),
     ],
-    banner: ("From today's catch", 'to your kitchen'),
+    banner: "From\ntoday's catch\nto your kitchen",
   ),
   (
     title: 'Steaks, curry cut, fillet',
@@ -22,7 +22,7 @@ const _pages = [
       ('Cleaned by hand', 'Scaled, gutted, washed'),
       ('Pay net weight', 'Weighed after cleaning'),
     ],
-    banner: ('Ready for', 'your pan'),
+    banner: 'Ready\nfor your pan',
   ),
   (
     title: 'Pick a delivery slot',
@@ -31,7 +31,7 @@ const _pages = [
       ('Cold box', 'Packed on ice'),
       ('Cash or UPI', 'Pay when it arrives'),
     ],
-    banner: ('From our store', 'to your door'),
+    banner: 'From our store\nto your door',
   ),
 ];
 
@@ -66,8 +66,7 @@ void main() {
         expect(find.text(label), findsWidgets, reason: label);
         expect(find.text(caption), findsOneWidget, reason: caption);
       }
-      expect(find.text(page.banner.$1), findsOneWidget);
-      expect(find.text(page.banner.$2), findsOneWidget);
+      expect(find.text(page.banner), findsOneWidget);
       expect(tester.takeException(), isNull);
       if (i < _pages.length - 1) await _next(tester);
     }

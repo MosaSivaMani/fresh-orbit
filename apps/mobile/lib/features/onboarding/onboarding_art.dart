@@ -1,407 +1,372 @@
-// Drawn decoration for the onboarding pages (owner's reference, docs/design/mockups/onboarding-reference-owner.jpg):
-// the scene behind the character on the colour block (a boat, a cutting board or a scooter, birds, bubbles, a map
-// pin, clouds, a sun glow and a wave strip where the block meets the sheet), sun-ray sparks, gulls, the tagline
-// swoosh, the soft blobs behind the feature tiles and the banner's wave and stand-in food. Everything here is
-// decoration: callers wrap it in ExcludeSemantics, and nothing moves.
+// Drawn decoration for the onboarding pages, traced from the approved preview (D156,
+// docs/design/mockups/app-onboarding-rich.html, designed at 390 × 873): the scene on the colour block (clouds,
+// hills, the trawler / cutting board / scooter silhouette, birds and the sea bands that run under the sheet), the
+// sun-ray sparks, the snowflake, the swooshes, the banner waves and arrow, and a drawn stand-in for a banner
+// picture that has not arrived. All of it is decoration: callers wrap it in ExcludeSemantics, and nothing moves.
+//
+// Coordinates are the preview's, in its 390-wide design space, scaled by the caller's factor.
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Which story a page tells; it picks the scene drawn on the block and in the banner stand-in.
+/// Which story a page tells; it picks the silhouette on the block and the banner stand-in.
 enum OnboardingScene { fresh, cleaned, delivery }
 
-/// [color] about 32% darker: the tone of the silhouettes on a colour block.
-Color blockShade(Color color, {double amount = 0.32}) {
-  final hsl = HSLColor.fromColor(color);
-  return hsl.withLightness((hsl.lightness * (1 - amount)).clamp(0.0, 1.0)).toColor();
+/// The y of the sheet's top edge in the preview: block drawings are anchored to it.
+const double kDesignSheetTop = 393;
+
+const Color _paper = Color(0xFFFFFDF8);
+
+/// A gull: two little arcs, [k] times the preview's 20-wide bird.
+void _bird(Canvas canvas, double x, double y, double k, Color color, {double width = 2.2}) {
+  final path = Path()
+    ..moveTo(x, y)
+    ..relativeQuadraticBezierTo(5 * k, -6 * k, 10 * k, 0)
+    ..relativeQuadraticBezierTo(5 * k, -6 * k, 10 * k, 0);
+  canvas.drawPath(
+    path,
+    Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width * k
+      ..strokeCap = StrokeCap.round,
+  );
 }
 
-/// The scene on the colour block. [avatar] and [overlap] place the sun glow behind the ringed circle, whose
-/// bottom edge sits [overlap] below the block's bottom and whose right edge is [avatarRight] from the right.
+void _cloud(Canvas canvas, double x, double y, double k, Paint paint) {
+  canvas
+    ..save()
+    ..translate(x, y)
+    ..scale(k);
+  final path = Path()
+    ..moveTo(0, 16)
+    ..arcToPoint(const Offset(26, 10), radius: const Radius.circular(14))
+    ..arcToPoint(const Offset(48, 14), radius: const Radius.circular(12))
+    ..arcToPoint(const Offset(52, 32), radius: const Radius.circular(10))
+    ..lineTo(0, 32)
+    ..arcToPoint(const Offset(0, 16), radius: const Radius.circular(10))
+    ..close();
+  canvas
+    ..drawPath(path, paint)
+    ..restore();
+}
+
+/// The scene on the colour block. The painter's bottom edge is the sheet's top ([kDesignSheetTop] in the
+/// preview); left items are scaled by [scale] from the left edge, right items from the right edge. The sea bands
+/// reach below the bottom edge, under the sheet's rounded corner, so the parent must not clip.
 class BlockScenePainter extends CustomPainter {
-  const BlockScenePainter({
-    required this.scene,
-    required this.shade,
-    required this.light,
-    required this.wave,
-    required this.glow,
-    required this.avatar,
-    required this.overlap,
-    this.avatarRight = 12,
-  });
+  const BlockScenePainter({required this.scene, required this.dark, required this.soft, required this.scale});
 
   final OnboardingScene scene;
 
-  /// Silhouettes and birds: a darker tone of the block.
-  final Color shade;
+  /// The darker shade of the block: silhouettes, hills and birds.
+  final Color dark;
 
-  /// Clouds, bubbles and sparkles: a light tone over the block.
-  final Color light;
-
-  /// The wave strip along the bottom.
-  final Color wave;
-
-  /// The sun glow behind the circle's top-right edge.
-  final Color glow;
-  final double avatar;
-  final double overlap;
-  final double avatarRight;
+  /// The pale cloud tint.
+  final Color soft;
+  final double scale;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = avatar / 2;
-    final centre = Offset(size.width - avatarRight - r, size.height - avatar + overlap + r);
-    final fill = Paint()..color = shade;
-    final stroke = Paint()
-      ..color = shade
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.2
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final lightFill = Paint()..color = light;
-    final lightStroke = Paint()
-      ..color = light
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
+    final k = scale;
+    final top = size.height - kDesignSheetTop * k;
+    final fill = Paint()..color = dark;
+    final softPaint = Paint()..color = soft;
 
-    // Sun glow behind the circle's top-right edge.
-    final sun = centre + Offset(r * 0.62, -r * 0.66);
-    canvas.drawCircle(
-      sun,
-      r * 0.7,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [glow, glow.withValues(alpha: 0)],
-        ).createShader(Rect.fromCircle(center: sun, radius: r * 0.7)),
-    );
-
-    // Two soft cloud puffs.
-    _cloud(canvas, Offset(size.width - 26, centre.dy - r * 0.95), 22, lightFill);
-    _cloud(canvas, Offset(28, size.height * 0.62), 18, lightFill);
-
-    final ground = size.height - 16;
-    const left = 12.0;
-    final width = math.min(150.0, (size.width - avatar - avatarRight) * 0.82);
-
-    switch (scene) {
-      case OnboardingScene.fresh:
-        _boat(canvas, Offset(left, ground), width, fill, stroke);
-        _waveBand(canvas, left - 12, ground, width + 30, fill);
-        for (final b in [
-          Offset(centre.dx - r - 20, centre.dy - r * 0.3),
-          Offset(centre.dx - r - 2, centre.dy - r * 0.55),
-          Offset(centre.dx + r * 0.25, centre.dy - r - 14),
-          Offset(centre.dx + r * 0.62, centre.dy - r - 2),
-          Offset(left + width * 0.92, ground - width * 0.62),
-        ]) {
-          _gull(canvas, b, 7, stroke);
-        }
-      case OnboardingScene.cleaned:
-        _board(canvas, Offset(left, ground), width, fill);
-        for (final (o, radius) in [
-          (Offset(centre.dx - r - 16, centre.dy - r * 0.5), 6.0),
-          (Offset(centre.dx - r - 4, centre.dy - r * 0.2), 3.5),
-          (Offset(centre.dx - r - 28, centre.dy), 4.5),
-          (Offset(centre.dx + r * 0.4, centre.dy - r - 12), 5.0),
-          (Offset(left + width * 0.95, ground - width * 0.55), 4.0),
-        ]) {
-          canvas.drawCircle(o, radius, lightStroke);
-        }
-        _fishOutline(canvas, Offset(left + width * 0.55, ground - width * 0.62), width * 0.3, stroke);
-        for (final o in [
-          Offset(centre.dx + r * 0.85, centre.dy - r - 6),
-          Offset(centre.dx - r - 34, centre.dy - r * 0.7),
-          Offset(left + width * 0.12, ground - width * 0.7),
-        ]) {
-          _sparkle(canvas, o, 6, lightFill);
-        }
-      case OnboardingScene.delivery:
-        _houses(canvas, Offset(left + width * 0.55, ground), width * 0.5, fill);
-        _scooter(canvas, Offset(left, ground), width * 0.7, fill);
-        final pin = Offset(centre.dx - r - 18, centre.dy - r * 0.45);
-        _dottedPath(canvas, Offset(left + width * 0.7, ground - width * 0.3), pin + const Offset(0, 14), stroke);
-        _pin(canvas, pin, 11, fill, light);
-        for (final b in [
-          Offset(centre.dx + r * 0.25, centre.dy - r - 14),
-          Offset(centre.dx + r * 0.62, centre.dy - r - 2),
-          Offset(centre.dx - r - 8, centre.dy - r * 0.95),
-          Offset(left + width * 0.3, ground - width * 0.85),
-        ]) {
-          _gull(canvas, b, 7, stroke);
-        }
-    }
-
-    // The wave strip where the block meets the sheet.
-    final strip = Path()..moveTo(0, size.height);
-    strip.lineTo(0, size.height - 12);
-    const step = 36.0;
-    for (var x = 0.0; x < size.width; x += step) {
-      strip.quadraticBezierTo(x + step / 4, size.height - 20, x + step / 2, size.height - 12);
-      strip.quadraticBezierTo(x + step * 3 / 4, size.height - 4, x + step, size.height - 12);
-    }
-    strip
-      ..lineTo(size.width, size.height)
-      ..close();
-    canvas.drawPath(strip, Paint()..color = wave);
-  }
-
-  static void _cloud(Canvas canvas, Offset o, double s, Paint paint) {
+    // Right-anchored: two clouds and the hills behind the circle.
     canvas
-      ..drawCircle(o + Offset(-s * 0.6, s * 0.15), s * 0.45, paint)
-      ..drawCircle(o + Offset(0, -s * 0.05), s * 0.6, paint)
-      ..drawCircle(o + Offset(s * 0.65, s * 0.18), s * 0.42, paint)
-      ..drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(o.dx - s * 1.05, o.dy + s * 0.05, s * 2.1, s * 0.5), Radius.circular(s)),
-        paint,
-      );
-  }
-
-  /// A small gull: two curved strokes meeting at [o].
-  static void _gull(Canvas canvas, Offset o, double s, Paint paint) {
-    final path = Path()
-      ..moveTo(o.dx - s, o.dy - s * 0.45)
-      ..quadraticBezierTo(o.dx - s * 0.45, o.dy - s * 0.85, o.dx, o.dy)
-      ..quadraticBezierTo(o.dx + s * 0.45, o.dy - s * 0.85, o.dx + s, o.dy - s * 0.45);
-    canvas.drawPath(path, paint);
-  }
-
-  /// A fishing boat: hull, cabin, two masts with rigging and a flag; its keel sits on [base].
-  static void _boat(Canvas canvas, Offset base, double w, Paint fill, Paint stroke) {
-    final hull = w * 0.2;
-    final top = base.dy - hull;
+      ..save()
+      ..translate(size.width - 390 * k, top)
+      ..scale(k);
+    _cloud(canvas, 318, 150, 1.1, softPaint);
+    _cloud(canvas, 250, 52, 0.7, softPaint);
     canvas.drawPath(
       Path()
-        ..moveTo(base.dx, top)
-        ..lineTo(base.dx + w, top - w * 0.04)
-        ..lineTo(base.dx + w * 0.86, base.dy)
-        ..lineTo(base.dx + w * 0.1, base.dy)
+        ..moveTo(250, 393)
+        ..quadraticBezierTo(290, 353, 330, 363)
+        ..quadraticBezierTo(370, 373, 390, 343)
+        ..lineTo(390, 393)
         ..close(),
       fill,
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(base.dx + w * 0.46, top - w * 0.2, w * 0.3, w * 0.2), Radius.circular(w * 0.02)),
-      fill,
-    );
-    canvas.drawRect(Rect.fromLTWH(base.dx + w * 0.5, top - w * 0.27, w * 0.18, w * 0.07), fill);
-    final mast = Offset(base.dx + w * 0.3, top - w * 0.62);
-    final aft = Offset(base.dx + w * 0.62, top - w * 0.46);
+    canvas
+      ..drawPath(
+        Path()
+          ..moveTo(300, 370)
+          ..quadraticBezierTo(320, 362, 340, 370)
+          ..quadraticBezierTo(360, 378, 380, 366),
+        Paint()
+          ..color = dark.withValues(alpha: 0.9)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round,
+      )
+      ..restore();
+
+    // Left-anchored: a cloud, the silhouette, its extras, three birds and the sea.
+    canvas
+      ..save()
+      ..translate(0, top)
+      ..scale(k);
+    _cloud(canvas, -14, 150, 0.9, softPaint);
+    switch (scene) {
+      case OnboardingScene.fresh:
+        _trawler(canvas, fill);
+      case OnboardingScene.cleaned:
+        _board(canvas, fill);
+        final ring = Paint()
+          ..color = dark
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2;
+        canvas
+          ..drawCircle(const Offset(150, 300), 6, ring)
+          ..drawCircle(const Offset(166, 282), 4, ring)
+          ..drawCircle(const Offset(140, 270), 3, ring);
+      case OnboardingScene.delivery:
+        _scooter(canvas, fill);
+        _route(canvas, dark);
+    }
+    _bird(canvas, 118, 300, 1, dark);
+    _bird(canvas, 140, 288, 0.75, dark);
+    _bird(canvas, 102, 318, 0.6, dark);
+    _sea(canvas);
+    canvas.restore();
+  }
+
+  /// The fishing trawler: curved hull, cabin with a window row, wheelhouse, mast with a flag and rigging.
+  static void _trawler(Canvas canvas, Paint fill) {
+    canvas
+      ..drawPath(
+        Path()
+          ..moveTo(2, 330)
+          ..lineTo(120, 330)
+          ..quadraticBezierTo(114, 352, 94, 364)
+          ..lineTo(20, 364)
+          ..quadraticBezierTo(8, 354, 2, 330)
+          ..close(),
+        fill,
+      )
+      ..drawRRect(RRect.fromLTRBR(26, 306, 80, 331, const Radius.circular(2)), fill)
+      ..drawRRect(RRect.fromLTRBR(34, 292, 68, 307, const Radius.circular(2)), fill);
+    final window = Paint()..color = _paper.withValues(alpha: 0.28);
+    for (final r in const [
+      Rect.fromLTWH(32, 312, 9, 8),
+      Rect.fromLTWH(45, 312, 9, 8),
+      Rect.fromLTWH(58, 312, 9, 8),
+      Rect.fromLTWH(40, 296, 7, 6),
+      Rect.fromLTWH(51, 296, 7, 6),
+    ]) {
+      canvas.drawRect(r, window);
+    }
+    canvas
+      ..drawRect(const Rect.fromLTWH(84, 250, 3.5, 82), fill)
+      ..drawRect(const Rect.fromLTWH(52, 268, 3, 26), fill)
+      ..drawPath(
+        Path()
+          ..moveTo(87.5, 252)
+          ..lineTo(103.5, 257)
+          ..lineTo(87.5, 263)
+          ..close(),
+        fill,
+      );
     final rig = Paint()
       ..color = fill.color
-      ..strokeWidth = math.max(1.2, w * 0.012)
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 1.4;
     canvas
-      ..drawLine(Offset(mast.dx, top), mast, stroke)
-      ..drawLine(Offset(aft.dx, top - w * 0.27), aft, stroke)
-      ..drawLine(mast, Offset(base.dx + w * 0.02, top), rig)
-      ..drawLine(mast, aft, rig)
-      ..drawLine(aft, Offset(base.dx + w * 0.98, top - w * 0.04), rig)
-      ..drawPath(
-        Path()
-          ..moveTo(mast.dx, mast.dy)
-          ..lineTo(mast.dx + w * 0.14, mast.dy + w * 0.04)
-          ..lineTo(mast.dx, mast.dy + w * 0.08)
-          ..close(),
-        fill,
-      );
+      ..drawLine(const Offset(86, 256), const Offset(118, 330), rig)
+      ..drawLine(const Offset(86, 262), const Offset(8, 330), rig)
+      ..drawLine(const Offset(54, 270), const Offset(86, 270), rig)
+      ..drawLine(const Offset(98, 300), const Offset(114, 300), rig);
   }
 
-  /// The small wave band the boat stands on.
-  static void _waveBand(Canvas canvas, double x, double y, double w, Paint fill) {
-    final path = Path()..moveTo(x, y + 2);
-    const step = 18.0;
-    for (var dx = 0.0; dx < w; dx += step) {
-      path.quadraticBezierTo(x + dx + step / 2, y - 5, x + dx + step, y + 2);
-    }
-    path
-      ..lineTo(x + w, y + 7)
-      ..lineTo(x, y + 7)
-      ..close();
-    canvas.drawPath(path, fill);
-  }
-
-  /// A cutting board with a handle hole and a knife lying across it.
-  static void _board(Canvas canvas, Offset base, double w, Paint fill) {
-    final h = w * 0.36;
-    final board = Path()
-      ..addRRect(RRect.fromRectAndRadius(Rect.fromLTWH(base.dx, base.dy - h, w * 0.78, h), Radius.circular(h * 0.3)))
-      ..addRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(base.dx + w * 0.78 - 2, base.dy - h * 0.66, w * 0.16, h * 0.32), Radius.circular(h * 0.16)),
-      );
-    final hole = Path()..addOval(Rect.fromCircle(center: Offset(base.dx + w * 0.88, base.dy - h * 0.5), radius: h * 0.06));
-    canvas.drawPath(Path.combine(PathOperation.difference, board, hole), fill);
-    // The knife floats just above the board.
-    final y = base.dy - h - 10;
+  /// A cutting board with a fish outline cut into it and a knife above.
+  static void _board(Canvas canvas, Paint fill) {
+    final mark = Paint()..color = _paper.withValues(alpha: 0.25);
     canvas
+      ..drawRRect(RRect.fromLTRBR(4, 318, 136, 364, const Radius.circular(12)), fill)
+      ..drawCircle(const Offset(124, 330), 5, mark)
       ..drawPath(
         Path()
-          ..moveTo(base.dx + w * 0.1, y)
-          ..lineTo(base.dx + w * 0.56, y - 4)
-          ..quadraticBezierTo(base.dx + w * 0.6, y + 5, base.dx + w * 0.56, y + 7)
-          ..lineTo(base.dx + w * 0.1, y + 7)
+          ..moveTo(18, 312)
+          ..lineTo(96, 266)
+          ..arcToPoint(const Offset(105, 276), radius: const Radius.circular(7))
+          ..lineTo(29, 320)
           ..close(),
         fill,
       )
-      ..drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(base.dx + w * 0.56, y - 2, w * 0.26, 9), const Radius.circular(4.5)),
-        fill,
+      ..save()
+      ..translate(95, 258)
+      ..rotate(-30 * math.pi / 180)
+      ..drawRRect(RRect.fromLTRBR(0, 0, 26, 9, const Radius.circular(4)), fill)
+      ..restore()
+      ..drawPath(
+        Path()
+          ..moveTo(24, 342)
+          ..quadraticBezierTo(54, 320, 88, 342)
+          ..quadraticBezierTo(54, 362, 24, 342)
+          ..close()
+          ..moveTo(88, 342)
+          ..lineTo(102, 332)
+          ..lineTo(102, 352)
+          ..close(),
+        mark,
       );
   }
 
-  /// A fish drawn as an outline, nose to the left.
-  static void _fishOutline(Canvas canvas, Offset c, double s, Paint stroke) {
-    final body = Path()
-      ..moveTo(c.dx - s, c.dy)
-      ..quadraticBezierTo(c.dx - s * 0.2, c.dy - s * 0.62, c.dx + s * 0.55, c.dy)
-      ..quadraticBezierTo(c.dx - s * 0.2, c.dy + s * 0.62, c.dx - s, c.dy)
-      ..moveTo(c.dx + s * 0.55, c.dy)
-      ..lineTo(c.dx + s, c.dy - s * 0.32)
-      ..lineTo(c.dx + s, c.dy + s * 0.32)
-      ..close();
+  /// A delivery scooter with a cold box on the back.
+  static void _scooter(Canvas canvas, Paint fill) {
     canvas
-      ..drawPath(body, stroke)
-      ..drawCircle(Offset(c.dx - s * 0.6, c.dy - s * 0.06), 1.8, Paint()..color = stroke.color);
-  }
-
-  /// A four-pointed sparkle.
-  static void _sparkle(Canvas canvas, Offset c, double s, Paint fill) {
-    final path = Path()
-      ..moveTo(c.dx, c.dy - s)
-      ..quadraticBezierTo(c.dx, c.dy, c.dx + s, c.dy)
-      ..quadraticBezierTo(c.dx, c.dy, c.dx, c.dy + s)
-      ..quadraticBezierTo(c.dx, c.dy, c.dx - s, c.dy)
-      ..quadraticBezierTo(c.dx, c.dy, c.dx, c.dy - s)
-      ..close();
-    canvas.drawPath(path, fill);
-  }
-
-  /// A delivery scooter with a cold box on the back, facing right.
-  static void _scooter(Canvas canvas, Offset base, double w, Paint fill) {
-    final wheel = w * 0.13;
-    final axle = base.dy - wheel;
-    final body = Path()
-      ..moveTo(base.dx + w * 0.1, axle - wheel * 0.2)
-      ..quadraticBezierTo(base.dx + w * 0.1, axle - w * 0.3, base.dx + w * 0.42, axle - w * 0.28)
-      ..lineTo(base.dx + w * 0.64, axle - w * 0.28)
-      ..lineTo(base.dx + w * 0.76, axle - w * 0.62)
-      ..lineTo(base.dx + w * 0.84, axle - w * 0.62)
-      ..lineTo(base.dx + w * 0.82, axle - wheel * 0.2)
-      ..close();
-    canvas
-      ..drawPath(body, fill)
-      ..drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(base.dx + w * 0.02, axle - w * 0.62, w * 0.34, w * 0.3), Radius.circular(w * 0.04)),
-        fill,
-      )
-      ..drawRect(Rect.fromLTWH(base.dx + w * 0.7, axle - w * 0.66, w * 0.18, w * 0.04), fill)
-      ..drawCircle(Offset(base.dx + w * 0.18, axle), wheel, fill)
-      ..drawCircle(Offset(base.dx + w * 0.82, axle), wheel, fill);
-  }
-
-  /// Two small houses with pitched roofs.
-  static void _houses(Canvas canvas, Offset base, double w, Paint fill) {
-    for (final (x, s) in [(0.0, 0.5), (0.52, 0.42)]) {
-      final hw = w * s;
-      final left = base.dx + w * x;
-      canvas.drawPath(
+      ..drawCircle(const Offset(30, 350), 15, fill)
+      ..drawCircle(const Offset(112, 350), 15, fill)
+      ..drawPath(
         Path()
-          ..moveTo(left, base.dy)
-          ..lineTo(left, base.dy - hw * 0.6)
-          ..lineTo(left + hw / 2, base.dy - hw * 1.05)
-          ..lineTo(left + hw, base.dy - hw * 0.6)
-          ..lineTo(left + hw, base.dy)
+          ..moveTo(18, 340)
+          ..lineTo(80, 340)
+          ..quadraticBezierTo(88, 316, 108, 312)
+          ..lineTo(112, 288)
+          ..lineTo(121, 288)
+          ..lineTo(117, 316)
+          ..quadraticBezierTo(131, 324, 131, 340)
           ..close(),
         fill,
-      );
-    }
+      )
+      ..drawRRect(RRect.fromLTRBR(12, 292, 56, 328, const Radius.circular(5)), fill)
+      ..drawRRect(RRect.fromLTRBR(104, 282, 124, 287, const Radius.circular(2)), fill);
   }
 
-  /// A dotted route from [a] curving up to [b].
-  static void _dottedPath(Canvas canvas, Offset a, Offset b, Paint stroke) {
-    final control = Offset((a.dx + b.dx) / 2 + 10, math.min(a.dy, b.dy) - 18);
-    final dot = Paint()..color = stroke.color;
-    const count = 11;
-    for (var i = 0; i <= count; i++) {
-      final t = i / count;
-      final p = Offset(
-        (1 - t) * (1 - t) * a.dx + 2 * (1 - t) * t * control.dx + t * t * b.dx,
-        (1 - t) * (1 - t) * a.dy + 2 * (1 - t) * t * control.dy + t * t * b.dy,
-      );
-      canvas.drawCircle(p, 1.7, dot);
+  /// The dotted route from the scooter up to a map pin.
+  static void _route(Canvas canvas, Color color) {
+    final dot = Paint()..color = color;
+    Offset quad(Offset a, Offset c, Offset b, double t) => a * ((1 - t) * (1 - t)) + c * (2 * (1 - t) * t) + b * (t * t);
+    const a = Offset(140, 356);
+    const c1 = Offset(180, 350);
+    const m = Offset(202, 316);
+    const c2 = Offset(224, 282);
+    const b = Offset(252, 250);
+    var last = a;
+    var travelled = 10.0;
+    for (var i = 0; i <= 120; i++) {
+      final t = i / 60;
+      final p = t <= 1 ? quad(a, c1, m, t) : quad(m, c2, b, t - 1);
+      travelled += (p - last).distance;
+      last = p;
+      if (travelled >= 10) {
+        canvas.drawCircle(p, 1.5, dot);
+        travelled = 0;
+      }
     }
-  }
-
-  /// A map pin whose point is [s] * 1.3 below [c].
-  static void _pin(Canvas canvas, Offset c, double s, Paint fill, Color hole) {
-    final path = Path()
-      ..moveTo(c.dx, c.dy + s * 1.3)
-      ..quadraticBezierTo(c.dx - s * 1.1, c.dy + s * 0.2, c.dx - s, c.dy - s * 0.1)
-      ..arcToPoint(Offset(c.dx + s, c.dy - s * 0.1), radius: Radius.circular(s))
-      ..quadraticBezierTo(c.dx + s * 1.1, c.dy + s * 0.2, c.dx, c.dy + s * 1.3)
-      ..close();
     canvas
-      ..drawPath(path, fill)
-      ..drawCircle(c - Offset(0, s * 0.1), s * 0.38, Paint()..color = hole);
+      ..drawPath(
+        Path()
+          ..moveTo(250, 212)
+          ..arcToPoint(const Offset(274, 212), radius: const Radius.circular(12))
+          ..cubicTo(274, 222, 262, 234, 262, 234)
+          ..cubicTo(262, 234, 250, 222, 250, 212)
+          ..close(),
+        dot,
+      )
+      ..drawCircle(const Offset(262, 212), 4, Paint()..color = _paper.withValues(alpha: 0.4));
+  }
+
+  /// Teal and pale bands with a white wave line, under the silhouette and into the sheet's corner.
+  static void _sea(Canvas canvas) {
+    canvas
+      ..drawPath(
+        Path()
+          ..moveTo(0, 360)
+          ..quadraticBezierTo(30, 350, 60, 358)
+          ..quadraticBezierTo(90, 366, 120, 358)
+          ..quadraticBezierTo(150, 350, 170, 364)
+          ..lineTo(170, 424)
+          ..lineTo(0, 424)
+          ..close(),
+        Paint()..color = const Color(0xFF9ED3CC),
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(0, 376)
+          ..quadraticBezierTo(30, 368, 60, 376)
+          ..quadraticBezierTo(90, 384, 120, 376)
+          ..quadraticBezierTo(150, 368, 180, 380),
+        Paint()
+          ..color = _paper.withValues(alpha: 0.9)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.4
+          ..strokeCap = StrokeCap.round,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(0, 388)
+          ..quadraticBezierTo(40, 382, 80, 388)
+          ..quadraticBezierTo(120, 394, 170, 392)
+          ..lineTo(170, 412)
+          ..lineTo(0, 412)
+          ..close(),
+        Paint()..color = const Color(0xFFBFE3E0),
+      );
   }
 
   @override
   bool shouldRepaint(BlockScenePainter old) =>
-      old.scene != scene ||
-      old.shade != shade ||
-      old.light != light ||
-      old.wave != wave ||
-      old.glow != glow ||
-      old.avatar != avatar ||
-      old.overlap != overlap ||
-      old.avatarRight != avatarRight;
+      old.scene != scene || old.dark != dark || old.soft != soft || old.scale != scale;
 }
 
-/// Three short sun-ray dashes fanning up and to the right (the reference's sparks by the heading and sticker).
-class SparkRays extends StatelessWidget {
-  const SparkRays({super.key, required this.color, this.size = 24, this.flip = false});
+/// Three short fanned dashes (the preview's `spark`), turned by [degrees]. Its box is 34 × 30 times [scale].
+class Spark extends StatelessWidget {
+  const Spark({super.key, required this.color, this.degrees = 0, this.scale = 1});
 
   final Color color;
-  final double size;
-
-  /// Fan to the left instead.
-  final bool flip;
+  final double degrees;
+  final double scale;
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
-    child: Transform.flip(
-      flipX: flip,
-      child: CustomPaint(size: Size.square(size), painter: _RaysPainter(color)),
+    child: Transform.rotate(
+      angle: degrees * math.pi / 180,
+      child: CustomPaint(size: Size(34 * scale, 30 * scale), painter: _SparkPainter(color)),
     ),
   );
 }
 
-class _RaysPainter extends CustomPainter {
-  const _RaysPainter(this.color);
+class _SparkPainter extends CustomPainter {
+  const _SparkPainter(this.color);
 
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final k = size.width / 34;
     final paint = Paint()
       ..color = color
-      ..strokeWidth = size.width * 0.11
+      ..strokeWidth = 3.6 * k
       ..strokeCap = StrokeCap.round;
-    final origin = Offset(0, size.height);
-    for (final angle in const [-0.15, -0.8, -1.42]) {
-      final dir = Offset(math.cos(angle), math.sin(angle));
-      canvas.drawLine(origin + dir * size.width * 0.45, origin + dir * size.width * 0.92, paint);
+    for (final (a, b) in const [
+      (Offset(6, 22), Offset(10, 10)),
+      (Offset(14, 24), Offset(24, 8)),
+      (Offset(22, 26), Offset(32, 20)),
+    ]) {
+      canvas.drawLine(a * k, b * k, paint);
     }
   }
 
   @override
-  bool shouldRepaint(_RaysPainter old) => old.color != color;
+  bool shouldRepaint(_SparkPainter old) => old.color != color;
 }
 
-/// Two small gulls in flight, for the sheet's top corner.
-class GullsPainter extends CustomPainter {
-  const GullsPainter(this.color);
+/// A small snowflake (the ice tile's spark), 30 × 26.
+class Snowflake extends StatelessWidget {
+  const Snowflake({super.key, required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) =>
+      ExcludeSemantics(child: CustomPaint(size: const Size(30, 26), painter: _SnowflakePainter(color)));
+}
+
+class _SnowflakePainter extends CustomPainter {
+  const _SnowflakePainter(this.color);
 
   final Color color;
 
@@ -409,152 +374,190 @@ class GullsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
-    BlockScenePainter._gull(canvas, Offset(size.width * 0.25, size.height * 0.75), 8, paint);
-    BlockScenePainter._gull(canvas, Offset(size.width * 0.72, size.height * 0.4), 6, paint);
+    canvas
+      ..drawLine(const Offset(15, 3), const Offset(15, 23), paint)
+      ..drawLine(const Offset(6, 8), const Offset(24, 18), paint)
+      ..drawLine(const Offset(24, 8), const Offset(6, 18), paint);
   }
 
   @override
-  bool shouldRepaint(GullsPainter old) => old.color != color;
+  bool shouldRepaint(_SnowflakePainter old) => old.color != color;
 }
 
-/// The handwritten swoosh under the tagline.
-class SwooshPainter extends CustomPainter {
-  const SwooshPainter(this.color);
+/// Gulls in the sheet's top corners (grey-teal), the preview's two sheet birds.
+class SheetBirdsPainter extends CustomPainter {
+  const SheetBirdsPainter(this.color);
 
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final y = size.height - 4;
-    final w = math.min(size.width * 0.7, 110.0);
+    _bird(canvas, 30, 22, 0.95, color, width: 2);
+    _bird(canvas, size.width - 50, 30, 0.95, color, width: 2);
+  }
+
+  @override
+  bool shouldRepaint(SheetBirdsPainter old) => old.color != color;
+}
+
+/// A hand-drawn underline: a gentle rising curve across the box.
+class SwooshPainter extends CustomPainter {
+  const SwooshPainter(this.color, {this.width = 2.6});
+
+  final Color color;
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size) {
     final path = Path()
-      ..moveTo(4, y)
-      ..quadraticBezierTo(w * 0.5, y - 9, w, y - 3);
+      ..moveTo(2, size.height * 0.75)
+      ..quadraticBezierTo(size.width * 0.4, size.height * -0.1, size.width - 2, size.height * 0.4);
     canvas.drawPath(
       path,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.4
+        ..strokeWidth = width
         ..strokeCap = StrokeCap.round,
     );
   }
 
   @override
-  bool shouldRepaint(SwooshPainter old) => old.color != color;
+  bool shouldRepaint(SwooshPainter old) => old.color != color || old.width != width;
 }
 
-/// An organic pastel blob behind a feature tile's picture.
-class BlobPainter extends CustomPainter {
-  const BlobPainter(this.color, {this.seed = 0});
+/// The banner's two teal wave layers, white wave line, bubbles and a wooden strip (preview 390 × 150, stretched).
+class BannerWavePainter extends CustomPainter {
+  const BannerWavePainter({required this.light, required this.mid, required this.dots, required this.line});
+
+  final Color light;
+  final Color mid;
+  final Color dots;
+  final Color line;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas
+      ..save()
+      ..scale(size.width / 390, size.height / 150)
+      ..drawPath(
+        Path()
+          ..moveTo(0, 26)
+          ..quadraticBezierTo(50, 0, 110, 18)
+          ..quadraticBezierTo(170, 36, 240, 38)
+          ..quadraticBezierTo(310, 40, 390, 12)
+          ..lineTo(390, 150)
+          ..lineTo(0, 150)
+          ..close(),
+        Paint()..color = light,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(0, 62)
+          ..quadraticBezierTo(60, 42, 130, 60)
+          ..quadraticBezierTo(200, 78, 270, 64)
+          ..quadraticBezierTo(340, 50, 390, 54)
+          ..lineTo(390, 150)
+          ..lineTo(0, 150)
+          ..close(),
+        Paint()..color = mid,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(150, 52)
+          ..quadraticBezierTo(190, 38, 230, 48),
+        Paint()
+          ..color = line
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round,
+      );
+    final dot = Paint()..color = dots;
+    canvas
+      ..drawCircle(const Offset(262, 30), 3, dot)
+      ..drawCircle(const Offset(276, 22), 2, dot)
+      ..drawCircle(const Offset(372, 58), 2.5, dot)
+      ..drawRect(const Rect.fromLTWH(210, 128, 180, 22), Paint()..color = const Color(0x59C89A6A))
+      ..restore();
+  }
+
+  @override
+  bool shouldRepaint(BannerWavePainter old) =>
+      old.light != light || old.mid != mid || old.dots != dots || old.line != line;
+}
+
+/// The small coral arrow curving from the banner line down towards the food (preview 40 × 40).
+class ArrowDoodlePainter extends CustomPainter {
+  const ArrowDoodlePainter(this.color);
 
   final Color color;
 
-  /// Turns the blob so neighbouring tiles differ.
-  final int seed;
-
   @override
   void paint(Canvas canvas, Size size) {
-    const radii = [1.0, 0.9, 1.04, 0.92, 1.0, 0.88];
-    final c = size.center(Offset.zero);
-    final base = math.min(size.width, size.height) / 2 * 0.94;
-    final points = [
-      for (var i = 0; i < radii.length; i++)
-        c +
-            Offset.fromDirection(
-              2 * math.pi * i / radii.length + seed * 0.7,
-              base * radii[(i + seed) % radii.length],
-            ),
-    ];
-    Offset mid(Offset a, Offset b) => (a + b) / 2;
-    final start = mid(points.last, points.first);
-    final path = Path()..moveTo(start.dx, start.dy);
-    for (var i = 0; i < points.length; i++) {
-      final p = points[i];
-      final next = mid(p, points[(i + 1) % points.length]);
-      path.quadraticBezierTo(p.dx, p.dy, next.dx, next.dy);
-    }
-    canvas.drawPath(path..close(), Paint()..color = color);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas
+      ..save()
+      ..scale(size.width / 40, size.height / 40)
+      ..drawPath(
+        Path()
+          ..moveTo(34, 6)
+          ..quadraticBezierTo(12, 8, 10, 32),
+        paint,
+      )
+      ..drawPath(
+        Path()
+          ..moveTo(4, 24)
+          ..lineTo(10, 33)
+          ..lineTo(17, 25),
+        paint,
+      )
+      ..restore();
   }
 
   @override
-  bool shouldRepaint(BlobPainter old) => old.color != color || old.seed != seed;
+  bool shouldRepaint(ArrowDoodlePainter old) => old.color != color;
 }
 
-/// The banner's soft background: a pale wash with two gentle waves.
-class BannerWavePainter extends CustomPainter {
-  const BannerWavePainter({required this.base, required this.wave});
-
-  final Color base;
-  final Color wave;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = base);
-    for (final (top, alpha) in [(0.42, 0.55), (0.62, 1.0)]) {
-      final y = size.height * top;
-      final path = Path()..moveTo(0, y);
-      final step = size.width / 4;
-      for (var x = 0.0; x < size.width - 0.5; x += step) {
-        path
-          ..quadraticBezierTo(x + step / 4, y - 10, x + step / 2, y)
-          ..quadraticBezierTo(x + step * 3 / 4, y + 10, x + step, y);
-      }
-      path
-        ..lineTo(size.width, size.height)
-        ..lineTo(0, size.height)
-        ..close();
-      canvas.drawPath(path, Paint()..color = wave.withValues(alpha: wave.a * alpha));
-    }
-  }
-
-  @override
-  bool shouldRepaint(BannerWavePainter old) => old.base != base || old.wave != wave;
-}
-
-/// The banner's stand-in until its picture is bundled: a simple drawn seafood still life for each scene.
+/// A simple drawn still life standing in for a banner picture that has not arrived yet.
 class BannerFoodPainter extends CustomPainter {
-  const BannerFoodPainter({
-    required this.scene,
-    required this.ice,
-    required this.silver,
-    required this.coral,
-    required this.mango,
-    required this.teal,
-    required this.wood,
-  });
+  const BannerFoodPainter({required this.scene, required this.coral, required this.teal});
 
   final OnboardingScene scene;
-  final Color ice;
-  final Color silver;
   final Color coral;
-  final Color mango;
   final Color teal;
-  final Color wood;
+
+  static const _silver = Color(0xFF9AA8AD);
+  static const _wood = Color(0xFFD9A86C);
+  static const _lemon = Color(0xFFF5B544);
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final floor = h * 0.86;
+    final floor = h * 0.9;
     Paint p(Color c) => Paint()..color = c;
     switch (scene) {
       case OnboardingScene.fresh:
-        // Crushed ice, a whole fish, prawns, a crab and a lemon.
-        for (var i = 0; i < 9; i++) {
-          final x = w * (0.06 + i * 0.11);
+        for (var i = 0; i < 8; i++) {
           canvas.drawRRect(
-            RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(x, floor - (i.isEven ? 4 : 0)), width: 16, height: 13), const Radius.circular(4)),
-            p(ice),
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset(w * (0.08 + i * 0.12), floor - (i.isEven ? 4 : 0)), width: 15, height: 12),
+              const Radius.circular(4),
+            ),
+            p(_paper.withValues(alpha: 0.95)),
           );
         }
-        _fish(canvas, Offset(w * 0.5, floor - h * 0.26), w * 0.3, p(silver));
-        for (final (x, y) in [(0.14, 0.5), (0.24, 0.62)]) {
+        _fish(canvas, Offset(w * 0.5, floor - h * 0.3), w * 0.3, p(_silver));
+        for (final (x, y) in const [(0.14, 0.5), (0.25, 0.62)]) {
           canvas.drawArc(
-            Rect.fromCircle(center: Offset(w * x, h * y), radius: h * 0.13),
+            Rect.fromCircle(center: Offset(w * x, h * y), radius: h * 0.12),
             0.5,
             math.pi * 1.5,
             false,
@@ -566,47 +569,44 @@ class BannerFoodPainter extends CustomPainter {
           );
         }
         canvas
-          ..drawOval(Rect.fromCenter(center: Offset(w * 0.82, floor - h * 0.14), width: w * 0.2, height: h * 0.24), p(coral))
-          ..drawCircle(Offset(w * 0.68, floor - h * 0.06), h * 0.09, p(mango));
+          ..drawOval(
+            Rect.fromCenter(center: Offset(w * 0.82, floor - h * 0.16), width: w * 0.2, height: h * 0.24),
+            p(coral),
+          )
+          ..drawCircle(Offset(w * 0.68, floor - h * 0.08), h * 0.09, p(_lemon));
       case OnboardingScene.cleaned:
-        // A board with a steak, curry-cut chunks, a fillet and a knife.
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.06, floor - h * 0.3, w * 0.8, h * 0.3), Radius.circular(h * 0.08)),
-          p(wood),
-        );
         canvas
-          ..drawOval(Rect.fromCenter(center: Offset(w * 0.22, floor - h * 0.36), width: w * 0.18, height: h * 0.2), p(coral))
-          ..drawPath(
-            Path()
-              ..moveTo(w * 0.52, floor - h * 0.34)
-              ..quadraticBezierTo(w * 0.66, floor - h * 0.5, w * 0.8, floor - h * 0.36)
-              ..quadraticBezierTo(w * 0.66, floor - h * 0.26, w * 0.52, floor - h * 0.34)
-              ..close(),
-            p(silver),
+          ..drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.06, floor - h * 0.3, w * 0.8, h * 0.3),
+              Radius.circular(h * 0.08),
+            ),
+            p(_wood),
+          )
+          ..drawOval(
+            Rect.fromCenter(center: Offset(w * 0.22, floor - h * 0.38), width: w * 0.18, height: h * 0.2),
+            p(coral),
           );
-        for (final x in [0.34, 0.41]) {
+        for (final x in const [0.34, 0.42]) {
           canvas.drawRRect(
-            RRect.fromRectAndRadius(Rect.fromLTWH(w * x, floor - h * 0.44, w * 0.06, w * 0.06), const Radius.circular(3)),
+            RRect.fromRectAndRadius(Rect.fromLTWH(w * x, floor - h * 0.46, w * 0.06, w * 0.06), const Radius.circular(3)),
             p(coral),
           );
         }
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.12, floor - h * 0.08, w * 0.5, h * 0.06), const Radius.circular(3)),
-          p(silver),
-        );
+        _fish(canvas, Offset(w * 0.68, floor - h * 0.38), w * 0.14, p(_silver));
       case OnboardingScene.delivery:
-        // A cold box beside a scooter at a door.
         canvas
           ..drawRRect(
-            RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.7, floor - h * 0.7, w * 0.2, h * 0.7), const Radius.circular(4)),
+            RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.7, floor - h * 0.75, w * 0.2, h * 0.75), const Radius.circular(4)),
             p(teal),
           )
           ..drawRRect(
-            RRect.fromRectAndRadius(Rect.fromLTWH(w * 0.44, floor - h * 0.34, w * 0.2, h * 0.34), Radius.circular(h * 0.05)),
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.44, floor - h * 0.36, w * 0.2, h * 0.36),
+              Radius.circular(h * 0.05),
+            ),
             p(teal.withValues(alpha: 0.8)),
-          );
-        final scooter = Paint()..color = coral;
-        canvas
+          )
           ..drawPath(
             Path()
               ..moveTo(w * 0.06, floor - h * 0.12)
@@ -616,10 +616,10 @@ class BannerFoodPainter extends CustomPainter {
               ..lineTo(w * 0.37, floor - h * 0.6)
               ..lineTo(w * 0.36, floor - h * 0.12)
               ..close(),
-            scooter,
+            p(coral),
           )
-          ..drawCircle(Offset(w * 0.1, floor - h * 0.08), h * 0.09, p(silver))
-          ..drawCircle(Offset(w * 0.34, floor - h * 0.08), h * 0.09, p(silver));
+          ..drawCircle(Offset(w * 0.1, floor - h * 0.08), h * 0.09, p(_silver))
+          ..drawCircle(Offset(w * 0.34, floor - h * 0.08), h * 0.09, p(_silver));
     }
   }
 
@@ -638,47 +638,5 @@ class BannerFoodPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(BannerFoodPainter old) =>
-      old.scene != scene ||
-      old.ice != ice ||
-      old.silver != silver ||
-      old.coral != coral ||
-      old.mango != mango ||
-      old.teal != teal ||
-      old.wood != wood;
-}
-
-/// A small hand-drawn arrow curving from the banner line towards the food.
-class ArrowDoodlePainter extends CustomPainter {
-  const ArrowDoodlePainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final tip = Offset(2, size.height * 0.75);
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(size.width - 2, 2)
-          ..quadraticBezierTo(size.width * 0.3, size.height * 0.05, tip.dx, tip.dy),
-        paint,
-      )
-      ..drawPath(
-        Path()
-          ..moveTo(tip.dx + 8, tip.dy - 3)
-          ..lineTo(tip.dx, tip.dy)
-          ..lineTo(tip.dx + 2, tip.dy - 9),
-        paint,
-      );
-  }
-
-  @override
-  bool shouldRepaint(ArrowDoodlePainter old) => old.color != color;
+  bool shouldRepaint(BannerFoodPainter old) => old.scene != scene || old.coral != coral || old.teal != teal;
 }
