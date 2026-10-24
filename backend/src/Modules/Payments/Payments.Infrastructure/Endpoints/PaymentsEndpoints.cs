@@ -60,12 +60,43 @@ internal static class PaymentsEndpoints
 
         endpoints.MapPost("/payments/webhooks/{provider}", async (string provider, HttpRequest request, WebhookService service, CancellationToken ct) =>
             {
-                using var buffer = new MemoryStream();
-                await request.Body.CopyToAsync(buffer, ct);
+                var body = await ReadWebhookBodyAsync(request, ct);
                 var headers = request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString(), StringComparer.OrdinalIgnoreCase);
-                return TypedResults.Ok(await service.ReceiveAsync(provider, headers, buffer.ToArray(), ct));
+                return TypedResults.Ok(await service.ReceiveAsync(provider, headers, body, ct));
             })
+            .WithMetadata(new RequestSizeLimitAttribute(WebhookEvent.MaxBodyBytes))
             .AllowAnonymous();
+    }
+
+    /// <summary>
+    /// SEC-6: at most <see cref="WebhookEvent.MaxBodyBytes"/>, else 413 <c>PAYLOAD_TOO_LARGE</c> before anything is stored.
+    /// Checked here as well as by the Kestrel limit above, because a chunked body has no Content-Length and test hosts
+    /// do not enforce the server limit.
+    /// </summary>
+    private static async Task<byte[]> ReadWebhookBodyAsync(HttpRequest request, CancellationToken cancellationToken)
+    {
+        if (request.ContentLength > WebhookEvent.MaxBodyBytes)
+        {
+            throw TooLarge();
+        }
+
+        using var buffer = new MemoryStream();
+        var chunk = new byte[16 * 1024];
+        int read;
+        while ((read = await request.Body.ReadAsync(chunk, cancellationToken)) > 0)
+        {
+            if (buffer.Length + read > WebhookEvent.MaxBodyBytes)
+            {
+                throw TooLarge();
+            }
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return buffer.ToArray();
+
+        static BadHttpRequestException TooLarge()
+            => new($"The webhook body must be at most {WebhookEvent.MaxBodyBytes} bytes.", StatusCodes.Status413PayloadTooLarge);
     }
 
     /// <summary>G9: Development/Testing only — makes the Fake gateway send a signed webhook for an order.</summary>

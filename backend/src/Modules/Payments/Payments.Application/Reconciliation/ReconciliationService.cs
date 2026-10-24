@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using FreshOrbit.Payments.Application.Common;
 using FreshOrbit.Payments.Application.Providers;
@@ -86,7 +87,8 @@ public sealed class ReconciliationService(
             }
 
             var eventId = $"recon:{capture.ProviderPaymentId}:CAPTURED";
-            var row = WebhookEvent.Received(provider.Key, eventId, "reconciliation.payment.captured", Serialize(capture), "{}", now);
+            var payload = Serialize(capture);
+            var row = WebhookEvent.Received(provider.Key, eventId, "reconciliation.payment.captured", payload, WebhookService.Sha256Hex(Encoding.UTF8.GetBytes(payload)), "{}", now);
             events.Add(row);
             await applier.CaptureAsync(attempt, orderPayments, capture.ProviderPaymentId, capture.AmountPaise, capture.Currency, cancellationToken);
             row.MarkProcessed(now);

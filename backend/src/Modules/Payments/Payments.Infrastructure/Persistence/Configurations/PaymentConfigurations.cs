@@ -100,6 +100,8 @@ internal sealed class WebhookEventConfiguration : IEntityTypeConfiguration<Webho
         builder.Property(x => x.ProviderEventId).HasMaxLength(200).IsRequired();
         builder.Property(x => x.EventType).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Payload).HasColumnType("jsonb").IsRequired();
+        builder.Property(x => x.PayloadSha256).HasMaxLength(WebhookEvent.Sha256HexLength).IsFixedLength().IsRequired();
+        builder.Property(x => x.PayloadTruncated).IsRequired();
         builder.Property(x => x.Headers).HasColumnType("jsonb").IsRequired();
         builder.Property(x => x.Error).HasMaxLength(WebhookEvent.MaxErrorLength);
         builder.Ignore(x => x.CanReprocess);

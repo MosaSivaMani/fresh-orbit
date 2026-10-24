@@ -197,6 +197,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | IDEMPOTENCY_KEY_REQUIRED | 400 | Header missing |
 | IDEMPOTENCY_KEY_REUSED | 422 | Key used with a different body |
 | IDEMPOTENCY_IN_PROGRESS | 409 | Same key still processing |
+| PAYLOAD_TOO_LARGE | 413 | Request body over the endpoint's limit (webhooks: 64 KB, SEC-6) |
 | RATE_LIMITED | 429 | Too many requests |
 | INVALID_STATUS_TRANSITION | 409 | Entity is not in a state that allows this action |
 | DUPLICATE | 409 | Unique value already used (`errors` names the field) |
@@ -258,7 +259,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | SKU_TAKEN | 409 | SKU already used |
 | DEFAULT_PREPARATION_REQUIRED | 422 | Variant needs exactly one default preparation |
 | YIELD_INVALID | 422 | `yieldBp` outside 1–10000 |
-| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP (checked by content, not extension), over 5 MB, or shortest side under 800 px |
+| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP (checked by content, not extension), over 5 MB, shortest side under 800 px, or header claiming over 8,000 px a side or 40 megapixels (SEC-5, refused before decoding) |
 | CATEGORY_NOT_FOUND, PRODUCT_NOT_FOUND, VARIANT_NOT_FOUND, IMAGE_NOT_FOUND | 404 | Specific `NOT_FOUND` codes for admin catalog |
 
 ### Pricing
@@ -1254,9 +1255,9 @@ needs that is not here is a missing API field, not a client calculation.
 | Path | `POST /api/v1/payments/webhooks/{provider}`; `{provider}` lowercase adapter key: `fake` (dev/tests), `razorpay` (later), others by adapter |
 | COD / UPI on delivery | No webhook; collection recorded by `deliver` / `cash-collected` |
 | Auth | None; provider signature only. Not behind JWT, CSRF or rate limit |
-| Body | Read raw bytes before parsing; signature computed over raw body |
+| Body | Read raw bytes before parsing; signature computed over raw body. At most 64 KB (65,536 bytes), checked on `Content-Length` and while reading (chunked bodies too) → 413 `PAYLOAD_TOO_LARGE`, nothing stored (SEC-6) |
 | Signature | Adapter-specific: `fake` → `X-Fake-Signature` HMAC-SHA256(secret, body) hex; `razorpay` → `X-Razorpay-Signature` HMAC-SHA256(webhook secret, body) hex; constant-time compare |
-| Invalid signature | Event stored with `signatureValid=false`, not processed → 401 `WEBHOOK_SIGNATURE_INVALID` |
+| Invalid signature | Event stored with `signatureValid=false`, not processed → 401 `WEBHOOK_SIGNATURE_INVALID`. The body is kept as one JSON string (never parsed, NUL replaced), cut to its first 4 KB (`payload_truncated = true` when cut), plus `payload_sha256` of the whole body (SEC-6) |
 | Event id | Adapter extracts `providerEventId` (`fake`: `id`; `razorpay`: `X-Razorpay-Event-Id` header) |
 | Idempotency | Insert `payments.webhook_events (provider, provider_event_id)`; unique violation = duplicate → 200 `{ "received": true, "duplicate": true }`, nothing re-applied |
 | Processing | Same transaction: event row → payment status → order status → outbox (database §4) |

@@ -1,5 +1,7 @@
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AwesomeAssertions;
 using FreshOrbit.Ordering.Public;
 using FreshOrbit.Payments.Domain.Reconciliation;
@@ -94,6 +96,65 @@ public sealed class WebhookTests(PaymentsDatabase database) : PaymentsTestBase(d
         valid.StatusCode.Should().Be(HttpStatusCode.OK);
         (await ReadJsonAsync(valid)).GetProperty("duplicate").GetBoolean().Should().BeFalse();
         (await LoadPaymentAsync(paymentId)).Status.Should().Be(PaymentStatus.Captured);
+    }
+
+    [Fact]
+    public async Task SEC6_body_over_64_kb_is_refused_with_413_and_nothing_is_stored()
+    {
+        var (providerOrderId, providerPaymentId, paymentId) = await GivenInitiatedAttemptAsync(2500);
+        var eventId = NewEventId();
+        var body = FakePaymentProvider.BuildBody(eventId, "payment.captured", Factory.Clock.UtcNow, new { providerOrderId, providerPaymentId, amountPaise = 2500L, currency = "INR", note = new string('x', 70_000) });
+        body.Length.Should().BeGreaterThan(WebhookEvent.MaxBodyBytes);
+
+        var withLength = await PostWebhookAsync(body, FakePaymentProvider.Sign(PaymentsApiFactory.FakeSecret, body));
+
+        using var client = Factory.CreateClient();
+        using var chunked = new HttpRequestMessage(HttpMethod.Post, "/api/v1/payments/webhooks/fake") { Content = new StreamContent(new UnseekableStream(body)) };
+        chunked.Headers.Add(FakePaymentProvider.SignatureHeader, FakePaymentProvider.Sign(PaymentsApiFactory.FakeSecret, body));
+        var withoutLength = await client.SendAsync(chunked, Ct);
+
+        foreach (var response in new[] { withLength, withoutLength })
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.RequestEntityTooLarge);
+            (await CodeAsync(response)).Should().Be("PAYLOAD_TOO_LARGE");
+        }
+
+        await using var db = Database.CreateDbContext();
+        (await db.Set<WebhookEvent>().CountAsync(e => e.ProviderEventId == eventId, Ct)).Should().Be(0);
+        (await LoadPaymentAsync(paymentId)).Status.Should().Be(PaymentStatus.Pending);
+    }
+
+    [Fact]
+    public async Task SEC6_rejected_event_keeps_only_the_first_4_kb_and_the_sha256_of_the_whole_body()
+    {
+        var eventId = NewEventId();
+        var big = FakePaymentProvider.BuildBody(eventId, "payment.captured", Factory.Clock.UtcNow, new { providerOrderId = "fake_order_x", amountPaise = 100L, currency = "INR", note = new string('y', 10_000) });
+        var smallEventId = NewEventId();
+        var small = FakePaymentProvider.BuildBody(smallEventId, "payment.captured", Factory.Clock.UtcNow, new { providerOrderId = "fake_order_y", amountPaise = 100L, currency = "INR" });
+
+        var bigResponse = await PostWebhookAsync(big, FakePaymentProvider.Sign("wrong-secret", big));
+        var smallResponse = await PostWebhookAsync(small, FakePaymentProvider.Sign("wrong-secret", small));
+
+        bigResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        smallResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        await using var db = Database.CreateDbContext();
+        var bigRow = await db.Set<WebhookEvent>().SingleAsync(e => e.ProviderEventId == eventId, Ct);
+        bigRow.Status.Should().Be(WebhookEventStatus.Rejected);
+        bigRow.PayloadTruncated.Should().BeTrue();
+        bigRow.PayloadSha256.Should().Be(Convert.ToHexStringLower(SHA256.HashData(big)));
+        var kept = JsonSerializer.Deserialize<string>(bigRow.Payload)!;
+        kept.Should().Be(Encoding.UTF8.GetString(big, 0, WebhookEvent.MaxRejectedPayloadBytes));
+
+        var smallRow = await db.Set<WebhookEvent>().SingleAsync(e => e.ProviderEventId == smallEventId, Ct);
+        smallRow.PayloadTruncated.Should().BeFalse();
+        smallRow.PayloadSha256.Should().Be(Convert.ToHexStringLower(SHA256.HashData(small)));
+        JsonSerializer.Deserialize<string>(smallRow.Payload).Should().Be(Encoding.UTF8.GetString(small));
+
+        // Not JSON and with a NUL byte (jsonb refuses \u0000): still stored, found by its hash.
+        var junk = Encoding.UTF8.GetBytes("junk\0" + Guid.NewGuid().ToString("N"));
+        (await PostWebhookAsync(junk, "00")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var junkHash = Convert.ToHexStringLower(SHA256.HashData(junk));
+        (await db.Set<WebhookEvent>().SingleAsync(e => e.PayloadSha256 == junkHash, Ct)).ProviderEventId.Should().Be("UNREADABLE");
     }
 
     [Fact]
@@ -211,5 +272,43 @@ public sealed class WebhookTests(PaymentsDatabase database) : PaymentsTestBase(d
     {
         await using var db = Database.CreateDbContext();
         return await db.Set<WebhookEvent>().CountAsync(e => e.ProviderEventId == eventId && e.SignatureValid, Ct);
+    }
+}
+
+/// <summary>Hides the length so the client sends the body chunked, without Content-Length.</summary>
+internal sealed class UnseekableStream(byte[] bytes) : Stream
+{
+    private readonly MemoryStream inner = new(bytes, writable: false);
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => false;
+
+    public override bool CanWrite => false;
+
+    public override long Length => throw new NotSupportedException();
+
+    public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+    public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+
+    public override void Flush()
+    {
+    }
+
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            inner.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
