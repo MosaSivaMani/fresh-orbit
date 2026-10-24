@@ -32,7 +32,7 @@ Read before working: `docs/architecture/README.md`, `docs/database/README.md`, `
    412 `CONCURRENCY_CONFLICT` for a stale quote, 409 `CONCURRENT_SAVE` for a lost race.
 10. **HTTP.** REST under `/api/v1` (customer) and `/api/v1/admin` (staff). Errors are RFC 7807 Problem Details
     with `code` and field-keyed `errors`. 400 unreadable, 401, 403, 404, 409, 412, 422 rule refusal, 428 missing
-    version, 429. Lists return `{ items, page, pageSize, totalCount }`. Retryable writes take `Idempotency-Key`.
+    version, 413 body too large (`PAYLOAD_TOO_LARGE`), 429. Lists return `{ items, page, pageSize, totalCount }`. Retryable writes take `Idempotency-Key`.
 11. **Tests prove behaviour.** xUnit + AwesomeAssertions (FluentAssertions-compatible, free) or plain Assert.
     Unit tests for domain rules; integration tests against real Postgres via Testcontainers, never an in-memory
     database. Assert codes and fields, never message wording.

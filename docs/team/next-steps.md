@@ -1,6 +1,6 @@
 # Next steps (handoff)
 
-Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample data on `integration/sec-sample` (waiting for the manager to merge it to `main`). Start here when work resumes.
+Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `security/round-2`), the sample-data loaders (L1, `backend/sample-loaders`) and the illustrated design system (U1) to `main`: `dotnet test` 999/999, all `pnpm` checks pass, no pending model changes. Start here when work resumes.
 
 ## 1. State of `main` (434a8dd and later)
 | Part | Status |
@@ -16,21 +16,20 @@ Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample
 ## 2. Branches waiting to merge (in this order)
 | Branch | What | Waiting for |
 |---|---|---|
-| `integration/sec-sample` | `fix/security-high` (SEC-1, SEC-2, part of SEC-3; D36) and the sample data branch `worktree-agent-a68eae478be810d8f` (`backend/data/sample`, `docs/content/`, CI validator; D54–D61), adapted to Phase 3: old `RateLimiting:Otp` and `login` names gone, `coupon` limit on `PUT /cart/coupon`, `public` limit on `/cart*` and `/promotions` (D62), smoke script reads OTPs from `GET /api/v1/dev/sms` | Manager review and merge to `main`. Deployed configs must rename `RateLimiting:Otp` to `OtpRequest`/`OtpVerify` and set `Notifications:Sms:Provider` (`runbooks/security-configuration.md`) |
-| `backend/sample-loaders` | Sample-data loaders, purge participants, placeholder images, `FreshOrbit.SampleData.Tests`; branched from `main` 9501cec; 928 tests | Merge after `integration/sec-sample`; decisions proposed as D63–D65 |
+| (none) | Track A, L1 and U1 merged to `main` on 2026-10-24 | |
 
 ## 3. Next, now that Phase 3 is merged
-1. Merge `integration/sec-sample` (§2) to `main`; `dotnet test` 926 tests expected.
+1. ~~Merge `integration/sec-sample`~~ Merged.
 2. ~~Check that a deploy runs migrations and the reference loader end to end.~~ Done on branch `infra/e2e-check-work`: `infra/scripts/e2e-check.sh` (`runbooks/e2e-check.md`), smoke 28/28 (Production) and 52/52 (Testing); open items E2E-1 to E2E-7 in `research/e2e-deploy-check-2026-10.md` §3.
-3. ~~Write the sample-data loaders~~ Done on `backend/sample-loaders` (L1, not merged; merge after `integration/sec-sample`). Load with `--sample`, remove with `--purge-sample` (`runbooks/local-development.md` §2); the dev database has the sample store loaded.
+3. ~~Write the sample-data loaders~~ Merged to `main` (L1; D78–D80). Load with `--sample`, remove with `--purge-sample` (`runbooks/local-development.md` §2); the dev database has the sample store loaded.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
 5. Close the API gaps listed in `design/web.md` §6 (W1–W10), `design/admin.md` §5 (G1–G12) and `design/mobile.md` §8.
 6. Publish clickable demo links for the website and admin running on sample data.
 
-## 4. Illustrated UI redesign (D53), not started
+## 4. Illustrated UI redesign (D53): U1 and U4 merged, U2 (web) and U3 (admin) next; 9 of 32 owner finals imported
 The owner asked for a more modern UI with AI-generated 3D cartoon characters on every page and state. They shared screenshots from a friend's food app as reference only; nothing is to be copied. Two engineers were briefed and then stopped before writing any code. Relaunch them from these briefs:
 - **U1, design system** (start first): package `packages/illustrations`.
-  - Package contents: `manifest.json` with the 33 slots below, a style prompt and a character sheet, our own placeholder SVGs, a `validate` script and a `sync-mobile` script.
+  - Package contents: `manifest.json` with the 32 slots below (D85), a style prompt and a character sheet, our own placeholder SVGs, a `validate` script and a `sync-mobile` script.
   - Tokens: sand surfaces, a coral sticker accent, an ink outline, larger radii, a sticker shadow, and Baloo 2 as the display face.
   - New `@fresh/ui` components: `Illustration`, `EmptyState`, `FeatureCard`, `PolaroidCard`, `Sticker`, `HelpHero` and `ReceiptCard` (shows server values only).
   - Also: a modernised look for the existing components, an "Illustrated" page in the playground, and `design/illustrations.md`.
@@ -50,7 +49,7 @@ Slots:
 - Admin: ADMIN_LOGIN, ADMIN_EMPTY, ADMIN_ALL_CAUGHT_UP, ADMIN_NO_ACCESS.
 
 ## 5. Open security work (after the merges)
-Done on `security/round-2` (waiting to merge; status table in `security/review-2026-10.md` §7): D33 lockout and the staff login limit per email + IP, D34 address anonymisation, D35 `tax.manage`, SEC-5, SEC-6, SEC-7, and the round's migration `SecurityRound2`. Still open:
+Merged to `main` (D64–D77; status table in `security/review-2026-10.md` §7): D33 lockout and the staff login limit per email + IP, D34 address anonymisation, D35 `tax.manage`, SEC-5, SEC-6, SEC-7, and the round's migration `SecurityRound2`. Still open:
 - Admin app: tax-rules gating by `tax.manage`, 429 on login, drop the `ACCOUNT_LOCKED`/`ACCOUNT_DISABLED` messages (`design/admin.md` row 5).
 - A break-glass reset for a locked or forgotten last admin (`--create-admin` is refused while it exists; SQL steps in `runbooks/security-configuration.md` §5 until then).
 - The reference loader does not add new permissions to existing system roles, so an already-seeded FINANCE role lacks `tax.manage` until an admin adds it.
@@ -74,7 +73,8 @@ Done on `security/round-2` (waiting to merge; status table in `security/review-2
 
 ## 7. Notes
 - **Company laptop (CLAUDE.md rule 18):** install nothing; the owner generates character images in ChatGPT or Gemini from the prompt pack (style and cast in `design/illustrations.md` once U1 lands).
-- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**; D54–D61 are sample data S-D1–S-D8 (all accepted); D62 is the Phase 3 rate limits; D63 is the OpenAPI document and generated front-end types (F1). The next free number is **D64**.
+- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**; D54–D61 are sample data S-D1–S-D8 (all accepted); D62 is the Phase 3 rate limits; D63 is the OpenAPI document and generated front-end types (F1); D64–D77 security round 2 (Track A); D78–D80 sample loaders (L1, D80 proposed); D81–D87 illustrated design system (U1). The next free number is **D88**.
+- Open: `sync-mobile` writes `lib/core/illustrations/illustration_slots.g.dart` but the app's widget is `apps/mobile/lib/illustrations/` (D87); align before using it. After an `import`, run `pnpm --filter @fresh/illustrations placeholders` so SCENE placeholders match. Regenerate API types after the merge (413, 429 on staff login).
 - Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
 
 ## 8. Open items from Phase 3 integration (session `fresh-orbit-3a`)
