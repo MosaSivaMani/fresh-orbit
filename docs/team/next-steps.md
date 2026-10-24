@@ -49,10 +49,9 @@ Slots:
 - Admin: ADMIN_LOGIN, ADMIN_EMPTY, ADMIN_ALL_CAUGHT_UP, ADMIN_NO_ACCESS.
 
 ## 5. Open security work (after the merges)
-- D33 time-based staff lockout and `--create-admin`.
+- D33 time-based staff lockout, the staff login limit per email + IP and D35 `tax.manage`: done on `security/round-2-identity`, waiting to merge. The round's migration must add `identity.users.locked_until`, `identity.users.lockout_count` and `identity.staff_login_failures`. Follow-ups: the admin app (tax-rules gating, 429 on login; `design/admin.md` row 5), and a break-glass command for a locked or forgotten last admin (`--create-admin` is refused while it exists; SQL steps in `runbooks/security-configuration.md` §5 until then).
 - D34 address anonymisation.
-- D35 `tax.manage` permission.
-- SEC-3 remainder: staff login limit per email + IP, customer and admin limits (a per-user limit for signed-in cart use, D62), global per-IP limit.
+- SEC-3 remainder: customer and admin limits (a per-user limit for signed-in cart use, D62), global per-IP limit.
 - SEC-5 image dimension guard.
 - SEC-6 webhook body cap.
 - SEC-7 audit writes.

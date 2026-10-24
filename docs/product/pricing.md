@@ -98,7 +98,7 @@ Consumed: none required. (If Catalog chooses the projection option, catalog.md Q
 | SetPrice | `PUT /api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` (IM / If-None-Match) | periods for key; variant + product (Catalog.Public); location (Locations.Public); tax rules for category | PRC-R3–R5, R9, R15, version | close containing period, delete replaced futures, insert new | `VariantPriceScheduled` |
 | EndPrice | `DELETE …/price` (IM) | periods for key | a CURRENT period exists | `valid_to = now` | `VariantPriceEnded` |
 | SetPreparationCharge | `PUT …/preparations/{code}/charge` (IM / If-None-Match) | periods for key; variant preparations | PRC-R3, R4, R7 | as SetPrice | `PreparationChargeScheduled` |
-| ScheduleTaxRule | `POST /api/v1/admin/pricing/tax-rules` | periods for category | `rateBp` 0–2800, PRC-R3/R4 | close + insert | `TaxRuleScheduled` |
+| ScheduleTaxRule | `POST /api/v1/admin/pricing/tax-rules` | periods for category | `tax.manage` (D35: ADMIN, FINANCE; endpoint policy plus `PricingRules.EnsureCanManageTax` in the service, 403 `FORBIDDEN`), `rateBp` 0–2800, PRC-R3/R4 | close + insert | `TaxRuleScheduled` |
 | BulkSetPrices | `POST /api/v1/admin/pricing/prices/bulk` (IK) | all locations by code, variants by sku (one query each), all periods for the keys (one query), tax rules | PRC-R13 per row | one save for all rows | `BulkPricesApplied` |
 | ListPrices (query) | `GET /api/v1/admin/pricing/prices` (`missingOnly`) | active variants × locations left-joined to CURRENT/FUTURE periods | — | — | — |
 | GetOffers / CalculateLine (Public) | used by cart, preview, place order, pack | one query per call | PRC-R1–R11 | — | — |

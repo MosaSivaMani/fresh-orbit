@@ -22,12 +22,13 @@ Sources: `docs/api/README.md` §2–§4, `docs/database/README.md` §3, §5, `do
 | `created_by` / `modified_by` = `SYSTEM`. Each file carries `"version": n`; the loader logs inserted / updated / skipped counts. |
 | Codes are UPPER_SNAKE (permission codes are dotted lowercase as in `docs/api` §3). |
 
-## 2. Permissions (`permissions.json`) — 24 rows
+## 2. Permissions (`permissions.json`) — 26 rows (the 25 below plus `payments.manage`)
 
 | Code | Description |
 |---|---|
 | `catalog.manage` | Categories, products, variants, preparations, images, home promotion banners |
-| `pricing.manage` | Variant prices, preparation charges, tax rules |
+| `pricing.manage` | Variant prices, preparation charges; view tax rules |
+| `tax.manage` | Schedule GST rates (tax rules) for every city (D35) |
 | `promotions.manage` | Coupons |
 | `inventory.view` | Stock, batches, movements, cold-chain logs |
 | `inventory.receive` | Receive stock (batches) |
@@ -57,12 +58,12 @@ Proposed, not shipped until `docs/api` adds it: `payments.manage` (webhook repro
 
 | Code | Name | Permissions | Location scope (staff default) |
 |---|---|---|---|
-| `ADMIN` | Administrator | all 24 | all locations |
+| `ADMIN` | Administrator | all 26 | all locations |
 | `STORE_MANAGER` | Store manager | `pricing.manage`, `inventory.view`, `inventory.receive`, `inventory.adjust`, `orders.view`, `orders.pack`, `orders.cancel`, `complaints.manage`, `refunds.request`, `payments.view`, `cash.settle`, `delivery.manage`, `customers.view`, `reports.view` (14) | scoped |
 | `PACKER` | Packer | `inventory.view`, `orders.view`, `orders.pack` (3) | scoped |
 | `DISPATCHER` | Dispatcher | `orders.view`, `delivery.manage` (2) | scoped |
 | `SUPPORT` | Customer support | `orders.view`, `orders.cancel`, `complaints.manage`, `refunds.request`, `payments.view`, `customers.view`, `customers.manage` (7) | all locations |
-| `FINANCE` | Finance | `inventory.view`, `orders.view`, `refunds.approve`, `payments.view`, `cash.settle`, `customers.view`, `reports.view`, `audit.view` (8) | all locations |
+| `FINANCE` | Finance | `inventory.view`, `orders.view`, `refunds.approve`, `payments.view`, `cash.settle`, `customers.view`, `reports.view`, `audit.view`, `tax.manage` (9; the file also grants `payments.manage`) | all locations |
 
 | Rule |
 |---|
@@ -137,10 +138,11 @@ cannot be disabled). Variables are pre-formatted strings from the server (`…Te
 | `STAFF_REFUND_FAILED` | EMAIL | `orderNumber`, `amountText`, `failureReasonText`, `adminUrl` | `refunds.approve` | `RefundFailed` |
 | `STAFF_CASH_DIFFERENCE` | EMAIL | `riderName`, `settlementDateText`, `expectedText`, `receivedText`, `differenceText`, `adminUrl` | `cash.settle` at the location | `CashSettlementRecorded` with difference ≠ 0 |
 | `STAFF_COLD_CHAIN_ALERT` | EMAIL | `locationName`, `storageUnit`, `temperatureText`, `recordedAtText` | `inventory.adjust` at the location | out-of-range cold-chain log |
+| `STAFF_ACCOUNT_LOCKED` | EMAIL | `staffEmail`, `lockedUntilText`, `lockoutCountText` | `staff.manage` holders (ADMIN always), active only | `StaffAccountLocked` (D33) |
 
 | Template rule |
 |---|
-| 16 customer codes, 47 customer rows; 7 staff codes, 7 rows; 54 rows total. |
+| 16 customer codes, 47 customer rows; 8 staff codes, 8 rows; 55 rows total. |
 | EMAIL rows carry `subject`; SMS bodies ≤ 160 GSM-7 characters where possible; PUSH title ≤ 50, body ≤ 150. |
 | Commercial SMS in India must use templates registered with the operator's DLT platform; the SMS body text and its DLT template id are confirmed by the business before go-live (RD-Q3). |
 | No `OFFERS` (marketing) templates at launch. |
