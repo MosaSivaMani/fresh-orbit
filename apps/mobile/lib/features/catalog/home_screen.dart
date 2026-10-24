@@ -309,7 +309,7 @@ void _showDelivery(BuildContext context, Serviceability? service) {
   );
 }
 
-/// Pin, "Delivering to <pincode> ⌄" with the city under it (both from the server), and the search and wishlist
+/// Pin, "Delivering to `pincode` ⌄" with the city under it (both from the server), and the search and wishlist
 /// buttons on the right.
 class _DeliveryHeader extends ConsumerWidget {
   const _DeliveryHeader({required this.service});
