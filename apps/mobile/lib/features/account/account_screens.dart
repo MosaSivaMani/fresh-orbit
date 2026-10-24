@@ -10,6 +10,8 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../app.dart';
 import '../../core/format.dart';
+import '../../demo/demo_app.dart';
+import '../../demo/demo_backend.dart';
 import '../../illustrations/illustration.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
@@ -28,6 +30,7 @@ class AccountScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Account')),
       body: ListView(
         children: [
+          if (demoMode) const DemoPanel(),
           if (!signedIn)
             Padding(
               padding: const EdgeInsets.all(FreshSpacing.s4),
