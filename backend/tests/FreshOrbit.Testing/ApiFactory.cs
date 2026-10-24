@@ -13,12 +13,15 @@ namespace FreshOrbit.Testing;
 
 /// <summary>
 /// The real Api host (<c>Program</c>) on the Testcontainers database, with a test JWT signing key and a
-/// <see cref="TestClock"/>. Create clients for a customer or a staff member with given permissions.
+/// <see cref="TestClock"/> and generous rate limits (override <c>RateLimiting:&lt;Rule&gt;</c> to test one). Create clients for a customer or a staff member with given permissions.
 /// Override <see cref="ConfigureTestServices"/> to add test modules or replace services.
 /// </summary>
 public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Program>
 {
     public const string SigningKey = "test-only-signing-key-0123456789-abcdefghijklmnopqrstuvwxyz";
+
+    /// <summary>Every rate-limit rule of the Api (section <c>RateLimiting</c>); tests raise them because they share one client IP.</summary>
+    public static readonly IReadOnlyList<string> RateLimitRules = ["OtpRequest", "OtpVerify", "Login", "Refresh", "Checkout", "Search", "Public", "Coupon"];
 
     public TestClock Clock { get; } = new();
 
@@ -49,10 +52,11 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
         builder.UseSetting($"ConnectionStrings:{FreshOrbitDbContextOptions.ConnectionStringName}", database.ConnectionString);
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
-        foreach (var policy in new[] { "Checkout", "Refresh", "Search" })
+        foreach (var rule in RateLimitRules)
         {
-            builder.UseSetting($"RateLimiting:{policy}:PermitLimit", "100000");
+            builder.UseSetting($"RateLimiting:{rule}:PermitLimit", "100000");
         }
+
         builder.ConfigureTestServices(services =>
         {
             services.Replace(ServiceDescriptor.Singleton<IClock>(Clock));

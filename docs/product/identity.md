@@ -60,7 +60,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | IDN-R1 | Phone is E.164 (`+` and 8–15 digits). OTP is 6 digits from a CSPRNG, stored as HMAC-SHA256 (keyed by the JWT signing key, salted with the challenge id), valid 5 minutes. |
 | IDN-R2 | `POST /auth/otp/request` answers 202 for every well-formed phone (no enumeration). A disabled user gets 202 but no SMS. |
 | IDN-R3 | Resend window: a new request for the same phone within 30 s of the previous challenge → 429 `OTP_RESEND_TOO_SOON` with `retryAfterSeconds`. |
-| IDN-R4 | Per-phone limit 3 challenges / 10 min and 10 / day; per-IP limit 20 / hour (counted from `otp_challenges`) → 429 `RATE_LIMITED` with `retryAfterSeconds`. The host IP limiter (`otp` policy) applies too. |
+| IDN-R4 | Per-phone limit 3 challenges / 10 min and 10 / day; per-IP limit 20 / hour (counted from `otp_challenges`) → 429 `RATE_LIMITED` with `retryAfterSeconds`. The host IP limiters (`otp-request` and `otp-verify` policies) apply too. |
 | IDN-R5 | Verify: unknown challenge, other phone or wrong code → 422 `OTP_INVALID`; consumed or expired → 422 `OTP_EXPIRED`; the 5th wrong code and every later try → 429 `OTP_TOO_MANY_ATTEMPTS`. The attempt counter is saved before the refusal is returned. |
 | IDN-R6 | First verify creates the user (CUSTOMER, ACTIVE, `phone_verified_at`) and, through `ICustomerAccountDirectory`, the customer (`isNewCustomer = true`). A DISABLED user → 403 `ACCOUNT_DISABLED`. |
 | IDN-R7 | Access token: JWT from `AccessTokenFactory` (15 min): `sub`, `actor_type`, `customer_id` or `staff_id`, `perm` per permission, `loc` per location or `all_loc`. |

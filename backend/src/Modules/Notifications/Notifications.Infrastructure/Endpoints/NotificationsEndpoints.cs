@@ -1,6 +1,8 @@
 using System.Globalization;
 using FreshOrbit.Notifications.Application.Inbox;
 using FreshOrbit.Notifications.Application.Templates;
+using FreshOrbit.Notifications.Infrastructure.Senders;
+using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Validation;
@@ -15,6 +17,20 @@ internal static class NotificationsEndpoints
 {
     public const string ManagePermission = "notifications.manage";
     private const string CustomerActorCode = "CUSTOMER";
+
+    /// <summary>
+    /// Development/Testing only (SEC-1): the messages the development SMS sender kept for one phone, newest first,
+    /// so a developer can read an OTP without it ever being logged. An unencoded <c>+</c> (read as a space) is accepted.
+    /// </summary>
+    public static void MapDevelopment(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/dev/sms", (string? phone, DevelopmentSmsOutbox outbox) =>
+                string.IsNullOrWhiteSpace(phone)
+                    ? throw new RefusalException(new FieldError("phone", "VALIDATION_FAILED", "Send the phone query parameter in E.164 form."))
+                    : TypedResults.Ok(outbox.For("+" + phone.Trim().TrimStart('+'))))
+            .AllowAnonymous()
+            .WithTags("Development");
+    }
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {

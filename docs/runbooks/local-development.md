@@ -41,18 +41,18 @@ dotnet run --project src/Hosts/FreshOrbit.Api        # http://localhost:5080, AP
 dotnet run --project src/Hosts/FreshOrbit.Worker     # outbox dispatcher and recurring jobs
 ```
 
-The Worker must run for anything driven by events: slot generation, stock and shipment updates after an order, payments, invoices, notifications. In Development SMS and push messages are written to the log (`DEV SMS to …`), which is also where OTP codes appear; e-mail goes to Mailpit.
+The Worker must run for anything driven by events: slot generation, stock and shipment updates after an order, payments, invoices, notifications. In Development (`Notifications:Sms:Provider` = `DEVELOPMENT`, set in `appsettings.Development.json`) SMS messages are kept in an in-memory outbox and never logged with their text (SEC-1): read OTP codes from `GET /api/v1/dev/sms?phone=+91…` (newest first). Push messages are written to the log; e-mail goes to Mailpit. Other settings an operator must get right are in `security-configuration.md`.
 
 ## 4. Smoke test
 
-With the Api's console output saved to a file (for example `dotnet run … > api.log`):
+With the Api running in Development (the script reads the OTP from `GET /api/v1/dev/sms`):
 
 ```bash
-API_URL=http://localhost:5080 API_LOG=api.log \
+API_URL=http://localhost:5080 \
   ADMIN_EMAIL=admin@freshorbit.local ADMIN_PASSWORD='<password>' infra/scripts/smoke.sh
 ```
 
-It creates a new city with a store, a product and stock, activates the city, signs a new customer in by OTP, places a COD order, packs, dispatches and delivers it, and checks the invoice, the COLLECTED payment, the SALE stock movement and the customer's notifications. Each run uses fresh codes, so it can be repeated; the default rate limits allow a few runs per five minutes (staff login 10 / 5 min, OTP 5 / 10 min per IP).
+It creates a new city with a store, a product and stock, activates the city, signs a new customer in by OTP, places a COD order, packs, dispatches and delivers it, and checks the invoice, the COLLECTED payment, the SALE stock movement and the customer's notifications. Each run uses fresh codes, so it can be repeated; the default rate limits allow a few runs per five minutes (`RateLimiting:Login` 10 / 5 min, `RateLimiting:OtpRequest` 20 / hour and `RateLimiting:OtpVerify` 30 / 10 min per IP; Identity also caps OTP requests at 3 per phone per 10 minutes).
 
 ## 5. Stop
 

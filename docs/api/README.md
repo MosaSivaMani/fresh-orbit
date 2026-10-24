@@ -162,12 +162,21 @@ Webhooks use the provider event id instead (§7).
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
 | `search` | `GET /products`, `/search/*` | 60 / min | IP |
-| `public` | other anonymous endpoints | 120 / min | IP |
+| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
+| `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
 | `admin` | `/admin/*` | 600 / min | user |
 | `webhook` | `/payments/webhooks/*` | none (signature-checked) | — |
 
-429 body: `code: RATE_LIMITED`, `retryAfterSeconds`.
+429 body: `code: RATE_LIMITED`, `retryAfterSeconds`; header `Retry-After`.
+
+IP keys use the client address after forwarded-headers processing: `X-Forwarded-For` / `X-Forwarded-Proto` are
+believed only from peers in `ForwardedHeaders:KnownNetworks` (the Caddy network), one hop only; with the list empty
+(the default) nothing is forwarded (SEC-2, D36). Limits are configuration (`RateLimiting:<Rule>`), defaults as above;
+`staff-login` is still per IP, and `customer`, `admin` and a global limiter are not built yet (SEC-3).
+
+Development and Testing only: `GET /api/v1/dev/sms?phone=…` returns the messages the development SMS sender kept
+for that phone (newest first), so OTPs can be read without being logged (SEC-1). Not mapped elsewhere.
 
 ## 2. Error-code catalogue
 
