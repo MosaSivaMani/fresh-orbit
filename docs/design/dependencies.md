@@ -23,6 +23,8 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | react-hook-form | 7.89.0 | MIT | admin | Forms; server field errors set with `setError` |
 | zod | 4.6.5 | MIT | admin | Form schemas (shape checks only; business rules stay on the server) |
 | @hookform/resolvers | 5.9.1 | MIT | admin | zod ↔ react-hook-form bridge |
+| @fontsource/baloo-2 | 5.3.0 | OFL-1.1 (font), MIT (CSS) | ui (`fonts.css`), playground | Self-hosted Baloo 2 display font, weights 500–800 (D53) |
+| @fontsource/inter | 5.3.0 | OFL-1.1 (font), MIT (CSS) | ui (`fonts.css`), playground | Self-hosted Inter body font, weights 400–700 |
 
 ## Development
 
@@ -58,6 +60,7 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | @types/node | 26.6.5 | MIT | Types |
 | @tailwindcss/postcss | 4.3.3 | MIT | Tailwind in Next.js (web) |
 | msw | 2.15.0 | MIT | API mocks in web and admin unit tests (Node interceptor only, never shipped; 2.x kept over 3.x, too new at adoption; postinstall skipped via `ignoredBuiltDependencies`) |
+| sharp | 0.35.5 | Apache-2.0 | `@fresh/illustrations` `optimize` only (dev): crop, resize, WebP. Its prebuilt libvips binary (`@img/sharp-libvips-*`, LGPL-3.0) is downloaded as a normal npm optional dependency, used only on the developer machine and never shipped; nothing installed on the system |
 | @playwright/test | 1.64.0 | Apache-2.0 | End-to-end smoke tests (web and admin; browsers installed with `pnpm exec playwright install chromium`) |
 
 ## Planned (not installed yet)
@@ -65,4 +68,5 @@ from the npm registry. Runtime = shipped to browsers/apps; dev = build, lint and
 | Tool | Licence | When |
 |---|---|---|
 | OpenAPI Generator (`dart-dio`, Docker image) | Apache-2.0 | `fresh_api` generation after Phase 3 |
-| Inter, Plus Jakarta Sans, JetBrains Mono fonts | OFL-1.1 | Loaded by each app (web: self-hosted; mobile: bundled) |
+| JetBrains Mono font | OFL-1.1 | Loaded by each app when needed (Inter and Baloo 2 are now installed, see above; Plus Jakarta Sans dropped for Baloo 2 by D53) |
+| Baloo 2 and Inter for Flutter | OFL-1.1 | Bundled in `apps/mobile` by U4 |
