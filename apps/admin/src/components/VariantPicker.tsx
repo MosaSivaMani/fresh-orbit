@@ -1,6 +1,6 @@
-import { Combobox, FormField, Input, Select } from "@fresh/ui";
-import { useProduct, useProducts } from "../api/catalog";
-import { type AdminVariant } from "../api/types/catalog";
+import { Combobox, FormField, Select } from "@fresh/ui";
+import { usePreparationMethods, useProduct, useProducts, useVariantLookup } from "../api/catalog";
+import { type StockUnit } from "../api/types/catalog";
 import { useCan } from "../app/services";
 
 export interface VariantChoice {
@@ -9,10 +9,18 @@ export interface VariantChoice {
   preparationCode: string;
 }
 
+/** The chosen variant's stock unit, with its order limits when the full catalogue is readable. */
+export interface PickedVariant {
+  stockUnit: StockUnit;
+  minOrder?: number;
+  maxOrder?: number;
+  orderStep?: number;
+}
+
 /**
- * Pick product → variant → preparation from the admin catalog (`catalog.manage`). Staff without that
- * permission type the variant id and preparation code instead (no staff-readable variant search exists yet;
- * listed as an API gap in docs/design/admin.md).
+ * Pick product → variant → preparation from the admin catalog (`catalog.manage`). Staff without that permission
+ * pick the variant from the staff-readable lookup and the preparation from every method (G3); the server refuses
+ * a preparation the variant does not offer.
  */
 export function VariantPicker({
   value,
@@ -24,33 +32,46 @@ export function VariantPicker({
   onChange: (next: VariantChoice) => void;
   errors?: { variantId?: string | undefined; preparationCode?: string | undefined };
   /** Called with the chosen variant (for its stock unit and order step). */
-  onVariant?: (variant: AdminVariant | null) => void;
+  onVariant?: (variant: PickedVariant | null) => void;
 }) {
   const can = useCan();
   const canBrowse = can("catalog.manage");
   const products = useProducts({ status: "ACTIVE", pageSize: 100 }, canBrowse);
   const product = useProduct(value.productId ?? "", canBrowse && Boolean(value.productId));
+  const lookup = useVariantLookup(!canBrowse);
+  const methods = usePreparationMethods(!canBrowse);
 
   if (!canBrowse) {
+    const found = lookup.data?.items ?? [];
     return (
       <div className="grid gap-3 sm:grid-cols-2">
-        <FormField
-          label="Variant id"
-          required
-          error={errors.variantId}
-          hint="Ask a catalog manager for the id."
-        >
-          <Input
-            value={value.variantId}
-            onChange={(e) => onChange({ ...value, variantId: e.target.value.trim() })}
+        <FormField label="Variant" required error={errors.variantId}>
+          <Combobox
+            options={found.map((v) => ({
+              value: v.variantId,
+              label: `${v.productName} · ${v.variantName} (${v.sku})`,
+              keywords: [v.sku],
+            }))}
+            value={value.variantId || null}
+            placeholder={lookup.isPending ? "Loading variants…" : "Choose a variant"}
+            searchPlaceholder="Search product, variant or SKU"
+            onValueChange={(id) => {
+              const next = found.find((v) => v.variantId === id) ?? null;
+              onChange({
+                productId: next?.productId ?? null,
+                variantId: id ?? "",
+                preparationCode: "",
+              });
+              onVariant?.(next ? { stockUnit: next.stockUnit } : null);
+            }}
           />
         </FormField>
-        <FormField label="Preparation code" required error={errors.preparationCode}>
-          <Input
+        <FormField label="Preparation" required error={errors.preparationCode}>
+          <Select
+            options={(methods.data ?? []).map((m) => ({ value: m.code, label: m.name }))}
             value={value.preparationCode}
-            onChange={(e) =>
-              onChange({ ...value, preparationCode: e.target.value.trim().toUpperCase() })
-            }
+            placeholder={methods.isPending ? "Loading…" : "Choose a preparation"}
+            onValueChange={(code) => onChange({ ...value, preparationCode: code })}
           />
         </FormField>
       </div>

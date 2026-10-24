@@ -19,11 +19,10 @@ import {
 } from "@fresh/ui";
 import { Download } from "lucide-react";
 import { useMemo } from "react";
-import { useCities } from "../../api/locations";
+import { useCityLookup } from "../../api/locations";
 import { useReport, useReportCsv } from "../../api/reports";
 import { type ReportQuery, type ReportRow } from "../../api/types/reports";
 import { useLocationScope } from "../../app/location-scope";
-import { useCan } from "../../app/services";
 import { DetailList, PageHeader, Section, tableError } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { useListParams } from "../../lib/list-params";
@@ -92,9 +91,8 @@ export function ReportsPage() {
   const list = useListParams({ defaultSort: DEFAULT_SORT });
   const report = reportDefinition(list.get("report"));
   const scope = useLocationScope();
-  const can = useCan();
   const csv = useReportCsv();
-  const cities = useCities({ page: 1, pageSize: 100 }, can("locations.manage"));
+  const cities = useCityLookup();
 
   const rawLocation = list.get("fulfillmentLocationId");
   const locationId =
@@ -222,19 +220,17 @@ export function ReportsPage() {
               onValueChange={(v) => list.set({ fulfillmentLocationId: v === ANY ? ALL : v })}
             />
           </div>
-          {can("locations.manage") && (
-            <div className="w-48">
-              <Select
-                aria-label="City"
-                value={list.get("cityId") ?? ANY}
-                options={[
-                  { value: ANY, label: "All cities" },
-                  ...(cities.data?.items ?? []).map((c) => ({ value: c.id, label: c.name })),
-                ]}
-                onValueChange={(v) => list.set({ cityId: v === ANY ? null : v })}
-              />
-            </div>
-          )}
+          <div className="w-48">
+            <Select
+              aria-label="City"
+              value={list.get("cityId") ?? ANY}
+              options={[
+                { value: ANY, label: "All cities" },
+                ...(cities.data?.items ?? []).map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              onValueChange={(v) => list.set({ cityId: v === ANY ? null : v })}
+            />
+          </div>
           <ReportFilters
             report={report}
             get={list.get}

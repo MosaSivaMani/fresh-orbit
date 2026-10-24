@@ -56,7 +56,7 @@ export function BatchesPage() {
           className="text-accent-text hover:underline"
           aria-label={`Open stock item for batch ${row.original.batchCode}`}
         >
-          <VariantRef variantId={row.original.variantId} />
+          <VariantRef item={row.original} />
         </Link>
       ),
     },

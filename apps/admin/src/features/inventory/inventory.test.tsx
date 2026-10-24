@@ -22,6 +22,9 @@ function stockItem(overrides: Partial<StockItem> = {}): StockItem {
     lowStockThreshold: 15000,
     isLowStock: true,
     batches: null,
+    productName: "Seer fish",
+    variantName: "Steaks",
+    sku: "SEER-STEAK",
     ...overrides,
   };
 }
@@ -39,6 +42,7 @@ describe("Stock list", () => {
 
     const table = await screen.findByRole("table", { name: "Stock items" });
     expect(await within(table).findByText("Low stock")).toBeInTheDocument();
+    expect(within(table).getByText("Seer fish · Steaks")).toBeInTheDocument();
     expect(requests[0]?.searchParams.get("fulfillmentLocationId")).toBe(LOCATION_A);
     expect(requests[0]?.searchParams.has("lowStockOnly")).toBe(false);
 
@@ -55,6 +59,23 @@ describe("Receive stock", () => {
     let body: Record<string, unknown> | undefined;
     let key: string | null = null;
     server.use(
+      http.get(`${API}/admin/catalog/variants`, () =>
+        HttpResponse.json(
+          page([
+            {
+              variantId: VARIANT,
+              productId: "0192b400-0000-7000-8000-00000000c001",
+              productName: "Seer fish",
+              variantName: "Steaks",
+              sku: "SEER-STEAK",
+              sellUnit: "KG",
+              stockUnit: "GRAM",
+              productStatus: "ACTIVE",
+              isActive: true,
+            },
+          ]),
+        ),
+      ),
       http.post(`${API}/admin/inventory/receipts`, async ({ request }) => {
         body = (await request.json()) as Record<string, unknown>;
         key = request.headers.get("Idempotency-Key");
@@ -72,7 +93,11 @@ describe("Receive stock", () => {
       permissions: ["inventory.view", "inventory.receive"],
     });
 
-    await user.type(await screen.findByLabelText(/^Variant/), VARIANT);
+    // Any staff member picks the variant by name or SKU (G3), without the catalogue permission.
+    await user.click(await screen.findByRole("combobox", { name: /^Variant/ }));
+    await user.keyboard("SEER-STEAK");
+    const option = "Seer fish · Steaks (SEER-STEAK)";
+    await user.click(await screen.findByRole("option", { name: option }));
     await user.type(screen.getByLabelText(/Batch code/), "KAS-2410-01");
     await user.type(screen.getByLabelText(/Received quantity/), "25000");
     await user.type(screen.getByLabelText(/Total cost/), "12500.50");

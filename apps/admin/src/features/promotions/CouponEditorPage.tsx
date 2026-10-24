@@ -16,7 +16,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
 import { useCategories } from "../../api/catalog";
-import { useCities } from "../../api/locations";
+import { useCityLookup } from "../../api/locations";
 import {
   useCoupon,
   useCouponRedemptions,
@@ -231,7 +231,7 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
   const create = useCreateCoupon();
   const update = useUpdateCoupon(coupon?.id ?? "");
   const transition = useCouponTransition(coupon?.id ?? "");
-  const cities = useCities({ pageSize: 100 }, can("locations.manage"));
+  const cities = useCityLookup();
   const categories = useCategories(false, can("catalog.manage"));
   const [scopes, setScopes] = useState<CouponScope[]>(coupon?.scopes ?? []);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: toValues(coupon) });
@@ -401,12 +401,7 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
                 name="cityId"
                 label="City"
                 options={cityOptions}
-                disabled={expired || !can("locations.manage")}
-                hint={
-                  can("locations.manage")
-                    ? undefined
-                    : "Choosing a city needs the locations permission."
-                }
+                disabled={expired}
               />
               <div className="flex items-end">
                 <SwitchField

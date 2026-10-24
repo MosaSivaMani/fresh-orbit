@@ -7,6 +7,7 @@ import {
   type AddPincodesResponse,
   type City,
   type CityDetail,
+  type CityLookup,
   type Closure,
   type CreateCityRequest,
   type CreateFulfillmentLocationRequest,
@@ -16,6 +17,7 @@ import {
   type Readiness,
   type ServiceArea,
   type SetOperatingHoursRequest,
+  type StaffLocation,
   type UpdateCityRequest,
   type UpdateFulfillmentLocationRequest,
   type UpdateServiceAreaRequest,
@@ -26,6 +28,8 @@ import {
 export const locationKeys = {
   all: ["locations"] as const,
   cities: (q: object) => ["locations", "cities", q] as const,
+  cityLookup: ["locations", "city-lookup"] as const,
+  myLocations: ["locations", "me"] as const,
   city: (id: Id) => ["locations", "city", id] as const,
   readiness: (id: Id) => ["locations", "city", id, "readiness"] as const,
   fulfillmentLocations: (q: object) => ["locations", "fulfillment-locations", q] as const,
@@ -46,6 +50,20 @@ export function useCities(query: CityListQuery, enabled = true) {
     queryFn: ({ signal }) => http.get<Page<City>>("/admin/cities", { query: { ...query }, signal }),
     placeholderData: keepPreviousData,
     enabled,
+  });
+}
+
+/**
+ * Every city by name for pickers and labels (`GET /admin/cities/lookup`, any staff member; G2). Editing a city still
+ * needs `locations.manage`.
+ */
+export function useCityLookup() {
+  const http = useHttp();
+  return useQuery({
+    queryKey: locationKeys.cityLookup,
+    queryFn: ({ signal }) =>
+      http.get<Page<CityLookup>>("/admin/cities/lookup", { query: { pageSize: 100 }, signal }),
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -274,18 +292,22 @@ export function useRemovePincode(serviceAreaId: Id) {
 }
 
 /**
- * Locations the signed-in staff member may pick in the location switcher. Names come from
- * `GET /admin/fulfillment-locations`, which needs `locations.manage`; staff without it see their location ids
- * only (API gap noted in docs/design/admin.md).
+ * Locations the signed-in staff member may pick in the location switcher, with names, from
+ * `GET /admin/me/locations` (any staff member; every location for all-locations staff; G1).
  */
 export function useStaffLocations() {
-  const { claims, store } = useSession();
-  const canList = store.can("locations.manage");
-  const list = useFulfillmentLocations({ pageSize: 100 }, canList && claims !== null);
+  const http = useHttp();
+  const { claims } = useSession();
+  const list = useQuery({
+    queryKey: locationKeys.myLocations,
+    queryFn: ({ signal }) =>
+      http.get<Page<StaffLocation>>("/admin/me/locations", { query: { pageSize: 100 }, signal }),
+    enabled: claims !== null,
+    staleTime: 5 * 60_000,
+  });
+  // Scoped staff keep their token's ids while the names load, so the scope is never "all locations" meanwhile.
   const named = new Map((list.data?.items ?? []).map((l) => [l.id, l]));
-  const ids = claims?.allLocations
-    ? (list.data?.items ?? []).map((l) => l.id)
-    : (claims?.locationIds ?? []);
+  const ids = claims?.allLocations ? [...named.keys()] : (claims?.locationIds ?? []);
   return {
     allLocations: claims?.allLocations ?? false,
     isLoading: list.isLoading,
