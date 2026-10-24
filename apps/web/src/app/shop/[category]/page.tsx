@@ -83,6 +83,12 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
           basePath={`/shop/${detail.slug}`}
           navCategories={roots.ok ? roots.value : []}
           currentCategory={detail.parent?.slug ?? detail.slug}
+          offerCategoryIds={[
+            detail.id,
+            ...(roots.ok && detail.parent
+              ? roots.value.filter((c) => c.slug === detail.parent?.slug).map((c) => c.id)
+              : []),
+          ]}
         />
       </Container>
     </>

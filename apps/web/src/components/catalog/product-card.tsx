@@ -51,6 +51,18 @@ export function offersBySlug(banners: readonly HomeBanner[]): Record<string, str
   return offers;
 }
 
+/**
+ * The offer line for every product of a category page: the title of a promotion banner that links to that
+ * category (by id) or to its parent. Undefined when the server has no such offer.
+ */
+export function categoryOffer(
+  banners: readonly HomeBanner[],
+  categoryIds: readonly string[],
+): string | undefined {
+  return banners.find((b) => b.linkType === "CATEGORY" && categoryIds.includes(b.linkTarget))
+    ?.title;
+}
+
 const gridClass =
   "grid grid-cols-1 gap-x-4 gap-y-6 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-x-[22px] lg:grid-cols-4";
 
@@ -58,12 +70,15 @@ export function ProductGrid({
   products,
   priorityCount = 0,
   offers,
+  offer,
   freshness,
 }: {
   products: ProductListItem[];
   priorityCount?: number;
   /** From `offersBySlug`. */
   offers?: Record<string, string>;
+  /** One offer line for every card (a category offer from `categoryOffer`); a product's own offer wins. */
+  offer?: string;
   /** The server's freshness or slot line for cards without their own message. */
   freshness?: string;
 }) {
@@ -75,7 +90,7 @@ export function ProductGrid({
             product={product}
             index={index}
             priority={index < priorityCount}
-            offer={offers?.[product.slug]}
+            offer={offers?.[product.slug] ?? offer}
             freshness={freshness}
           />
         </li>

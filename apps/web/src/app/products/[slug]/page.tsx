@@ -203,7 +203,14 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           script={product.category.name.toLowerCase()}
           action={{ href: `/shop/${product.category.slug}`, label: "See all" }}
         >
-          <ProductGrid products={relatedItems} />
+          <ProductGrid
+            products={relatedItems}
+            {...(area?.nextSlot
+              ? {
+                  freshness: `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)} – ${formatTime(area.nextSlot.endAt)}`,
+                }
+              : {})}
+          />
         </Section>
       )}
       <GetTheApp />

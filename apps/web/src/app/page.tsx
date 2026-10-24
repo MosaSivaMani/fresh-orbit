@@ -126,7 +126,19 @@ export default async function HomePage() {
 
         {banners.length > 0 && (
           <Section id="offers" title="Today's" script="offers">
-            <OfferStrip banners={banners} />
+            <OfferStrip
+              banners={banners}
+              categorySlugs={
+                home.ok
+                  ? Object.fromEntries(
+                      home.value.data.featuredCategories.flatMap((c) => [
+                        [c.id, c.slug],
+                        ...c.children.map((child) => [child.id, child.slug]),
+                      ]),
+                    )
+                  : {}
+              }
+            />
           </Section>
         )}
 

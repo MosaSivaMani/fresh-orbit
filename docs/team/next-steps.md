@@ -16,7 +16,8 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 ## 2. Branches waiting to merge (in this order)
 | Branch | What | Waiting for |
 |---|---|---|
-| (none) | Track A, L1 and U1 merged to `main` on 2026-10-24 | |
+| `ui/bold-blocks-web` | B1: D88/D89 design system in `@fresh/ui` and `@fresh/design-tokens`, website shell, home, shop/category/search and product in the food-app style (D95) | Merge first; then W2's `web/food-app-pages` (cut from it) |
+| `web/food-app-pages` | W2: cart, checkout, login/OTP, orders and tracking, account, empty and error pages in the D95 style | `ui/bold-blocks-web` |
 
 ## 3. Next, now that Phase 3 is merged
 1. ~~Merge `integration/sec-sample`~~ Merged.

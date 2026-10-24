@@ -1,5 +1,5 @@
-import { cn } from "@fresh/ui";
 import { Suspense } from "react";
+import { cx } from "@/lib/cx";
 import { SearchBox } from "./search-box";
 
 function SearchFallback() {
@@ -11,7 +11,7 @@ function SearchFallback() {
 /** The app's search bar, placed in the page (home, shop, search) as on the phone. */
 export function PageSearch({ className }: { className?: string }) {
   return (
-    <div className={cn("w-full max-w-[640px]", className)}>
+    <div className={cx("w-full max-w-[640px]", className)}>
       <Suspense fallback={<SearchFallback />}>
         <SearchBox />
       </Suspense>

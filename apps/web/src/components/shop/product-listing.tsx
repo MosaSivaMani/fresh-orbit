@@ -5,7 +5,7 @@ import { getPromotions, getServiceability, listProducts } from "@/api/endpoints/
 import { type RequestApi, loadWithLocation } from "@/api/server";
 import { type CategoryRef } from "@/api/types/catalog";
 import { CategoryRail } from "@/components/catalog/category-rail";
-import { ProductGrid, offersBySlug } from "@/components/catalog/product-card";
+import { ProductGrid, categoryOffer, offersBySlug } from "@/components/catalog/product-card";
 import { LocationBanner } from "@/components/location-banner";
 import { SectionError } from "@/components/section";
 import {
@@ -31,6 +31,7 @@ export async function ProductListing({
   categoryNames,
   navCategories,
   currentCategory,
+  offerCategoryIds,
 }: {
   api: RequestApi;
   filters: Filters;
@@ -42,6 +43,8 @@ export async function ProductListing({
   /** The round category row above the chips (D95). */
   navCategories?: (CategoryRef & { imageUrl?: string | null })[];
   currentCategory?: string;
+  /** Category ids whose promotion banner puts its offer line on every card (a category page and its parent). */
+  offerCategoryIds?: string[];
 }) {
   const hasLocation = api.pincode !== null;
   const [result, promotions, serviceability] = await Promise.all([
@@ -50,6 +53,10 @@ export async function ProductListing({
     api.pincode ? settle(getServiceability(api.anonymous, api.pincode)) : null,
   ]);
   const offers = promotions.ok ? offersBySlug(promotions.value.data) : {};
+  const sharedOffer =
+    promotions.ok && offerCategoryIds
+      ? categoryOffer(promotions.value.data, offerCategoryIds)
+      : undefined;
   const nextSlot = serviceability?.ok ? serviceability.value.nextSlot : null;
   const freshness = nextSlot
     ? `Next slot ${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
@@ -118,6 +125,7 @@ export async function ProductListing({
               products={result.value.data.items}
               priorityCount={2}
               offers={offers}
+              {...(sharedOffer ? { offer: sharedOffer } : {})}
               {...(freshness ? { freshness } : {})}
             />
             <LinkPagination

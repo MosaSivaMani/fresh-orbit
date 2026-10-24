@@ -280,7 +280,8 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
               <span aria-hidden="true" className="font-display text-lg font-extrabold">
                 {formatRupees(variant.unitPricePaise!)}
                 <span className="text-xs font-semibold opacity-80">
-                  /{sellUnitLabels[variant.sellUnit]}
+                  {" "}
+                  {sellUnitLabels[variant.sellUnit]}
                 </span>
               </span>
             )}
