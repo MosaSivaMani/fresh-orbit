@@ -496,7 +496,7 @@ public sealed class StockItem : AggregateRoot
 
         if (before.Available <= 0 && after.Available > 0)
         {
-            Raise(new FreshOrbit.Inventory.Public.Events.StockBackInStock(Id, FulfillmentLocationId, VariantId, after.Available));
+            Raise(new FreshOrbit.Inventory.Public.Events.StockAvailableAgain(Id, FulfillmentLocationId, VariantId, after.Available));
         }
 
         if (before.Available <= before.Threshold && after.Available > after.Threshold)

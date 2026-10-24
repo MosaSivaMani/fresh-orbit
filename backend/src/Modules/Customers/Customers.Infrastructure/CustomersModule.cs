@@ -40,7 +40,7 @@ public sealed class CustomersModule : IModule
         services.AddScoped<IWishlistService, WishlistService>();
         services.AddScoped<IStockAlertService, StockAlertService>();
         services.AddScoped<StockAlertTrigger>();
-        services.AddEventHandler<StockBackInStock, CustomersStockBackInStockHandler>();
+        services.AddEventHandler<StockAvailableAgain, CustomersStockAvailableAgainHandler>();
         services.AddScoped<IAdminCustomerService, AdminCustomerService>();
         services.AddScoped<ICustomersApi, CustomersApi>();
         services.AddScoped<ICustomerAccountDirectory, CustomerAccountDirectory>();
