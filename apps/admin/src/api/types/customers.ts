@@ -1,6 +1,7 @@
 // Customers (docs/api §4.19), generated from the backend OpenAPI document.
 
 import type { Coded, Id, Schema } from "./common";
+import type { OrderStatus, PaymentMethod } from "./orders";
 
 export type CustomerStatus = "ACTIVE" | "DELETED";
 
@@ -9,7 +10,7 @@ export type CustomerListItem = Coded<Schema<"CustomerListItem">, { status: Custo
 export interface CustomerListQuery {
   q?: string;
   status?: string;
-  /** In docs/api §4.19; the backend list does not accept it yet (gap G6). */
+  /** Customers with an address in this city (G6). */
   cityId?: Id;
   page?: number;
   pageSize?: number;
@@ -17,8 +18,11 @@ export interface CustomerListQuery {
 
 export type CustomerAddress = Schema<"AddressResponse">;
 
-/**
- * `GET /admin/customers/{id}`. Order counts and lifetime value (docs/api §4.19) are not in the response; the screen
- * does not show them (gap G6).
- */
+/** `GET /admin/customers/{id}` with the customer's order counts (G6). */
 export type CustomerDetail = Coded<Schema<"CustomerDetailResponse">, { status: CustomerStatus }>;
+
+/** A row of `GET /admin/customers/{id}/orders` (G6), newest first. */
+export type CustomerOrder = Coded<
+  Schema<"CustomerOrderListItem">,
+  { status: OrderStatus; paymentMethod: PaymentMethod }
+>;

@@ -6,8 +6,8 @@ import {
   type CustomerDetail,
   type CustomerListItem,
   type CustomerListQuery,
+  type CustomerOrder,
 } from "./types/customers";
-import { type AdminOrderSummary } from "./types/orders";
 
 // docs/api/README.md §4.19 — customer list, detail, orders, block / unblock.
 
@@ -51,7 +51,7 @@ export function useCustomerOrders(
   return useQuery({
     queryKey: customerKeys.orders(customerId, query),
     queryFn: ({ signal }) =>
-      http.get<Page<AdminOrderSummary>>(`/admin/customers/${customerId}/orders`, {
+      http.get<Page<CustomerOrder>>(`/admin/customers/${customerId}/orders`, {
         query: { ...query },
         signal,
       }),

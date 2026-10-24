@@ -198,8 +198,8 @@ export function useResolvePaymentIssue(issueId: Id) {
 }
 
 /**
- * Riders for the settlement picker. `GET /admin/delivery/riders` needs `delivery.manage`; staff with only
- * `cash.settle` get 403 and the form falls back to a rider-id field (API gap, docs/design/admin.md).
+ * Riders for the settlement picker from `GET /admin/delivery/riders/lookup`, readable with `delivery.manage` or
+ * `cash.settle` (G7). On a 403 the form falls back to a rider-id field.
  */
 export function useRiderOptions(fulfillmentLocationId: Id | null, enabled = true) {
   const http = useHttp();
@@ -210,7 +210,7 @@ export function useRiderOptions(fulfillmentLocationId: Id | null, enabled = true
   return useQuery({
     queryKey: paymentKeys.riders(query),
     queryFn: ({ signal }) =>
-      http.get<Page<RiderOption>>("/admin/delivery/riders", { query, signal }),
+      http.get<Page<RiderOption>>("/admin/delivery/riders/lookup", { query, signal }),
     enabled,
     retry: false,
     staleTime: 5 * 60_000,

@@ -14,14 +14,13 @@ import { FileSliders, Plus } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCities } from "../../api/locations";
+import { useCityLookup } from "../../api/locations";
 import { useOrderPolicies, useSaveOrderPolicy } from "../../api/settings";
 import {
   type CancelAllowedUntilStatus,
   type OrderPolicy,
   type PolicyPaymentMethod,
 } from "../../api/types/settings";
-import { useCan } from "../../app/services";
 import { SelectField, TextField } from "../../components/form";
 import { DetailList, PageHeader, QueryView, Section } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
@@ -49,8 +48,7 @@ type Target = { key: string; title: string; policy: OrderPolicy | null };
 
 export function OrderPoliciesPage() {
   const policies = useOrderPolicies();
-  const can = useCan();
-  const cities = useCities({ page: 1, pageSize: 100 }, can("locations.manage"));
+  const cities = useCityLookup();
   const [target, setTarget] = useState<Target | null>(null);
   const [addingCity, setAddingCity] = useState(false);
   const cityName = (id: string | null) =>
@@ -62,16 +60,14 @@ export function OrderPoliciesPage() {
         title="Order policies"
         description="Rules the server applies at checkout and after. A city policy overrides the default."
         actions={
-          can("locations.manage") && (
-            <Button
-              size="sm"
-              variant="outline"
-              leadingIcon={<Plus aria-hidden="true" />}
-              onClick={() => setAddingCity(true)}
-            >
-              City policy
-            </Button>
-          )
+          <Button
+            size="sm"
+            variant="outline"
+            leadingIcon={<Plus aria-hidden="true" />}
+            onClick={() => setAddingCity(true)}
+          >
+            City policy
+          </Button>
         }
       />
       <QueryView query={policies} what="order policies">

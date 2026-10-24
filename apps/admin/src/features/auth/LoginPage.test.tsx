@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { emptyDashboard, emptyReport } from "../../test/fixtures";
+import { emptyDashboard } from "../../test/fixtures";
 import { fakeAccessToken, renderApp, staffProfile } from "../../test/render";
 import { API, problem, server } from "../../test/server";
 
@@ -28,7 +28,6 @@ describe("LoginPage", () => {
       }),
       http.get(`${API}/admin/auth/me`, () => HttpResponse.json(staffProfile())),
       http.get(`${API}/admin/reports/dashboard`, () => HttpResponse.json(emptyDashboard())),
-      http.get(`${API}/admin/reports/daily-sales`, () => HttpResponse.json(emptyReport())),
     );
     const { user, router, services } = renderApp({ permissions: null, path: "/login?next=%2F" });
     await user.type(await screen.findByLabelText(/Email/), "anitha@freshorbit.test");

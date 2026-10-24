@@ -1,11 +1,21 @@
-import { formatQuantity } from "@fresh/core";
+import { formatDayShort, formatQuantity, formatTime } from "@fresh/core";
 import { Button, EmptyState } from "@fresh/ui";
 import { ClipboardList, Printer } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { usePickList } from "../../api/orders";
+import { type PickList } from "../../api/types/orders";
 import { useLocationScope } from "../../app/location-scope";
 import { PageHeader, QueryView } from "../../components/page";
 import { AllCaughtUp } from "../../components/states";
+
+/** "Main store · Fri 24 Oct, 4:00 pm – 6:00 pm · 3 orders": the location, the server's slot times and order count. */
+function describe(pick: PickList, location: string): string {
+  const slot = pick.slot
+    ? `${formatDayShort(pick.slot.startAt)}, ${formatTime(pick.slot.startAt)} – ${formatTime(pick.slot.endAt)}`
+    : null;
+  const orders = `${pick.orderCount} ${pick.orderCount === 1 ? "order" : "orders"}`;
+  return [location, slot, orders].filter(Boolean).join(" · ");
+}
 
 /**
  * Pick list for one slot at one location (ORD-R60): gross quantities per variant and preparation, summed by the
@@ -41,7 +51,7 @@ export function PickListPage() {
             title="Pick list"
             backTo="/orders"
             backLabel="Orders"
-            description={nameOf(fulfillmentLocationId)}
+            description={describe(pick, nameOf(fulfillmentLocationId))}
             actions={
               <Button
                 variant="outline"
@@ -83,6 +93,7 @@ export function PickListPage() {
                       <td className="px-3 py-2">
                         <span className="font-medium">{item.productName}</span>{" "}
                         <span className="text-text-muted">{item.variantName}</span>
+                        <span className="text-text-muted block font-mono text-xs">{item.sku}</span>
                       </td>
                       <td className="px-3 py-2">{item.preparationName ?? "—"}</td>
                       <td className="px-3 py-2 text-right text-base font-semibold tabular-nums">

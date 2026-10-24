@@ -36,3 +36,6 @@ export type AdminProduct = Schema<"AdminProductResponse">;
 export type AdminProductListItem = Schema<"AdminProductListItem">;
 
 export type PreparationMethod = Schema<"PreparationMethodResponse">;
+
+/** `GET /admin/catalog/variants` item, readable by any staff member (G3): names, SKU and units only. */
+export type VariantLookup = Schema<"VariantLookupItem">;

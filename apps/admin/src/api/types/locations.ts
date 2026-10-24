@@ -9,6 +9,12 @@ export type DayOfWeekName = Schema<"DayOfWeek">;
 
 export type City = Schema<"CityResponse">;
 
+/** `GET /admin/cities/lookup` item, readable by any staff member (G2). */
+export type CityLookup = Coded<Schema<"CityLookupItem">, { status: CityStatus }>;
+
+/** `GET /admin/me/locations` item: one of the caller's own locations (G1). */
+export type StaffLocation = Coded<Schema<"StaffLocationItem">, { status: LocationStatus }>;
+
 export type ReadinessCode =
   | "FULFILLMENT_LOCATION_MISSING"
   | "SERVICE_AREA_MISSING"
