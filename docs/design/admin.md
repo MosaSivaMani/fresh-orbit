@@ -115,24 +115,24 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 | # | Gap | Status | Effect now | Backend change that closes it |
 |---|---|---|---|---|
-| G1 | Location names need `locations.manage` | STILL OPEN | Other staff see `Location 1a2b3c` | Staff-readable `GET /admin/me/locations` (id, code, name) |
-| G2 | Cities list needs `locations.manage` | STILL OPEN | City pickers (reports, order policies, coupons) hidden for others | Read-only cities lookup |
-| G3 | No staff-readable variant search | STILL OPEN | Staff without `catalog.manage` type variant ids; inventory rows show shortened ids; substitution proposals cannot load preparation methods | `GET /admin/catalog/variants?q=`, staff-readable preparation methods, variant name/SKU on stock items, batches, reservations, movements |
-| G4 | Dashboard has no sales figures; low stock has no unit | STILL OPEN | Dashboard reads today's `daily-sales` report | Sales tiles and unit in `DashboardResponse` |
+| G1 | Location names need `locations.manage` | CLOSED (`admin/api-adoption`) | Location switcher and every location label read `GET /admin/me/locations` (any staff); scoped staff keep their token's ids while names load | — |
+| G2 | Cities list needs `locations.manage` | CLOSED (`admin/api-adoption`) | Report, coupon, order-policy and customer city pickers read `GET /admin/cities/lookup` for every staff member; "City policy" no longer needs `locations.manage` | — |
+| G3 | No staff-readable variant search | CLOSED (`admin/api-adoption`) | Receive stock, stock item and substitution pickers search `GET /admin/catalog/variants` (one page of 100 active variants, searched in the browser); preparations from `GET /admin/preparation-methods` for staff without `catalog.manage`; inventory rows show the server's product · variant names and SKU | — |
+| G4 | Dashboard has no sales figures; low stock has no unit | CLOSED (`admin/api-adoption`) | "Orders today" / "Sales today" tiles from `DashboardResponse.sales` (placed, cancelled, order value, delivered revenue); low stock in its `stockUnit` with the product name. The dashboard no longer reads the `daily-sales` report | — |
 | G5 | Ordering admin shapes not on `main` | CLOSED | Real shapes in the spec; screens follow them (§4) | — |
-| G6 | No `GET /admin/customers/{id}/orders`; no city filter; no order counts | STILL OPEN | Orders tab shows "not available yet" | Add the endpoint, `cityId` filter, order counts on the detail |
-| G7 | Rider list needs `delivery.manage` | STILL OPEN | Cash settlement takes a typed rider id for `cash.settle`-only staff | Rider lookup readable with `cash.settle` |
+| G6 | No `GET /admin/customers/{id}/orders`; no city filter; no order counts | CLOSED (`admin/api-adoption`) | Customer Orders tab lists the customer's orders; profile shows `orderCounts`; customers list filters by city | — |
+| G7 | Rider list needs `delivery.manage` | CLOSED (`admin/api-adoption`) | Cash settlement picks the rider from `GET /admin/delivery/riders/lookup` (name · last 4 phone digits); a 403 still falls back to typing the id | — |
 | G8 | `docs/api` lists If-Match on image upload and refund create, the backend does not require it | STILL OPEN | Admin follows the backend | Align `docs/api` (doc change) |
 | G9 | Tax rule scheduling has no If-Match | STILL OPEN | `POST /admin/pricing/tax-rules` returns a version but takes none | Version on the tax-rule collection, or accept |
-| G10 | Shipments list has no date filter; most lists have no `sort` | STILL OPEN | Shipments filter by location, slot, rider, status only | `slotDate` and `sort` where useful |
-| G11 | `CITY_RETIREMENT_BLOCKED` blocking item shape undocumented | STILL OPEN | Shown as text | Typed Problem extension in the spec |
-| G12 | Payments have no created date | STILL OPEN | `PaymentResponse` has no `createdAt` | Add `createdAt` |
-| G13 | Admin order list row has no `version` | NEW, OPEN | Bulk start-preparing GETs each order first | `version` on `AdminOrderSummary` |
-| G14 | Admin orders filter takes one status | NEW, OPEN | One status at a time | Accept a status list |
-| G15 | Complaint has no product name or max refund | NEW, OPEN | "One item" / "Whole order"; server checks the refund amount | Product/variant name and refundable limit on the complaint |
-| G16 | Redemptions have no order number | NEW, OPEN | Order id only | `orderNumber` on `CouponRedemption` |
-| G17 | Order item batches not in admin order detail | NEW, OPEN | Batch column removed | Batch allocations per line |
-| G18 | Pick list has no slot times, order count or SKU | NEW, OPEN | Columns show what is there | Add them to the pick list response |
+| G10 | Shipments list has no date filter; most lists have no `sort` | CLOSED (`admin/api-adoption`) | The shipments board sends the chosen `slotDate`; `sort` not used yet | — |
+| G11 | `CITY_RETIREMENT_BLOCKED` blocking item shape undocumented | CLOSED | `blocking` is typed `string[]` (`CityRetirementBlockedProblem`); the retire dialog lists it | — |
+| G12 | Payments have no created date | CLOSED (`admin/api-adoption`) | Payments list has a Created column from `createdAt` | — |
+| G13 | Admin order list row has no `version` | CLOSED (`admin/api-adoption`) | Bulk start-preparing quotes each row's `version`; no detail read first | — |
+| G14 | Admin orders filter takes one status | CLOSED (`admin/api-adoption`) | Each status choice adds to the filter; `status` is sent repeated | — |
+| G15 | Complaint has no product name or max refund | CLOSED (`admin/api-adoption`) | Complaint list and detail name the line (product · variant · preparation); the refund field shows the server's `maxRefundPaise` (the server still checks the amount) | — |
+| G16 | Redemptions have no order number | CLOSED (`admin/api-adoption`) | Redemptions show `orderNumber`, a short id when null | — |
+| G17 | Order item batches not in admin order detail | CLOSED (`admin/api-adoption`) | Order lines list each batch code and quantity under the reserved quantity | — |
+| G18 | Pick list has no slot times, order count or SKU | CLOSED (`admin/api-adoption`) | Header shows the slot's day and times and the order count; each line shows its SKU | — |
 
 **Backend Track E (2026-10-24).** The backend now closes every gap in this table. G7 and G10–G18 are on `main` through #5. G1–G4, G6, G8, G9 and G11 are on draft PR #6 (`backend/api-gaps-2`, not merged). They include:
 - `GET /admin/me/locations`
@@ -142,7 +142,7 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 The admin screens have not adopted them yet; the Status column above stays as the front-end status until they do.
 
-Front end, not backend: coupon `isListed` has no editor control yet.
+Front end, not backend: coupon `isListed` is a switch ("Show in the customer's offers") on the coupon editor (`admin/api-adoption`). Product variants edit the serving facts (CAT-R21: fewest / most pieces and serves per basis; no pieces range for PIECE variants). Still open on the admin side: G8 (a `docs/api` wording change) and G9 (tax-rule versions are quoted per category already).
 
 ## 5a. Illustrated look (U3, D53)
 
