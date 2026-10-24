@@ -183,6 +183,17 @@ Paths are under `/api/v1/`.
 | No discount percentage, no catch time, no delivery ETA in the API | The mockup's "% off", "caught 4:30 am" and "arrives in 25 min" are not shown; the slot window is shown instead |
 | No "Notify me" (back in stock) endpoint | Sold-out products show the state only |
 
+**Backend Track E (2026-10-24).** The backend now closes these gaps, either on `main` (#5) or on draft PR #6 (not merged):
+- price quote: `GET /price-quote`
+- cart line order rules
+- priced wishlist cards
+- public `GET /business-profile`
+- `defaultVariant`
+- `discountBp`, `freshness`, and the ETA from serviceability `nextSlot`
+- "Notify me": `POST/GET/DELETE /me/stock-alerts`
+
+The app has not adopted them yet.
+
 ## 9. Not done or not verified
 
 - No build on a device or emulator: this machine has no Android SDK, and Xcode/CocoaPods are incomplete
