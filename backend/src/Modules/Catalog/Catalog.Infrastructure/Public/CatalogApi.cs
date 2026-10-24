@@ -97,6 +97,13 @@ public sealed class CatalogApi(FreshOrbitDbContext db, IFileStorage storage) : I
         return await db.Set<Category>().AsNoTracking().Where(c => wanted.Contains(c.Slug)).ToDictionaryAsync(c => c.Slug, c => c.Id, StringComparer.Ordinal, cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetCategorySlugsAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(categoryIds);
+        var wanted = categoryIds.Distinct().ToList();
+        return await db.Set<Category>().AsNoTracking().Where(c => wanted.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Slug, cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<string, Guid>> GetProductIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(slugs);

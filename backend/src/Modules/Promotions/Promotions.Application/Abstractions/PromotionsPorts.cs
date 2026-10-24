@@ -50,6 +50,9 @@ public interface IPromotionsCatalog
 
     /// <summary>The ids among the given categories and products that do not exist.</summary>
     Task<IReadOnlyCollection<Guid>> FindMissingAsync(IReadOnlyCollection<Guid> categoryIds, IReadOnlyCollection<Guid> productIds, CancellationToken cancellationToken);
+
+    /// <summary>Storefront slugs of the given categories and products, by id (W14); missing ids are absent.</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetLinkSlugsAsync(IReadOnlyCollection<Guid> categoryIds, IReadOnlyCollection<Guid> productIds, CancellationToken cancellationToken);
 }
 
 /// <summary>City existence check (PROMO-R22); adapter <see cref="LocationsCityDirectory"/> over <c>Locations.Public</c>.</summary>

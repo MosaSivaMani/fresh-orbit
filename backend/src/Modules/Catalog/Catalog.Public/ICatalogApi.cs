@@ -33,6 +33,10 @@ public interface ICatalogApi
     Task<IReadOnlyDictionary<string, Guid>> GetCategoryIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
 
+    /// <summary>Category slugs by id for the ids that exist, active or not (missing ids are absent).</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetCategorySlugsAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
+
     /// <summary>Product ids by slug for the slugs that exist, any status (missing slugs are absent).</summary>
     Task<IReadOnlyDictionary<string, Guid>> GetProductIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
