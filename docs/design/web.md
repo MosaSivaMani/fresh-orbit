@@ -36,24 +36,26 @@ prerendered, data fetched in the browser with TanStack Query through the same-or
 | `/shop/[category]` | Category listing with sub-category chips | Done | SSR | `GET /categories/{slug}`, `GET /products?category=` |
 | `/search?q=` | Search results; header box has suggestions | Done | SSR (noindex) | `GET /products?q=`; suggestions `GET /search/suggest` (client) |
 | `/products/[slug]` | Gallery, variants, preparation with charge and yield note, quantity/weight stepper, availability, add to cart, in-cart estimate and maximum, delivery box, description/storage/sourcing tabs, related, JSON-LD | Done | SSR + client panel | `GET /products/{slug}` (`?preparation=` from the panel), `GET /serviceability`, `GET /products?category=`, `POST /cart/items`, wishlist |
-| `/cart` | Server-priced lines, change quantity (bounds from the product), remove, coupon apply/remove, summary, blockers, messages, location note | Done | Client (noindex) | `GET /cart`, `PATCH/DELETE /cart/items/{id}`, `PUT/DELETE /cart/coupon`, `GET /products/{slug}` (editor) |
-| `/login?next=` | Phone → OTP, resend timer, guest cart merge, safe redirect | Done | Client (noindex) | `POST /auth/otp/request`; `POST /bff/auth/verify` |
-| `/checkout` | Address choose/add, slot by day, payment (COD / UPI on delivery from `paymentMethods`), substitution preference, notes, live preview with blockers, place order with `Idempotency-Key`, `PRICE_CHANGED` confirm, `CART_LOCATION_CHANGED` move | Done | Client, signed in | `GET /cart`, `GET/POST /me/addresses`, `GET /delivery-slots?pincode=`, `POST /checkout/preview`, `POST /orders`, `PUT /cart/location` |
-| `/orders/[orderId]/success` | Confirmation | Done | Client, signed in | `GET /orders/{id}` |
-| `/orders/[orderId]` | Status, timeline, delivery code (only when sent), rider, items ordered vs charged, estimate/final amounts, amount due, cancel (reason, IK), report a problem (JSON, no photos yet — W12, IK), invoice, order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice`, `POST /orders/{id}/reorder` |
-| `/account` | Profile (PATCH with `If-Match`), sign out, delete account (typed confirmation, `If-Match`) | Done | Client, signed in | `GET/PATCH/DELETE /me` |
-| `/account/orders` | Orders, paginated | Done | Client, signed in | `GET /orders` (no `sort` parameter; server order) |
+| `/cart` | Server-priced lines with a − n + stepper (bounds from the product), remove, coupon strip, slot buttons (carried to checkout as `?slot=`), bill box, blockers, messages, location note, sticky Place order bar | Done | Client (noindex) | `GET /cart`, `PATCH/DELETE /cart/items/{id}`, `PUT/DELETE /cart/coupon`, `GET /products/{slug}` (stepper bounds, one read per line), `GET /delivery-slots?pincode=` |
+| `/login?next=` | Phone → OTP, resend timer, guest cart merge, safe redirect; 429 waits for `Retry-After` (default 30 s) with the buttons disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and "Try sending again" to the same number | Done | SSR shell (reads `next`) + client form (noindex) | `POST /auth/otp/request`; `POST /bff/auth/verify` |
+| `/checkout?slot=` | Address choose/add, slot by day (preselected from the cart's `?slot=`), pay on delivery (COD / UPI on delivery from `paymentMethods`), substitution preference, notes, live preview with blockers, sticky Place order bar with `Idempotency-Key`, `PRICE_CHANGED` confirm, `CART_LOCATION_CHANGED` move | Done | SSR shell (reads `slot`) + client, signed in | `GET /cart`, `GET/POST /me/addresses`, `GET /delivery-slots?pincode=`, `POST /checkout/preview`, `POST /orders`, `PUT /cart/location` |
+| `/orders/[orderId]/success` | Order-placed screen: ORDER_PLACED character, number, slot, payment, bill from the server's estimate | Done | Client, signed in | `GET /orders/{id}` |
+| `/orders/[orderId]` | Coral band with number and status character, status steps, delivery code (only when sent), slot, address, rider, items ordered vs charged, the bill (estimate or final), amount due, cancel (reason, IK), report a problem (JSON, no photos yet — W12, IK), invoice, order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice`, `POST /orders/{id}/reorder` |
+| `/account` | Profile (PATCH with `If-Match`) | Done | Client, signed in | `GET/PATCH /me` |
+| `/account/settings` | Contact preferences (moved from notifications), sign out, delete account (typed confirmation, `If-Match`) | Done | Client, signed in | `GET/PUT /me/notification-preferences`, `GET/DELETE /me`, `POST /bff/auth/logout` |
+| `/account/orders` | Order cards with the status character, paginated | Done | Client, signed in | `GET /orders` (no `sort` parameter; server order) |
 | `/account/addresses` | List, add, edit (`If-Match`), delete, make default | Done | Client, signed in | `/me/addresses…` |
 | `/account/wishlist` | Saved items, remove | Done (ids only, see §6) | Client, signed in | `GET/DELETE /me/wishlist…` |
-| `/account/notifications` | Inbox (mark read / all read, paged), preferences switches (ORDER_UPDATES SMS locked on) | Done | Client, signed in | `GET /me/notifications`, `POST …/read`, `POST …/read-all`, `GET/PUT /me/notification-preferences` |
+| `/account/notifications` | Inbox (mark read / all read, paged); preferences switches (ORDER_UPDATES SMS locked on) are on `/account/settings` | Done | Client, signed in | `GET /me/notifications`, `POST …/read`, `POST …/read-all` |
 | `/about` | About with owner placeholder | Done (placeholder text) | Static/ISR | — |
 | `/support` | FAQ, policy links, contact placeholder | Done (contact placeholder) | Static/ISR | — |
 | `/support/{delivery,cancellation,refund}-policy` | Policy outlines, visibly marked placeholders | Done (placeholder text) | Static/ISR | — |
-| 404, error, global error | Not found, retry with trace id | Done | — | — |
+| 404, error, global error | Character states (NOT_FOUND, ERROR_GENERIC), retry with trace id | Done | — | — |
 | `/sitemap.xml`, `/robots.txt` | Catalogue sitemap (static pages, categories, up to 2,000 products); robots disallows customer pages, allows all only in production with a site URL | Done | Dynamic | `GET /categories`, `GET /products` (cached 1 h) |
 
 Loading skeletons: root, `/shop`, `/products/[slug]`, and inside each client view. Empty states: cart, orders,
-addresses, wishlist, inbox, slots, search, listing.
+addresses, wishlist, inbox, slots, search, listing. The cart, checkout, sign-in, orders, account, empty, error and
+not-found pages follow the food-app look (§10).
 
 **Placeholder text for the owner.** `<OwnerPlaceholder>` (in `src/components/content-page.tsx`) renders a dashed
 "Placeholder text: to be replaced by the store owner" box. It is on About, Support (contact) and all three policy
@@ -124,7 +126,7 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W1 | No bestsellers endpoint | STILL OPEN | Home shows `GET /home` `featuredProducts` titled "Featured today". Closes with a Catalog/Reporting bestsellers read |
 | W2 | No price quote for a chosen weight before it is in the cart | STILL OPEN | `GET /products/{id}/availability` gives the unit price only; estimate and maximum appear from the cart line. Closes with a quote endpoint (variant, preparation, quantity → estimate, max chargeable) |
 | W3 | Product list items carry no variant ids | STILL OPEN | No quick-add on cards. Closes with the default variant id (and its order rules) on `ProductListItem` |
-| W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Quantity editor fetches the product when opened. Closes with the three fields on `CartLineView` |
+| W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Each line's − n + stepper reads its product (`GET /products/{slug}`, cached 60 s) for the bounds and stays disabled until they arrive: one read per line. Closes with the three fields on `CartLineView` |
 | W5 | `GET /me/wishlist` returns ids only | STILL OPEN | Always a dated placeholder row linking nowhere. Closes with a product summary (slug, name, image, price) per item |
 | W6 | Shapes not shown in docs/api | CLOSED | All in the spec now; `/promotions`, `/products`, `/orders` are paged, `/cities`, `/suggest`, `/me/addresses`, `/me/wishlist`, complaints are bare arrays. `GET /home` `banners` is still `object[]`, so banners come from `/promotions` |
 | W7 | No public business profile (support phone, email, hours) | STILL OPEN | Static owner placeholder on `/support`. Closes with a public `GET /business-profile` |
@@ -182,8 +184,37 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 |---|---|
 | `src/location/pincode-form.test.tsx` | Serviceable pincode stored + pages refreshed; unserviceable not stored; malformed refused locally; `CART_LOCATION_CHANGED` asks before `force=true` |
 | `src/components/product/purchase-panel.test.tsx` | Add to cart sends variant, preparation, quantity and `X-Pincode`; estimate and maximum come from the server line; field error from the server; no pincode → picker |
-| `src/components/cart/cart-view.test.tsx` | Server totals rendered as sent; coupon refusal under the field; empty state |
-| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; safe redirect |
-| `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled |
-| `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; cancel only when allowed, with reason and key |
+| `src/components/cart/cart-view.test.tsx` | Server line totals, bill and sticky total rendered as sent; stepper steps by the product's `orderStep` and shows the server's new line; below minimum removes the line; chosen slot button carried to checkout (`?slot=`, through sign-in for a guest); coupon refusal under the field; empty-cart character; error state with trace id |
+| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect |
+| `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled; cart's slot priced from `?slot=`; server-disabled ONLINE tile disabled; UPI on delivery re-prices |
+| `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; status steps up to the server's status; bill uses the server's final total; not-found character for an unknown order; cancel only when allowed, with reason and key |
+| `src/components/orders/order-success.test.tsx` | ORDER_PLACED character, number, payment and the server's estimate bill |
+| `src/components/account/account-pages.test.tsx` | Account chips mark the current section; settings: locked order SMS switch, sign out through the BFF; addresses empty character and list; order cards link to tracking with the server's total; empty-orders character |
+| `src/lib/order-progress.test.ts` | Status → steps (usual path, delivered, off-path timeline) and status → character |
+| `src/app/not-found.test.tsx` | 404 and route error character states, reference and retry |
 | `e2e/smoke.spec.ts` (Playwright) | Home shell renders, skip link first in tab order, 404 page |
+
+## 10. Food-app pages (D95): cart, checkout, sign-in, orders, account, states
+
+Built by W2 on `web/food-app-pages` against `docs/design/mockups/web-food-app.html` version 2, inside B1's coral
+header and dark footer. Same components at phone and desktop widths; the only width changes are grid columns.
+
+| Page | Look |
+|---|---|
+| Every inner page | `PageBand` (coral band, Baloo 2 heading with one Dancing Script word via `Script`), then the page in `Container` |
+| Cart | `StepCard` "n items" with rows: rounded picture, name, variant · cut, the server's line total (and "at most"), unit price, `QuantityStepper` (− n +, bounds from the product, below min removes), remove. `StepCard` "Delivery slot" with `SlotPicker` (day `FilterChip`s, `OptionTile look="ink"` slot buttons). Right column: `CouponStrip` / dashed mango coupon form, `BillBox`, blockers. `StickyActionBar` at the bottom: server's estimated total and Place order |
+| Checkout | `StepCard` 1 address (`OptionTile` per address, unserviceable disabled), 2 slot (`SlotPicker`), 3 pay on delivery (`OptionTile` per server `paymentMethods`, disabled when the server says so) and substitution tiles, notes. Right column: `BillBox` from the preview. `StickyActionBar` "Place order · ₹…" |
+| Order placed | `CharacterState` ORDER_PLACED (md circle), slot and payment, `BillBox` from the estimate, Track / Continue |
+| Sign in | Coral band "Welcome back", white card with the LOGIN_OTP circle on its top edge; 429 / 503 notices above the form |
+| Orders | Cards with the status character (`orderSlot`), number, `StatusBadge`, slot, items, server total |
+| Tracking | Band with number, status and character; `StepCard` "Tracking" with `StatusSteps` (across from `sm`, down on phones) and the slot/address/rider box; actions; items; `BillBox` "Bill" (final when packed) and amount due |
+| Account | Section `FilterChip` links (Profile, Orders, Addresses, Saved items, Notifications, Settings); pages in `StepCard`s; Settings holds contact preferences, sign out and delete account |
+| Empty / error / 404 | `CharacterState` with the slot: EMPTY_CART, EMPTY_ORDERS, EMPTY_ADDRESSES, EMPTY_WISHLIST, EMPTY_NOTIFICATIONS, ORDER_PACKING (no slots), ERROR_GENERIC, OFFLINE (network / 503 shop), NOT_FOUND. Load errors show the server's message, the trace id and Try again (`src/components/states.tsx`) |
+
+New `@fresh/ui` components (`packages/ui/src/components/food-app-checkout.tsx`, tests beside it): `StepCard`,
+`BillBox` (rows and a total passed in, never summed), `StickyActionBar`, `StatusSteps` (`aria-current="step"`).
+`src/lib/order-progress.ts` maps the server's status to which step is lit and which character shows; it never
+decides an order's state.
+
+Rule 4: every amount on these pages is a server value formatted by `@fresh/core`. The stepper proposes a requested
+quantity; the server's returned cart replaces the cached one.
