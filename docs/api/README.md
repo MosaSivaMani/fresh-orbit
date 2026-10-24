@@ -165,6 +165,7 @@ Webhooks use the provider event id instead (§7).
 | `search` | `GET /products`, `/search/*` | 60 / min | IP |
 | `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
 | `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
+| `upload` | `POST /orders/{orderId}/complaints/{complaintId}/photos` | 20 / hour | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
 | `admin` | `/admin/*` | 600 / min | user |
 | `webhook` | `/payments/webhooks/*` | none (signature-checked) | — |

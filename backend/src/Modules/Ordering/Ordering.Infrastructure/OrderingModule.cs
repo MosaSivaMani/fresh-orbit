@@ -74,6 +74,7 @@ public sealed class OrderingModule : IModule
 
         services.AddScoped<ExpireUnpaidOrdersJob>();
         services.AddScoped<ExpireSubstitutionsJob>();
+        services.AddScoped<ComplaintPhotoPurgeJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, OrderingJobs>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, OrderingSamplePurgeParticipant>());
     }
