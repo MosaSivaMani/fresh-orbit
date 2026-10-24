@@ -9,7 +9,8 @@
 # OTP (code read from the development SMS outbox, `GET /dev/sms`, Development only), adds to cart, previews and places a COD order;
 # staff packs, dispatches and delivers it with the customer's code; the script then checks the invoice, the COLLECTED
 # payment, the consumed stock and the queued notifications. Every run uses fresh codes, so it can be re-run.
-# Needs bash, curl, jq. Exit code 0 only when every step passes.
+# SMOKE_STOP_BEFORE_OTP=true stops after the staff set-up and the public checks (a Production-mode stack, which has no
+# development SMS outbox; infra/scripts/e2e-check.sh). Needs bash, curl, jq. Exit code 0 only when every step passes.
 set -uo pipefail
 
 API="${API_URL:-http://localhost:5080}/api/v1"
@@ -167,20 +168,7 @@ printf '      %s\n' "$(jq -c . <<< "$BODY" | head -c 400)"
 step "activate city" POST "/admin/cities/$CITY/activate" "$STAFF" "" -H "If-Match: $(etag_of "/admin/cities/$CITY" "$STAFF")"
 wait_for "delivery slots generated" '[.. | objects | select(has("startAt"))] | length > 0' GET "/delivery-slots?pincode=$PINCODE" ""
 
-# --- Customer ------------------------------------------------------------------------------------------------------
-step "OTP request" POST /auth/otp/request "" "$(jq -nc --arg p "$PHONE" '{phone:$p,purpose:"LOGIN"}')"
-CHALLENGE=$(jq -r .challengeId <<< "$BODY")
-OTP=""
-for ((i = 0; i < 20; i++)); do
-  OTP=$(curl -s -G "$API/dev/sms" --data-urlencode "phone=$PHONE" | jq -r '.[0].text // ""' | grep -oE '\b[0-9]{6}\b' | head -1 || true)
-  [ -n "$OTP" ] && break
-  sleep 0.5
-done
-[ -n "$OTP" ] || fail "OTP code in dev SMS outbox" "no development SMS for $PHONE at $API/dev/sms (is the Api in Development?)"
-pass "OTP code in dev SMS outbox"
-step "OTP verify" POST /auth/otp/verify "" "$(jq -nc --arg c "$CHALLENGE" --arg p "$PHONE" --arg o "$OTP" '{challengeId:$c,phone:$p,code:$o,deviceLabel:"smoke",guestCartToken:null}')"
-CUSTOMER=$(jq -r .accessToken <<< "$BODY")
-
+# --- Public (no sign-in) -------------------------------------------------------------------------------------------
 step "serviceability" GET "/serviceability?pincode=$PINCODE" "" ""
 check "pincode is serviceable" '.serviceable == true'
 SLOT=$(jq -r .nextSlot.id <<< "$BODY")
@@ -195,6 +183,29 @@ case "$IMAGE_URL" in
 esac
 MEDIA_STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL")
 [ "$MEDIA_STATUS" = 200 ] && pass "product image served from /media" || fail "product image served from /media" "HTTP $MEDIA_STATUS for $MEDIA_URL"
+
+# The OTP sign-in needs the development SMS outbox (Development/Testing only). Against a Production-mode stack, where
+# the DLT sender is configured (and still a stub), SMOKE_STOP_BEFORE_OTP=true ends the run here.
+if [ "${SMOKE_STOP_BEFORE_OTP:-false}" = true ]; then
+  echo "SMOKE_STOP_BEFORE_OTP=true: customer sign-in, order and fulfilment steps skipped."
+  summary
+  [ "$FAILED" -eq 0 ]
+  exit
+fi
+
+# --- Customer ------------------------------------------------------------------------------------------------------
+step "OTP request" POST /auth/otp/request "" "$(jq -nc --arg p "$PHONE" '{phone:$p,purpose:"LOGIN"}')"
+CHALLENGE=$(jq -r .challengeId <<< "$BODY")
+OTP=""
+for ((i = 0; i < 20; i++)); do
+  OTP=$(curl -s -G "$API/dev/sms" --data-urlencode "phone=$PHONE" | jq -r '.[0].text // ""' | grep -oE '\b[0-9]{6}\b' | head -1 || true)
+  [ -n "$OTP" ] && break
+  sleep 0.5
+done
+[ -n "$OTP" ] || fail "OTP code in dev SMS outbox" "no development SMS for $PHONE at $API/dev/sms (is the Api in Development?)"
+pass "OTP code in dev SMS outbox"
+step "OTP verify" POST /auth/otp/verify "" "$(jq -nc --arg c "$CHALLENGE" --arg p "$PHONE" --arg o "$OTP" '{challengeId:$c,phone:$p,code:$o,deviceLabel:"smoke",guestCartToken:null}')"
+CUSTOMER=$(jq -r .accessToken <<< "$BODY")
 
 step "add address" POST /me/addresses "$CUSTOMER" "$(jq -nc --arg pin "$PINCODE" --arg ph "$PHONE" \
   '{label:"HOME",recipientName:"Smoke Customer",phone:$ph,line1:"12 Beach Road",line2:null,landmark:null,locality:"Harbour",cityName:"Chennai",stateCode:"TN",pincode:$pin,latitude:null,longitude:null,isDefault:true}')"
@@ -219,7 +230,8 @@ ITEMS=$(jq -c '[(.order // .).items[] | {orderItemId:.id, packedQuantity:{value:
 step "start preparing" POST "/admin/orders/$ORDER/start-preparing" "$STAFF" "" -H "If-Match: $(etag_of "/admin/orders/$ORDER" "$STAFF")"
 step "pack" POST "/admin/orders/$ORDER/pack" "$STAFF" "$(jq -nc --argjson l "$ITEMS" '{lines:$l,coldBoxUsed:true}')" -H "If-Match: $(etag_of "/admin/orders/$ORDER" "$STAFF")"
 
-wait_for "shipment ready" "[.items[] | select(.orderId == \"$ORDER\")] | length > 0" GET "/admin/delivery/shipments?fulfillmentLocationId=$LOCATION" "$STAFF"
+# The shipment is created on OrderConfirmed and marked packed on OrderPacked, both by the Worker; dispatch needs both.
+wait_for "shipment ready (packed)" "[.items[] | select(.orderId == \"$ORDER\" and .packedAt != null)] | length > 0" GET "/admin/delivery/shipments?fulfillmentLocationId=$LOCATION" "$STAFF"
 SHIPMENT=$(jq -r --arg o "$ORDER" '.items[] | select(.orderId == $o) | .id' <<< "$BODY")
 step "create rider" POST /admin/delivery/riders "$STAFF" "$(jq -nc --arg loc "$LOCATION" --arg ph "+9197$(printf '%08d' "$RUN")" '{fulfillmentLocationId:$loc,fullName:"Smoke Rider",phone:$ph}')"
 RIDER=$(jq -r .id <<< "$BODY")

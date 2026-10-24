@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 # Local end-to-end check of a production deploy (docs/runbooks/e2e-check.md).
 #
-#   infra/scripts/e2e-check.sh              everything: env → build → migrate (twice) → up → health → Caddy → smoke → down -v
-#   infra/scripts/e2e-check.sh <step>...    only some steps: env build migrate up caddy smoke down
+#   infra/scripts/e2e-check.sh              both passes (below), each: migrate (twice) → up → health → Caddy → smoke → down -v
+#   infra/scripts/e2e-check.sh <step>...    only some steps of one pass: env build migrate up caddy smoke down
+#   E2E_MODE=testing infra/scripts/e2e-check.sh <step>...   the same steps in the testing pass
 #   KEEP=true infra/scripts/e2e-check.sh    leave the stack running at the end (tear down later with `down`)
+#
+# Two passes, each on a fresh database (E2E_MODE=production|testing|both, default both):
+#   production  APP_ENVIRONMENT=Production with the DLT SMS settings, exactly as on a server: proves the start-up
+#               guards accept a complete configuration, the Production guards hold (no /dev/sms; OTP send refused
+#               while DLT is a stub), and runs smoke.sh up to the OTP sign-in (SMOKE_STOP_BEFORE_OTP=true).
+#   testing     APP_ENVIRONMENT=Testing plus docker-compose.e2e-testing.yml (DEVELOPMENT SMS sender, /dev/sms): the
+#               full smoke.sh (sign-in, order, fulfilment, invoice, payment, stock, notifications).
 #
 # Runs docker-compose.prod.yml + docker-compose.e2e.yml under its OWN project name (default fo-e2e), so it never
 # touches a `freshorbit` stack (dev or prod) or its volumes, and `down` removes only this project's containers and
@@ -33,9 +41,18 @@ ok() { printf 'OK    %s\n' "$*"; }
 
 [[ $PROJECT != freshorbit ]] || die "E2E_PROJECT must not be 'freshorbit' (that is the real stack's project name)."
 
+MODE="${E2E_MODE:-both}"
+
+# MODE is production or testing here (main runs each pass of "both" separately). The shell's APP_ENVIRONMENT wins
+# over the env file in compose.
 compose() {
-  docker compose -p "$PROJECT" --env-file "$ENV_FILE" \
-    -f "$COMPOSE_DIR/docker-compose.prod.yml" -f "$COMPOSE_DIR/docker-compose.e2e.yml" "$@"
+  local files=(-f "$COMPOSE_DIR/docker-compose.prod.yml" -f "$COMPOSE_DIR/docker-compose.e2e.yml")
+  if [[ $MODE == testing ]]; then
+    files+=(-f "$COMPOSE_DIR/docker-compose.e2e-testing.yml")
+    APP_ENVIRONMENT=Testing docker compose -p "$PROJECT" --env-file "$ENV_FILE" "${files[@]}" "$@"
+  else
+    APP_ENVIRONMENT=Production docker compose -p "$PROJECT" --env-file "$ENV_FILE" "${files[@]}" "$@"
+  fi
 }
 
 env_value() { grep -E "^$1=" "$ENV_FILE" | tail -n 1 | cut -d= -f2-; }
@@ -298,24 +315,55 @@ step_caddy() {
 
   expect_status "www redirects to the apex" 301 "https://www.$domain/"
   expect_status "plain HTTP redirects to HTTPS" 308 "http://$domain/"
+
+  if [[ $MODE == testing ]]; then
+    expect_status "testing: development SMS outbox exists" 200 "https://api.$domain/api/v1/dev/sms?phone=%2B919800000000"
+  else
+    step_guards
+  fi
 }
 
-# ---- smoke: infra/scripts/smoke.sh through Caddy (api.<domain>), OTP codes from the api container's log ----------
-step_smoke() {
-  local domain pid code=0
+# Production pass only: the guards of docs/runbooks/security-configuration.md §2 hold in the running stack.
+step_guards() {
+  local domain got name state code i
   domain=$(env_value DOMAIN)
+  expect_status "production: no development SMS outbox" 404 "https://api.$domain/api/v1/dev/sms?phone=%2B919800000000"
+  got=$(ecurl -s -o "$WORK_DIR/last-body" -w '%{http_code}' -m 20 -X POST "https://api.$domain/api/v1/auth/otp/request" \
+    -H 'Content-Type: application/json' -H "Idempotency-Key: e2e-$(openssl rand -hex 8)" \
+    --data '{"phone":"+919800000001","purpose":"LOGIN"}' || true)
+  [[ $got == 5?? ]] || die "production: OTP request with the DLT stub answered $got; expected a 5xx refusal."
+  ok "production: OTP send refused while the DLT sender is a stub ($got)"
+
+  # The api must refuse to START in Production with the DEVELOPMENT SMS sender (a throwaway extra container).
+  name="$PROJECT-guard-$(openssl rand -hex 4)"
+  compose run -d --no-deps --name "$name" -e Notifications__Sms__Provider=DEVELOPMENT api >/dev/null
+  state=running
+  for ((i = 0; i < 60; i++)); do
+    state=$(docker inspect -f '{{.State.Status}}' "$name" 2>/dev/null || echo gone)
+    [[ $state == running || $state == created ]] || break
+    sleep 1
+  done
+  code=$(docker inspect -f '{{.State.ExitCode}}' "$name" 2>/dev/null || echo "?")
+  docker logs "$name" >"$WORK_DIR/guard-api.log" 2>&1 || true
+  docker rm -f "$name" >/dev/null 2>&1 || true
+  [[ $state == exited && $code != 0 ]] || die "production: api with Sms Provider=DEVELOPMENT is $state (exit $code); it must refuse to start."
+  grep -q 'OptionsValidationException: Notifications:Sms:Provider' "$WORK_DIR/guard-api.log" \
+    || die "production: the api stopped (exit $code) but not on the SMS provider check; see $WORK_DIR/guard-api.log."
+  ok "production: api refuses to start with Notifications__Sms__Provider=DEVELOPMENT (exit $code)"
+}
+
+# ---- smoke: infra/scripts/smoke.sh through Caddy (api.<domain>) ----------------------------------------------------
+# testing: the full script (OTP codes from GET /api/v1/dev/sms). production: up to the OTP sign-in.
+step_smoke() {
+  local domain code=0 stop=false
+  domain=$(env_value DOMAIN)
+  [[ $MODE == testing ]] || stop=true
   [[ -f $WORK_DIR/.curlrc ]] || write_curl_config
-  : >"$WORK_DIR/api.log"
-  compose logs -f --no-color --no-log-prefix api >"$WORK_DIR/api.log" 2>&1 &
-  pid=$!
-  sleep 2
-  CURL_HOME="$WORK_DIR" API_URL="https://api.$domain" API_LOG="$WORK_DIR/api.log" \
+  CURL_HOME="$WORK_DIR" API_URL="https://api.$domain" SMOKE_STOP_BEFORE_OTP=$stop \
     ADMIN_EMAIL="$(env_value E2E_ADMIN_EMAIL)" ADMIN_PASSWORD="$(env_value E2E_ADMIN_PASSWORD)" \
-    "$INFRA_DIR/scripts/smoke.sh" | tee "$WORK_DIR/smoke.log" || code=$?
-  kill "$pid" 2>/dev/null || true
-  wait "$pid" 2>/dev/null || true
-  ((code == 0)) || die "smoke.sh failed (exit $code; $WORK_DIR/smoke.log, $WORK_DIR/api.log)."
-  ok "smoke: $(tail -n 1 "$WORK_DIR/smoke.log")"
+    "$INFRA_DIR/scripts/smoke.sh" | tee "$WORK_DIR/smoke-$MODE.log" || code=$?
+  ((code == 0)) || die "smoke.sh failed (exit $code; $WORK_DIR/smoke-$MODE.log; compose logs api worker)."
+  ok "smoke ($MODE): $(tail -n 1 "$WORK_DIR/smoke-$MODE.log")"
 }
 
 # ---- down: remove this project's containers, network and volumes (images are kept for the next run) ---------------
@@ -325,25 +373,43 @@ step_down() {
   ok "project $PROJECT removed"
 }
 
-main() {
-  local steps=("$@")
-  ((${#steps[@]})) || steps=(env build migrate up caddy smoke down)
+run_steps() {
   local s
-  for s in "${steps[@]}"; do
-    case $s in env | build | migrate | up | caddy | smoke | down) ;; *) die "Unknown step '$s'." ;; esac
-  done
-  [[ ${steps[0]} == env ]] || step_env >/dev/null
-  if [[ ${KEEP:-false} != true && " ${steps[*]} " == *" down "* ]]; then
+  if [[ ${KEEP:-false} != true && " $* " == *" down "* ]]; then
     trap 'code=$?; if ((code != 0)); then log "Failed; tearing down (KEEP=true keeps the stack for debugging)."; step_down || true; fi' EXIT
   fi
-  for s in "${steps[@]}"; do
+  for s in "$@"; do
     if [[ $s == down && ${KEEP:-false} == true ]]; then
-      log "KEEP=true: leaving $PROJECT running. Tear down: $0 down"
+      log "KEEP=true: leaving $PROJECT ($MODE) running. Tear down: E2E_MODE=$MODE $0 down"
       continue
     fi
     "step_$s"
   done
-  log "E2E check passed: ${steps[*]}."
+  trap - EXIT
+  log "E2E check passed ($MODE): $*."
+}
+
+main() {
+  local s
+  # (No arrays here: macOS bash 3.2 treats an empty array as unbound under `set -u`.)
+  for s in "$@"; do
+    case $s in env | build | migrate | up | caddy | smoke | down) ;; *) die "Unknown step '$s'." ;; esac
+  done
+  case $MODE in production | testing | both) ;; *) die "E2E_MODE must be production, testing or both." ;; esac
+  if (($# == 0)); then
+    step_env
+    step_build
+    if [[ $MODE == both ]]; then
+      MODE=production run_steps migrate up caddy smoke down
+      MODE=testing run_steps migrate up caddy smoke down
+    else
+      run_steps migrate up caddy smoke down
+    fi
+    return
+  fi
+  [[ $MODE != both ]] || MODE=production
+  [[ $1 == env ]] || step_env >/dev/null
+  run_steps "$@"
 }
 
 main "$@"

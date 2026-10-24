@@ -20,7 +20,7 @@ Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample
 
 ## 3. Next, now that Phase 3 is merged
 1. Merge `integration/sec-sample` (§2) to `main`; `dotnet test` 926 tests expected.
-2. The initial migration now exists; check that a deploy runs migrations and the reference loader end to end.
+2. ~~Check that a deploy runs migrations and the reference loader end to end.~~ Done on branch `infra/e2e-check-work`: `infra/scripts/e2e-check.sh` (`runbooks/e2e-check.md`), smoke 28/28 (Production) and 52/52 (Testing); open items E2E-1 to E2E-7 in `research/e2e-deploy-check-2026-10.md` §3.
 3. Write the sample-data loaders (`product/sample-data.md`), then run the stack with sample data.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
 5. Close the API gaps listed in `design/web.md` §6 (W1–W10), `design/admin.md` §5 (G1–G12) and `design/mobile.md` §8.
