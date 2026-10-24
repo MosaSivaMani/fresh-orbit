@@ -1,0 +1,127 @@
+# Fresh Orbit FREE PUBLIC DEMO on Render (Blueprint). Sample data only: the Visakhapatnam sample store, for testers.
+# NOT for real customers: every SMS (OTP codes too) is readable at <api>/api/v1/dev/sms.
+# Owner steps in plain English: docs/runbooks/render-demo.md. Production stays docker-compose.prod.yml (D25, D127).
+#
+# Three free services in Singapore (the closest region to India):
+#   fresh-orbit-demo-api    Docker web service: Migrations host (+ sample data) then the Api, with the Worker's
+#                           background jobs inside the Api (infra/docker/api-demo.Dockerfile). Database: Neon free.
+#   fresh-orbit-demo-web    Docker web service: the customer website (infra/docker/web.Dockerfile).
+#   fresh-orbit-demo-admin  Static site: the admin dashboard (Vite build).
+#
+# Addresses. Render gives each service https://<name>.onrender.com when that name is free on Render, and adds a few
+# letters (https://<name>-abcd.onrender.com) when it is taken. The four values marked ADDRESS below assume the plain
+# names. If Render shows a different address, change those values in the Render dashboard (runbook, step 6).
+#
+# Secrets are never in this file: `sync: false` values are asked for when the Blueprint is created.
+
+services:
+  - type: web
+    name: fresh-orbit-demo-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./infra/docker/api-demo.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    buildFilter:
+      paths:
+        - backend/**
+        - infra/docker/api-demo.Dockerfile
+        - infra/docker/api-demo-start.sh
+      ignoredPaths:
+        - backend/tests/**
+    envVars:
+      # Neon connection string in .NET form (Host=...; Database=...; Username=...; Password=...; SSL Mode=Require).
+      - key: ConnectionStrings__FreshOrbit
+        sync: false
+      # Password of the sample staff accounts (sample.admin@freshorbit.example): 12 characters or more.
+      - key: FRESHORBIT_SAMPLE_STAFF_PASSWORD
+        sync: false
+      # Signs the access tokens; Render generates a random value once.
+      - key: Jwt__SigningKey
+        generateValue: true
+      # The Api listens on 8080 (ASPNETCORE_HTTP_PORTS in the image).
+      - key: PORT
+        value: "8080"
+      # ADDRESS: the admin site may call the Api from the browser (CORS).
+      - key: Cors__AllowedOrigins__0
+        value: https://fresh-orbit-demo-admin.onrender.com
+      # ADDRESS: image links point at the Api, so the website and the admin both show pictures.
+      - key: FileStorage__PublicBaseUrl
+        value: https://fresh-orbit-demo-api.onrender.com/media
+      - key: Notifications__BusinessName
+        value: Fresh Orbit (demo)
+
+  - type: web
+    name: fresh-orbit-demo-web
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./infra/docker/web.Dockerfile
+    dockerContext: .
+    # Answers without calling the Api, so the website is healthy while the Api is still waking up.
+    healthCheckPath: /robots.txt
+    buildFilter:
+      paths:
+        - apps/web/**
+        - packages/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
+        - infra/docker/web.Dockerfile
+    envVars:
+      # Build argument and runtime value: the "DEMO, test data only" banner on every page.
+      - key: NEXT_PUBLIC_DEMO_MODE
+        value: "true"
+      # ADDRESS: the website's server calls the Api here (pages, /api/v1 proxy, sign-in).
+      - key: FRESH_API_ORIGIN
+        value: https://fresh-orbit-demo-api.onrender.com
+      - key: HOSTNAME
+        value: 0.0.0.0
+      # NEXT_PUBLIC_SITE_URL is left unset on purpose: no canonical links, and robots.txt asks search engines to stay
+      # away, so the demo is never indexed.
+
+  - type: web
+    name: fresh-orbit-demo-admin
+    runtime: static
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm turbo run build --filter="@fresh/admin^..." &&
+      pnpm --filter @fresh/admin run build
+    staticPublishPath: ./apps/admin/dist
+    buildFilter:
+      paths:
+        - apps/admin/**
+        - packages/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
+    routes:
+      # Single-page app: every screen is index.html (files that exist are served first).
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: COREPACK_ENABLE_DOWNLOAD_PROMPT
+        value: "0"
+      # Inlined at build time: the "DEMO, test data only" banner on every screen.
+      - key: VITE_DEMO_MODE
+        value: "true"
+      # ADDRESS: the admin calls the Api directly (no proxy on a static site).
+      - key: VITE_API_ORIGIN
+        value: https://fresh-orbit-demo-api.onrender.com

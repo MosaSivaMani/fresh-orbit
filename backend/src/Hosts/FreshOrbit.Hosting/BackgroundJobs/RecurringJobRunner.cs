@@ -1,6 +1,7 @@
 using FreshOrbit.SharedKernel.Jobs;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace FreshOrbit.Worker.Jobs;
+namespace FreshOrbit.Hosting.BackgroundJobs;
 
 /// <summary>Hangfire entry point for module recurring jobs; Hangfire creates a DI scope per run.</summary>
 public sealed class RecurringJobRunner(IEnumerable<IRecurringJobRegistration> registrations, IServiceProvider services)

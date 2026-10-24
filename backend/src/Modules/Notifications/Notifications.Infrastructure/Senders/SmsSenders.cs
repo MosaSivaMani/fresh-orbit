@@ -146,7 +146,7 @@ public static class SmsSenderRegistration
 }
 
 /// <summary>
-/// Rule 7 / SEC-1 / E2E-1: the Api and Worker refuse to start outside Development and Testing with the development
+/// Rule 7 / SEC-1 / E2E-1: the Api and Worker refuse to start outside Development, Testing and Demo with the development
 /// sender (which never delivers), and refuse an unknown provider or an incomplete DLT configuration (including a
 /// missing DLT template id for any SMS template code) everywhere.
 /// </summary>
@@ -158,7 +158,7 @@ internal sealed class SmsOptionsValidator(IHostEnvironment environment) : IValid
         var provider = options.Provider.Trim();
         switch (provider)
         {
-            case "" or SmsOptions.DevelopmentProvider when !(environment.IsDevelopment() || environment.IsEnvironment("Testing")):
+            case "" or SmsOptions.DevelopmentProvider when !(environment.IsDevelopment() || environment.IsEnvironment("Testing") || environment.IsEnvironment(NotificationsModule.DemoEnvironmentName)):
                 return ValidateOptionsResult.Fail(
                     $"{SmsOptions.SectionName}:Provider must be {SmsOptions.DltProvider} in the {environment.EnvironmentName} environment; the development SMS sender never delivers messages.");
             case "" or SmsOptions.DevelopmentProvider:

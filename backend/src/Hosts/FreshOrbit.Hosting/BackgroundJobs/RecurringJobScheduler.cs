@@ -1,7 +1,8 @@
 using FreshOrbit.SharedKernel.Jobs;
 using Hangfire;
+using Microsoft.Extensions.Hosting;
 
-namespace FreshOrbit.Worker.Jobs;
+namespace FreshOrbit.Hosting.BackgroundJobs;
 
 /// <summary>At startup, adds or updates a Hangfire recurring job (UTC cron) for every job modules register.</summary>
 internal sealed class RecurringJobScheduler(IEnumerable<IRecurringJobRegistration> registrations, IRecurringJobManager manager) : IHostedService

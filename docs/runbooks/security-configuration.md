@@ -45,7 +45,7 @@ DLT content template id and sends through one provider adapter (`Gateway`). Toda
 
 | Key (environment variable in `.env.prod`) | Values |
 |---|---|
-| `Notifications:Sms:Provider` | `DEVELOPMENT` (Development and Testing only) or `DLT`. Fixed to `DLT` in `docker-compose.prod.yml` |
+| `Notifications:Sms:Provider` | `DEVELOPMENT` (Development, Testing and the sample-only Demo, §6) or `DLT`. Fixed to `DLT` in `docker-compose.prod.yml` |
 | `Notifications:Sms:Dlt:Gateway` (`SMS_DLT_GATEWAY`) | `FAST2SMS` |
 | `Notifications:Sms:Dlt:BaseUrl` (`SMS_DLT_BASE_URL`) | Optional. Empty means the gateway's documented endpoint (`https://www.fast2sms.com/`). When set, it must be `https` |
 | `Notifications:Sms:Dlt:ApiKey` (`SMS_DLT_API_KEY`) | The provider's API key. A secret: keep it in `.env.prod` on the server only, never in a committed file |
@@ -55,7 +55,7 @@ DLT content template id and sends through one provider adapter (`Gateway`). Toda
 | `Notifications:Sms:Dlt:Templates:<CODE>` (`SMS_DLT_TEMPLATE_<CODE>`) | The DLT content template id (digits) of each SMS template in the table below. **Every one is required** |
 
 What the hosts refuse:
-- Outside Development and Testing, the Api and Worker refuse to start (one Critical log line, exit code 1, E2E-2)
+- Outside Development, Testing and Demo (§6), the Api and Worker refuse to start (one Critical log line, exit code 1, E2E-2)
   when the provider is `DEVELOPMENT`, empty or unknown, or when any `Dlt` value above is missing or malformed. That
   includes a missing template id for any of the 13 SMS templates.
 - When a send fails (provider unreachable, timed out, key refused, message rejected), an OTP request answers
@@ -64,7 +64,7 @@ What the hosts refuse:
 - SMS text is never logged by the DLT sender: a log line has the template code and the last 2 digits of the phone
   (`**10`), plus the failure code and the provider's status code. The API key is sent only in the `authorization`
   header.
-- In Development, read OTPs from `GET /api/v1/dev/sms?phone=+91…` (newest first). This route does not exist in other
+- In Development and Demo, read OTPs from `GET /api/v1/dev/sms?phone=+91…` (newest first). This route does not exist in other
   environments.
 
 ### 2.1 What the owner registers (once, before launch)
@@ -131,7 +131,7 @@ so the effective limit is multiplied by the number of instances.
 ### 3.1 Data Protection keys: `DataProtection:KeysPath` (Api)
 
 An absolute directory for the ASP.NET Core Data Protection key ring, application name `FreshOrbit`. Required outside
-Development and Testing; a missing or relative path stops the Api at start-up (exit 1). In `docker-compose.prod.yml` it
+Development, Testing and Demo (§6: keys are lost on restart there, which only matters once a feature uses them); a missing or relative path stops the Api at start-up (exit 1). In `docker-compose.prod.yml` it
 is `/keys` on the `dataprotection-keys` volume (mode 700, app user). Nothing protects data with it yet (JWT only), so
 the keys are not encrypted or backed up; revisit both when a feature starts using it (for example the D40 staff
 refresh cookie). Details: `research/deploy-gaps-ops-2026-10.md`.
@@ -203,3 +203,19 @@ Try these in order. Never paste a password into a ticket or chat, and never run 
      UPDATE identity.staff_members SET is_active = false
      WHERE user_id = (SELECT id FROM identity.users WHERE email = 'admin@<domain>' AND user_type = 'STAFF');
      ```
+
+## 6. The Demo environment (free public demo only)
+
+`ASPNETCORE_ENVIRONMENT=Demo` / `DOTNET_ENVIRONMENT=Demo` is the free, sample-data-only demo on Render and Neon
+(`runbooks/render-demo.md`). The demo image (`infra/docker/api-demo.Dockerfile`) fixes both to `Demo`, so it can never
+run as Production. Production and Staging behave exactly as before; nothing above is relaxed for them.
+
+| Topic | Demo |
+|---|---|
+| SMS | The development sender: nothing is delivered, every SMS (OTPs too) is readable at `GET /api/v1/dev/sms?phone=…` |
+| Database guard | The Migrations host uses a database only when it is completely empty (no table in any schema) and then marks it (`COMMENT ON DATABASE … IS 'FRESH_ORBIT_DEMO'`); any other database is refused with exit code 5 before anything is changed. The Api refuses to start (exit 1) on a database without the mark. A production database always has tables and never has the mark |
+| Sample data | Loaded on every start (`--sample`; idempotent). Allowed because only Production refuses sample data (rule 16) |
+| Background jobs | Inside the Api (`Hosting:RunBackgroundJobsInApi=true`, `appsettings.Demo.json`): Hangfire server, recurring jobs, outbox dispatcher. Any other environment refuses to start with the switch on (exit 1) |
+| Data Protection keys | Not required (ephemeral). Nothing uses them yet |
+| Images | Files on the container disk vanish on every restart; a missing `/media/…` image (`.webp`, `.png`, `.jpg`) is answered with the sample placeholder drawing |
+| Rate limits | Raised in `appsettings.Demo.json`: every tester reaches the Api through Render's proxy or the website's server, so they share one client IP |

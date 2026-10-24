@@ -32,6 +32,16 @@ jobs:
         run: dotnet restore backend/FreshOrbit.slnx
       - name: Build
         run: dotnet build backend/FreshOrbit.slnx --no-restore -c Release
+      # Testcontainers' database image, pulled once before the test assemblies start in parallel (they failed with
+      # "No such image: postgres:17-alpine" when each tried to pull it), from Google's Docker Hub mirror.
+      - name: Pull the test database image
+        run: |
+          for attempt in 1 2 3; do
+            docker pull mirror.gcr.io/library/postgres:17-alpine && break
+            sleep 10
+          done
+          docker tag mirror.gcr.io/library/postgres:17-alpine postgres:17-alpine
+          df -h /
       - name: Test
         run: dotnet test backend/FreshOrbit.slnx --no-build -c Release --logger "trx" --results-directory TestResults
       - name: Vulnerable packages

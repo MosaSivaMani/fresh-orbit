@@ -21,4 +21,5 @@
 | Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
 | Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
 | **Owner testing** (demo app on an Android phone; whole store in a GitHub Codespace) | `runbooks/owner-testing.md` |
+| **Free public demo** (website, admin and API on Render + Neon free plans, sample store only, shareable links) | `runbooks/render-demo.md` |
 | Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`) |

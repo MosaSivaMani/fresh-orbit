@@ -43,7 +43,8 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 backend/
   FreshOrbit.slnx  global.json  Directory.Build.props  Directory.Packages.props
   src/Hosts/FreshOrbit.Api            HTTP host: auth, Problem Details, Swagger, maps every module's endpoints
-  src/Hosts/FreshOrbit.Worker         Hangfire server, outbox dispatcher, recurring jobs
+  src/Hosts/FreshOrbit.Worker         Hangfire server, outbox dispatcher, recurring jobs (registered by FreshOrbit.Hosting AddFreshOrbitBackgroundJobs)
+  src/Hosts/FreshOrbit.Hosting        What every host composes: module list, logging, Data Protection, background jobs, the Demo environment
   src/Hosts/FreshOrbit.Migrations     EF migrations, module database objects, reference data, --create-admin, sample data; then exits
   src/SharedKernel/FreshOrbit.SharedKernel                 Money, Weight, AggregateRoot, DomainEvent, Result, errors, EnumCodes, IClock
   src/SharedKernel/FreshOrbit.SharedKernel.EntityFramework FreshOrbitDbContext, IModuleModel, conventions, outbox/inbox
@@ -86,7 +87,7 @@ backend/
 | Authorization | Policies per permission code (`orders.pack`); endpoints declare `.RequirePermission("...")` |
 | Validation | FluentValidation, field-keyed 422 |
 | Events | Aggregate raises `DomainEvent`; `SaveChanges` writes `platform.outbox` in the same transaction; Worker dispatches to `IEventHandler<T>`; `platform.inbox` makes each handler run once; failures go to `platform.dead_letters` |
-| Jobs | Hangfire with PostgreSQL storage, in the Worker |
+| Jobs | Hangfire with PostgreSQL storage, in the Worker (inside the Api only in the free Demo, `Hosting:RunBackgroundJobsInApi`, `runbooks/render-demo.md`) |
 | Files | `IFileStorage` with MinIO (S3 API) implementation |
 | Payments | `IPaymentProvider`: `CashOnDelivery` (launch), `Fake` (tests), gateway adapter later |
 | Logging | Serilog to console (JSON in production) + OpenTelemetry traces |

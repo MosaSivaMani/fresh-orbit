@@ -16,7 +16,8 @@ public sealed class DataProtectionKeysOptions
 
     /// <summary>
     /// Absolute directory shared by every Api instance and kept across deploys (a named volume in production). Required
-    /// outside Development and Testing (rule 7); left empty there, the framework's per-user default is used.
+    /// outside Development, Testing and Demo (rule 7); left empty there, the framework's per-user default is used (in Demo the keys
+    /// are lost on restart, which only signs users out).
     /// </summary>
     public string? KeysPath { get; set; }
 }
@@ -66,9 +67,9 @@ internal sealed class DataProtectionKeysOptionsValidator(IHostEnvironment enviro
         var path = options.KeysPath;
         if (string.IsNullOrWhiteSpace(path))
         {
-            return environment.IsDevelopment() || environment.IsEnvironment("Testing")
+            return environment.IsDevelopment() || environment.IsEnvironment("Testing") || environment.IsDemo()
                 ? ValidateOptionsResult.Success
-                : ValidateOptionsResult.Fail("DataProtection:KeysPath is required outside Development and Testing; set it to a persistent directory shared by every Api instance.");
+                : ValidateOptionsResult.Fail("DataProtection:KeysPath is required outside Development, Testing and Demo; set it to a persistent directory shared by every Api instance.");
         }
 
         return Path.IsPathFullyQualified(path)

@@ -1,0 +1,133 @@
+# Free public demo (render.yaml, docs/runbooks/render-demo.md): builds the demo API image and starts it the way Render's
+# free plan runs it (512 MB, a fraction of a CPU, a brand-new empty Postgres standing in for Neon). Checks the sample
+# store, the OTP outbox, the image placeholders, staff sign-in, a restart (as after a sleep) and the refusal of a
+# database that is not the demo's. Nothing is pushed or deployed.
+
+name: Render demo
+
+on:
+  pull_request:
+    paths:
+      - backend/**
+      - infra/docker/api-demo.Dockerfile
+      - infra/docker/api-demo-start.sh
+      - render.yaml
+      - .github/workflows/render-demo.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PG_IMAGE: mirror.gcr.io/library/postgres:17-alpine
+  DB: Host=pg;Port=5432;Username=freshorbit;Password=demo_ci_password
+  STAFF_PASSWORD: Ci-Demo-Staff-Pass-2026
+  API: http://localhost:8080
+
+jobs:
+  api-demo:
+    name: Demo API image in 512 MB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the demo API image
+        run: docker build -f infra/docker/api-demo.Dockerfile -t fresh-orbit-api-demo .
+
+      - name: Start an empty Postgres (stands in for Neon)
+        run: |
+          docker network create demo
+          docker pull "$PG_IMAGE"
+          docker run -d --name pg --network demo -e POSTGRES_USER=freshorbit -e POSTGRES_PASSWORD=demo_ci_password \
+            -e POSTGRES_DB=neondb "$PG_IMAGE"
+          for i in $(seq 1 30); do docker exec pg pg_isready -U freshorbit -d neondb && break; sleep 2; done
+
+      - name: Start the demo API with the free plan's memory
+        run: |
+          docker run -d --name api --network demo -p 8080:8080 --memory 512m --memory-swap 512m --cpus 0.5 \
+            -e "ConnectionStrings__FreshOrbit=$DB;Database=neondb" \
+            -e Jwt__SigningKey=ci-only-signing-key-0123456789-abcdefghijklmnopqrstuvwxyz \
+            -e "FRESHORBIT_SAMPLE_STAFF_PASSWORD=$STAFF_PASSWORD" \
+            -e FileStorage__PublicBaseUrl=http://localhost:8080/media \
+            fresh-orbit-api-demo
+
+      - name: First start (migrations, sample store, Api)
+        run: |
+          start=$(date +%s)
+          for i in $(seq 1 150); do
+            if curl -fsS "$API/health" > /dev/null 2>&1; then
+              echo "Healthy after $(( $(date +%s) - start )) s"
+              break
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' api)" != "true" ]; then
+              docker logs api
+              exit 1
+            fi
+            sleep 2
+          done
+          curl -fsS "$API/health"
+          echo
+          docker stats --no-stream --format 'Memory after start: {{.MemUsage}}' api
+
+      - name: Sample store, OTP outbox, images and staff sign-in
+        run: |
+          set -eu
+          curl -fsS "$API/api/v1/serviceability?pincode=530017" | tee /tmp/serviceability.json
+          echo
+          grep -q '"serviceable":true' /tmp/serviceability.json
+          phone=+919876500001
+          curl -fsS -X POST -H 'Content-Type: application/json' -d "{\"phone\":\"$phone\"}" "$API/api/v1/auth/otp/request"
+          echo
+          curl -fsS "$API/api/v1/dev/sms?phone=$phone" | tee /tmp/sms.json
+          echo
+          grep -Eq '[0-9]{6}' /tmp/sms.json
+          type=$(curl -fsS -o /tmp/placeholder.webp -w '%{content_type}' "$API/media/products/gone/gone/640.webp")
+          echo "Placeholder: $type, $(wc -c < /tmp/placeholder.webp) bytes"
+          [ "$type" = "image/webp" ]
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            -d "{\"email\":\"sample.admin@freshorbit.example\",\"password\":\"$STAFF_PASSWORD\"}" \
+            "$API/api/v1/admin/auth/login" | grep -q accessToken
+          echo "Staff sign-in works"
+          sleep 20
+          docker stats --no-stream --format 'Memory after requests and 20 s of background jobs: {{.MemUsage}}' api
+
+      - name: Restart (as after a sleep on the free plan) and check again
+        run: |
+          set -eu
+          docker restart api
+          start=$(date +%s)
+          for i in $(seq 1 150); do
+            if curl -fsS "$API/health" > /dev/null 2>&1; then
+              echo "Healthy again after $(( $(date +%s) - start )) s"
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS "$API/health"
+          echo
+          curl -fsS "$API/api/v1/serviceability?pincode=530017" | grep -q '"serviceable":true'
+          docker stats --no-stream --format 'Memory after restart: {{.MemUsage}}' api
+          docker inspect -f 'OOM killed: {{.State.OOMKilled}}' api
+
+      - name: A database that is not the demo's is refused, untouched
+        run: |
+          set -u
+          docker exec pg psql -U freshorbit -d neondb -c 'CREATE DATABASE realdb'
+          docker exec pg psql -U freshorbit -d realdb -c 'CREATE TABLE customers (id integer)'
+          code=0
+          docker run --name refused --network demo --memory 512m -e "ConnectionStrings__FreshOrbit=$DB;Database=realdb" \
+            -e Jwt__SigningKey=ci-only-signing-key-0123456789-abcdefghijklmnopqrstuvwxyz fresh-orbit-api-demo || code=$?
+          docker logs refused 2>&1 | tail -5
+          echo "Exit code: $code"
+          [ "$code" = "5" ]
+          tables=$(docker exec pg psql -U freshorbit -d realdb -tAc "SELECT count(*) FROM pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema')")
+          [ "$tables" = "1" ]
+
+      - name: Api logs
+        if: always()
+        run: docker logs api 2>&1 | tail -200 || true

@@ -29,10 +29,13 @@ FROM ${NODE_IMAGE} AS build
 ARG WEB_PACKAGE=@fresh/web
 ARG WEB_DIR=apps/web
 ARG NEXT_PUBLIC_SITE_URL=
+# "true" only for the free public demo (render.yaml): shows the "test data only" banner. Empty everywhere else.
+ARG NEXT_PUBLIC_DEMO_MODE=
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     NEXT_TELEMETRY_DISABLED=1 \
     NEXT_OUTPUT=standalone \
-    NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+    NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL} \
+    NEXT_PUBLIC_DEMO_MODE=${NEXT_PUBLIC_DEMO_MODE}
 WORKDIR /repo
 RUN corepack enable
 # Dependency layer: only package manifests and the pruned lockfile, so source edits keep the install cached.

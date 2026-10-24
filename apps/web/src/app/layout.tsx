@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { type ReactNode } from "react";
+import { DemoBanner } from "@/components/demo-banner";
 import { SiteHeader } from "@/components/header/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { getSiteUrl } from "@/server/config";
+import { getSiteUrl, isDemoMode } from "@/server/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           Skip to content
         </a>
         <Providers>
+          <DemoBanner enabled={isDemoMode()} />
           <SiteHeader />
           <main id="main" className="flex-1">
             {children}

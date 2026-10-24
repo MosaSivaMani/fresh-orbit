@@ -1,7 +1,9 @@
 using FreshOrbit.SharedKernel.EntityFramework.Outbox;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace FreshOrbit.Worker;
+namespace FreshOrbit.Hosting.BackgroundJobs;
 
 /// <summary>
 /// Runs the outbox dispatcher in a loop: a full batch is followed immediately by the next one; otherwise the
