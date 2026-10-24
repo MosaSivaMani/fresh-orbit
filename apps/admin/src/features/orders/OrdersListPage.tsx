@@ -66,10 +66,8 @@ export function OrdersListPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <span className="flex flex-col">
-            <span>{row.original.customerName ?? "—"}</span>
-            {row.original.customerPhone && (
-              <span className="text-text-muted text-xs">{row.original.customerPhone}</span>
-            )}
+            <span>{row.original.recipientName}</span>
+            <span className="text-text-muted text-xs">{row.original.phone}</span>
           </span>
         ),
       },
@@ -89,16 +87,15 @@ export function OrdersListPage() {
         header: "Slot",
         enableSorting: false,
         cell: ({ row }) => {
-          const slot = row.original.slot;
-          if (!slot) return "—";
+          const o = row.original;
           return (
             <span className="flex flex-col">
               <span>
-                {formatTime(slot.startAt)} – {formatTime(slot.endAt)}
+                {formatTime(o.slotStartAt)} – {formatTime(o.slotEndAt)}
               </span>
               {can("orders.pack") && (
                 <Link
-                  to={`/orders/pick-list?slotId=${slot.id}&fulfillmentLocationId=${row.original.fulfillmentLocationId}`}
+                  to={`/orders/pick-list?slotId=${o.deliverySlotId}&fulfillmentLocationId=${o.fulfillmentLocationId}`}
                   className="text-accent-text text-xs hover:underline"
                 >
                   Pick list
@@ -204,7 +201,8 @@ export function OrdersListPage() {
               placeholder="Status"
               value=""
               options={statusOptions(ORDER_STATUS).filter((o) => !statuses.includes(o.value))}
-              onValueChange={(v) => list.set({ status: [...statuses, v] })}
+              // `GET /admin/orders` takes one status code (gap G14): choosing a status replaces the filter.
+              onValueChange={(v) => list.set({ status: [v] })}
             />
           </div>
           <div className="w-44">
@@ -266,15 +264,15 @@ export function OrdersListPage() {
 /** Bulk actions after selection: start preparing every selected CONFIRMED order, open the pick list of a slot. */
 function BulkActions({ rows, onDone }: { rows: AdminOrderSummary[]; onDone: () => void }) {
   const confirmed = rows.filter((r) => r.status === "CONFIRMED");
-  const slots = new Set(rows.map((r) => r.slot?.id).filter(Boolean));
-  const firstWithSlot = rows.find((r) => r.slot);
+  const slots = new Set(rows.map((r) => r.deliverySlotId));
+  const first = rows[0];
   return (
     <>
       <StartPreparingMany orders={confirmed} onDone={onDone} />
-      {slots.size === 1 && firstWithSlot?.slot && (
+      {slots.size === 1 && first && (
         <Button asChild size="sm" variant="outline">
           <Link
-            to={`/orders/pick-list?slotId=${firstWithSlot.slot.id}&fulfillmentLocationId=${firstWithSlot.fulfillmentLocationId}`}
+            to={`/orders/pick-list?slotId=${first.deliverySlotId}&fulfillmentLocationId=${first.fulfillmentLocationId}`}
           >
             Pick list for this slot
           </Link>
@@ -300,7 +298,7 @@ function StartPreparingMany({
       loading={start.isPending}
       onClick={() =>
         start.mutate(
-          orders.map((o) => ({ orderId: o.id, version: o.version })),
+          orders.map((o) => o.id),
           {
             onSuccess: (count) => {
               notifySaved(`Started preparing ${count} ${count === 1 ? "order" : "orders"}`);

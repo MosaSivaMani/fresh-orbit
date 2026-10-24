@@ -7,13 +7,12 @@ import { Heart } from "lucide-react";
 import Link from "next/link";
 import { browserHttp } from "@/api/browser";
 import { listWishlist, removeFromWishlist } from "@/api/endpoints/account";
-import { ProductCard } from "@/components/catalog/product-card";
 import { asApiError, describeError } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 /**
- * Saved products. The current API returns product ids only; a product card is shown when the server includes the
- * product (docs/design/web.md, API gaps).
+ * Saved products. The API returns product ids and dates only, so each row is a dated placeholder until the wishlist
+ * carries product details (docs/design/web.md §6, gap W5).
  */
 export function WishlistView() {
   const queryClient = useQueryClient();
@@ -57,13 +56,9 @@ export function WishlistView() {
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {wishlist.data.map((item) => (
         <li key={item.productId} className="flex flex-col gap-2">
-          {item.product ? (
-            <ProductCard product={item.product} />
-          ) : (
-            <div className="border-border bg-surface text-text-muted rounded-xl border p-4 text-sm">
-              Saved on {formatDate(item.addedAt)}. Product details will appear here soon.
-            </div>
-          )}
+          <div className="border-border bg-surface text-text-muted rounded-xl border p-4 text-sm">
+            Saved on {formatDate(item.addedAt)}. Product details will appear here soon.
+          </div>
           <Button
             variant="ghost"
             size="sm"

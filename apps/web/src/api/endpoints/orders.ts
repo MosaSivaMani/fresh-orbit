@@ -11,11 +11,11 @@ import { type Page } from "../types/common";
 import {
   type CancelReasonCode,
   type Complaint,
-  type ComplaintKind,
   type InvoiceResponse,
   type OrderDetail,
   type OrderListItem,
   type OrderTracking,
+  type RaiseComplaintRequest,
 } from "../types/orders";
 
 export function previewCheckout(
@@ -37,8 +37,9 @@ export function listOrders(
   http: HttpClient,
   params: { page?: number; pageSize?: number } = {},
 ): Promise<Page<OrderListItem>> {
+  // Newest first is the server's order; `GET /orders` takes no sort parameter.
   return http.get<Page<OrderListItem>>("/orders", {
-    query: { sort: "-placedAt", page: params.page, pageSize: params.pageSize },
+    query: { page: params.page, pageSize: params.pageSize },
   });
 }
 
@@ -63,34 +64,20 @@ export function cancelOrder(
   );
 }
 
-export interface ComplaintInput {
-  orderItemId: string | null;
-  kind: ComplaintKind;
-  description: string;
-  images: File[];
-}
-
-/** Multipart (`orderItemId`, `kind`, `description`, up to 4 `images`). */
+/** JSON body; the API takes no photos yet (docs/design/web.md §6, gap W12). */
 export function raiseComplaint(
   http: HttpClient,
   orderId: string,
-  input: ComplaintInput,
+  body: RaiseComplaintRequest,
   idempotencyKey: string,
 ): Promise<Complaint> {
-  const form = new FormData();
-  if (input.orderItemId) form.append("orderItemId", input.orderItemId);
-  form.append("kind", input.kind);
-  form.append("description", input.description);
-  for (const image of input.images) form.append("images", image);
-  return http.post<Complaint>(`/orders/${encodeURIComponent(orderId)}/complaints`, form, {
+  return http.post<Complaint>(`/orders/${encodeURIComponent(orderId)}/complaints`, body, {
     idempotencyKey,
   });
 }
 
 export function listComplaints(http: HttpClient, orderId: string): Promise<Complaint[]> {
-  return http
-    .get<Complaint[] | { items: Complaint[] }>(`/orders/${encodeURIComponent(orderId)}/complaints`)
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<Complaint[]>(`/orders/${encodeURIComponent(orderId)}/complaints`);
 }
 
 export function getInvoice(http: HttpClient, orderId: string): Promise<InvoiceResponse> {

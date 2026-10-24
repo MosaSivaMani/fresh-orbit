@@ -61,18 +61,15 @@ export function getProduct(
 }
 
 export function suggest(http: HttpClient, q: string, signal?: AbortSignal): Promise<SuggestItem[]> {
-  return http
-    .get<SuggestItem[] | { items: SuggestItem[] }>("/search/suggest", {
-      query: { q },
-      ...(signal ? { signal } : {}),
-    })
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<SuggestItem[]>("/search/suggest", {
+    query: { q },
+    ...(signal ? { signal } : {}),
+  });
 }
 
+/** Active banners for the visitor's city (`X-Pincode`); one page holds them all. */
 export function getPromotions(http: HttpClient): Promise<HomeBanner[]> {
-  return http
-    .get<HomeBanner[] | { items: HomeBanner[] }>("/promotions")
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<Page<HomeBanner>>("/promotions").then((data) => data.items);
 }
 
 /** Always 200; `serviceable: false` with a `reasonCode` when the pincode is not served. */
@@ -84,9 +81,7 @@ export function getServiceability(
 }
 
 export function getCities(http: HttpClient): Promise<PublicCity[]> {
-  return http
-    .get<PublicCity[] | { items: PublicCity[] }>("/cities")
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<PublicCity[]>("/cities");
 }
 
 /** Slots for a pincode (query wins over the header, docs/api §1.4). */

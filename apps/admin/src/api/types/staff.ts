@@ -1,27 +1,13 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.21 (staff, roles, permissions); shapes match backend
-// Identity.Application/Staff/StaffContracts.cs and Identity.Application/Roles/RoleService.cs.
+// Staff, roles and permissions (docs/api §4.21), generated from the backend OpenAPI document.
 
-import type { Id, Instant, Version } from "./common";
 import type { StaffRoleRef } from "./auth";
+import type { Coded, Schema } from "./common";
 
 export type { StaffRoleRef };
 
 export type UserStatus = "ACTIVE" | "LOCKED" | "DISABLED";
 
-export interface Staff {
-  id: Id;
-  userId: Id;
-  email: string | null;
-  fullName: string;
-  roles: StaffRoleRef[];
-  allLocations: boolean;
-  locationIds: Id[];
-  isActive: boolean;
-  userStatus: UserStatus;
-  lastLoginAt: Instant | null;
-  version: Version;
-}
+export type Staff = Coded<Schema<"StaffResponse">, { userStatus: UserStatus }>;
 
 export interface StaffListQuery {
   q?: string;
@@ -30,56 +16,20 @@ export interface StaffListQuery {
   pageSize?: number;
 }
 
-export interface CreateStaffRequest {
-  email: string;
-  fullName: string;
-  roleIds: Id[];
-  allLocations: boolean;
-  locationIds: Id[] | null;
-  temporaryPassword: string;
-}
+export type CreateStaffRequest = Schema<"CreateStaffRequest">;
 
-export interface UpdateStaffRequest {
-  fullName: string;
-  roleIds: Id[];
-  allLocations: boolean;
-  locationIds: Id[] | null;
-  isActive: boolean;
-}
+export type UpdateStaffRequest = Schema<"UpdateStaffRequest">;
 
-export interface ResetStaffPasswordRequest {
-  temporaryPassword: string;
-}
+export type ResetStaffPasswordRequest = Schema<"ResetStaffPasswordRequest">;
 
-export interface Role {
-  id: Id;
-  code: string;
-  name: string;
-  isSystem: boolean;
-  permissions: string[];
-  version: Version;
-}
+export type Role = Schema<"RoleResponse">;
 
-export interface RoleList {
-  items: Role[];
-}
+export type RoleList = Schema<"RoleListResponse">;
 
-export interface CreateRoleRequest {
-  code: string;
-  name: string;
-  permissions: string[];
-}
+export type CreateRoleRequest = Schema<"CreateRoleRequest">;
 
-export interface UpdateRoleRequest {
-  name: string;
-  permissions: string[];
-}
+export type UpdateRoleRequest = Schema<"UpdateRoleRequest">;
 
-export interface PermissionInfo {
-  code: string;
-  description: string;
-}
+export type PermissionInfo = Schema<"PermissionResponse">;
 
-export interface PermissionList {
-  items: PermissionInfo[];
-}
+export type PermissionList = Schema<"PermissionListResponse">;

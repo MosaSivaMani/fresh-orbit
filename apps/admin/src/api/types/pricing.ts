@@ -1,34 +1,15 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.12; shapes match backend Pricing.Application/Contracts/PricingContracts.cs and
-// Pricing.Infrastructure/Endpoints (PricingEndpoints.cs, BulkPriceReader.cs).
+// Pricing (docs/api §4.12), generated from the backend OpenAPI document. The bulk upload body is read by hand on
+// the server (JSON or CSV), so it is not in the spec and is written here from `BulkPriceReader.cs`.
 
-import type { Id, Instant, Version } from "./common";
+import type { Id, Instant, Schema } from "./common";
 
-export type ChargeBasis = "PER_KG" | "PER_ITEM" | "FLAT";
-export type BulkRowKind = "PRICE" | "PREP_CHARGE";
+export type ChargeBasis = Schema<"ChargeBasis">;
+export type BulkRowKind = Schema<"BulkRowKind">;
 
-export interface PricePeriod {
-  id: Id;
-  unitPricePaise: number;
-  compareAtPaise: number | null;
-  validFrom: Instant;
-  validTo: Instant | null;
-}
+export type PricePeriod = Schema<"PricePeriodResponse">;
 
 /** `GET /admin/pricing/prices` row. `missing` = no current price at the location (not for sale there). */
-export interface PriceListItem {
-  fulfillmentLocationId: Id;
-  variantId: Id;
-  productId: Id;
-  sku: string;
-  productName: string;
-  variantName: string;
-  /** KG / PIECE / PACK. */
-  priceUnit: string;
-  current: PricePeriod | null;
-  next: PricePeriod | null;
-  missing: boolean;
-}
+export type PriceListItem = Schema<"PriceListItem">;
 
 export interface PriceListQuery {
   fulfillmentLocationId: Id;
@@ -39,79 +20,27 @@ export interface PriceListQuery {
   pageSize?: number;
 }
 
-/** Price schedule of one variant at one location. `version` null → send `If-None-Match: *`. */
-export interface PriceSchedule {
-  fulfillmentLocationId: Id;
-  variantId: Id;
-  version: Version | null;
-  current: PricePeriod | null;
-  next: PricePeriod | null;
-  history: PricePeriod[];
-  /** The request matched the current price; nothing was written. */
-  unchanged: boolean;
-  /** More than 50 % up or down against the previous price. */
-  largeChange: boolean;
-}
+/**
+ * Price schedule of one variant at one location. `version` null → send `If-None-Match: *`; `unchanged`: nothing
+ * was written; `largeChange`: more than 50 % up or down.
+ */
+export type PriceSchedule = Schema<"PriceScheduleResponse">;
 
-export interface SetPriceRequest {
-  unitPricePaise: number;
-  compareAtPaise: number | null;
-  /** Omitted = now. */
-  validFrom: Instant | null;
-  reason: string | null;
-  replaceFuture: boolean | null;
-}
+/** `validFrom` omitted = now. */
+export type SetPriceRequest = Schema<"SetPriceRequest">;
 
-export interface ChargePeriod {
-  id: Id;
-  chargePaise: number;
-  chargeBasis: ChargeBasis;
-  validFrom: Instant;
-  validTo: Instant | null;
-}
+export type ChargePeriod = Schema<"ChargePeriodResponse">;
 
-export interface ChargeSchedule {
-  fulfillmentLocationId: Id;
-  variantId: Id;
-  preparationCode: string;
-  version: Version | null;
-  current: ChargePeriod | null;
-  next: ChargePeriod | null;
-  history: ChargePeriod[];
-  unchanged: boolean;
-}
+export type ChargeSchedule = Schema<"ChargeScheduleResponse">;
 
-export interface SetChargeRequest {
-  chargePaise: number;
-  chargeBasis: ChargeBasis;
-  validFrom: Instant | null;
-  replaceFuture: boolean | null;
-}
+export type SetChargeRequest = Schema<"SetChargeRequest">;
 
-export interface TaxRulePeriod {
-  id: Id;
-  rateBp: number;
-  validFrom: Instant;
-  validTo: Instant | null;
-}
+export type TaxRulePeriod = Schema<"TaxRulePeriodResponse">;
 
-export interface TaxCategoryRules {
-  taxCategoryCode: string;
-  name: string;
-  version: Version | null;
-  current: TaxRulePeriod | null;
-  next: TaxRulePeriod | null;
-  history: TaxRulePeriod[];
-  unchanged: boolean;
-}
+export type TaxCategoryRules = Schema<"TaxCategoryRulesResponse">;
 
-export interface ScheduleTaxRuleRequest {
-  taxCategoryCode: string;
-  /** 0–2800. */
-  rateBp: number;
-  validFrom: Instant | null;
-  replaceFuture: boolean | null;
-}
+/** `rateBp` 0–2800. */
+export type ScheduleTaxRuleRequest = Schema<"ScheduleTaxRuleRequest">;
 
 export interface BulkPriceRow {
   kind: BulkRowKind;
@@ -144,34 +73,10 @@ export const BULK_CSV_COLUMNS = [
   "valid_from",
 ] as const;
 
-export interface BulkValues {
-  unitPricePaise: number | null;
-  compareAtPaise: number | null;
-  chargePaise: number | null;
-  chargeBasis: ChargeBasis | null;
-}
+export type BulkValues = Schema<"BulkValues">;
 
-export interface BulkRowResult {
-  index: number;
-  kind: BulkRowKind;
-  locationCode: string;
-  sku: string;
-  preparationCode: string | null;
-  status: "CHANGED" | "UNCHANGED";
-  current: BulkValues | null;
-  new: BulkValues;
-  validFrom: Instant;
-  /** Change against the current value in basis points (server-computed); null without a current value. */
-  changeBp: number | null;
-  largeChange: boolean;
-}
+/** `changeBp` is server-computed against the current value; null without a current value. */
+export type BulkRowResult = Schema<"BulkRowResult">;
 
 /** All-or-nothing: an invalid row refuses the whole upload with 422 and `errors["rows[i].field"]`. */
-export interface BulkPriceResponse {
-  uploadId: Id | null;
-  dryRun: boolean;
-  rowCount: number;
-  changedCount: number;
-  unchangedCount: number;
-  rows: BulkRowResult[];
-}
+export type BulkPriceResponse = Schema<"BulkPriceResponse">;

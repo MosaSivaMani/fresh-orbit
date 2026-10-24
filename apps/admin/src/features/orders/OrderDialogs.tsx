@@ -7,6 +7,7 @@ import {
   useProposeSubstitution,
   useRecordSubstitutionResponse,
 } from "../../api/orders";
+import { usePreparationMethods } from "../../api/catalog";
 import { type AdminVariant } from "../../api/types/catalog";
 import {
   type AdminOrderDetail,
@@ -53,7 +54,7 @@ export function CancelOrderDialog({
   const notesError =
     touched && reason === "OTHER" && !notes.trim()
       ? "Describe the reason in notes."
-      : firstFieldError(cancel.error, "notes");
+      : firstFieldError(cancel.error, "note");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,7 +78,7 @@ export function CancelOrderDialog({
                 if (!reason || (reason === "OTHER" && !notes.trim())) return;
                 cancel.mutate(
                   {
-                    body: { reasonCode: reason, notes: notes.trim() || null },
+                    body: { reasonCode: reason, note: notes.trim() || null },
                     version: order.version,
                   },
                   {
@@ -86,7 +87,7 @@ export function CancelOrderDialog({
                       onOpenChange(false);
                     },
                     onError: (error) => {
-                      if (!firstFieldError(error, "reasonCode", "notes"))
+                      if (!firstFieldError(error, "reasonCode", "note"))
                         reportError(error, { onConflict });
                     },
                   },
@@ -142,6 +143,11 @@ export function ProposeSubstitutionDialog({
       : "PIECE"
     : item.orderedQuantity.unit;
   const parsed = parseWholeNumber(quantity);
+  // The API takes the preparation method id; the picker gives its code. The method list needs
+  // `catalog.manage` (gap G3), so without it the proposal cannot be sent.
+  const methods = usePreparationMethods(open);
+  const preparationMethodId =
+    methods.data?.find((m) => m.code === choice.preparationCode)?.id ?? null;
 
   const errors = {
     variantId:
@@ -149,7 +155,10 @@ export function ProposeSubstitutionDialog({
       firstFieldError(propose.error, "variantId"),
     preparationCode:
       (touched && !choice.preparationCode ? "Choose a preparation." : undefined) ??
-      firstFieldError(propose.error, "preparationCode"),
+      (touched && choice.preparationCode && !preparationMethodId
+        ? "Preparation methods could not be loaded; ask a catalogue manager."
+        : undefined) ??
+      firstFieldError(propose.error, "preparationMethodId"),
   };
   const quantityError =
     (touched && (parsed === null || parsed <= 0)
@@ -175,7 +184,7 @@ export function ProposeSubstitutionDialog({
               loading={propose.isPending}
               onClick={() => {
                 setTouched(true);
-                if (!choice.variantId || !choice.preparationCode || parsed === null || parsed <= 0)
+                if (!choice.variantId || !preparationMethodId || parsed === null || parsed <= 0)
                   return;
                 propose.mutate(
                   {
@@ -183,7 +192,7 @@ export function ProposeSubstitutionDialog({
                     version: order.version,
                     body: {
                       variantId: choice.variantId,
-                      preparationCode: choice.preparationCode,
+                      preparationMethodId,
                       quantity: { value: parsed, unit },
                     },
                   },
@@ -197,7 +206,7 @@ export function ProposeSubstitutionDialog({
                         !firstFieldError(
                           error,
                           "variantId",
-                          "preparationCode",
+                          "preparationMethodId",
                           "quantity.value",
                           "quantity",
                         )
@@ -247,7 +256,11 @@ export function RecordSubstitutionAnswer({
   const record = useRecordSubstitutionResponse(order.id);
   const send = (accepted: boolean) =>
     record.mutate(
-      { substitutionId: substitution.id, body: { accepted }, version: order.version },
+      {
+        substitutionId: substitution.id,
+        body: { answer: accepted ? "ACCEPTED" : "REJECTED" },
+        version: order.version,
+      },
       {
         onSuccess: () => notifySaved(accepted ? "Substitution accepted" : "Substitution rejected"),
         onError: (error) => reportError(error, { onConflict }),
@@ -258,7 +271,7 @@ export function RecordSubstitutionAnswer({
       <Button
         size="sm"
         variant="outline"
-        loading={record.isPending && record.variables?.body.accepted === true}
+        loading={record.isPending && record.variables?.body.answer === "ACCEPTED"}
         onClick={() => send(true)}
       >
         Customer accepted
@@ -266,7 +279,7 @@ export function RecordSubstitutionAnswer({
       <Button
         size="sm"
         variant="ghost"
-        loading={record.isPending && record.variables?.body.accepted === false}
+        loading={record.isPending && record.variables?.body.answer === "REJECTED"}
         onClick={() => send(false)}
       >
         Customer rejected

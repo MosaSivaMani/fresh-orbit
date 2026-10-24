@@ -32,29 +32,30 @@ internal static class DeliveryEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous();
+        endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous()
+            .Produces<CustomerSlotsResponse>();
 
         var admin = endpoints.MapGroup("/admin/delivery").RequirePermission(Permission);
 
-        admin.MapGet("/slot-templates", ListTemplatesAsync);
-        admin.MapPost("/slot-templates", CreateTemplateAsync).WithValidation<CreateSlotTemplateRequest>();
-        admin.MapPut("/slot-templates/{id:guid}", UpdateTemplateAsync).WithValidation<UpdateSlotTemplateRequest>();
+        admin.MapGet("/slot-templates", ListTemplatesAsync).Produces<PagedResponse<SlotTemplateResponse>>();
+        admin.MapPost("/slot-templates", CreateTemplateAsync).WithValidation<CreateSlotTemplateRequest>().Produces<SlotTemplateResponse>(StatusCodes.Status201Created);
+        admin.MapPut("/slot-templates/{id:guid}", UpdateTemplateAsync).WithValidation<UpdateSlotTemplateRequest>().Produces<SlotTemplateResponse>();
 
-        admin.MapGet("/slots", ListSlotsAsync);
-        admin.MapPatch("/slots/{slotId:guid}", ChangeSlotAsync);
+        admin.MapGet("/slots", ListSlotsAsync).Produces<PagedResponse<DeliverySlotResponse>>();
+        admin.MapPatch("/slots/{slotId:guid}", ChangeSlotAsync).Produces<DeliverySlotResponse>();
 
-        admin.MapGet("/riders", ListRidersAsync);
-        admin.MapPost("/riders", CreateRiderAsync).WithValidation<CreateRiderRequest>();
-        admin.MapPut("/riders/{riderId:guid}", UpdateRiderAsync).WithValidation<UpdateRiderRequest>();
+        admin.MapGet("/riders", ListRidersAsync).Produces<PagedResponse<RiderResponse>>();
+        admin.MapPost("/riders", CreateRiderAsync).WithValidation<CreateRiderRequest>().Produces<RiderResponse>(StatusCodes.Status201Created);
+        admin.MapPut("/riders/{riderId:guid}", UpdateRiderAsync).WithValidation<UpdateRiderRequest>().Produces<RiderResponse>();
 
-        admin.MapGet("/shipments", ListShipmentsAsync);
-        admin.MapGet("/shipments/{shipmentId:guid}", GetShipmentAsync);
-        admin.MapPost("/shipments/{shipmentId:guid}/assign", AssignAsync).WithValidation<AssignRiderRequest>();
-        admin.MapPost("/shipments/{shipmentId:guid}/dispatch", DispatchAsync).WithValidation<DispatchShipmentRequest>();
-        admin.MapPost("/shipments/{shipmentId:guid}/deliver", DeliverAsync).WithValidation<DeliverShipmentRequest>();
-        admin.MapPost("/shipments/{shipmentId:guid}/attempts", RecordAttemptAsync);
-        admin.MapPost("/shipments/{shipmentId:guid}/reattempt", ReattemptAsync);
-        admin.MapPost("/shipments/{shipmentId:guid}/return", ReturnAsync);
+        admin.MapGet("/shipments", ListShipmentsAsync).Produces<PagedResponse<ShipmentResponse>>();
+        admin.MapGet("/shipments/{shipmentId:guid}", GetShipmentAsync).Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/assign", AssignAsync).WithValidation<AssignRiderRequest>().Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/dispatch", DispatchAsync).WithValidation<DispatchShipmentRequest>().Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/deliver", DeliverAsync).WithValidation<DeliverShipmentRequest>().Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/attempts", RecordAttemptAsync).Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/reattempt", ReattemptAsync).Produces<ShipmentResponse>();
+        admin.MapPost("/shipments/{shipmentId:guid}/return", ReturnAsync).Produces<ShipmentResponse>();
     }
 
     // ---- customer -------------------------------------------------------------------------------------------

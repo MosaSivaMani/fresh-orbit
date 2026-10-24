@@ -4,6 +4,7 @@ import { useHttp } from "../app/services";
 import { type Id, type Version } from "./types/common";
 import {
   type AdminOrderDetail,
+  type AdminOrderDetailResponse,
   type AdminOrderListQuery,
   type AdminOrderSummary,
   type CancelOrderRequest,
@@ -16,6 +17,7 @@ import {
   type PickList,
   type ProposeSubstitutionRequest,
   type RecordSubstitutionResponseRequest,
+  flattenAdminOrder,
 } from "./types/orders";
 
 // docs/api/README.md §4.15 — admin orders, pick list, weigh and pack, substitutions, cancel, complaints.
@@ -50,10 +52,13 @@ export function useOrder(orderId: Id) {
   const http = useHttp();
   return useQuery({
     queryKey: orderKeys.detail(orderId),
-    queryFn: async ({ signal }) =>
-      withVersion(
-        await http.request<AdminOrderDetail>("GET", `/admin/orders/${orderId}`, { signal }),
-      ),
+    queryFn: async ({ signal }): Promise<Versioned<AdminOrderDetail>> => {
+      const res = await http.request<AdminOrderDetailResponse>("GET", `/admin/orders/${orderId}`, {
+        signal,
+      });
+      const detail = flattenAdminOrder(res.data);
+      return { ...detail, version: detail.version || res.version || "" };
+    },
   });
 }
 
@@ -106,19 +111,24 @@ export class BulkOrderError extends Error {
 }
 
 /**
- * Start preparing several orders (orders list bulk action). One request per order, each quoting its own
- * version; stops at the first refusal. Resolves with the number started.
+ * Start preparing several orders (orders list bulk action). The list row carries no version (gap G13), so each
+ * order's detail is read for its version, then the write quotes it; stops at the first refusal. Resolves with the
+ * number started.
  */
 export function useStartPreparingMany() {
   const http = useHttp();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (orders: { orderId: Id; version: Version }[]) => {
+    mutationFn: async (orderIds: Id[]) => {
       let started = 0;
-      for (const { orderId, version } of orders) {
+      for (const orderId of orderIds) {
         try {
+          const detail = await http.request<AdminOrderDetailResponse>(
+            "GET",
+            `/admin/orders/${orderId}`,
+          );
           await http.post(`/admin/orders/${orderId}/start-preparing`, undefined, {
-            ifMatch: version,
+            ifMatch: detail.data.order.version || detail.version || "",
           });
         } catch (error) {
           throw new BulkOrderError(orderId, error);

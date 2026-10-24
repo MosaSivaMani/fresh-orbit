@@ -1,33 +1,17 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §4.4 and docs/product/catalog.md; where the docs are silent the field names follow
-// the Phase 2 storefront contracts (Catalog.Application/Storefront/StorefrontContracts.cs).
+// Catalogue shapes (docs/api §4.4), generated from the backend OpenAPI document (`@fresh/api-client`).
 
-import { type Availability, type AvailabilityStatus, type Quantity, type SellUnit } from "./common";
+import { type Schema } from "@fresh/api-client";
 
-export type SourceType = "WILD" | "FARMED";
+export type SourceType = Schema<"SourceType">;
 
 /** `GET /products` `sort` values (CAT-R15). `relevance` needs `q`; price sorts need a location. */
 export type ProductSort = "relevance" | "price" | "-price" | "name" | "-newest";
 
-export interface FromPrice {
-  unitPricePaise: number;
-  compareAtPaise: number | null;
-  perUnit: SellUnit;
-}
+export type FromPrice = Schema<"FromPrice">;
 
-export interface ProductListItem {
-  id: string;
-  slug: string;
-  name: string;
-  localNames: string[];
-  sourceType: SourceType;
-  imageUrl: string | null;
-  /** Null without a location (`locationRequired: true`). */
-  fromPrice: FromPrice | null;
-  availability: Availability | null;
-  locationRequired: boolean;
-}
+export type ProductListItem = Schema<"ProductListItem">;
 
+/** Query of `GET /products` (the OpenAPI document lists it as query parameters, not a schema). */
 export interface ProductListParams {
   category?: string[];
   q?: string;
@@ -41,123 +25,42 @@ export interface ProductListParams {
   pageSize?: number;
 }
 
-export interface ImageSource {
-  width: number;
-  url: string;
-}
+export type ImageSource = Schema<"ImageSource">;
 
-export interface ProductImage {
-  url: string;
-  altText: string;
-  width: number;
-  height: number;
-  /** Phase 2 addition: the 320 / 640 / 1280 px renditions. */
-  sources?: ImageSource[];
-}
+export type ProductImage = Schema<"StorefrontImage">;
 
-export type PreparationChargeBasis = "PER_KG" | "PER_ITEM" | "FLAT";
+export type PreparationChargeBasis = Schema<"ChargeBasis">;
 
-export interface Preparation {
-  code: string;
-  name: string;
-  /** Net yield after cleaning in basis points (display only: "about 70% after cleaning"). */
-  yieldBp: number;
-  isDefault: boolean;
-  chargePaise: number | null;
+/** `chargeBasis` is PER_KG / PER_ITEM / FLAT; the spec types it as a string. */
+export type Preparation = Omit<Schema<"StorefrontPreparation">, "chargeBasis"> & {
   chargeBasis: PreparationChargeBasis | null;
-}
+};
 
-export interface VariantAvailability {
-  status: AvailabilityStatus;
-  /** Largest valid quantity the stock covers for the chosen preparation; computed by the server. */
-  maxOrderableNow: Quantity | null;
-  message: string | null;
-}
+export type VariantAvailability = Schema<"CatalogVariantAvailability">;
 
-export interface Variant {
-  id: string;
-  sku: string;
-  name: string;
-  sellUnit: SellUnit;
-  isWeightVariable: boolean;
-  packSizeGrams?: number | null;
-  avgPieceGrams?: number | null;
-  minOrder: Quantity;
-  maxOrder: Quantity;
-  orderStep: Quantity;
-  unitPricePaise: number | null;
-  compareAtPaise: number | null;
+export type Variant = Omit<Schema<"StorefrontVariant">, "preparations"> & {
   preparations: Preparation[];
-  availability: VariantAvailability | null;
-}
+};
 
-export interface CategoryRef {
-  slug: string;
-  name: string;
-}
+export type CategoryRef = Schema<"CategoryRef">;
 
-export interface ProductDetail {
-  id: string;
-  slug: string;
-  name: string;
-  localNames: string[];
-  speciesScientificName: string | null;
-  description: string | null;
-  sourceType: SourceType;
-  sourceRegion: string | null;
-  storageInstructions: string | null;
-  category: CategoryRef;
-  images: ProductImage[];
-  location: { fulfillmentLocationCode: string; pincode: string } | null;
+export type ProductDetail = Omit<Schema<"StorefrontProductDetail">, "variants"> & {
   variants: Variant[];
-  /** Product-level availability (`NOT_SOLD_HERE` when not sellable at the location). */
-  availability?: Availability | null;
-  netWeightNote: string;
-  isWishlisted: boolean | null;
-  locationRequired?: boolean;
-}
+};
 
-export interface CategoryNode {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  imageUrl: string | null;
-  sortOrder: number;
-  children: CategoryNode[];
-}
+export type CategoryNode = Schema<"StorefrontCategory">;
 
-export interface CategoryDetail {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  imageUrl: string | null;
-  parent: CategoryRef | null;
-  children: CategoryNode[];
-}
+export type CategoryDetail = Schema<"StorefrontCategoryDetail">;
 
-export interface SuggestItem {
-  name: string;
-  matchedLocalName: string | null;
-  slug: string;
-  imageUrl: string | null;
-}
+export type SuggestItem = Schema<"SuggestItem">;
 
-/** Home offer banner (Promotions). Shape not fixed in docs/api; see docs/design/web.md "API gaps". */
-export interface HomeBanner {
-  id: string;
-  title: string;
-  description: string | null;
-  imageUrl: string | null;
-  /** `COUPON`, `CATEGORY` or `PRODUCT` (PROMO-R25). */
-  linkType: "COUPON" | "CATEGORY" | "PRODUCT" | null;
-  linkTarget: string | null;
-}
+/** Home offer banner: an item of `GET /promotions` (Promotions `BannerInfo`). */
+export type HomeBanner = Omit<Schema<"BannerInfo">, "linkType"> & {
+  linkType: Schema<"PromotionLinkType">;
+};
 
-export interface HomeResponse {
-  banners: HomeBanner[];
-  featuredCategories: CategoryNode[];
-  featuredProducts: ProductListItem[];
-  locationRequired: boolean;
-}
+/**
+ * `GET /home`. The OpenAPI document types `banners` as `unknown[]` (Catalog sends an empty list until home banners
+ * come from Promotions); the website reads banners from `GET /promotions` instead.
+ */
+export type HomeResponse = Schema<"HomeResponse">;

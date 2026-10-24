@@ -30,7 +30,8 @@ internal static class ReportingEndpoints
 
         foreach (var report in ReportDefinitions.All)
         {
-            reports.MapGet("/" + report.Key, (HttpContext http, ReportReader reader, CancellationToken ct) => ServeAsync(report, http, reader, ct));
+            reports.MapGet("/" + report.Key, (HttpContext http, ReportReader reader, CancellationToken ct) => ServeAsync(report, http, reader, ct))
+                .Produces<ReportResponse>(); // format=csv answers text/csv instead
         }
 
         reports.MapGet("/repeat-customers", async (HttpContext http, ReportReader reader, CancellationToken ct) =>
@@ -52,7 +53,8 @@ internal static class ReportingEndpoints
             }
 
             return Results.Ok(response);
-        });
+        })
+            .Produces<ReportResponse>();
 
         reports.MapGet("/dashboard", async (HttpContext http, ReportReader reader, CancellationToken ct) =>
         {
@@ -65,7 +67,7 @@ internal static class ReportingEndpoints
             var dashboard = await reader.DashboardAsync(query, ct);
             SetCache(http.Response);
             return Results.Ok(dashboard);
-        });
+        }).Produces<DashboardResponse>();
     }
 
     private static async Task<IResult> ServeAsync(ReportDefinition report, HttpContext http, ReportReader reader, CancellationToken ct)

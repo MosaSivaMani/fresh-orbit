@@ -1,7 +1,7 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.20; shapes match backend Reporting (ReportRequests.cs, ReportReader.cs).
+// Reports and dashboard (docs/api §4.20), generated from the backend OpenAPI document. Report rows, totals and
+// filters are dictionaries in the API (`object` in the spec), so their value type is written here.
 
-import type { CalendarDate, Id, Instant } from "./common";
+import type { CalendarDate, Id, Schema } from "./common";
 
 export type ReportKey =
   "daily-sales" | "product-performance" | "contribution-margin" | "waste" | "repeat-customers";
@@ -21,55 +21,20 @@ export interface ReportQuery {
 /** Report rows are server-shaped dictionaries; money columns end in `Paise`, rates in `Bp`. */
 export type ReportRow = Readonly<Record<string, string | number | boolean | null>>;
 
-export interface ReportResponse {
-  /** Oldest refresh of the views used; null before the first refresh. */
-  asOf: Instant | null;
-  fromDate: CalendarDate;
-  toDate: CalendarDate;
+/** `totals` is computed by the server over all matching rows; `asOf` is null before the first refresh. */
+export type ReportResponse = Omit<Schema<"ReportResponse">, "filters" | "totals" | "items"> & {
   filters: Readonly<Record<string, unknown>>;
-  /** Totals over all matching rows (server-computed). */
   totals: ReportRow;
   items: ReportRow[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-}
+};
 
-export interface DashboardCount {
-  status: string;
-  count: number;
-}
+export type DashboardCount = Schema<"DashboardCount">;
 
-export interface DashboardSlot {
-  slotId: Id;
-  fulfillmentLocationId: Id;
-  startAt: Instant;
-  endAt: Instant;
-  bookedCount: number;
-  capacity: number;
-  fillBp: number | null;
-}
+export type DashboardSlot = Schema<"DashboardSlot">;
 
-export interface DashboardLowStock {
-  stockItemId: Id;
-  fulfillmentLocationId: Id;
-  variantId: Id;
-  sku: string | null;
-  variantName: string | null;
-  /** Stock-item unit quantity (grams or pieces). */
-  available: number;
-  lowStockThreshold: number;
-}
+/** `available` and `lowStockThreshold` are stock-item units (grams or pieces); the unit is not sent (gap G4). */
+export type DashboardLowStock = Schema<"DashboardLowStock">;
 
-export interface DashboardResponse {
-  asOf: Instant;
-  date: CalendarDate;
+export type DashboardResponse = Omit<Schema<"DashboardResponse">, "filters"> & {
   filters: Readonly<Record<string, unknown>>;
-  ordersByStatus: DashboardCount[];
-  slots: DashboardSlot[];
-  lowStock: DashboardLowStock[];
-  openComplaints: number;
-  refundsRequested: number;
-  refundsRequestedPaise: number;
-  openPaymentIssues: number;
-}
+};

@@ -17,7 +17,7 @@ builder.Services.AddFreshOrbitPersistence();
 builder.Services.AddFreshOrbitModules(builder.Configuration, Modules.All);
 builder.Services.AddFreshOrbitForwardedHeaders();
 builder.Services.AddFreshOrbitRateLimiting();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(OpenApiSetup.Configure);
 builder.Services.AddHealthChecks().AddDbContextCheck<FreshOrbitDbContext>("database");
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
