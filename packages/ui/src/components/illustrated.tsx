@@ -88,6 +88,12 @@ export interface IllustrationProps extends Omit<
   fit?: "auto" | "cover" | "contain";
 }
 
+const aspectClass: Record<IllustrationEntry["aspect"], string> = {
+  "1:1": "aspect-square",
+  "4:3": "aspect-[4/3]",
+  "2:1": "aspect-[2/1]",
+};
+
 const sceneRadius: Record<IllustrationSize, string> = {
   xs: "rounded-xl",
   sm: "rounded-2xl",
@@ -128,11 +134,7 @@ export function Illustration({
         "h-auto max-w-full select-none",
         size === "fill" && "w-full",
         cover
-          ? cn(
-              "object-cover",
-              entry.aspect === "1:1" ? "aspect-square" : "aspect-[4/3]",
-              fit === "auto" && sceneRadius[size],
-            )
+          ? cn("object-cover", aspectClass[entry.aspect], fit === "auto" && sceneRadius[size])
           : "object-contain",
         float && !cover && "motion-safe:animate-fo-float",
         className,

@@ -41,7 +41,11 @@ The full descriptions copied into every prompt are the `characters` entries in t
   | `TRANSPARENT` | Cut-out subject; PNG or WebP with alpha | Shown whole (`contain`), may float gently in heroes |
 
   `import` sets `SCENE` or `TRANSPARENT` from the file itself (alpha or not) and rebuilds the prompt to match.
-- **Shapes**: `1:1` (empty states, features, status) or `4:3` (onboarding, hero, delivery, admin login), 2% tolerance.
+- **Shapes**: `1:1` (empty states, features, status, onboarding tiles), `4:3` (onboarding, hero, delivery, admin
+  login) or `2:1` (onboarding food banners, 1024 × 512 design size), 2% tolerance.
+- **Object-only slots**: the onboarding tiles and banners have no `character` (and no `supporting`); their prompt is
+  the scene, the style block, the background and the shape only. Their scenes say "no people, no characters and no
+  faces" because the style block is written for character renders.
 - **Files**: `assets/<slot_lower_snake>.jpg|png|webp`, at most 600 KB, longest side at least 1024 px. Placeholders:
   `assets/<slot_lower_snake>.svg`, under 6 KB, no text, generated from `src/placeholder-art.ts`.
 - **Alt text**: one plain sentence describing the picture. Check it after importing a final; components make the
@@ -49,9 +53,9 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
 ## 3. Slots
 
-32 slots (the handoff said 33; the list in `REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of
-this change: 2 FINAL, 30 PLACEHOLDER. The playground's **Illustrated** tab shows every slot with its alt text and
-status.
+44 slots (32 from the handoff plus 12 onboarding tiles and banners from the owner's onboarding reference; the list in
+`REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of this change: 10 FINAL, 34 PLACEHOLDER.
+The playground's **Illustrated** tab shows every slot with its alt text and status.
 
 | Slot | Shape | Cast | Website | Admin | Mobile |
 |---|---|---|---|---|---|
@@ -87,6 +91,23 @@ status.
 | `ADMIN_EMPTY` | 1:1 | Chanduva | — | Empty lists (size `sm`) | — |
 | `ADMIN_ALL_CAUGHT_UP` | 1:1 | Padma, Chanduva | — | Nothing left to pack / no exceptions | — |
 | `ADMIN_NO_ACCESS` | 1:1 | Anil | — | 403 page | — |
+| `ONBOARDING_TILE_MORNING_CATCH` | 1:1 | none (a seer fish) | — | — | Onboarding page 1 tile "Morning catch" |
+| `ONBOARDING_TILE_KEPT_CHILLED` | 1:1 | none (ice cubes) | — | — | Page 1 tile "Kept chilled" |
+| `ONBOARDING_TILE_DELIVERED_FRESH` | 1:1 | none (delivery van) | — | — | Page 1 tile "Delivered fresh" |
+| `ONBOARDING_TILE_YOUR_CUT` | 1:1 | none (steak, curry cut, fillet on a board) | — | — | Page 2 tile "Your cut" |
+| `ONBOARDING_TILE_CLEANED_BY_HAND` | 1:1 | none (gloved hand, fish, bowl of water) | — | — | Page 2 tile "Cleaned by hand" |
+| `ONBOARDING_TILE_NET_WEIGHT` | 1:1 | none (kitchen scale with fish pieces) | — | — | Page 2 tile "Pay net weight" |
+| `ONBOARDING_TILE_PICK_SLOT` | 1:1 | none (alarm clock, calendar page) | — | — | Page 3 tile "Pick a slot" |
+| `ONBOARDING_TILE_COLD_BOX` | 1:1 | none (open cold box with ice, fish tail, prawns) | — | — | Page 3 tile "Cold box" |
+| `ONBOARDING_TILE_CASH_UPI` | 1:1 | none (rupee notes, phone with a tick) | — | — | Page 3 tile "Cash or UPI" |
+| `ONBOARDING_BANNER_FRESH` | 2:1 | none (prawns, seer fish, crab, lemon, herbs on ice) | — | — | Page 1 food banner |
+| `ONBOARDING_BANNER_CLEANED` | 2:1 | none (steaks, curry cut, fillet, knife, curry leaves, chillies) | — | — | Page 2 food banner |
+| `ONBOARDING_BANNER_DELIVERY` | 2:1 | none (cold box, scooter, Indian doorstep) | — | — | Page 3 food banner |
+
+The twelve onboarding pictures are all `TRANSPARENT` PNGs: save them as
+`docs/design/characters/generated/onboarding_tile_<name>.png` / `onboarding_banner_<name>.png`. Until they are
+bundled the app draws its own stand-ins (a pastel blob with an icon for a tile, a soft wave with a simple drawn
+seafood scene for a banner); the web uses the SVG placeholders.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 

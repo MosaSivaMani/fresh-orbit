@@ -368,19 +368,12 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
   |---|---|---|---|
   | Headings, prices, buttons on blocks | `AppFonts.display` | `Baloo2` (800) | Yes, `assets/fonts/Baloo2-*.ttf` |
   | Body text | `AppFonts.body` | `Inter` (400–700) | Yes, `assets/fonts/Inter-*.ttf` |
-  | Handwritten second line of big headings | `AppFonts.script` | `DancingScript` (700) | **No, pending from the owner** |
+  | Handwritten lines (script heading lines, the onboarding tagline and banner line) | `AppFonts.script` | `DancingScript` (700) | Yes, `assets/fonts/DancingScript-Variable.ttf` |
 
-  Until the Dancing Script file is there, Flutter does not know the family and draws the fallback face. The
-  −3° tilt, the 1.12× size and the brush still mark the line. **To switch it on:** put
-  `DancingScript-Bold.ttf` and its `OFL.txt` in `apps/mobile/assets/fonts/` and add this to `pubspec.yaml`
-  under `flutter: fonts:`. No code change is needed.
-
-  ```yaml
-      - family: DancingScript
-        fonts:
-          - asset: assets/fonts/DancingScript-Bold.ttf
-            weight: 700
-  ```
+  Dancing Script is bundled as the Google Fonts variable font (`DancingScript[wght].ttf` from
+  `google/fonts/ofl/dancingscript`, SIL OFL 1.1, licence in `assets/fonts/DancingScript-OFL.txt`), about 130 KB.
+  `scriptStyle` (`lib/widgets/heading.dart`) sets `fontWeight: w700` and `FontVariation('wght', 700)`, so the
+  variable font draws its bold instance.
 
   To change a font later, change its constant and the `fonts:` entry. The app never calls Google Fonts at
   runtime.
@@ -408,7 +401,7 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
 | Screen | Look |
 |---|---|
 | Splash | Teal with `HOME_HERO` in the circle |
-| Onboarding ×3 | Coral "Straight off / *the boats*", teal "Cleaned / *your way*", mango "At your / *door*". Stickers: Morning catch, Your cut, Kept cold. Skip, dots, Next / Get started |
+| Onboarding ×3 | The owner's reference layout (below): coral "Straight off / the boats", teal "Cleaned / your way", mango "At your / door", second line on the brush. Stickers: Morning catch, Your cut, Kept cold. Taglines, three feature tiles, a food banner, pinned dots and Next / Get started |
 | Location, not serviceable | Ice block: "Where do we / *deliver?*" with the pincode field; "Not here / *yet*" with the Coming soon sticker |
 | OTP | Mango block, six OTP boxes over one real text field (SMS autofill still works) |
 | Home | Greeting and "What's cooking *today?*", then a bento: today's catch (teal, wide), cleaned your way (coral), kept cold (mango). Each tile peeks at its `ONBOARDING_*` character. Then category bubbles, offers and "Popular today" cards with ADD |
@@ -419,6 +412,31 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
 | Orders, tracking, order placed | Orders: cards with the status circle. Empty: mango "No orders / *yet*". Tracking: a teal block with the status and its character, a "Code ####" sticker while out for delivery, then a paper sheet with the slot, four progress bars, the delivery code, rider, timeline, receipt and actions. No moving dot. Order placed: a teal block with `ORDER_PLACED` and the receipt |
 | Saved, notifications | Coral "*Nothing* / saved yet"; ice "*All* / quiet" |
 | Account, settings | "My *account*", a mango profile card, quick tiles (Orders, Saved, Addresses) and a menu. Settings (`/account/settings`, open when signed out too): notification switches, Language EN / తెలుగు / हिं, Theme Light / Auto / Dark, Privacy and terms, Log out, Delete my account |
+
+### Onboarding (owner's reference)
+
+The owner redesigned onboarding page 1 (`docs/design/mockups/onboarding-reference-owner.jpg`); all three pages
+follow it (`lib/features/onboarding/onboarding_screen.dart`, drawings in `onboarding_art.dart`).
+
+| Part | What it is |
+|---|---|
+| Colour block | Skip (top right), eyebrow "STEP n OF 3" (Inter 600, letter-spaced, ink 80%), a two-line Baloo 2 800 heading whose second line sits on the brush (paper brush on mango), sun-ray sparks by the brush line, and a Dancing Script tagline (paper on coral and teal, ink on mango) with an underline swoosh |
+| Drawn scene | `BlockScenePainter`, behind everything and excluded from semantics, static: a sun glow behind the circle's top-right edge, two cloud puffs, a teal-ish wave strip where the block meets the sheet, and per page: coral a fishing boat (hull, cabin, masts, flag) on a wave band plus gulls; teal a cutting board and knife, bubbles, a fish outline and sparkles; mango a scooter with a cold box, two small houses, a dotted route to a map pin and gulls. Silhouettes are the block colour about 30% darker (`blockShade`) so they read clearly but stay behind the text |
+| Circle and sticker | The `ONBOARDING_*` character in the ringed `AvatarCircle` on the right, overlapping the sheet by 18% of its size; the sticker on its upper-left edge with small sparks under it |
+| Sheet | Gulls in the top-left corner, the title (Baloo 2 800, 25), one body line (Inter 400, 14, muted, line height 1.4), three feature tiles and the food banner |
+| Feature tiles | `ONBOARDING_TILE_*` picture on a pastel blob (`BlobPainter`), a bold label (Inter 700, 14) and a muted caption (Inter 400, 12). One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`) |
+| Food banner | `ONBOARDING_BANNER_*` (2:1) on a soft teal wave, with a Dancing Script line in ink tilted −6° and a small arrow. Read as one line ("From today's catch to your kitchen"). Until the PNG is bundled a simple drawn seafood scene stands in (`BannerFoodPainter`) |
+| Bottom | Page dots and the full-width ink "Next →" (stadium shape, Inter 700, 16) stay pinned below the pages; the last page says "Get started →" |
+
+Copy per page: tiles Morning catch / Kept chilled / Delivered fresh, Your cut / Cleaned by hand / Pay net weight,
+Pick a slot / Cold box / Cash or UPI; banner lines "From today's catch / to your kitchen", "Ready for / your pan",
+"From our store / to your door".
+
+Responsive: the circle is 30% of the page height (at most 58% of the width), between 128 and 236 px; the banner is
+17% of the page height (100–136 px) and is left out when the page area is under 600 px tall (a 360 × 640 phone).
+Headings drop to 31 px on narrow or short screens. The page scrolls if text scaling needs more room; the dots and
+the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
+Next / Get started, Skip, reduced motion and no overflow at 360 × 640 and 390 × 844 with text scale 1.0 and 1.3.
 
 Slot changes since §14: the home bento uses `ONBOARDING_FRESH`, `ONBOARDING_CLEANED` and
 `ONBOARDING_DELIVERY` peeks; `HOME_HERO` appears only on the splash; the four `FEATURE_*` slots are no longer on

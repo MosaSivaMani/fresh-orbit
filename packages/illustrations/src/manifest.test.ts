@@ -9,6 +9,7 @@ import {
   REQUIRED_SLOTS,
   checkManifest,
   composePrompt,
+  designSize,
   toRuntime,
 } from "./manifest.ts";
 import { renderPlaceholder } from "./placeholder-art.ts";
@@ -144,9 +145,27 @@ describe("manifest.json", () => {
     for (const entry of manifest.slots) {
       expect(entry.prompt.endsWith(PROMPT_SUFFIX)).toBe(true);
       expect(entry.prompt).toContain(manifest.stylePrompt.replace(/\.$/, ""));
-      expect(entry.prompt).toContain(manifest.characters[entry.character]!.role);
+      if (entry.character !== undefined)
+        expect(entry.prompt).toContain(manifest.characters[entry.character]!.role);
       expect(entry.prompt).toBe(composePrompt(manifest, entry));
     }
+  });
+
+  it("draws the onboarding tiles and banners as transparent objects with no character", () => {
+    const objects = manifest.slots.filter(
+      (s) => s.slot.startsWith("ONBOARDING_TILE_") || s.slot.startsWith("ONBOARDING_BANNER_"),
+    );
+    expect(objects).toHaveLength(12);
+    for (const entry of objects) {
+      expect(entry.character).toBeUndefined();
+      expect(entry.supporting).toBeUndefined();
+      expect(entry.background).toBe("TRANSPARENT");
+      expect(entry.aspect).toBe(entry.slot.startsWith("ONBOARDING_TILE_") ? "1:1" : "2:1");
+      for (const sheet of Object.values(manifest.characters))
+        expect(entry.prompt).not.toContain(sheet.role);
+    }
+    expect(designSize("2:1")).toEqual({ width: 1024, height: 512 });
+    expect(designSize("4:3")).toEqual({ width: 1024, height: 768 });
   });
 
   it("uses the five named characters and never names a studio", () => {

@@ -1,4 +1,4 @@
-// Fixes FINAL JPEG or PNG images that break a rule (over 600 KB, or not the slot's 1:1 or 4:3 shape):
+// Fixes FINAL JPEG or PNG images that break a rule (over 600 KB, or not the slot's 1:1, 4:3 or 2:1 shape):
 //   - crops to the slot's aspect, keeping the most interesting part of the picture;
 //   - scales the longest side down to 1536 px (never up);
 //   - encodes WebP (transparency kept), lowering quality until the file is at most 600 KB;
@@ -11,7 +11,7 @@
 import { mkdirSync, renameSync, statSync } from "node:fs";
 import type SharpModule from "sharp";
 import { join } from "node:path";
-import { LIMITS, fileStem, finalExtension } from "../src/manifest.ts";
+import { ASPECT_RATIO, LIMITS, fileStem, finalExtension } from "../src/manifest.ts";
 import { packageRoot, readManifest, writeManifest } from "./lib.ts";
 
 type Sharp = typeof SharpModule;
@@ -37,7 +37,7 @@ for (const entry of manifest.slots) {
   const meta = await sharp(input).metadata();
   if (!meta.width || !meta.height) throw new Error(`${entry.slot}: cannot read ${entry.file}.`);
 
-  const ratio = entry.aspect === "1:1" ? 1 : 4 / 3;
+  const ratio = ASPECT_RATIO[entry.aspect];
   const shapeOk = Math.abs(meta.width / meta.height - ratio) / ratio <= LIMITS.aspectTolerance;
   if (shapeOk && statSync(input).size <= LIMITS.finalMaxBytes) continue;
 

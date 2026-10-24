@@ -58,3 +58,8 @@ flutter:
           weight: 700
         - asset: assets/fonts/Baloo2-ExtraBold.ttf
           weight: 800
+    # Dancing Script (handwritten lines, D89), SIL Open Font License 1.1 (assets/fonts/DancingScript-OFL.txt): the
+    # Google Fonts variable font; the 700 weight is picked with FontVariation('wght', 700) in scriptStyle.
+    - family: DancingScript
+      fonts:
+        - asset: assets/fonts/DancingScript-Variable.ttf
