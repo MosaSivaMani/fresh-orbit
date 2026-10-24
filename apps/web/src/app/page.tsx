@@ -1,25 +1,25 @@
 import { formatDayShort, formatTime } from "@fresh/core";
-import { Brush, FilterChip, FoodHero, PromiseCard, Script } from "@fresh/ui";
+import { FilterChip } from "@fresh/ui";
 import Link from "next/link";
-import { Suspense } from "react";
 import { getHome, getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
 import { loadWithLocation, requestApi } from "@/api/server";
-import { CategoryRail } from "@/components/catalog/category-rail";
 import { OfferStrip } from "@/components/catalog/offer-strip";
 import { ProductGrid, offersBySlug } from "@/components/catalog/product-card";
 import { GetTheApp } from "@/components/get-the-app";
-import { SearchBox } from "@/components/header/search-box";
+import { HomeCategories } from "@/components/home/home-categories";
+import { HomeCheckBar } from "@/components/home/home-check-bar";
+import { HomeHero } from "@/components/home/home-hero";
+import { PromoCards } from "@/components/home/promo-cards";
 import { LocationBanner } from "@/components/location-banner";
 import { Container, Section, SectionError } from "@/components/section";
 import { settle } from "@/lib/settle";
-import { PincodeForm } from "@/location/pincode-form";
 
 /**
- * Home in the food-app style (D95, web-food-app.html version 2): the coral hero with the headline, a pincode box
- * that asks the server about delivery and the search box, three promise cards and two tilted character photos;
- * then the round category row, "Top picks in <city>", the location's bestsellers (CAT-R24; the section is left out
- * when the server has none), offers, "Filter and pick" and the get-the-app band. Every slot, offer, price, ranking
- * and city shown is the server's.
+ * Home after the owner's reference (D188, `docs/design/mockups/web-home-reference-owner.png`): the harbour hero with
+ * Padma, the headline and three feature chips; the white pincode-check and search bar over its bottom edge; "What's
+ * on your mind?" with the server's featured categories; three promo cards; then "Top picks in <city>", the
+ * location's bestsellers (CAT-R24; left out when the server has none), offers, "Filter and pick" and the get-the-app
+ * band. Every slot, offer, price, ranking, category and city shown is the server's.
  */
 export default async function HomePage() {
   const api = await requestApi();
@@ -44,53 +44,15 @@ export default async function HomePage() {
 
   return (
     <>
-      <FoodHero
-        leftSlot="ONBOARDING_CLEANED"
-        leftFocus="50% 28%"
-        rightSlot="ONBOARDING_DELIVERY"
-        rightFocus="45% 25%"
-      >
-        <h1 className="font-display text-on-block-coral text-[clamp(2.125rem,4.4vw,3.25rem)] leading-[1.05] font-extrabold text-balance">
-          Fresh fish.{" "}
-          <Brush tone="paper">
-            <Script>Cleaned your way.</Script>
-          </Brush>
-          <br />
-          At your door, in your slot.
-        </h1>
-        <div className="grid w-full gap-2.5 text-left sm:grid-cols-[minmax(230px,280px)_1fr] sm:items-start">
-          <PincodeForm variant="hero" />
-          <Suspense
-            fallback={<div className="bg-surface h-[52px] rounded-2xl" aria-hidden="true" />}
-          >
-            <SearchBox className="bg-surface rounded-2xl p-1.5 shadow-[0_6px_16px_rgb(0_0_0/0.12)] [&_input]:h-11 [&_input]:border-0 [&_input]:shadow-none" />
-          </Suspense>
-        </div>
-        <ul className="grid w-full gap-3 sm:grid-cols-3 sm:gap-3.5">
-          <li>
-            <PromiseCard title="CLEANED" line="YOUR WAY" label="WHOLE · STEAKS · CURRY CUT" />
-          </li>
-          <li>
-            <PromiseCard title="PAY FOR" line="NET WEIGHT" label="WEIGHED AFTER CLEANING" />
-          </li>
-          <li>
-            <PromiseCard
-              title="DELIVERY"
-              line="IN YOUR SLOT"
-              label={slotText ? `NEXT SLOT ${slotText.toUpperCase()}` : "PICK A SLOT AT CHECKOUT"}
-            />
-          </li>
-        </ul>
-      </FoodHero>
+      <HomeHero nextSlot={slotText} heroBackground={null} />
+      <HomeCheckBar />
 
-      <Container className="flex flex-col gap-8 pt-7 pb-4">
+      <Container className="flex flex-col gap-8 pt-10 pb-4">
         <LocationBanner pincode={api.pincode} pincodeRefused={pincodeRefused} />
 
-        {home.ok && home.value.data.featuredCategories.length > 0 && (
-          <Section title="What's on your" script="mind?">
-            <CategoryRail categories={home.value.data.featuredCategories} />
-          </Section>
-        )}
+        {home.ok && <HomeCategories categories={home.value.data.featuredCategories} />}
+
+        <PromoCards />
 
         <hr className="border-border" />
 

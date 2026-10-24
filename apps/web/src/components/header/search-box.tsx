@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@fresh/ui";
+import { Input, cn } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import Link from "next/link";
@@ -21,8 +21,19 @@ function useDebounced(value: string, ms: number): string {
   return debounced;
 }
 
-/** Search field with server suggestions (`/search/suggest`, trigram matches on names and local names). */
-export function SearchBox({ className }: { className?: string }) {
+/**
+ * Search field with server suggestions (`/search/suggest`, trigram matches on names and local names). `label` names
+ * the search landmark when a page has more than one; `inputClassName` restyles the field.
+ */
+export function SearchBox({
+  className,
+  inputClassName,
+  label,
+}: {
+  className?: string;
+  inputClassName?: string;
+  label?: string;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const [value, setValue] = useState(params.get("q") ?? "");
@@ -66,7 +77,7 @@ export function SearchBox({ className }: { className?: string }) {
   }
 
   return (
-    <form role="search" onSubmit={submit} className={className}>
+    <form role="search" aria-label={label} onSubmit={submit} className={className}>
       <div className="relative">
         <label htmlFor={`${listId}-input`} className="sr-only">
           Search fish, prawns, crabs
@@ -80,7 +91,10 @@ export function SearchBox({ className }: { className?: string }) {
           aria-controls={listId}
           aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
           placeholder="Search seer fish, vanjaram, prawns…"
-          className="bg-surface-paper border-border h-11 rounded-[14px] border-[1.5px] shadow-none"
+          className={cn(
+            "bg-surface-paper border-border h-11 rounded-[14px] border-[1.5px] shadow-none",
+            inputClassName,
+          )}
           value={value}
           autoComplete="off"
           enterKeyHint="search"

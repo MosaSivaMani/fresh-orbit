@@ -1,7 +1,7 @@
 "use client";
 
 import { cn, focusRing } from "@fresh/ui";
-import { BadgePercent, LifeBuoy, ReceiptText, ShoppingCart, UserRound } from "lucide-react";
+import { BadgePercent, Headphones, ReceiptText, ShoppingCart, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
@@ -44,7 +44,7 @@ function NavLink({
 }
 
 /**
- * The coral header's links (D95): Offers, Help, Orders, Sign in or Account, and the ink cart pill. The cart count is
+ * The header's links (D188): Offers, Help, Orders, Sign in or Account, and the dark teal cart pill. The cart count is
  * the number of lines in the server's cart.
  */
 export function HeaderNav() {
@@ -57,13 +57,13 @@ export function HeaderNav() {
     <nav aria-label="Main" className="flex items-center gap-1 sm:gap-4">
       <NavLink
         href="/#offers"
-        icon={<BadgePercent aria-hidden="true" />}
+        icon={<BadgePercent aria-hidden="true" className="text-accent-coral" />}
         label="Offers"
         current={false}
       />
       <NavLink
         href="/support"
-        icon={<LifeBuoy aria-hidden="true" />}
+        icon={<Headphones aria-hidden="true" />}
         label="Help"
         current={isCurrent(pathname, "/support")}
       />
@@ -89,7 +89,7 @@ export function HeaderNav() {
         href="/cart"
         aria-current={isCurrent(pathname, "/cart") ? "page" : undefined}
         className={cn(
-          "bg-outline-ink text-on-outline-ink ml-1 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold [&_svg]:size-[18px]",
+          "bg-primary text-on-primary hover:bg-primary-hover ml-1 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold [&_svg]:size-[18px]",
           focusRing,
         )}
       >
