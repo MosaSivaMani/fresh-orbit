@@ -45,7 +45,8 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         {
             foreach (var loader in scope.ServiceProvider.GetServices<IReferenceDataLoader>().OrderBy(l => l.Order))
             {
-                LogReferenceLoader(loader.GetType().Name);
+                var loaderName = loader.GetType().Name;
+                LogReferenceLoader(loaderName);
                 await loader.LoadAsync(new ReferenceDataContext(referencePath), cancellationToken);
             }
         }
@@ -92,7 +93,8 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
             var context = new SampleDataContext(samplePath, tracker, scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
             foreach (var loader in scope.ServiceProvider.GetServices<ISampleDataLoader>().OrderBy(l => l.Order))
             {
-                LogSampleLoader(loader.GetType().Name);
+                var loaderName = loader.GetType().Name;
+                LogSampleLoader(loaderName);
                 await loader.LoadAsync(context, cancellationToken);
             }
         }

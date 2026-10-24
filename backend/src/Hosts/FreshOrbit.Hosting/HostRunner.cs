@@ -22,8 +22,12 @@ public static class HostRunner
             }
             catch (OptionsValidationException exception)
             {
-                host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HostRunner))
-                    .LogCritical("Start-up refused: {OptionsName} configuration is invalid: {Failures}", exception.OptionsName, exception.Failures);
+                var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HostRunner));
+                if (logger.IsEnabled(LogLevel.Critical))
+                {
+                    logger.LogCritical("Start-up refused: {OptionsName} configuration is invalid: {Failures}", exception.OptionsName, exception.Failures);
+                }
+
                 return 1;
             }
 
