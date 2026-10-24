@@ -83,7 +83,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 | CART-R20 | Every write sets `expires_at = now + lifetime`: customer 30 days, guest 7 days (Q2). |
 | CART-R21 | Owner: customer JWT wins; `X-Cart-Token` ignored when a JWT is present. Unknown token or non-`ACTIVE` cart → 404 `CART_NOT_FOUND` (except `GET /cart`, which returns an empty cart). |
 | CART-R22 | Guest token is issued on the first write without token or JWT; returned once in `X-Cart-Token` and `cartToken`; only its hash is stored. |
-| CART-R23 | Coupon endpoints require a customer JWT (guest → 401 `LOGIN_REQUIRED`). `PUT /cart/coupon` validates now and refuses with the `COUPON_*` code; reads never throw for coupons (`PROMO-R12`). |
+| CART-R23 | Coupon endpoints require a customer JWT (guest → 401 `LOGIN_REQUIRED`). `PUT /cart/coupon` validates now and refuses with the `COUPON_*` code; reads never throw for coupons (`PROMO-R12`). Rate limits (API §1.9, D62): every cart route is under the per-IP `public` limit (guests use the cart); `PUT /cart/coupon` instead has the `coupon` limit, 10 per 10 minutes per customer (IP when anonymous), against code guessing. |
 
 ### Location change
 

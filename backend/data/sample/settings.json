@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "module": "settings",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "businessProfile": {
+    "legalName": "Fresh Orbit Demo Store",
+    "tradeName": "Fresh Orbit",
+    "gstin": "37AAAAA0000A1Z1",
+    "fssaiLicenseNo": null,
+    "address": "Plot 0, Sample Commercial Complex, Sector 4, MVP Colony, Visakhapatnam, Andhra Pradesh 530017",
+    "supportPhone": "+919999900101",
+    "supportEmail": "support@freshorbit.example",
+    "timeZone": "Asia/Kolkata",
+    "onlyWhenMissing": true,
+    "sampleNote": "[SAMPLE] Fake GSTIN: state 37 (AP), placeholder PAN AAAAA0000A, valid check character so it passes the Settings checksum; it is not a registered GSTIN. FSSAI left null (the profile accepts only a real 14-digit number). Loaded only when no business profile exists, so a real profile is never replaced."
+  }
+}

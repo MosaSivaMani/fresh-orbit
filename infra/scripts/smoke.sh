@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
 # End-to-end smoke test of a running Api + Worker (docs/runbooks/local-development.md).
 #
-#   API_URL=http://localhost:5080 API_LOG=/path/to/api.log \
+#   API_URL=http://localhost:5080 \
 #   ADMIN_EMAIL=admin@freshorbit.local ADMIN_PASSWORD='...' infra/scripts/smoke.sh
 #
 # Staff sets up a new city end to end (city, location, service area, pincode, hours, slot templates, category, product,
 # variant with preparations, price, preparation charge, tax rules, stock), activates the city; a customer signs in by
-# OTP (code read from the Api log written by the logging SMS sender), adds to cart, previews and places a COD order;
+# OTP (code read from the development SMS outbox, `GET /dev/sms`, Development only), adds to cart, previews and places a COD order;
 # staff packs, dispatches and delivers it with the customer's code; the script then checks the invoice, the COLLECTED
 # payment, the consumed stock and the queued notifications. Every run uses fresh codes, so it can be re-run.
 # Needs bash, curl, jq. Exit code 0 only when every step passes.
 set -uo pipefail
 
 API="${API_URL:-http://localhost:5080}/api/v1"
-API_LOG="${API_LOG:?set API_LOG to the Api log file (OTP codes are read from it)}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@freshorbit.local}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:?set ADMIN_PASSWORD}"
 WAIT_SECONDS="${WAIT_SECONDS:-60}"
@@ -173,12 +172,12 @@ step "OTP request" POST /auth/otp/request "" "$(jq -nc --arg p "$PHONE" '{phone:
 CHALLENGE=$(jq -r .challengeId <<< "$BODY")
 OTP=""
 for ((i = 0; i < 20; i++)); do
-  OTP=$(grep -F "${PHONE}" "$API_LOG" | grep -oE '\b[0-9]{6}\b' | tail -1 || true)
+  OTP=$(curl -s -G "$API/dev/sms" --data-urlencode "phone=$PHONE" | jq -r '.[0].text // ""' | grep -oE '\b[0-9]{6}\b' | head -1 || true)
   [ -n "$OTP" ] && break
   sleep 0.5
 done
-[ -n "$OTP" ] || fail "OTP code in Api log" "no DEV SMS line for $PHONE in $API_LOG"
-pass "OTP code in Api log"
+[ -n "$OTP" ] || fail "OTP code in dev SMS outbox" "no development SMS for $PHONE at $API/dev/sms (is the Api in Development?)"
+pass "OTP code in dev SMS outbox"
 step "OTP verify" POST /auth/otp/verify "" "$(jq -nc --arg c "$CHALLENGE" --arg p "$PHONE" --arg o "$OTP" '{challengeId:$c,phone:$p,code:$o,deviceLabel:"smoke",guestCartToken:null}')"
 CUSTOMER=$(jq -r .accessToken <<< "$BODY")
 

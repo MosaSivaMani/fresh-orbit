@@ -2,6 +2,7 @@ using FreshOrbit.Cart.Application.Carts;
 using FreshOrbit.Cart.Domain.Shared;
 using FreshOrbit.Cart.Public;
 using FreshOrbit.SharedKernel.Actors;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -10,7 +11,11 @@ using Microsoft.AspNetCore.Routing;
 
 namespace FreshOrbit.Cart.Infrastructure.Endpoints;
 
-/// <summary>Cart endpoints (docs/api §4.6). Owner = customer JWT, else <c>X-Cart-Token</c>.</summary>
+/// <summary>
+/// Cart endpoints (docs/api §4.6). Owner = customer JWT, else <c>X-Cart-Token</c>. Guests reach every route, so the
+/// group is under the per-IP <c>public</c> limit; applying a coupon has its own <c>coupon</c> limit against code guessing
+/// (docs/api §1.9, SEC-3).
+/// </summary>
 internal static class CartEndpoints
 {
     public const string CartTokenHeader = "X-Cart-Token";
@@ -18,7 +23,7 @@ internal static class CartEndpoints
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
-        var cart = endpoints.MapGroup("/cart").WithTags("Cart");
+        var cart = endpoints.MapGroup("/cart").WithTags("Cart").RequireRateLimiting(RateLimitPolicies.Public);
 
         cart.MapGet(string.Empty, async (HttpContext http, ICurrentActor actor, CartService service, CancellationToken ct)
             => Ok(http, await service.GetAsync(Owner(http, actor), ct)));
@@ -48,7 +53,8 @@ internal static class CartEndpoints
         });
 
         cart.MapPut("/coupon", async (CartCouponRequest request, HttpContext http, ICurrentActor actor, CartService service, CancellationToken ct)
-            => actor.CustomerId is { } customerId ? Ok(http, await service.ApplyCouponAsync(customerId, request.Code, ct)) : (IResult)LoginRequired());
+            => actor.CustomerId is { } customerId ? Ok(http, await service.ApplyCouponAsync(customerId, request.Code, ct)) : (IResult)LoginRequired())
+            .RequireRateLimiting(RateLimitPolicies.Coupon);
 
         cart.MapDelete("/coupon", async (HttpContext http, ICurrentActor actor, CartService service, CancellationToken ct)
             => actor.CustomerId is { } customerId ? Ok(http, await service.RemoveCouponAsync(customerId, ct)) : (IResult)LoginRequired());

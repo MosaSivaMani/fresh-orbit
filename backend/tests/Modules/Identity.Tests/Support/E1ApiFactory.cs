@@ -5,14 +5,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using FreshOrbit.Notifications.Application.Shared;
 using FreshOrbit.Testing;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace FreshOrbit.E1Testing;
 
 /// <summary>
-/// The real Api with generous HTTP rate limits (tests share one client IP) and capturing SMS / e-mail / push senders.
+/// The real Api (generous rate limits from <see cref="ApiFactory"/>) with capturing SMS / e-mail / push senders.
 /// </summary>
 public sealed partial class E1ApiFactory(E1Database database) : ApiFactory(database)
 {
@@ -26,13 +25,6 @@ public sealed partial class E1ApiFactory(E1Database database) : ApiFactory(datab
 
     /// <summary>Extra registrations (e.g. NSubstitute fakes of other modules' extension points); set before the first client.</summary>
     public Action<IServiceCollection>? AdditionalServices { get; set; }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        base.ConfigureWebHost(builder);
-        builder.UseSetting("RateLimiting:Otp:PermitLimit", "100000");
-        builder.UseSetting("RateLimiting:Login:PermitLimit", "100000");
-    }
 
     protected override void ConfigureTestServices(IServiceCollection services)
     {

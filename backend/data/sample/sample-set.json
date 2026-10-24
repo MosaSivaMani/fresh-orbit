@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "name": "Visakhapatnam demo store",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "timeAnchor": "All *OffsetHours are hours from the load instant T0 (UTC). All *OffsetDays are days from the city-local date of T0 (Asia/Kolkata for the sample city). Absent validFrom = T0.",
+  "keys": "Records reference each other by natural keys (city code, location code, service-area key, category/product slug, SKU, coupon code, rider/customer/staff key). Database ids are new UUIDv7 values generated at load and recorded in platform.sample_records.",
+  "loadOrder": [
+    {
+      "order": 5,
+      "module": "settings",
+      "file": "settings.json",
+      "needs": [],
+      "note": "business profile only when none exists (invoices need a GSTIN)"
+    },
+    {
+      "order": 10,
+      "module": "locations",
+      "file": "locations.json",
+      "needs": [
+        "reference data"
+      ],
+      "note": "city and location stay DRAFT until order 90"
+    },
+    {
+      "order": 20,
+      "module": "identity",
+      "file": "identity.json",
+      "needs": [
+        "reference: roles, permissions",
+        "locations"
+      ],
+      "note": "staff users"
+    },
+    {
+      "order": 30,
+      "module": "catalog",
+      "file": "catalog.json",
+      "needs": [
+        "reference: preparation methods, tax categories"
+      ],
+      "also": "images.json"
+    },
+    {
+      "order": 40,
+      "module": "pricing",
+      "file": "pricing.json",
+      "needs": [
+        "locations",
+        "catalog"
+      ]
+    },
+    {
+      "order": 50,
+      "module": "inventory",
+      "file": "inventory.json",
+      "needs": [
+        "locations",
+        "catalog",
+        "reference: storage units"
+      ]
+    },
+    {
+      "order": 60,
+      "module": "delivery",
+      "file": "delivery.json",
+      "needs": [
+        "locations"
+      ]
+    },
+    {
+      "order": 70,
+      "module": "customers",
+      "file": "customers.json",
+      "needs": [
+        "identity (customer users created through the OTP-verify path)"
+      ]
+    },
+    {
+      "order": 80,
+      "module": "promotions",
+      "file": "promotions.json",
+      "needs": [
+        "locations",
+        "catalog"
+      ]
+    },
+    {
+      "order": 90,
+      "module": "locations",
+      "file": "locations.json",
+      "needs": [
+        "pricing",
+        "inventory",
+        "delivery"
+      ],
+      "note": "activate location, then city (LOC-R6 readiness must pass)"
+    }
+  ]
+}

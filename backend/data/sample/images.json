@@ -1,0 +1,527 @@
+{
+  "version": 1,
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "policy": "Placeholders only. No downloaded or copyrighted images. The loader renders each placeholder at load time (solid background, product name, 'Sample image' label, 1200x1200 px PNG) and uploads it through IFileStorage. Real photography is supplied by the owner and replaces these through the admin image endpoints.",
+  "products": [
+    {
+      "productSlug": "seer-fish",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Seer Fish (Vanjaram) — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Seer Fish (Vanjaram)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "silver-pomfret",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Silver Pomfret — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Silver Pomfret",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "rohu",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Rohu — sample placeholder image",
+          "placeholder": {
+            "background": "#2E7D32",
+            "label": "Rohu",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "katla",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Katla — sample placeholder image",
+          "placeholder": {
+            "background": "#2E7D32",
+            "label": "Katla",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "yellowfin-tuna",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Yellowfin Tuna — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Yellowfin Tuna",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "indian-mackerel",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Indian Mackerel (Bangda) — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Indian Mackerel (Bangda)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "oil-sardine",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Oil Sardine (Mathi) — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Oil Sardine (Mathi)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "red-snapper",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Red Snapper — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Red Snapper",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "barramundi",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Barramundi (Bhetki) — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Barramundi (Bhetki)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "tiger-prawns",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Tiger Prawns — sample placeholder image",
+          "placeholder": {
+            "background": "#E8743B",
+            "label": "Tiger Prawns",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "white-prawns",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "White Prawns — sample placeholder image",
+          "placeholder": {
+            "background": "#E8743B",
+            "label": "White Prawns",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "scampi",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Scampi (Freshwater Prawn) — sample placeholder image",
+          "placeholder": {
+            "background": "#E8743B",
+            "label": "Scampi (Freshwater Prawn)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "mud-crab",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Mud Crab — sample placeholder image",
+          "placeholder": {
+            "background": "#C0392B",
+            "label": "Mud Crab",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "blue-swimmer-crab",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Blue Swimmer Crab — sample placeholder image",
+          "placeholder": {
+            "background": "#C0392B",
+            "label": "Blue Swimmer Crab",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "squid",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Squid — sample placeholder image",
+          "placeholder": {
+            "background": "#6C5CE7",
+            "label": "Squid",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "green-mussels",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Green Mussels — sample placeholder image",
+          "placeholder": {
+            "background": "#6C5CE7",
+            "label": "Green Mussels",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "clams",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Clams — sample placeholder image",
+          "placeholder": {
+            "background": "#6C5CE7",
+            "label": "Clams",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "spiny-lobster",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Spiny Lobster — sample placeholder image",
+          "placeholder": {
+            "background": "#6C5CE7",
+            "label": "Spiny Lobster",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "basa-fillet",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Basa Fillet — sample placeholder image",
+          "placeholder": {
+            "background": "#B08968",
+            "label": "Basa Fillet",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "atlantic-salmon-fillet",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Atlantic Salmon Fillet — sample placeholder image",
+          "placeholder": {
+            "background": "#B08968",
+            "label": "Atlantic Salmon Fillet",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "anchovy",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Anchovy (Nethili) — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Anchovy (Nethili)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "ribbon-fish",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Ribbon Fish — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Ribbon Fish",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "indian-halibut",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Indian Halibut — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Indian Halibut",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "tongue-sole",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Tongue Sole — sample placeholder image",
+          "placeholder": {
+            "background": "#0E9384",
+            "label": "Tongue Sole",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "seer-fish-steaks",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Seer Fish Steaks (Pack) — sample placeholder image",
+          "placeholder": {
+            "background": "#B08968",
+            "label": "Seer Fish Steaks (Pack)",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    },
+    {
+      "productSlug": "marinated-prawns-andhra-fry",
+      "images": [
+        {
+          "sortOrder": 1,
+          "altText": "Andhra Fry Marinated Prawns — sample placeholder image",
+          "placeholder": {
+            "background": "#D35400",
+            "label": "Andhra Fry Marinated Prawns",
+            "width": 1200,
+            "height": 1200
+          },
+          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "categorySlug": "fish",
+      "imageKey": "sample/categories/fish.webp",
+      "placeholder": {
+        "background": "#0B7D70",
+        "label": "Fish",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "sea-fish",
+      "imageKey": "sample/categories/sea-fish.webp",
+      "placeholder": {
+        "background": "#0E9384",
+        "label": "Sea Fish",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "freshwater-fish",
+      "imageKey": "sample/categories/freshwater-fish.webp",
+      "placeholder": {
+        "background": "#2E7D32",
+        "label": "Freshwater Fish",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "prawns-shrimp",
+      "imageKey": "sample/categories/prawns-shrimp.webp",
+      "placeholder": {
+        "background": "#E8743B",
+        "label": "Prawns & Shrimp",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "crabs",
+      "imageKey": "sample/categories/crabs.webp",
+      "placeholder": {
+        "background": "#C0392B",
+        "label": "Crabs",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "shellfish",
+      "imageKey": "sample/categories/shellfish.webp",
+      "placeholder": {
+        "background": "#6C5CE7",
+        "label": "Shellfish",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "fillets-steaks",
+      "imageKey": "sample/categories/fillets-steaks.webp",
+      "placeholder": {
+        "background": "#B08968",
+        "label": "Fillets & Steaks",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "ready-to-cook",
+      "imageKey": "sample/categories/ready-to-cook.webp",
+      "placeholder": {
+        "background": "#D35400",
+        "label": "Ready to Cook",
+        "width": 1200,
+        "height": 800
+      }
+    }
+  ],
+  "banners": [
+    {
+      "bannerKey": "BANNER-WELCOME",
+      "imageKey": "sample/banners/welcome.webp",
+      "placeholder": {
+        "background": "#0B7D70",
+        "label": "₹100 off your first order",
+        "width": 1600,
+        "height": 600
+      }
+    },
+    {
+      "bannerKey": "BANNER-PRAWNS",
+      "imageKey": "sample/banners/prawn-week.webp",
+      "placeholder": {
+        "background": "#0B7D70",
+        "label": "Prawn week",
+        "width": 1600,
+        "height": 600
+      }
+    }
+  ]
+}

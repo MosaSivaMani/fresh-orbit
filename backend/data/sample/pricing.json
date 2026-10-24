@@ -1,0 +1,770 @@
+{
+  "version": 1,
+  "module": "pricing",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "taxRules": [
+    {
+      "taxCategoryCode": "SEAFOOD_FRESH_CHILLED",
+      "rateBp": 0,
+      "rateIsPlaceholder": true,
+      "sampleNote": "[SAMPLE] Placeholder rate — confirm with CA. Not a tax statement."
+    },
+    {
+      "taxCategoryCode": "SEAFOOD_FROZEN",
+      "rateBp": 500,
+      "rateIsPlaceholder": true,
+      "sampleNote": "[SAMPLE] Placeholder rate — confirm with CA. Not a tax statement."
+    },
+    {
+      "taxCategoryCode": "SEAFOOD_MARINATED",
+      "rateBp": 500,
+      "rateIsPlaceholder": true,
+      "sampleNote": "[SAMPLE] Placeholder rate — confirm with CA. Not a tax statement."
+    },
+    {
+      "taxCategoryCode": "DELIVERY_SERVICE",
+      "rateBp": 1800,
+      "rateIsPlaceholder": true,
+      "sampleNote": "[SAMPLE] Placeholder rate — confirm with CA. Not a tax statement."
+    }
+  ],
+  "bulk": {
+    "validFrom": null,
+    "replaceFuture": false,
+    "sampleNote": "[SAMPLE] Same shape as POST /api/v1/admin/pricing/prices/bulk. validFrom null = load time. Prices are plausible retail ranges for illustration only, not market quotes.",
+    "rows": [
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "unitPricePaise": 129900,
+        "compareAtPaise": 149900
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-MED-KG",
+        "unitPricePaise": 109900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-LARGE-PC",
+        "unitPricePaise": 69900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ROHU-KG",
+        "unitPricePaise": 25900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "KATLA-KG",
+        "unitPricePaise": 27900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "TUNA-YF-KG",
+        "unitPricePaise": 39900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MACKEREL-KG",
+        "unitPricePaise": 29900,
+        "compareAtPaise": 34900
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SARDINE-KG",
+        "unitPricePaise": 19900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SNAPPER-RED-KG",
+        "unitPricePaise": 69900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BARRAMUNDI-KG",
+        "unitPricePaise": 79900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-L-KG",
+        "unitPricePaise": 99900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-J-KG",
+        "unitPricePaise": 139900,
+        "compareAtPaise": 159900
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-WHITE-M-KG",
+        "unitPricePaise": 59900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SCAMPI-KG",
+        "unitPricePaise": 94900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-MUD-KG",
+        "unitPricePaise": 84900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-BLUE-KG",
+        "unitPricePaise": 49900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SQUID-KG",
+        "unitPricePaise": 44900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MUSSEL-GREEN-KG",
+        "unitPricePaise": 29900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CLAM-KG",
+        "unitPricePaise": 19900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "LOBSTER-SPINY-PC",
+        "unitPricePaise": 89900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BASA-FILLET-500G",
+        "unitPricePaise": 27900,
+        "compareAtPaise": 32900
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SALMON-FILLET-250G",
+        "unitPricePaise": 99900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ANCHOVY-KG",
+        "unitPricePaise": 29900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "RIBBONFISH-KG",
+        "unitPricePaise": 24900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "HALIBUT-IN-KG",
+        "unitPricePaise": 44900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SOLE-KG",
+        "unitPricePaise": 34900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-STEAK-500G",
+        "unitPricePaise": 79900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PRICE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-MARINATED-250G",
+        "unitPricePaise": 39900,
+        "compareAtPaise": null
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "preparationCode": "STEAK",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "preparationCode": "FRY_CUT",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-WHOLE-KG",
+        "preparationCode": "FILLET_SKINLESS",
+        "chargePaise": 9000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-MED-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-MED-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-MED-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-LARGE-PC",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-LARGE-PC",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "POMFRET-LARGE-PC",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 2000,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ROHU-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ROHU-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ROHU-KG",
+        "preparationCode": "STEAK",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "KATLA-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "KATLA-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "KATLA-KG",
+        "preparationCode": "STEAK",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "TUNA-YF-KG",
+        "preparationCode": "STEAK",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "TUNA-YF-KG",
+        "preparationCode": "BONELESS_CUBES",
+        "chargePaise": 9000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MACKEREL-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MACKEREL-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MACKEREL-KG",
+        "preparationCode": "CLEANED_HEADLESS",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SARDINE-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SARDINE-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SARDINE-KG",
+        "preparationCode": "CLEANED_HEADLESS",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SNAPPER-RED-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SNAPPER-RED-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SNAPPER-RED-KG",
+        "preparationCode": "FILLET",
+        "chargePaise": 8000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BARRAMUNDI-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BARRAMUNDI-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BARRAMUNDI-KG",
+        "preparationCode": "FILLET_SKINLESS",
+        "chargePaise": 9000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-L-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-L-KG",
+        "preparationCode": "DEVEINED_SHELL_ON",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-L-KG",
+        "preparationCode": "PEELED_TAIL_ON",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-L-KG",
+        "preparationCode": "PEELED_DEVEINED",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-J-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-J-KG",
+        "preparationCode": "BUTTERFLY",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-TIGER-J-KG",
+        "preparationCode": "PEELED_TAIL_ON",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-WHITE-M-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-WHITE-M-KG",
+        "preparationCode": "PEELED_DEVEINED",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SCAMPI-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SCAMPI-KG",
+        "preparationCode": "DEVEINED_SHELL_ON",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SCAMPI-KG",
+        "preparationCode": "PEELED_DEVEINED",
+        "chargePaise": 6000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-MUD-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-MUD-KG",
+        "preparationCode": "CRAB_CLEANED_CUT",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-BLUE-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CRAB-BLUE-KG",
+        "preparationCode": "CRAB_CLEANED_CUT",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SQUID-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SQUID-KG",
+        "preparationCode": "SQUID_CLEANED",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SQUID-KG",
+        "preparationCode": "SQUID_RINGS",
+        "chargePaise": 5000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "MUSSEL-GREEN-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "CLAM-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "LOBSTER-SPINY-PC",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "LOBSTER-SPINY-PC",
+        "preparationCode": "BUTTERFLY",
+        "chargePaise": 5000,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "BASA-FILLET-500G",
+        "preparationCode": "FILLET_SKINLESS",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SALMON-FILLET-250G",
+        "preparationCode": "FILLET",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ANCHOVY-KG",
+        "preparationCode": "WHOLE",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "ANCHOVY-KG",
+        "preparationCode": "CLEANED_HEADLESS",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "RIBBONFISH-KG",
+        "preparationCode": "CLEANED_HEADLESS",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "RIBBONFISH-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "HALIBUT-IN-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "HALIBUT-IN-KG",
+        "preparationCode": "CURRY_CUT",
+        "chargePaise": 3000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "HALIBUT-IN-KG",
+        "preparationCode": "STEAK",
+        "chargePaise": 4000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SOLE-KG",
+        "preparationCode": "CLEANED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SOLE-KG",
+        "preparationCode": "FILLET_SKINLESS",
+        "chargePaise": 9000,
+        "chargeBasis": "PER_KG"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "SEER-STEAK-500G",
+        "preparationCode": "STEAK",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      },
+      {
+        "kind": "PREP_CHARGE",
+        "locationCode": "VSKP-MVP",
+        "sku": "PRAWN-MARINATED-250G",
+        "preparationCode": "PEELED_DEVEINED",
+        "chargePaise": 0,
+        "chargeBasis": "PER_ITEM"
+      }
+    ]
+  }
+}

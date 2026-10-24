@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "module": "identity",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "staff": [
+    {
+      "key": "STAFF-ADMIN",
+      "email": "sample.admin@freshorbit.example",
+      "fullName": "Sample Admin",
+      "roleCodes": [
+        "ADMIN"
+      ],
+      "allLocations": true,
+      "locationCodes": [],
+      "sampleNote": "[SAMPLE] No password in this file; the loader takes it from FRESHORBIT_SAMPLE_STAFF_PASSWORD or generates one and prints it once."
+    },
+    {
+      "key": "STAFF-FINANCE",
+      "email": "sample.finance@freshorbit.example",
+      "fullName": "Sample Finance",
+      "roleCodes": [
+        "FINANCE"
+      ],
+      "allLocations": true,
+      "locationCodes": [],
+      "sampleNote": "[SAMPLE] No password in this file; the loader takes it from FRESHORBIT_SAMPLE_STAFF_PASSWORD or generates one and prints it once."
+    }
+  ]
+}

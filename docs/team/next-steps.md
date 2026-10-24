@@ -1,26 +1,25 @@
 # Next steps (handoff)
 
-Last updated: 2026-10-24, when the owner paused work for the night. Everything on `main` is merged, verified and pushed. Start here when work resumes.
+Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample data on `integration/sec-sample` (waiting for the manager to merge it to `main`). Start here when work resumes.
 
 ## 1. State of `main` (434a8dd and later)
 | Part | Status |
 |---|---|
-| Backend modules | All on `main`, including Cart, Promotions and Ordering: Phase 3 merged by session `fresh-orbit-3a` at 4c3b36e. Build has 0 warnings; `dotnet test` 891/891; smoke 52/52; initial EF migration `InitialCreate` in `FreshOrbit.Migrations/Persistence/Migrations` |
+| Backend modules | All on `main`, including Cart, Promotions and Ordering: Phase 3 merged by session `fresh-orbit-3a` at 4c3b36e. Initial EF migration `InitialCreate` in `FreshOrbit.Migrations/Persistence/Migrations`. On `integration/sec-sample` (not yet on `main`): the security fixes and sample data; build 0 warnings, `dotnet test` 926/926, smoke 52/52 |
 | Customer website `apps/web` | Merged (Phase 7). Uses TEMPORARY API types until Phase 3 lands |
 | Admin dashboard `apps/admin` | Merged (Phase 6). Home banners screen not built (needs Promotions) |
 | Mobile app `apps/mobile` (Flutter) | Merged (Phase 8). Not yet run on a device; no Android SDK or full Xcode on the dev Mac |
 | Infrastructure `infra/` | Merged (Phase 9), including web and admin images. Not yet run on a real server |
-| Security review | `security/review-2026-10.md`; the fixes wait on `fix/security-high` (see §2) |
+| Security review | `security/review-2026-10.md`; SEC-1 and SEC-2 fixed and SEC-3 partly fixed on `integration/sec-sample` (D36, D62); remainder in §5 |
 | Front-end checks | `pnpm build/typecheck/lint/test/format:check` pass on `main`; `flutter analyze/test` pass |
 
 ## 2. Branches waiting to merge (in this order)
 | Branch | What | Waiting for |
 |---|---|---|
-| `fix/security-high` | SEC-1 (no OTP in logs, DLT SMS stub), SEC-2 (forwarded headers, split OTP limits), part of SEC-3; D36; `runbooks/security-configuration.md` Ready to merge now. On merge, update the old names `RateLimiting:Otp`/`Login` in `Identity.Tests/Support/E1ApiFactory.cs:33-34`, Api `appsettings.json:16-17`, `RateLimitingSetup.cs:14,16,63-64`, `IdentityEndpoints.cs:35,41,62`, SharedKernel.Web `RateLimitPolicies.cs` and `runbooks/local-development.md` §4. Add `.RequireRateLimiting(RateLimitPolicies.Coupon)` to `PUT /cart/coupon` |
-| `worktree-agent-a68eae478be810d8f` | Sample data (`backend/data/sample`), content drafts (`docs/content/`), validator in CI | Ready to merge after `fix/security-high`. Log decisions S-D1 to S-D8 from `product/sample-data.md` §7 when merging |
+| `integration/sec-sample` | `fix/security-high` (SEC-1, SEC-2, part of SEC-3; D36) and the sample data branch `worktree-agent-a68eae478be810d8f` (`backend/data/sample`, `docs/content/`, CI validator; D54–D61), adapted to Phase 3: old `RateLimiting:Otp` and `login` names gone, `coupon` limit on `PUT /cart/coupon`, `public` limit on `/cart*` and `/promotions` (D62), smoke script reads OTPs from `GET /api/v1/dev/sms` | Manager review and merge to `main`. Deployed configs must rename `RateLimiting:Otp` to `OtpRequest`/`OtpVerify` and set `Notifications:Sms:Provider` (`runbooks/security-configuration.md`) |
 
 ## 3. Next, now that Phase 3 is merged
-1. Merge the two branches above and run `dotnet test` (608+ tests expected).
+1. Merge `integration/sec-sample` (§2) to `main`; `dotnet test` 926 tests expected.
 2. The initial migration now exists; check that a deploy runs migrations and the reference loader end to end.
 3. Write the sample-data loaders (`product/sample-data.md`), then run the stack with sample data.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
@@ -53,7 +52,7 @@ Slots:
 - D33 time-based staff lockout and `--create-admin`.
 - D34 address anonymisation.
 - D35 `tax.manage` permission.
-- SEC-3 remainder: staff login limit per email + IP, customer and admin limits, global per-IP limit.
+- SEC-3 remainder: staff login limit per email + IP, customer and admin limits (a per-user limit for signed-in cart use, D62), global per-IP limit.
 - SEC-5 image dimension guard.
 - SEC-6 webhook body cap.
 - SEC-7 audit writes.
@@ -72,7 +71,7 @@ Slots:
 - A check of the fish names, yields and pincode groupings in the sample data.
 
 ## 7. Notes
-- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**. The next free number is **D54**.
+- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**; D54–D61 are sample data S-D1–S-D8 (D60, S-D7, still only proposed: needs a manager ruling); D62 is the Phase 3 rate limits. The next free number is **D63**.
 - Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
 
 ## 8. Open items from Phase 3 integration (session `fresh-orbit-3a`)

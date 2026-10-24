@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "module": "promotions",
+  "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
+  "coupons": [
+    {
+      "code": "WELCOME100",
+      "description": "₹100 off your first order above ₹499.",
+      "discountType": "FLAT",
+      "discountValue": 10000,
+      "maxDiscountPaise": null,
+      "minOrderPaise": 49900,
+      "cityCode": "VISAKHAPATNAM",
+      "firstOrderOnly": true,
+      "perCustomerLimit": 1,
+      "totalLimit": 500,
+      "isListed": true,
+      "validFromOffsetDays": 0,
+      "validToOffsetDays": 60,
+      "scopes": [],
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "code": "PRAWNFEST10",
+      "description": "10% off prawns and shrimp, up to ₹150, on prawn orders above ₹799.",
+      "discountType": "PERCENT",
+      "discountValue": 1000,
+      "maxDiscountPaise": 15000,
+      "minOrderPaise": 79900,
+      "cityCode": "VISAKHAPATNAM",
+      "firstOrderOnly": false,
+      "perCustomerLimit": 2,
+      "totalLimit": 200,
+      "isListed": true,
+      "validFromOffsetDays": 0,
+      "validToOffsetDays": 30,
+      "scopes": [
+        {
+          "scopeType": "CATEGORY",
+          "scopeRef": "prawns-shrimp"
+        }
+      ],
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ],
+  "banners": [
+    {
+      "key": "BANNER-WELCOME",
+      "title": "₹100 off your first order",
+      "subtitle": "Use code WELCOME100 on orders above ₹499.",
+      "imageKey": "sample/banners/welcome.webp",
+      "linkType": "COUPON",
+      "linkTarget": "WELCOME100",
+      "cityCode": "VISAKHAPATNAM",
+      "startsAtOffsetHours": 0,
+      "endsAtOffsetHours": 1440,
+      "sortOrder": 10,
+      "isActive": true,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "key": "BANNER-PRAWNS",
+      "title": "Prawn week",
+      "subtitle": "Tiger, white and scampi — cleaned the way you cook them.",
+      "imageKey": "sample/banners/prawn-week.webp",
+      "linkType": "CATEGORY",
+      "linkTarget": "prawns-shrimp",
+      "cityCode": "VISAKHAPATNAM",
+      "startsAtOffsetHours": 0,
+      "endsAtOffsetHours": 720,
+      "sortOrder": 20,
+      "isActive": true,
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    }
+  ]
+}

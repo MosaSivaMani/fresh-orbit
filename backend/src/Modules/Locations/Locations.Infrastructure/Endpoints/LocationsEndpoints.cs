@@ -13,6 +13,7 @@ using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Paging;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -62,9 +63,10 @@ internal static class LocationsEndpoints
                 new ServiceabilityLocation(served.FulfillmentLocationId, served.FulfillmentLocationCode, served.FulfillmentLocationName, served.HasColdStorage),
                 new ServiceabilityArea(served.ServiceAreaId, served.ServiceAreaName, served.DeliveryFeePaise, served.FreeDeliveryAbovePaise, served.MinOrderPaise),
                 slot is null ? null : new ServiceabilitySlot(slot.SlotId, slot.StartAt, slot.EndAt)));
-        });
+        }).RequireRateLimiting(RateLimitPolicies.Public);
 
-        group.MapGet("/cities", async (ILocationsReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ListActiveCitiesAsync(ct)));
+        group.MapGet("/cities", async (ILocationsReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ListActiveCitiesAsync(ct)))
+            .RequireRateLimiting(RateLimitPolicies.Public);
     }
 
     private static void MapCities(RouteGroupBuilder admin)

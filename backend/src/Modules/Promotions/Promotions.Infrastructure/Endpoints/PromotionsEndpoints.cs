@@ -10,6 +10,7 @@ using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Paging;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ internal static class PromotionsEndpoints
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/coupons", ListVisibleCouponsAsync).RequireAuthorization().WithTags("Promotions");
-        endpoints.MapGet("/promotions", ListBannersAsync).WithTags("Promotions");
+        endpoints.MapGet("/promotions", ListBannersAsync).RequireRateLimiting(RateLimitPolicies.Public).WithTags("Promotions");
 
         var coupons = endpoints.MapGroup("/admin/coupons").RequirePermission(PromotionsManage).WithTags("Admin promotions");
         coupons.MapGet(string.Empty, ListCouponsAsync);

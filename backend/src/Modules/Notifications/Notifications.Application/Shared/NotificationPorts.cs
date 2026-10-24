@@ -30,7 +30,10 @@ public sealed record PushMessage(IReadOnlyList<string> Tokens, string Title, str
 /// <param name="InvalidTokens">Tokens the provider reported as no longer registered; they are removed.</param>
 public sealed record PushResult(string? ProviderMessageId, IReadOnlyList<string> InvalidTokens);
 
-/// <summary>SMS adapter (dev: logs the text; a DLT-registered provider later). Throws on a provider error.</summary>
+/// <summary>
+/// SMS adapter: a DLT-registered provider outside Development and Testing (refused at startup otherwise, SEC-1).
+/// Implementations never log the text or the full phone number. Throws on a provider error.
+/// </summary>
 public interface ISmsSender
 {
     /// <returns>The provider's message id, when it gives one.</returns>
