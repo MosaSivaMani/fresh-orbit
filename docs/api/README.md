@@ -520,7 +520,7 @@ Not served → 200 `{ "pincode": "600123", "serviceable": false, "reasonCode": "
 
 Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
 CART-R31); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
-`GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14).
+Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14).
 
 ### 4.4 Catalog and search (public)
 
