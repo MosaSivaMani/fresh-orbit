@@ -13,6 +13,22 @@
 #
 # Environment: HEALTH_TIMEOUT (seconds, default 240), SKIP_PRE_DEPLOY_BACKUP=true to skip the local backup,
 # SKIP_PULL=true to use images already on the host (local testing, registry outage).
+#
+# Runs on the Linux server (bash 4+, flock) and also on macOS's bash 3.2 without flock (E2E-7: a mkdir lock is used
+# instead), so it can drive the local fo-e2e stack (docs/runbooks/e2e-check.md section 5).
+
+# Before anything else (even `set -o pipefail`): `sh deploy.sh` with a non-bash sh, or a bash older than 3.2, would
+# otherwise fail half-way with an obscure error. POSIX syntax only up to the `fi`.
+if [ -z "${BASH_VERSION:-}" ]; then
+  echo "deploy.sh needs bash 3.2 or later; run it as 'bash infra/scripts/deploy.sh' or './infra/scripts/deploy.sh'." >&2
+  exit 1
+fi
+case $BASH_VERSION in
+  1.* | 2.* | 3.0.* | 3.1.*)
+    echo "deploy.sh needs bash 3.2 or later (this is bash $BASH_VERSION)." >&2
+    exit 1
+    ;;
+esac
 set -euo pipefail
 
 # shellcheck source=infra/scripts/lib.sh
@@ -22,16 +38,18 @@ HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-240}
 STABILITY_SECONDS=${STABILITY_SECONDS:-15}
 
 usage() {
-  sed -n '2,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  # The header comment (line 2 up to the first line that is not a comment).
+  awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
   exit 2
 }
 
 # check_services: 0 = all running (and healthy where a healthcheck exists), 1 = still starting, 2 = failed.
 # Prints the services that are not ready.
 check_services() {
-  local services svc id state health restarts not_ready=() failed=()
-  mapfile -t services < <(compose config --services | grep -vx migrations)
-  for svc in "${services[@]}"; do
+  local svc id state health restarts not_ready=() failed=()
+  # A while-read loop on fd 3, not mapfile (bash 3.2 on macOS has none); fd 3 keeps docker from eating the list.
+  while IFS= read -r svc <&3; do
+    [[ -n $svc && $svc != migrations ]] || continue
     id=$(compose ps -q "$svc" 2>/dev/null || true)
     if [[ -z $id ]]; then
       not_ready+=("$svc:missing")
@@ -44,7 +62,7 @@ check_services() {
     elif [[ $state != running || ($health != healthy && $health != none) ]]; then
       not_ready+=("$svc:$state/$health")
     fi
-  done
+  done 3< <(compose config --services)
   if ((${#failed[@]})); then
     printf '%s\n' "${failed[*]}"
     return 2
@@ -107,14 +125,36 @@ prune_images() {
   docker image prune -f >/dev/null || true
 }
 
+# One deploy at a time. With flock (Linux): a lock on deploy.lock, released by the kernel however the script ends.
+# Without flock (macOS): an atomic mkdir of deploy.lock.d holding the owner's PID, removed on exit; a lock whose PID
+# no longer runs (the deploy was killed with -9) is stale and is taken over.
+acquire_deploy_lock() {
+  if command -v flock >/dev/null 2>&1; then
+    exec 9>"$FO_STATE_DIR/deploy.lock"
+    flock -n 9 || die "Another deploy is running."
+    return 0
+  fi
+  local dir="$FO_STATE_DIR/deploy.lock.d" owner
+  if ! mkdir "$dir" 2>/dev/null; then
+    owner=$(cat "$dir/pid" 2>/dev/null || true)
+    if [[ -n $owner ]] && { kill -0 "$owner" 2>/dev/null || ps -p "$owner" >/dev/null 2>&1; }; then
+      die "Another deploy is running (PID $owner)."
+    fi
+    log "Removing a stale deploy lock (PID ${owner:-unknown} is not running)."
+    rm -rf "$dir"
+    mkdir "$dir" 2>/dev/null || die "Another deploy is running."
+  fi
+  printf '%s\n' "$$" >"$dir/pid"
+  # shellcheck disable=SC2064 # expand $dir now
+  trap "rm -rf '$dir'" EXIT
+}
+
 main() {
   [[ $# -eq 1 ]] || usage
-  require_command docker curl flock
+  require_command docker curl
   require_env_file
   mkdir -p "$FO_STATE_DIR"
-
-  exec 9>"$FO_STATE_DIR/deploy.lock"
-  flock -n 9 || die "Another deploy is running."
+  acquire_deploy_lock
 
   local current tag
   current=$(cat "$FO_STATE_DIR/current-tag" 2>/dev/null || true)
@@ -154,7 +194,8 @@ main() {
     migration_args+=(--sample)
   fi
   log "Running migrations ${migration_args[*]:-}."
-  if ! compose run --rm --no-deps migrations "${migration_args[@]}"; then
+  # ${a[@]+...}: an empty array is "unbound" under set -u in bash before 4.4 (macOS has 3.2).
+  if ! compose run --rm --no-deps migrations ${migration_args[@]+"${migration_args[@]}"}; then
     die "Migrations failed; the running release was not touched. See the output above."
   fi
 

@@ -24,7 +24,8 @@ URLs, JSON-LD, sitemap; missing → no canonical host, empty sitemap, robots dis
 ## 2. Page inventory
 
 Mode: **SSR** = rendered per request on the server (reads the pincode cookie, so not cached); **Static/ISR** =
-prerendered, regenerated hourly (root layout `revalidate = 3600`, for the footer's city list); **Client** = shell
+prerendered, regenerated at most every 5 minutes (root layout `revalidate = 300`, for the footer's city list; E2E-6);
+**Client** = shell
 prerendered, data fetched in the browser with TanStack Query through the same-origin proxy (per-customer data,
 `noindex`).
 
@@ -100,7 +101,9 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
 ## 5. Data fetching
 
 - Server components: `requestApi()` (`src/api/server.ts`) builds a `@fresh/core` client with `X-Pincode`, no cache.
-  Public reads that do not depend on the visitor use `publicHttp(revalidateSeconds)`.
+  Public reads that do not depend on the visitor use `publicHttp(revalidateSeconds)`. Categories and the footer's
+  city list use 300 s, so a city that staff activate shows in the footer within about 5 minutes (E2E-6,
+  `research/deploy-gaps-ops-2026-10.md` §3). The sitemap uses 3600 s.
 - Client components: `browserHttp()` (`src/api/browser.ts`) → same-origin proxy, bearer from memory, refresh on 401.
 - Typed endpoint functions live in `src/api/endpoints/*.ts`; components never build URLs.
 - Writes that need `Idempotency-Key` (place order, cancel, complaint) keep **one key per user action**: reused when

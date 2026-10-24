@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddFreshOrbitSerilog(builder.Configuration, builder.Environment);
 builder.Services.AddFreshOrbitWeb();
 builder.Services.AddFreshOrbitAuthentication();
+builder.Services.AddFreshOrbitDataProtection();
 builder.Services.AddFreshOrbitPersistence();
 builder.Services.AddFreshOrbitModules(builder.Configuration, Modules.All);
 builder.Services.AddFreshOrbitForwardedHeaders();

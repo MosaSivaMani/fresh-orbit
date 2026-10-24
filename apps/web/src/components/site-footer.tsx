@@ -4,9 +4,15 @@ import { publicHttp } from "@/api/server";
 import { type PublicCity } from "@/api/types/locations";
 import { Logo } from "./logo";
 
+/**
+ * How long the footer's city list may be served from cache (E2E-6): short, so a city the staff activate appears
+ * within minutes, like the category list. Keep the root layout's `revalidate` (static pages) equal to it.
+ */
+export const FOOTER_CITIES_REVALIDATE_SECONDS = 300;
+
 async function loadCities(): Promise<PublicCity[]> {
   try {
-    return await getCities(publicHttp(3600));
+    return await getCities(publicHttp(FOOTER_CITIES_REVALIDATE_SECONDS));
   } catch (error) {
     // The footer must render even when the API is down or not configured (e.g. at build time).
     console.warn("Footer: cities unavailable.", error instanceof Error ? error.message : error);

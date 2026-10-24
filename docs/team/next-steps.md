@@ -17,6 +17,7 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 | Branch | What | Waiting for |
 |---|---|---|
 | (none) | Track A, L1 and U1 merged to `main` on 2026-10-24 | |
+| `backend/deploy-gaps-ops` | E2E-3, E2E-5, E2E-6 and E2E-7 (§9). No schema change, no new package | Manager review; decisions to number from D94 |
 
 ## 3. Next, now that Phase 3 is merged
 1. ~~Merge `integration/sec-sample`~~ Merged.
@@ -88,8 +89,8 @@ Merged to `main` (D64–D77; status table in `security/review-2026-10.md` §7): 
 ## 9. Open items from the end-to-end deploy check (`runbooks/e2e-check.md`)
 - E2E-1 Notifications: done on `backend/deploy-gaps-sms` (DLT sender + Fast2SMS adapter; failed send → 503 `SMS_PROVIDER_UNAVAILABLE`; all 13 SMS templates need a DLT template id at start-up). Owner: DLT registration in `runbooks/security-configuration.md` §2.1. Decisions proposed, not yet numbered.
 - E2E-2 Api: done on `security/round-2` (`HostRunner.RunFreshOrbitAsync`: Api and Worker log one Critical line and exit 1).
-- E2E-3 Data Protection keys are not persisted; persist them or confirm unused.
+- E2E-3 Data Protection: done on `backend/deploy-gaps-ops`. Nothing protects data today (JWT only). The Api keeps its key ring on the `dataprotection-keys` volume (`DataProtection:KeysPath`, required outside Development and Testing, `SetApplicationName("FreshOrbit")`). The keys are not encrypted and not backed up; that is to be reviewed when a feature starts using Data Protection (`research/deploy-gaps-ops-2026-10.md` §1).
 - E2E-4 Identity: done on `security/round-2` (staff loads use split queries).
-- E2E-5 EF logs one harmless Error on an empty database.
-- E2E-6 web: footer city list is cached 1 hour, so a newly activated city appears late.
-- E2E-7 `deploy.sh` itself is not yet run (needs Linux: flock, bash 4); run it on the staging server.
+- E2E-5 EF Error on an empty database: done on `backend/deploy-gaps-ops`. The Migrations host creates the history table first, with EF's own idempotent script. No log filter.
+- E2E-6 web footer cities: done on `backend/deploy-gaps-ops`. Cached for 5 minutes instead of 1 hour (fetch and root layout `revalidate`).
+- E2E-7 `deploy.sh`: done on `backend/deploy-gaps-ops`. The script is portable to bash 3.2 without `flock` (mkdir lock fallback, shell check) and was run on the Mac against `fo-e2e` (`runbooks/e2e-check.md` §5). On Linux it behaves exactly as before. It has still not run on a real server: do that on the first staging deploy.

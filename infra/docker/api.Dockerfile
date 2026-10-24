@@ -30,8 +30,9 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_NOLOGO=1 \
     FileStorage__RootPath=/media
 WORKDIR /app
-# /media is the file-storage volume (D21); create it owned by the app user so a new named volume inherits it.
-RUN mkdir -p /media && chown "$APP_UID" /media
+# /media is the file-storage volume (D21) and /keys the Data Protection key ring (E2E-3); create both owned by the app
+# user so a new named volume inherits the owner (and /keys its 700 mode: only the app user can read the keys).
+RUN mkdir -p /media /keys && chown "$APP_UID" /media /keys && chmod 700 /keys
 COPY --from=build /app .
 # Numeric form of the image's non-root `app` user ($APP_UID).
 USER 1654:1654

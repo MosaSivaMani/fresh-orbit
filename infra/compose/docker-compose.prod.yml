@@ -155,6 +155,9 @@ services:
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
       Cors__AllowedOrigins__0: https://${DOMAIN:?DOMAIN is required}
       Cors__AllowedOrigins__1: https://admin.${DOMAIN:?DOMAIN is required}
+      # Data Protection key ring (E2E-3): one volume shared by every api container and kept across deploys, so a
+      # restart or a new release can read what the previous one protected. Required outside Development.
+      DataProtection__KeysPath: /keys
       FileStorage__RootPath: /media
       FileStorage__PublicBaseUrl: https://api.${DOMAIN:?DOMAIN is required}/media
       Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbit}
@@ -169,6 +172,7 @@ services:
       Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
     volumes:
       - media:/media
+      - dataprotection-keys:/keys
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/health || exit 1"]
       interval: 15s
@@ -369,6 +373,8 @@ networks:
 volumes:
   postgres-data:
   media:
+  # ASP.NET Core Data Protection keys of the api (E2E-3). Owned by the app user, mode 700 (api.Dockerfile).
+  dataprotection-keys:
   caddy-data:
   caddy-config:
   loki-data:

@@ -126,6 +126,15 @@ print_loaded() {
     | sed -E 's/^"@m":"Reference data \\"([^"\\]+)\\": ([^"]+)"$/      \1: \2/' || true
 }
 
+# E2E-5: no_error_lines LOGFILE NAME fails when the log has an Error or Fatal entry (Serilog compact JSON).
+no_error_lines() {
+  if grep -qE '"@l":"(Error|Fatal)"' "$1"; then
+    grep -E '"@l":"(Error|Fatal)"' "$1" | head -n 5 >&2
+    die "$2 logged an Error (log: $1)."
+  fi
+  ok "$2 logged no Error"
+}
+
 run_migrations() { # run_migrations LOGFILE [args...] → exit code of the one-shot container
   local logfile=$1 code=0
   shift
@@ -152,6 +161,8 @@ step_migrate() {
   fi
   ((code == 0)) || { tail -n 60 "$WORK_DIR/migrations-run1.log" >&2; die "Migrations run 1 exited $code (log: $WORK_DIR/migrations-run1.log)."; }
   ok "migrations run 1 exited 0"
+  # E2E-5: a fresh database migrates without a single Error line (compact JSON writes "@l" only when not Information).
+  no_error_lines "$WORK_DIR/migrations-run1.log" "migrations run 1"
 
   local history
   history=$(psql_at "SELECT migration_id || ' (EF ' || product_version || ')' FROM $HISTORY_TABLE ORDER BY 1;")
@@ -188,6 +199,7 @@ step_migrate() {
   code=0
   run_migrations "$WORK_DIR/migrations-run2.log" || code=$?
   ((code == 0)) || { tail -n 60 "$WORK_DIR/migrations-run2.log" >&2; die "Migrations run 2 exited $code."; }
+  no_error_lines "$WORK_DIR/migrations-run2.log" "migrations run 2"
   print_loaded "$WORK_DIR/migrations-run2.log"
   local counts2
   counts2=$(reference_counts)
@@ -256,6 +268,33 @@ step_up() {
   done
   printf '      %s\n' "$detail"
   ok "postgres, api, web, admin, caddy healthy; worker running without restarts; migrations exited 0"
+  check_data_protection_keys
+}
+
+# E2E-3: the api keeps its Data Protection key ring on the dataprotection-keys volume (DataProtection__KeysPath=/keys),
+# so a new api container (every deploy) reads the same keys instead of making new ones and logs no "keys may not be
+# persisted" warning.
+data_protection_keys() { compose exec -T api sh -c 'ls -1 /keys 2>/dev/null | grep -E "^key-.+\.xml$" | sort' || true; }
+
+check_data_protection_keys() {
+  local before after i health=starting
+  before=$(data_protection_keys)
+  [[ -n $before ]] || die "api: no Data Protection key in /keys."
+  if compose logs api 2>&1 | grep -q 'may not be persisted outside of the container'; then
+    die "api: Data Protection still stores keys inside the container."
+  fi
+  log "Recreating the api container (as a deploy does); the key ring must survive."
+  compose up -d --no-deps --force-recreate api >/dev/null 2>&1
+  for ((i = 0; i < 60; i++)); do
+    health=$(docker inspect -f '{{.State.Health.Status}}' "$(compose ps -q api)" 2>/dev/null || echo starting)
+    [[ $health == healthy ]] && break
+    sleep 2
+  done
+  [[ $health == healthy ]] || die "api is $health after being recreated."
+  after=$(data_protection_keys)
+  [[ $before == "$after" ]] || die "api: the Data Protection keys changed after a restart ($before → $after)."
+  printf '      keys: %s\n' "$(printf '%s' "$after" | paste -sd, -)"
+  ok "api: Data Protection keys persisted on the dataprotection-keys volume and kept across a new container"
 }
 
 # curl through Caddy exactly as a visitor would (https://<host>/..., standard ports), trusting Caddy's local CA. The
