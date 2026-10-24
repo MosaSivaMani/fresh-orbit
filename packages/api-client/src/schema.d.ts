@@ -981,12 +981,8 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: {
-                    pincode?: string;
-                };
-                header?: {
-                    "X-Pincode"?: string;
-                };
+                query?: never;
+                header?: never;
                 path?: never;
                 cookie?: never;
             };
@@ -999,15 +995,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["WishlistItemResponse"][];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -1074,126 +1061,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/me/stock-alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StockAlertResponse"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateStockAlertRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StockAlertResponse"];
-                    };
-                };
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StockAlertResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/stock-alerts/{alertId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    alertId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description No Content */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/customers": {
         parameters: {
             query?: never;
@@ -1208,7 +1075,6 @@ export interface paths {
                     Status?: string;
                     Page?: number;
                     PageSize?: number;
-                    CityId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1269,64 +1135,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["CustomerDetailResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/customers/{customerId}/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Page?: number;
-                    PageSize?: number;
-                };
-                header?: never;
-                path: {
-                    customerId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CustomerOrdersResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -1438,15 +1246,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ServiceabilityResponse"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -1765,33 +1564,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["CityResponse"];
-                    };
-                };
-                /** @description Precondition Failed */
-                412: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["CityRetirementBlockedProblem"];
-                    };
-                };
-                /** @description Precondition Required */
-                428: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -2312,101 +2084,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/me/locations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Page?: number;
-                    PageSize?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PagedResponseOfStaffLocationItem"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/cities/lookup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Page?: number;
-                    PageSize?: number;
-                    status?: string[];
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PagedResponseOfCityLookupItem"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/home": {
         parameters: {
             query?: never;
@@ -2430,103 +2107,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["HomeResponse"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/bestsellers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BestsellersResponse"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/preparation-methods": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StorefrontPreparationMethod"][];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -2693,24 +2273,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["StorefrontProductDetail"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -2943,56 +2505,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PreparationMethodResponse"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/catalog/variants": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    Page?: number;
-                    PageSize?: number;
-                    q?: string;
-                    id?: string[];
-                    activeOnly?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PagedResponseOfVariantLookupItem"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -3709,33 +3221,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["TaxCategoryRulesResponse"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Precondition Failed */
-                412: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Precondition Required */
-                428: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -4667,56 +4152,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/price-quote": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    variantId?: string;
-                    preparation?: string;
-                    quantity?: number;
-                    unit?: string;
-                    pincode?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PriceQuoteResponse"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/coupons": {
         parameters: {
             query?: never;
@@ -4779,15 +4214,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PagedResponseOfBannerInfo"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -4917,74 +4343,6 @@ export interface paths {
                         "application/json": components["schemas"]["CustomerSlotsResponse"];
                     };
                 };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/delivery/riders/lookup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: {
-                    fulfillmentLocationId?: string;
-                    isActive?: boolean;
-                    q?: string;
-                    page?: number;
-                    pageSize?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PagedResponseOfRiderLookupItem"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
             };
         };
         put?: never;
@@ -5068,50 +4426,6 @@ export interface paths {
                 };
                 /** @description Unprocessable Entity */
                 422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/business-profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PublicBusinessProfileResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5357,15 +4671,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PagedResponseOfRedemptionResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -5865,132 +5170,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/orders/{orderId}/complaints/{complaintId}/photos": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orderId: string;
-                    complaintId: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "multipart/form-data": {
-                        file?: components["schemas"]["IFormFile"];
-                    };
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ComplaintResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Conflict */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Payload Too Large */
-                413: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/orders/{orderId}/complaints/{complaintId}/photos/{photoId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orderId: string;
-                    complaintId: string;
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/orders/{orderId}/invoice": {
         parameters: {
             query?: never;
@@ -6076,7 +5255,7 @@ export interface paths {
             parameters: {
                 query?: {
                     fulfillmentLocationId?: string;
-                    status?: string[];
+                    status?: string;
                     slotDate?: string;
                     slotId?: string;
                     paymentMethod?: string;
@@ -6097,24 +5276,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PagedResponseOfAdminOrderListItem"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -6155,15 +5316,6 @@ export interface paths {
                         "application/json": components["schemas"]["PickListResponse"];
                     };
                 };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
             };
         };
         put?: never;
@@ -6199,24 +5351,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["AdminOrderDetailResponse"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -6576,78 +5710,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ComplaintResponse"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/complaints/{complaintId}/photos/{photoId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    complaintId: string;
-                    photoId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -7927,8 +6989,6 @@ export interface paths {
                     slotId?: string;
                     riderId?: string;
                     status?: string[];
-                    slotDate?: string;
-                    sort?: string;
                     page?: number;
                     pageSize?: number;
                 };
@@ -7945,15 +7005,6 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["PagedResponseOfShipmentResponse"];
-                    };
-                };
-                /** @description Unprocessable Entity */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -9214,7 +8265,6 @@ export interface components {
             finalTotalPaise: null | number;
             /** Format: int64 */
             amountDuePaise: number;
-            version: string;
         };
         AdminPreparationResponse: {
             code: string;
@@ -9284,12 +8334,6 @@ export interface components {
             isWeightVariable: boolean;
             isActive: boolean;
             preparations: components["schemas"]["AdminPreparationResponse"][];
-            /** Format: int32 */
-            piecesMin?: null | number;
-            /** Format: int32 */
-            piecesMax?: null | number;
-            /** Format: int32 */
-            serves?: null | number;
         };
         AllowedActionsDto: {
             cancel: boolean;
@@ -9373,7 +8417,6 @@ export interface components {
             endsAt: null | string;
             /** Format: int32 */
             sortOrder: number;
-            imageUrl?: null | string;
         };
         BatchResponse: {
             /** Format: uuid */
@@ -9403,16 +8446,9 @@ export interface components {
             totalCostPaise: number;
             /** Format: int64 */
             costPerUnitPaise: number;
-            productName?: null | string;
-            variantName?: null | string;
-            sku?: null | string;
         };
         /** @enum {string} */
         BatchStatus: "ACTIVE" | "DEPLETED" | "EXPIRED" | "DISCARDED";
-        BestsellersResponse: {
-            location: components["schemas"]["LocationRef"];
-            items: components["schemas"]["ProductListItem"][];
-        };
         BulkPriceResponse: {
             /** Format: uuid */
             uploadId: null | string;
@@ -9464,7 +8500,6 @@ export interface components {
             supportEmail: string;
             timeZone: string;
             version: string;
-            supportHours?: null | string;
         };
         CancelOrderRequest: {
             reasonCode: null | string;
@@ -9532,9 +8567,6 @@ export interface components {
             availability: components["schemas"]["CartAvailabilityView"];
             isSellable: boolean;
             issues: components["schemas"]["CartIssueView"][];
-            minOrder?: null | components["schemas"]["QuantityView"];
-            maxOrder?: null | components["schemas"]["QuantityView"];
-            orderStep?: null | components["schemas"]["QuantityView"];
         };
         CartLocationRequest: {
             pincode: string;
@@ -9733,13 +8765,6 @@ export interface components {
             version: string;
             readiness: components["schemas"]["ReadinessResponse"];
         };
-        CityLookupItem: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            name: string;
-            status: components["schemas"]["CityStatus"];
-        };
         CityResponse: {
             /** Format: uuid */
             id: string;
@@ -9753,20 +8778,6 @@ export interface components {
             /** Format: uuid */
             activatedBy: null | string;
             version: string;
-        };
-        CityRetirementBlockedProblem: {
-            type: null | string;
-            title: string;
-            /** Format: int32 */
-            status: number;
-            detail: string;
-            instance: null | string;
-            code: string;
-            traceId: null | string;
-            blocking: string[];
-            errors: {
-                [key: string]: components["schemas"]["ProblemError"][];
-            };
         };
         /** @enum {string} */
         CityStatus: "DRAFT" | "ACTIVE" | "PAUSED" | "RETIRED";
@@ -9795,17 +8806,6 @@ export interface components {
         };
         /** @enum {null|string} */
         CollectionMode: "CASH" | "UPI" | null;
-        ComplaintPhotoDto: {
-            /** Format: uuid */
-            id: string;
-            url: string;
-            /** Format: int32 */
-            width: number;
-            /** Format: int32 */
-            height: number;
-            /** Format: date-time */
-            uploadedAt: string;
-        };
         ComplaintResponse: {
             /** Format: uuid */
             id: string;
@@ -9831,12 +8831,6 @@ export interface components {
             /** Format: date-time */
             resolvedAt: null | string;
             attachmentUrls: string[];
-            productName: null | string;
-            variantName: null | string;
-            preparationName: null | string;
-            /** Format: int64 */
-            maxRefundPaise: number;
-            photos: components["schemas"]["ComplaintPhotoDto"][];
         };
         CountStockRequest: {
             /** Format: uuid */
@@ -10002,12 +8996,6 @@ export interface components {
             locationIds: null | string[];
             temporaryPassword: string;
         };
-        CreateStockAlertRequest: {
-            /** Format: uuid */
-            variantId: string;
-            /** Format: uuid */
-            fulfillmentLocationId: string;
-        };
         CreateStockItemRequest: {
             /** Format: uuid */
             fulfillmentLocationId: string;
@@ -10031,7 +9019,6 @@ export interface components {
             deletedAt: null | string;
             addresses: components["schemas"]["AddressResponse"][];
             version: string;
-            orderCounts: components["schemas"]["CustomerOrderCountsResponse"];
         };
         CustomerListItem: {
             /** Format: uuid */
@@ -10073,46 +9060,6 @@ export interface components {
             phone: null | string;
             fullName: null | string;
             isNewCustomer: boolean;
-        };
-        CustomerOrderCountsResponse: {
-            /** Format: int32 */
-            total: number;
-            /** Format: int32 */
-            open: number;
-            /** Format: int32 */
-            delivered: number;
-            /** Format: int32 */
-            cancelled: number;
-            /** Format: date-time */
-            lastPlacedAt: null | string;
-        };
-        CustomerOrderListItem: {
-            /** Format: uuid */
-            orderId: string;
-            orderNumber: string;
-            status: components["schemas"]["OrderStatus"];
-            paymentMethod: components["schemas"]["OrderingPaymentMethod"];
-            /** Format: uuid */
-            fulfillmentLocationId: string;
-            /** Format: date-time */
-            placedAt: string;
-            /** Format: date-time */
-            slotStartAt: string;
-            /** Format: date-time */
-            slotEndAt: string;
-            /** Format: int64 */
-            totalPaise: number;
-            /** Format: int64 */
-            finalTotalPaise: null | number;
-        };
-        CustomerOrdersResponse: {
-            items: components["schemas"]["CustomerOrderListItem"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
         };
         CustomerPaymentResponse: {
             /** Format: uuid */
@@ -10161,7 +9108,6 @@ export interface components {
             /** Format: uuid */
             fulfillmentLocationId: string;
             items: components["schemas"]["CustomerSlotResponse"][];
-            timeZone: string;
         };
         DashboardCount: {
             status: string;
@@ -10181,8 +9127,6 @@ export interface components {
             available: number;
             /** Format: int64 */
             lowStockThreshold: number;
-            stockUnit: null | string;
-            productName: null | string;
         };
         DashboardResponse: {
             /** Format: date-time */
@@ -10201,21 +9145,6 @@ export interface components {
             refundsRequestedPaise: number;
             /** Format: int64 */
             openPaymentIssues: number;
-            sales: components["schemas"]["DashboardSales"];
-        };
-        DashboardSales: {
-            /** Format: int64 */
-            ordersPlaced: number;
-            /** Format: int64 */
-            ordersCancelled: number;
-            /** Format: int64 */
-            orderValuePaise: number;
-            /** Format: int64 */
-            averageOrderValuePaise: null | number;
-            /** Format: int64 */
-            ordersDelivered: number;
-            /** Format: int64 */
-            deliveredRevenuePaise: number;
         };
         DashboardSlot: {
             /** Format: uuid */
@@ -10308,20 +9237,12 @@ export interface components {
         DisputeCashSettlementRequest: {
             reason: null | string;
         };
-        FreshnessInfo: {
-            /** Format: date */
-            caughtOn: null | string;
-            /** Format: date-time */
-            receivedAt: string;
-        };
         FromPrice: {
             /** Format: int64 */
             unitPricePaise: number;
             /** Format: int64 */
             compareAtPaise: null | number;
             perUnit: components["schemas"]["SellUnit"];
-            /** Format: int32 */
-            discountBp?: null | number;
         };
         FulfillmentLocationResponse: {
             /** Format: uuid */
@@ -10350,28 +9271,11 @@ export interface components {
             /** Format: uuid */
             orderItemId: null | string;
         };
-        HomeBanner: {
-            /** Format: uuid */
-            id: string;
-            title: string;
-            subtitle: null | string;
-            imageKey: null | string;
-            imageUrl: null | string;
-            linkType: string;
-            linkTarget: string;
-            /** Format: date-time */
-            startsAt: string;
-            /** Format: date-time */
-            endsAt: null | string;
-            /** Format: int32 */
-            sortOrder: number;
-        };
         HomeResponse: {
-            banners: components["schemas"]["HomeBanner"][];
+            banners: unknown[];
             featuredCategories: components["schemas"]["StorefrontCategory"][];
             featuredProducts: components["schemas"]["ProductListItem"][];
             locationRequired: boolean;
-            bestsellers?: components["schemas"]["ProductListItem"][];
         };
         /** Format: binary */
         IFormFile: string;
@@ -10473,17 +9377,6 @@ export interface components {
             status: components["schemas"]["AvailabilityStatus"];
             message: null | string;
         };
-        ListVariant: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            sellUnit: components["schemas"]["SellUnit"];
-            minOrder: components["schemas"]["QuantityValue"];
-            maxOrder: components["schemas"]["QuantityValue"];
-            orderStep: components["schemas"]["QuantityValue"];
-            defaultPreparationCode: null | string;
-            serving: components["schemas"]["ServingInfo"];
-        };
         LocationRef: {
             fulfillmentLocationCode: string;
             pincode: string;
@@ -10528,11 +9421,6 @@ export interface components {
             occurredAt: string;
             /** Format: uuid */
             recordedBy: null | string;
-            /** Format: uuid */
-            variantId?: null | string;
-            productName?: null | string;
-            variantName?: null | string;
-            sku?: null | string;
         };
         NumberSeriesListResponse: {
             items: components["schemas"]["NumberSeriesResponse"][];
@@ -10613,7 +9501,6 @@ export interface components {
             payment: components["schemas"]["OrderPaymentDto"];
             invoice: null | components["schemas"]["OrderInvoiceRefDto"];
             allowedActions: components["schemas"]["AllowedActionsDto"];
-            timeZone?: string;
         };
         OrderHistoryDto: {
             from: null | string;
@@ -10659,16 +9546,6 @@ export interface components {
             /** Format: uuid */
             substitutedFromItemId: null | string;
         };
-        OrderLineBatchDto: {
-            /** Format: uuid */
-            movementId: string;
-            /** Format: uuid */
-            batchId: null | string;
-            batchCode: null | string;
-            quantity: components["schemas"]["OrderingQuantityDto"];
-            /** Format: date-time */
-            occurredAt: string;
-        };
         OrderLineStockDto: {
             /** Format: uuid */
             orderItemId: string;
@@ -10678,8 +9555,6 @@ export interface components {
             grossQuantity: components["schemas"]["OrderingQuantityDto"];
             /** Format: int32 */
             yieldBp: number;
-            reservationStatus: null | string;
-            batches: components["schemas"]["OrderLineBatchDto"][];
         };
         OrderListItem: {
             /** Format: uuid */
@@ -10701,7 +9576,6 @@ export interface components {
             finalTotalPaise: null | number;
             /** Format: int64 */
             amountDuePaise: number;
-            timeZone?: string;
         };
         OrderPaymentDto: {
             method: string;
@@ -10739,8 +9613,6 @@ export interface components {
             maxDeliveryAttempts: number;
             version: string;
         };
-        /** @enum {string} */
-        OrderStatus: "PENDING_PAYMENT" | "CONFIRMED" | "PREPARING" | "PACKED" | "OUT_FOR_DELIVERY" | "DELIVERED" | "PAYMENT_FAILED" | "CANCELLED" | "DELIVERY_FAILED" | "RETURNED";
         OrderTrackingResponse: {
             orderNumber: string;
             status: string;
@@ -10750,10 +9622,7 @@ export interface components {
             deliveryCode: null | string;
             /** Format: int64 */
             amountDuePaise: number;
-            timeZone?: string;
         };
-        /** @enum {string} */
-        OrderingPaymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
         OrderingQuantityDto: {
             /** Format: int32 */
             value: number;
@@ -10857,15 +9726,6 @@ export interface components {
         };
         PagedResponseOfCashSettlementResponse: {
             items: components["schemas"]["CashSettlementResponse"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
-        PagedResponseOfCityLookupItem: {
-            items: components["schemas"]["CityLookupItem"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -11017,15 +9877,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        PagedResponseOfRiderLookupItem: {
-            items: components["schemas"]["RiderLookupItem"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
         PagedResponseOfRiderResponse: {
             items: components["schemas"]["RiderResponse"][];
             /** Format: int32 */
@@ -11062,26 +9913,8 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        PagedResponseOfStaffLocationItem: {
-            items: components["schemas"]["StaffLocationItem"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
         PagedResponseOfStockItemResponse: {
             items: components["schemas"]["StockItemResponse"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int32 */
-            totalCount: number;
-        };
-        PagedResponseOfVariantLookupItem: {
-            items: components["schemas"]["VariantLookupItem"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -11172,8 +10005,6 @@ export interface components {
             failureMessage: null | string;
             summary: components["schemas"]["PaymentSummaryResponse"];
             version: string;
-            /** Format: date-time */
-            createdAt: string;
         };
         /** @enum {string} */
         PaymentStatus: "PENDING" | "AUTHORIZED" | "CAPTURED" | "COLLECTED" | "FAILED" | "CANCELLED";
@@ -11208,7 +10039,6 @@ export interface components {
             grossQuantity: number;
             /** Format: int32 */
             orderCount: number;
-            sku: string;
         };
         PickListResponse: {
             /** Format: uuid */
@@ -11216,19 +10046,6 @@ export interface components {
             /** Format: uuid */
             slotId: string;
             lines: components["schemas"]["PickListLine"][];
-            slot: null | components["schemas"]["PickListSlotDto"];
-            /** Format: int32 */
-            orderCount: number;
-        };
-        PickListSlotDto: {
-            /** Format: date */
-            slotDate: string;
-            /** Format: date-time */
-            startAt: string;
-            /** Format: date-time */
-            endAt: string;
-            /** Format: date-time */
-            cutoffAt: string;
         };
         PincodeResponse: {
             pincode: string;
@@ -11282,37 +10099,6 @@ export interface components {
             /** Format: date-time */
             validTo: null | string;
         };
-        PriceQuoteResponse: {
-            /** Format: uuid */
-            variantId: string;
-            preparationCode: null | string;
-            quantity: components["schemas"]["QuantityView"];
-            maxChargeableQuantity: components["schemas"]["QuantityView"];
-            /** Format: int64 */
-            unitPricePaise: number;
-            /** Format: int64 */
-            compareAtPaise: null | number;
-            /** Format: int32 */
-            discountBp: null | number;
-            priceUnit: string;
-            /** Format: int64 */
-            itemPaise: number;
-            /** Format: int64 */
-            preparationPaise: number;
-            chargeBasis: null | string;
-            /** Format: int32 */
-            taxRateBp: number;
-            /** Format: int64 */
-            taxPaise: number;
-            /** Format: int64 */
-            estimatedTotalPaise: number;
-            /** Format: int64 */
-            maxChargeablePaise: number;
-            availability: components["schemas"]["CartAvailabilityView"];
-            fulfillmentLocationCode: null | string;
-            pincode: string;
-            weightNote: null | string;
-        };
         PriceScheduleResponse: {
             /** Format: uuid */
             fulfillmentLocationId: string;
@@ -11333,10 +10119,6 @@ export interface components {
             detail?: null | string;
             instance?: null | string;
         };
-        ProblemError: {
-            code: string;
-            message: string;
-        };
         ProductListItem: {
             /** Format: uuid */
             id: string;
@@ -11348,13 +10130,6 @@ export interface components {
             fromPrice: null | components["schemas"]["FromPrice"];
             availability: null | components["schemas"]["ListAvailability"];
             locationRequired: boolean;
-            defaultVariant?: null | components["schemas"]["ListVariant"];
-            freshness?: null | components["schemas"]["FreshnessInfo"];
-            offer?: null | components["schemas"]["ProductOffer"];
-        };
-        ProductOffer: {
-            couponCode: string;
-            text: string;
         };
         ProductRequest: {
             /** Format: uuid */
@@ -11428,17 +10203,6 @@ export interface components {
             /** Format: uuid */
             preparationMethodId: null | string;
             quantity: null | components["schemas"]["OrderingQuantityDto"];
-        };
-        PublicBusinessProfileResponse: {
-            legalName: string;
-            tradeName: string;
-            gstin: null | string;
-            fssaiLicenseNo: null | string;
-            address: string;
-            supportPhone: string;
-            supportEmail: string;
-            supportHours: null | string;
-            timeZone: string;
         };
         PublicCityResponse: {
             /** Format: uuid */
@@ -11543,7 +10307,6 @@ export interface components {
             /** Format: date-time */
             reversedAt: null | string;
             reversalReason: null | components["schemas"]["ReversalReason"];
-            orderNumber?: null | string;
         };
         /** @enum {string} */
         RedemptionStatus: "APPLIED" | "REVERSED";
@@ -11642,9 +10405,6 @@ export interface components {
             expiresAt: null | string;
             /** Format: date-time */
             createdAt: string;
-            productName?: null | string;
-            variantName?: null | string;
-            sku?: null | string;
         };
         /** @enum {string} */
         ReservationStatus: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
@@ -11656,15 +10416,6 @@ export interface components {
         };
         /** @enum {null|string} */
         ReversalReason: "ORDER_CANCELLED" | "PAYMENT_FAILED" | null;
-        RiderLookupItem: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            fulfillmentLocationId: string;
-            fullName: string;
-            phoneLast4: string;
-            isActive: boolean;
-        };
         RiderResponse: {
             /** Format: uuid */
             id: string;
@@ -11713,7 +10464,6 @@ export interface components {
             supportPhone: string;
             supportEmail: string;
             timeZone: string;
-            supportHours?: null | string;
         };
         SaveNumberSeriesRequest: {
             prefix: string;
@@ -11783,7 +10533,6 @@ export interface components {
             id: string;
             code: string;
             name: string;
-            timeZone: string;
         };
         ServiceabilityLocation: {
             /** Format: uuid */
@@ -11808,21 +10557,6 @@ export interface components {
             startAt: string;
             /** Format: date-time */
             endAt: string;
-            /** Format: date */
-            date?: string;
-            /** Format: date-time */
-            cutoffAt?: string;
-        };
-        ServingInfo: {
-            basis: components["schemas"]["QuantityValue"];
-            /** Format: int32 */
-            netWeightGrams: null | number;
-            /** Format: int32 */
-            piecesMin: null | number;
-            /** Format: int32 */
-            piecesMax: null | number;
-            /** Format: int32 */
-            serves: null | number;
         };
         SessionTokensResponse: {
             accessToken: string;
@@ -11946,15 +10680,6 @@ export interface components {
             /** Format: int32 */
             totalCount: number;
         };
-        StaffLocationItem: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            cityId: string;
-            code: string;
-            name: string;
-            status: components["schemas"]["LocationStatus"];
-        };
         StaffLoginRequest: {
             email: string;
             password: string;
@@ -12003,16 +10728,6 @@ export interface components {
             code: string;
             name: string;
         };
-        StockAlertResponse: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            variantId: string;
-            /** Format: uuid */
-            fulfillmentLocationId: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
         StockChangeResponse: {
             movements: components["schemas"]["MovementResponse"][];
             stockItem: components["schemas"]["StockItemResponse"];
@@ -12033,9 +10748,6 @@ export interface components {
             lowStockThreshold: number;
             isLowStock: boolean;
             batches: null | components["schemas"]["BatchResponse"][];
-            productName?: null | string;
-            variantName?: null | string;
-            sku?: null | string;
         };
         StorefrontCategory: {
             /** Format: uuid */
@@ -12077,13 +10789,6 @@ export interface components {
             chargePaise: null | number;
             chargeBasis: null | string;
         };
-        StorefrontPreparationMethod: {
-            code: string;
-            name: string;
-            description: null | string;
-            /** Format: int32 */
-            sortOrder: number;
-        };
         StorefrontProductDetail: {
             /** Format: uuid */
             id: string;
@@ -12103,7 +10808,6 @@ export interface components {
             netWeightNote: string;
             isWishlisted: null | boolean;
             locationRequired: boolean;
-            offer?: null | components["schemas"]["ProductOffer"];
         };
         StorefrontVariant: {
             /** Format: uuid */
@@ -12125,10 +10829,6 @@ export interface components {
             compareAtPaise: null | number;
             preparations: components["schemas"]["StorefrontPreparation"][];
             availability: null | components["schemas"]["CatalogVariantAvailability"];
-            /** Format: int32 */
-            discountBp?: null | number;
-            serving?: null | components["schemas"]["ServingInfo"];
-            freshness?: null | components["schemas"]["FreshnessInfo"];
         };
         SubstitutionDto: {
             /** Format: uuid */
@@ -12289,19 +10989,6 @@ export interface components {
             body: string;
             isActive: boolean;
         };
-        VariantLookupItem: {
-            /** Format: uuid */
-            variantId: string;
-            /** Format: uuid */
-            productId: string;
-            productName: string;
-            variantName: string;
-            sku: string;
-            sellUnit: components["schemas"]["SellUnit"];
-            stockUnit: components["schemas"]["CatalogStockUnit"];
-            productStatus: components["schemas"]["ProductStatus"];
-            isActive: boolean;
-        };
         VariantPreparationRequest: {
             code: null | string;
             /** Format: int32 */
@@ -12324,12 +11011,6 @@ export interface components {
             orderStep: null | number;
             isActive: null | boolean;
             preparations: null | components["schemas"]["VariantPreparationRequest"][];
-            /** Format: int32 */
-            piecesMin?: null | number;
-            /** Format: int32 */
-            piecesMax?: null | number;
-            /** Format: int32 */
-            serves?: null | number;
         };
         VisibleCoupon: {
             code: string;
@@ -12372,21 +11053,6 @@ export interface components {
             productId: string;
             /** Format: date-time */
             addedAt: string;
-            product?: null | components["schemas"]["WishlistProductView"];
-        };
-        WishlistPriceView: {
-            /** Format: int64 */
-            unitPricePaise: number;
-            /** Format: int64 */
-            compareAtPaise: null | number;
-            perUnit: string;
-        };
-        WishlistProductView: {
-            slug: string;
-            name: string;
-            imageUrl: null | string;
-            price: null | components["schemas"]["WishlistPriceView"];
-            isAvailable: boolean;
         };
     };
     responses: never;
