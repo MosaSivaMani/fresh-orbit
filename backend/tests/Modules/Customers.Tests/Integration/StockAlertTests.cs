@@ -10,6 +10,7 @@ using FreshOrbit.Notifications.Domain.Messages;
 using FreshOrbit.Notifications.Domain.Shared;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Outbox;
+using FreshOrbit.SharedKernel.EntityFramework.Platform;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
