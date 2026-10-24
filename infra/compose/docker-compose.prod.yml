@@ -58,6 +58,7 @@ x-sms-env: &sms-env
 services:
   postgres:
     image: postgres:17.10-alpine3.24
+    networks: [backend]
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-freshorbit}
@@ -123,6 +124,7 @@ services:
   # deploy.sh also runs it explicitly (with --sample on staging when SEED_SAMPLE_DATA=true) before `up`.
   migrations:
     image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-migrations:${IMAGE_TAG:?IMAGE_TAG is required}
+    networks: [backend]
     restart: "no"
     depends_on:
       postgres:
@@ -138,6 +140,7 @@ services:
 
   api:
     image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-api:${IMAGE_TAG:?IMAGE_TAG is required}
+    networks: [edge, backend]
     restart: unless-stopped
     depends_on:
       postgres:
@@ -147,8 +150,8 @@ services:
     environment:
       <<: [*backend-env, *sms-env]
       ASPNETCORE_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
-      # Trust X-Forwarded-For/-Proto only from the compose network (Caddy). Left empty, every client shares one
-      # rate-limit bucket (docs/runbooks/security-configuration.md).
+      # Trust X-Forwarded-For/-Proto only from the edge network (Caddy and the web server's /api/v1 proxy). Left
+      # empty, every client shares one rate-limit bucket (docs/runbooks/security-configuration.md §1).
       ForwardedHeaders__KnownNetworks__0: ${DOCKER_SUBNET:-172.30.0.0/24}
       Jwt__Issuer: ${JWT_ISSUER:-freshorbit}
       Jwt__Audience: ${JWT_AUDIENCE:-freshorbit}
@@ -188,6 +191,7 @@ services:
 
   worker:
     image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-worker:${IMAGE_TAG:?IMAGE_TAG is required}
+    networks: [backend]
     restart: unless-stopped
     depends_on:
       postgres:
@@ -225,6 +229,7 @@ services:
 
   web:
     image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-web:${IMAGE_TAG:?IMAGE_TAG is required}
+    networks: [edge]
     restart: unless-stopped
     depends_on:
       api:
@@ -249,6 +254,7 @@ services:
 
   admin:
     image: ${IMAGE_REGISTRY:-ghcr.io/mosasivamani}/fresh-orbit-admin:${IMAGE_TAG:?IMAGE_TAG is required}
+    networks: [static]
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
@@ -263,6 +269,7 @@ services:
 
   caddy:
     image: caddy:2.11.6-alpine
+    networks: [edge, static]
     restart: unless-stopped
     depends_on:
       api:
@@ -300,6 +307,7 @@ services:
 
   loki:
     image: grafana/loki:3.7.8
+    networks: [backend]
     profiles: ["monitoring"]
     restart: unless-stopped
     command: ["-config.file=/etc/loki/config.yml"]
@@ -314,6 +322,7 @@ services:
 
   alloy:
     image: grafana/alloy:v1.20.1
+    networks: [backend]
     profiles: ["monitoring"]
     restart: unless-stopped
     command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
@@ -331,6 +340,7 @@ services:
 
   grafana:
     image: grafana/grafana:13.2.3
+    networks: [backend]
     profiles: ["monitoring"]
     restart: unless-stopped
     depends_on:
@@ -364,11 +374,17 @@ services:
     logging: *logging
 
 networks:
-  default:
-    # Fixed subnet so Caddy's address is predictable for the API's forwarded-headers allow-list.
+  # The only network whose peers the API trusts for X-Forwarded-For / -Proto (ForwardedHeaders:KnownNetworks):
+  # Caddy and the website's Next.js server (which proxies /api/v1 and forwards the visitor IP it got from Caddy), and
+  # the API itself. Fixed subnet so the allow-list stays the same between deploys (W9, SEC-2).
+  edge:
     ipam:
       config:
         - subnet: ${DOCKER_SUBNET:-172.30.0.0/24}
+  # Database, migrations, worker and monitoring. Not trusted: a request from here keeps its own peer address.
+  backend: {}
+  # Caddy and the static admin SPA (which never calls the API itself). Not trusted.
+  static: {}
 
 volumes:
   postgres-data:

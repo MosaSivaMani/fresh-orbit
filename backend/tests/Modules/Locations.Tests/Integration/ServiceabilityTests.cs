@@ -23,6 +23,8 @@ public sealed class ServiceabilityTests(LocationsDatabase database) : LocationsT
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         json.GetProperty("serviceable").GetBoolean().Should().BeTrue();
         json.GetProperty("city").GetProperty("id").GetGuid().Should().Be(setup.CityId);
+        json.GetProperty("city").GetProperty("name").GetString().Should().Be("Test City");
+        json.GetProperty("city").GetProperty("timeZone").GetString().Should().Be("Asia/Kolkata");
         json.GetProperty("fulfillmentLocation").GetProperty("id").GetGuid().Should().Be(setup.LocationId);
         json.GetProperty("serviceArea").GetProperty("deliveryFeePaise").GetInt64().Should().Be(3900);
         json.GetProperty("serviceArea").GetProperty("minOrderPaise").GetInt64().Should().Be(29900);
@@ -39,6 +41,26 @@ public sealed class ServiceabilityTests(LocationsDatabase database) : LocationsT
             MinOrderPaise = (long?)29900,
         });
         resolved.FulfillmentLocationCode.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Next_slot_carries_its_local_date_and_cutoff_as_the_delivery_eta()
+    {
+        var setup = await CreateActiveCityAsync();
+        var slotId = Guid.CreateVersion7();
+        // 20:00 UTC is 01:30 the next day in Asia/Kolkata: the date must be the location's, not UTC's.
+        var startAt = new DateTimeOffset(2030, 3, 4, 20, 0, 0, TimeSpan.Zero);
+        var cutoffAt = startAt.AddHours(-2);
+        Factory.NextSlots.Slots[setup.LocationId] = new NextSlot(slotId, startAt, startAt.AddHours(2), cutoffAt);
+
+        var json = await ReadJsonAsync(await Factory.CreateClient().GetAsync($"/api/v1/serviceability?pincode={setup.Pincode}", Ct));
+
+        var nextSlot = json.GetProperty("nextSlot");
+        nextSlot.GetProperty("id").GetGuid().Should().Be(slotId);
+        nextSlot.GetProperty("startAt").GetDateTimeOffset().Should().Be(startAt);
+        nextSlot.GetProperty("endAt").GetDateTimeOffset().Should().Be(startAt.AddHours(2));
+        nextSlot.GetProperty("date").GetString().Should().Be("2030-03-05");
+        nextSlot.GetProperty("cutoffAt").GetDateTimeOffset().Should().Be(cutoffAt);
     }
 
     [Fact]

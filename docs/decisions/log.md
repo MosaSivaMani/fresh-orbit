@@ -131,3 +131,31 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D125 | 2026-10-24 | Sticky Place order bar | Sits at the bottom of the page grid at every width, not in a side column |
 | D126 | 2026-10-24 | Times kept at microsecond precision | `IClock` (`SystemClock`, `TestClock`) and client instants the domain compares (pricing `validFrom`) are cut to whole microseconds with `StoredPrecision.TruncateToMicroseconds`, so a value read back from Postgres equals the one written on Linux too; fixed in the clock, not with test tolerances, because the mismatch caused a real pricing 500 |
 | D127 | 2026-10-24 | Hosting without Oracle | Oracle Cloud sign-up failed for the owner ("Forbidden – number of requests exceeded"). Testing before launch uses GitHub Codespaces and the demo APK (₹0, nothing on the dev laptop); no server is rented until launch is near (DLT approved, domain bought); then Hostinger VPS KVM 2 directly (`runbooks/move-to-hostinger.md` steps on a fresh VPS). Oracle stays optional if a later sign-up works. Amends D25 |
+| D128 | 2026-10-24 | Catalog storefront facts via ports | Storefront facts owned by other modules reach Catalog through ports in `Catalog.Public` that those modules implement; Catalog uses no other module (Track E, PR #6) |
+| D129 | 2026-10-24 | Pre-add price quote | `GET /price-quote` lives in Cart and reuses the line code; needs a location, applies no coupon, reports stock instead of refusing (Track E, PR #6) |
+| D130 | 2026-10-24 | Bestsellers | Distinct sold orders in the last 30 days per location (CONFIRMED..DELIVERED); top 40 cached 10 min; at most 12 in-stock shown; empty without sales (Track E, PR #6) |
+| D131 | 2026-10-24 | Freshness shown | The FEFO-next batch (Track E, PR #6) |
+| D132 | 2026-10-24 | Compare-at discount | Floored basis points; null when 0 or when compare-at is not above the price (Track E, PR #6) |
+| D133 | 2026-10-24 | Serving facts | Per serving basis (1 kg net, one pack, one piece); PIECE variants have no pieces range; scaling floors/ceils pieces and floors serves, minimum 1 (Track E, PR #6) |
+| D134 | 2026-10-24 | Offer line choice | Most specific listed coupon (product, category, store-wide), then lowest minimum order, then code; not customer-specific; text composed by the server (Track E, PR #6) |
+| D135 | 2026-10-24 | Public preparation methods | Methods in use on visible variants; with a location, only those priced, stocked and charged there (Track E, PR #6) |
+| D136 | 2026-10-24 | Default variant | With a location, the cheapest current offer (ties by variant id); without, the first visible variant by id (Track E, PR #6) |
+| D137 | 2026-10-24 | Complaint photos | Added after raising, one per request, private, WebP only via `IImageSanitizer`; max 4 photos, 5 MB, shortest side 320 px, width 1280 px (Track E, PR #6) |
+| D138 | 2026-10-24 | G16 order numbers | Read through Ordering at list time (Track E, PR #6) |
+| D139 | 2026-10-24 | Account deletion with open matters | 422 `ACCOUNT_HAS_OPEN_MATTERS` via `ICustomerDeletionCheck`; active orders stay 409 (Track E, PR #6) |
+| D140 | 2026-10-24 | Shipment sort keys | As in G10, ties by placedAt then id (Track E, PR #6) |
+| D141 | 2026-10-24 | Rider lookup permission | Any of `delivery.manage` or `cash.settle` (Track E, PR #6) |
+| D142 | 2026-10-24 | Reference lookups for staff | Own locations, city lookup, variant search and preparation methods are open to any staff token; edits keep `*.manage` (Track E, PR #6) |
+| D143 | 2026-10-24 | Tax rule schedules | Versioned like price schedules (428/412/409) (Track E, PR #6) |
+| D144 | 2026-10-24 | Adding child records | Image upload or refund request takes no `If-Match` (Track E, PR #6) |
+| D145 | 2026-10-24 | Customer cityId filter | An active saved address in a pincode served by the city (Track E, PR #6) |
+| D146 | 2026-10-24 | Customer order counts | Scoped to the caller's locations; PAYMENT_FAILED not counted (Track E, PR #6) |
+| D147 | 2026-10-24 | Home banners source | `IHomeBannerSource` in `Catalog.Public`, implemented by Promotions (Track E, PR #6) |
+| D148 | 2026-10-24 | Back-in-stock alerts | Customers owns them; Inventory publishes `StockAvailableAgain`; Customers publishes `StockAlertTriggered`; Notifications sends; fires once and is deleted (Track E, PR #6) |
+| D149 | 2026-10-24 | BACK_IN_STOCK channels | Push, email and in-app only under ORDER_UPDATES; no SMS or DLT template (Track E, PR #6) |
+| D150 | 2026-10-24 | Public business profile | Legal name, GSTIN, FSSAI licence, address and support hours; 404 when not configured (Track E, PR #6) |
+| D151 | 2026-10-24 | Forwarded headers trust | Only from the edge network (Caddy and web); Caddy overwrites X-Forwarded-For with `{client_ip}` (Track E, PR #6) |
+| D152 | 2026-10-24 | Wishlist prices | Only when a location is given (Track E, PR #6) |
+| D153 | 2026-10-24 | Order needs location time zone | Placing an order requires it (422 `CONFIGURATION_MISSING`); rule ORD-R65 (Track E, PR #6) |
+| D154 | 2026-10-24 | Delivery ETA | Extends `nextSlot` (date, cutoffAt) instead of a new field (Track E, PR #6) |
+| D155 | 2026-10-24 | Stock-alert rate limit | Public per-IP limit until a customer limiter exists (Track E, PR #6) |

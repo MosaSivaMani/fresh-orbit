@@ -83,6 +83,7 @@ Any other transition → 409 `INVALID_STATUS_TRANSITION`.
 | LOC-R15 | Fulfillment location `code` UPPER_SNAKE / hyphen (`CHN-TVM`), unique, immutable. |
 | LOC-R16 | Resolution results are cached in memory for 60 s per pincode; any Locations event below clears the cache. |
 | LOC-R17 | All times in UTC; dates and times of day (`closed_on`, `opens_at`) are in the location's city time zone. |
+| LOC-R18 | `GET /serviceability` returns `city { id, code, name, timeZone }` and `nextSlot { id, startAt, endAt, date, cutoffAt }`: the earliest bookable slot, `date` in the location's time zone, `cutoffAt` the last moment to order for it; null when none (delivery ETA). |
 
 Website note (E2E-6): the website footer's "Cities we serve" list comes from `GET /cities` and is cached for up to
 5 minutes, so a city that was just activated, paused or retired shows there within about 5 minutes. Serviceability,
@@ -125,6 +126,18 @@ Consumed: none.
 | ResolvePincode (query) | `GET /api/v1/serviceability`, X-Pincode | LOC-R1 query | — | — | — |
 
 `GET /serviceability` `nextSlot` comes from Delivery through an `INextSlotProvider` interface declared in `Locations.Public` and implemented by Delivery (see Q2).
+
+### Staff lookups (G1, G2, G11)
+
+| Query | Who | Returns |
+|---|---|---|
+| `GET /admin/me/locations` | any staff token | The caller's own locations (`loc` claims), every location for all-locations staff; `{ id, cityId, code, name, status }` by code, paged |
+| `GET /admin/cities/lookup` | any staff token | `{ id, code, name, status }` by name, paged; `status` filter takes the stored codes (unknown code → 422 `VALIDATION_FAILED`) |
+
+Names only (no configuration, readiness or audit fields), so they need no `locations.manage`. `ILocationsApi.GetCityPincodesAsync(cityId)` gives the
+active pincodes assigned to any service area of the city's locations (Customers' `cityId` filter).
+The retire refusal is published as `CityRetirementBlockedProblem` (422, `application/problem+json`): `blocking` lists the
+UPPER_SNAKE codes every `ICityRetirementCheck` reported (`ORDERS_OPEN` today), `errors` is empty.
 
 ## 6. Test scenarios
 

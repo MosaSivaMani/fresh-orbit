@@ -103,6 +103,16 @@ Consumed: none required. (If Catalog chooses the projection option, catalog.md Q
 | ListPrices (query) | `GET /api/v1/admin/pricing/prices` (`missingOnly`) | active variants × locations left-joined to CURRENT/FUTURE periods | — | — | — |
 | GetOffers / CalculateLine (Public) | used by cart, preview, place order, pack | one query per call | PRC-R1–R11 | — | — |
 
+### Tax rule schedule versioning (G9)
+
+`POST /admin/pricing/tax-rules` follows PRC-R16 like a price schedule: the latest period of the category versions it;
+send `If-Match` with the `version` from `GET /tax-rules`, or `If-None-Match: *` while the category has no period.
+Missing on a category with periods → 428 `VERSION_REQUIRED`; stale, or `If-None-Match: *` when periods exist → 412
+`CONCURRENCY_CONFLICT`; a lost race → 409 `CONCURRENT_SAVE` (the EXCLUDE constraint stays the last guard). Without it
+two finance users could each schedule a rate from a stale screen and the later one would silently close the other's
+period. The sample loader quotes the listed version.
+
+
 ## 6. Test scenarios
 
 ### Unit (domain, pure)

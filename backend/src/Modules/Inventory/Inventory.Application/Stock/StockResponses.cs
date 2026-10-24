@@ -2,6 +2,7 @@ using System.Globalization;
 using FreshOrbit.Inventory.Domain.ColdChain;
 using FreshOrbit.Inventory.Domain.Stock;
 using FreshOrbit.SharedKernel.Units;
+using VariantInfo = FreshOrbit.Catalog.Public.VariantInfo;
 
 namespace FreshOrbit.Inventory.Application.Stock;
 
@@ -9,6 +10,7 @@ public sealed record QuantityDto(int Value, StockUnit Unit);
 
 /// <param name="Version">Row version, also sent as ETag; quote it in If-Match.</param>
 /// <param name="Batches">ACTIVE batches (detail only; null in lists).</param>
+/// <param name="ProductName">Catalog names (G3): filled on the admin GET lists and detail; null in write responses.</param>
 public sealed record StockItemResponse(
     Guid Id,
     string Version,
@@ -20,10 +22,14 @@ public sealed record StockItemResponse(
     QuantityDto Available,
     int LowStockThreshold,
     bool IsLowStock,
-    IReadOnlyList<BatchResponse>? Batches);
+    IReadOnlyList<BatchResponse>? Batches,
+    string? ProductName = null,
+    string? VariantName = null,
+    string? Sku = null);
 
 /// <param name="CostPerUnitPaise">Display only: round(total cost / received quantity) (INV-R16).</param>
 /// <param name="StockItemVersion">Version of the owning stock item, to quote in If-Match for discard (API gap A5).</param>
+/// <param name="ProductName">Catalog names (G3): filled on the admin GET lists and detail; null in write responses.</param>
 public sealed record BatchResponse(
     Guid Id,
     Guid StockItemId,
@@ -41,8 +47,12 @@ public sealed record BatchResponse(
     DateTimeOffset BestBeforeAt,
     decimal? ReceiptTemperatureC,
     long TotalCostPaise,
-    long CostPerUnitPaise);
+    long CostPerUnitPaise,
+    string? ProductName = null,
+    string? VariantName = null,
+    string? Sku = null);
 
+/// <param name="VariantId">The stock item's variant (G3): filled on <c>GET /movements</c>, like the names; null in write responses.</param>
 public sealed record MovementResponse(
     Guid Id,
     Guid StockItemId,
@@ -55,13 +65,18 @@ public sealed record MovementResponse(
     MovementReferenceType ReferenceType,
     Guid? ReferenceId,
     DateTimeOffset OccurredAt,
-    Guid? RecordedBy);
+    Guid? RecordedBy,
+    Guid? VariantId = null,
+    string? ProductName = null,
+    string? VariantName = null,
+    string? Sku = null);
 
 public sealed record ReceiptResponse(BatchResponse Batch, MovementResponse Movement, StockItemResponse StockItem, bool TemperatureWarning);
 
 /// <summary>Result of waste, discard, adjustment and count: the movements written and the stock item after the change.</summary>
 public sealed record StockChangeResponse(IReadOnlyList<MovementResponse> Movements, StockItemResponse StockItem);
 
+/// <param name="ProductName">Catalog names (G3).</param>
 public sealed record ReservationResponse(
     Guid Id,
     Guid StockItemId,
@@ -72,7 +87,10 @@ public sealed record ReservationResponse(
     QuantityDto Quantity,
     ReservationStatus Status,
     DateTimeOffset? ExpiresAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? ProductName = null,
+    string? VariantName = null,
+    string? Sku = null);
 
 public sealed record ColdChainLogResponse(
     Guid Id,
@@ -85,6 +103,37 @@ public sealed record ColdChainLogResponse(
 
 public static class StockMappings
 {
+    /// <summary>The stock item with Catalog names; unchanged when the variant is unknown to Catalog.</summary>
+    public static StockItemResponse WithVariant(this StockItemResponse item, VariantInfo? variant)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return variant is null ? item : item with
+        {
+            ProductName = variant.ProductName,
+            VariantName = variant.VariantName,
+            Sku = variant.Sku,
+            Batches = item.Batches is null ? null : [.. item.Batches.Select(b => b.WithVariant(variant))],
+        };
+    }
+
+    public static BatchResponse WithVariant(this BatchResponse batch, VariantInfo? variant)
+    {
+        ArgumentNullException.ThrowIfNull(batch);
+        return variant is null ? batch : batch with { ProductName = variant.ProductName, VariantName = variant.VariantName, Sku = variant.Sku };
+    }
+
+    public static MovementResponse WithVariant(this MovementResponse movement, Guid variantId, VariantInfo? variant)
+    {
+        ArgumentNullException.ThrowIfNull(movement);
+        return movement with { VariantId = variantId, ProductName = variant?.ProductName, VariantName = variant?.VariantName, Sku = variant?.Sku };
+    }
+
+    public static ReservationResponse WithVariant(this ReservationResponse reservation, VariantInfo? variant)
+    {
+        ArgumentNullException.ThrowIfNull(reservation);
+        return variant is null ? reservation : reservation with { ProductName = variant.ProductName, VariantName = variant.VariantName, Sku = variant.Sku };
+    }
+
     public static string FormatVersion(uint version) => version.ToString(CultureInfo.InvariantCulture);
 
     public static QuantityDto Quantity(int value, StockUnit unit) => new(value, unit);

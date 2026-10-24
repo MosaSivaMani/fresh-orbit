@@ -110,9 +110,13 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
                 o.TotalPaise,
                 o.FinalTotalPaise,
                 o.AmountDuePaise,
+                o.TimeZone,
             })
             .ToListAsync(cancellationToken);
-        return ([.. items.Select(o => new OrderListItem(o.Id, o.OrderNumber, o.Status.ToCode(), o.PaymentMethod.ToCode(), o.PlacedAt, o.SlotStartAt, o.SlotEndAt, o.ItemCount, o.TotalPaise, o.FinalTotalPaise, o.AmountDuePaise))], total);
+        return ([.. items.Select(o => new OrderListItem(o.Id, o.OrderNumber, o.Status.ToCode(), o.PaymentMethod.ToCode(), o.PlacedAt, o.SlotStartAt, o.SlotEndAt, o.ItemCount, o.TotalPaise, o.FinalTotalPaise, o.AmountDuePaise)
+        {
+            TimeZone = OrderViews.TimeZoneOf(o.OrderNumber, o.TimeZone),
+        })], total);
     }
 
     public async Task<(IReadOnlyList<AdminOrderListItem> Items, int Total)> ListForStaffAsync(AdminOrderFilter filter, CancellationToken cancellationToken)

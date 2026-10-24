@@ -79,6 +79,19 @@ Source states used (owned elsewhere): order `DELIVERED` / `CANCELLED` and their 
 | G4 | `format=csv` on dashboard undefined | Not supported → 422 `VALIDATION_FAILED` (`format`) |
 | G5 | Cohort length | `cohortMonths` (1–12, default 6) on repeat-customers |
 
+### Dashboard sales tiles (G4)
+
+`DashboardResponse.sales` is computed live (not from a view) in one statement over `ordering.orders` for the
+caller's locations, by each location's local date (REP-R1): `ordersPlaced` (not PAYMENT_FAILED, as `daily-sales`
+`ordersPlaced`), `ordersCancelled`, `orderValuePaise` (orders placed today and not cancelled, final total once
+packed else the estimate), `averageOrderValuePaise` (= orderValue ÷ (placed − cancelled), truncated; null when 0),
+`ordersDelivered` and `deliveredRevenuePaise` (REP-R2 revenue of orders delivered today, the same number as
+`daily-sales` `netRevenuePaise` once the view refreshes). Only orders placed or delivered in the last two days are
+scanned. Low-stock rows add `stockUnit` (GRAM/PIECE, the unit of `available` and `lowStockThreshold`) and `productName`.
+Fixture (L1, clock 2026-10-23 15:30 IST): placed 4, cancelled 2, order value 305 306, AOV 152 653, delivered 2,
+revenue 305 306; all locations add F: 5 / 2 / 405 305 / 135 101 / 3 / 405 305.
+
+
 ## 6. Test scenarios
 
 ### Seeded fixture (integration; one city `Asia/Kolkata`, location L1; dates 2026-10-23 IST unless stated)

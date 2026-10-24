@@ -114,6 +114,9 @@ public sealed record CartAvailabilityView(string Status, string? Message);
 public sealed record CartIssueView(string Code, string Message);
 
 /// <summary>One cart line as the API shows it (docs/api §4.6, §5.1).</summary>
+/// <param name="MinOrder">The variant's order rules (the same ones the cart validates quantities with), in the line's
+/// quantity unit; null only when the variant no longer exists. Likewise <paramref name="MaxOrder"/> and
+/// <paramref name="OrderStep"/>.</param>
 public sealed record CartLineView(
     Guid Id,
     Guid ProductId,
@@ -139,7 +142,10 @@ public sealed record CartLineView(
     long MaxLineTotalPaise,
     CartAvailabilityView Availability,
     bool IsSellable,
-    IReadOnlyList<CartIssueView> Issues);
+    IReadOnlyList<CartIssueView> Issues,
+    QuantityView? MinOrder = null,
+    QuantityView? MaxOrder = null,
+    QuantityView? OrderStep = null);
 
 /// <param name="Status">APPLIED / NOT_APPLICABLE / INVALID.</param>
 /// <param name="ReasonCode">COUPON_* reason when not applied.</param>

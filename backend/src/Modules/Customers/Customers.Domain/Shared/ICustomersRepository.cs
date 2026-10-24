@@ -1,5 +1,6 @@
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
+using FreshOrbit.Customers.Domain.StockAlerts;
 using FreshOrbit.Customers.Domain.Wishlist;
 
 namespace FreshOrbit.Customers.Domain.Shared;
@@ -30,6 +31,16 @@ public interface ICustomersRepository
 
     void Remove(WishlistItem item);
 
+    /// <summary>The customer's alerts, newest first.</summary>
+    Task<IReadOnlyList<StockAlert>> GetStockAlertsAsync(Guid customerId, CancellationToken cancellationToken);
+
+    /// <summary>Every alert waiting for the variant at the location (all customers).</summary>
+    Task<IReadOnlyList<StockAlert>> GetStockAlertsForAsync(Guid variantId, Guid fulfillmentLocationId, CancellationToken cancellationToken);
+
+    void Add(StockAlert alert);
+
+    void Remove(StockAlert alert);
+
     /// <summary>Writes pending changes so later queries in the same transaction see them (e.g. the default flag moved).</summary>
     Task FlushAsync(CancellationToken cancellationToken);
 
@@ -39,6 +50,16 @@ public interface ICustomersRepository
     /// <summary>True when <paramref name="exception"/> is a unique-key violation from a save.</summary>
     bool IsDuplicateKey(Exception exception);
 
-    /// <summary>Admin list: <paramref name="userIds"/> narrows to those users when not null.</summary>
-    Task<(IReadOnlyList<Customer> Items, int TotalCount)> SearchAsync(string? name, IReadOnlyCollection<Guid>? userIds, CustomerStatus? status, int skip, int take, CancellationToken cancellationToken);
+    /// <summary>
+    /// Admin list: <paramref name="userIds"/> narrows to those users when not null; <paramref name="pincodes"/> narrows
+    /// to customers with an active saved address in one of those pincodes when not null.
+    /// </summary>
+    Task<(IReadOnlyList<Customer> Items, int TotalCount)> SearchAsync(
+        string? name,
+        IReadOnlyCollection<Guid>? userIds,
+        CustomerStatus? status,
+        IReadOnlyCollection<string>? pincodes,
+        int skip,
+        int take,
+        CancellationToken cancellationToken);
 }

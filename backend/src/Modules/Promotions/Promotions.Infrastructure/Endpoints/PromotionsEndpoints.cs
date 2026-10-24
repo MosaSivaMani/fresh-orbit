@@ -29,7 +29,8 @@ internal static class PromotionsEndpoints
     {
         endpoints.MapGet("/coupons", ListVisibleCouponsAsync).RequireAuthorization().WithTags("Promotions").Produces<PagedResponse<VisibleCoupon>>();
         endpoints.MapGet("/promotions", ListBannersAsync).RequireRateLimiting(RateLimitPolicies.Public).WithTags("Promotions")
-            .Produces<PagedResponse<BannerInfo>>();
+            .Produces<PagedResponse<BannerInfo>>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         var coupons = endpoints.MapGroup("/admin/coupons").RequirePermission(PromotionsManage).WithTags("Admin promotions");
         coupons.MapGet(string.Empty, ListCouponsAsync).Produces<PagedResponse<CouponResponse>>();

@@ -1,3 +1,4 @@
+using FreshOrbit.Catalog.Public;
 using FreshOrbit.Inventory.Application.Common;
 using FreshOrbit.Inventory.Application.Stock;
 using FreshOrbit.Inventory.Domain.ColdChain;
@@ -25,7 +26,7 @@ public sealed record ColdChainListQuery(Guid? FulfillmentLocationId, bool OutOfR
 /// Admin reads (no Decide/Commit), all location-scoped: staff limited to some locations see only those rows
 /// (silent filter, INV-R10); a single resource at another location is 403.
 /// </summary>
-public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
+public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor, ICatalogApi catalog)
 {
     public async Task<PagedResponse<StockItemResponse>> ListStockAsync(StockListQuery query, PagedRequest paging, CancellationToken cancellationToken)
     {
@@ -48,7 +49,8 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
 
         var total = await items.CountAsync(cancellationToken);
         var page = await items.OrderBy(s => s.FulfillmentLocationId).ThenBy(s => s.Id).Skip(Skip(paging)).Take(paging.PageSize).ToListAsync(cancellationToken);
-        return new PagedResponse<StockItemResponse>([.. page.Select(s => s.ToResponse(includeBatches: false))], paging.Page, paging.PageSize, total);
+        var variants = await VariantsAsync(page.Select(s => s.VariantId), cancellationToken);
+        return new PagedResponse<StockItemResponse>([.. page.Select(s => s.ToResponse(includeBatches: false).WithVariant(variants.GetValueOrDefault(s.VariantId)))], paging.Page, paging.PageSize, total);
     }
 
     public async Task<StockItemResponse> GetStockAsync(Guid stockItemId, CancellationToken cancellationToken)
@@ -58,7 +60,8 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
             .FirstOrDefaultAsync(s => s.Id == stockItemId, cancellationToken)
             ?? throw new NotFoundException("No stock item has this id.");
         LocationScope.Ensure(actor, item.FulfillmentLocationId);
-        return item.ToResponse(includeBatches: true);
+        var variants = await VariantsAsync([item.VariantId], cancellationToken);
+        return item.ToResponse(includeBatches: true).WithVariant(variants.GetValueOrDefault(item.VariantId));
     }
 
     public async Task<PagedResponse<BatchResponse>> ListBatchesAsync(BatchListQuery query, PagedRequest paging, CancellationToken cancellationToken)
@@ -94,14 +97,19 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
 
         var total = await rows.CountAsync(cancellationToken);
         var page = await rows.OrderBy(r => r.Batch.BestBeforeAt).ThenBy(r => r.Batch.Id).Skip(Skip(paging)).Take(paging.PageSize).ToListAsync(cancellationToken);
-        return new PagedResponse<BatchResponse>([.. page.Select(r => r.Batch.ToResponse(r.StockUnit, StockMappings.FormatVersion(r.Version)))], paging.Page, paging.PageSize, total);
+        var variants = await VariantsAsync(page.Select(r => r.Batch.VariantId), cancellationToken);
+        return new PagedResponse<BatchResponse>(
+            [.. page.Select(r => r.Batch.ToResponse(r.StockUnit, StockMappings.FormatVersion(r.Version)).WithVariant(variants.GetValueOrDefault(r.Batch.VariantId)))],
+            paging.Page,
+            paging.PageSize,
+            total);
     }
 
     public async Task<PagedResponse<MovementResponse>> ListMovementsAsync(MovementListQuery query, PagedRequest paging, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         var rows = db.Set<StockMovement>().AsNoTracking()
-            .Join(ScopedStockItems(), m => m.StockItemId, s => s.Id, (m, s) => new { Movement = m, s.StockUnit, s.FulfillmentLocationId });
+            .Join(ScopedStockItems(), m => m.StockItemId, s => s.Id, (m, s) => new { Movement = m, s.StockUnit, s.FulfillmentLocationId, s.VariantId });
         if (query.StockItemId is { } stockItemId)
         {
             rows = rows.Where(r => r.Movement.StockItemId == stockItemId);
@@ -132,7 +140,12 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
 
         var total = await rows.CountAsync(cancellationToken);
         var page = await rows.OrderByDescending(r => r.Movement.OccurredAt).ThenByDescending(r => r.Movement.Id).Skip(Skip(paging)).Take(paging.PageSize).ToListAsync(cancellationToken);
-        return new PagedResponse<MovementResponse>([.. page.Select(r => r.Movement.ToResponse(r.StockUnit))], paging.Page, paging.PageSize, total);
+        var variants = await VariantsAsync(page.Select(r => r.VariantId), cancellationToken);
+        return new PagedResponse<MovementResponse>(
+            [.. page.Select(r => r.Movement.ToResponse(r.StockUnit).WithVariant(r.VariantId, variants.GetValueOrDefault(r.VariantId)))],
+            paging.Page,
+            paging.PageSize,
+            total);
     }
 
     public async Task<PagedResponse<ReservationResponse>> ListReservationsAsync(ReservationListQuery query, PagedRequest paging, CancellationToken cancellationToken)
@@ -161,6 +174,7 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
 
         var total = await rows.CountAsync(cancellationToken);
         var page = await rows.OrderBy(r => r.CreatedAt).ThenBy(r => r.Reservation.Id).Skip(Skip(paging)).Take(paging.PageSize).ToListAsync(cancellationToken);
+        var variants = await VariantsAsync(page.Select(r => r.VariantId), cancellationToken);
         return new PagedResponse<ReservationResponse>(
             [.. page.Select(r => new ReservationResponse(
                 r.Reservation.Id,
@@ -172,7 +186,7 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
                 StockMappings.Quantity(r.Reservation.Quantity, r.StockUnit),
                 r.Reservation.Status,
                 r.Reservation.ExpiresAt,
-                r.CreatedAt))],
+                r.CreatedAt).WithVariant(variants.GetValueOrDefault(r.VariantId)))],
             paging.Page,
             paging.PageSize,
             total);
@@ -216,6 +230,13 @@ public sealed class InventoryReads(FreshOrbitDbContext db, ICurrentActor actor)
         }
 
         return paging.Skip;
+    }
+
+    /// <summary>Catalog names for one page in one call (G3; never one call per row).</summary>
+    private async Task<Dictionary<Guid, VariantInfo>> VariantsAsync(IEnumerable<Guid> variantIds, CancellationToken cancellationToken)
+    {
+        var ids = variantIds.Distinct().ToList();
+        return ids.Count == 0 ? [] : (await catalog.GetVariantsAsync(ids, cancellationToken)).ToDictionary(v => v.VariantId);
     }
 
     private IQueryable<StockItem> ScopedStockItems()

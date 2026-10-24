@@ -134,6 +134,14 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | G17 | Order item batches not in admin order detail | NEW, OPEN | Batch column removed | Batch allocations per line |
 | G18 | Pick list has no slot times, order count or SKU | NEW, OPEN | Columns show what is there | Add them to the pick list response |
 
+**Backend Track E (2026-10-24).** The backend now closes every gap in this table. G7 and G10–G18 are on `main` through #5. G1–G4, G6, G8, G9 and G11 are on draft PR #6 (`backend/api-gaps-2`, not merged). They include:
+- `GET /admin/me/locations`
+- `GET /admin/cities/lookup`
+- `GET /admin/catalog/variants` and `GET /admin/preparation-methods`
+- `GET /admin/customers/{customerId}/orders`
+
+The admin screens have not adopted them yet; the Status column above stays as the front-end status until they do.
+
 Front end, not backend: coupon `isListed` has no editor control yet.
 
 ## 5a. Illustrated look (U3, D53)

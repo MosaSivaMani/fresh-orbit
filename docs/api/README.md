@@ -124,7 +124,8 @@ and `docs/database/README.md`. Swagger is generated from code and must match thi
 | Stale | 412 `CONCURRENCY_CONFLICT`; client re-reads |
 | Lost race after a matching quote | 409 `CONCURRENT_SAVE`; client may retry with the new ETag |
 | Success | Response carries the new `ETag` |
-| Create-if-absent | `If-None-Match: *` (price set when no current price) |
+| Create-if-absent | `If-None-Match: *` (price, preparation charge or tax rule schedule with no period yet) |
+| Appends without `If-Match` | Adding a child that overwrites nothing takes no `If-Match`: image upload (`POST /admin/products/{id}/images`) and refund request (`POST /admin/orders/{orderId}/refunds`, `Idempotency-Key` instead). Both answer with the parent's new `ETag`; a concurrent save of the same parent is 409 `CONCURRENT_SAVE`, and the refund amount is re-checked against the refundable balance inside the save |
 
 ### 1.8 Idempotency-Key
 
@@ -162,7 +163,7 @@ Webhooks use the provider event id instead (§7).
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
 | `search` | `GET /products`, `/search/*` | 60 / min | IP |
-| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
+| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
 | `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
 | `admin` | `/admin/*` | 600 / min | user |
@@ -171,7 +172,9 @@ Webhooks use the provider event id instead (§7).
 429 body: `code: RATE_LIMITED`, `retryAfterSeconds`; header `Retry-After`.
 
 IP keys use the client address after forwarded-headers processing: `X-Forwarded-For` / `X-Forwarded-Proto` are
-believed only from peers in `ForwardedHeaders:KnownNetworks` (the Caddy network), one hop only; with the list empty
+believed only from peers in `ForwardedHeaders:KnownNetworks` (the compose `edge` network: Caddy and the website's
+Next.js server, whose `/api/v1` proxy passes on the visitor IP Caddy set), one hop only; Caddy replaces
+`X-Forwarded-For` with the one client address it determined (`{client_ip}`), so a client-supplied list is never read; with the list empty
 (the default) nothing is forwarded (SEC-2, D36). Limits are configuration (`RateLimiting:<Rule>`), defaults as above;
 the `staff-login` HTTP policy is per IP, and the per email + IP part is counted by Identity from
 `identity.staff_login_failures` (failed logins only, unknown emails included; a successful sign-in clears the count;
@@ -236,6 +239,8 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | ADDRESS_LIMIT_REACHED | 422 | More than 20 active addresses |
 | CUSTOMER_DELETED | 403 | Account deleted |
 | ACCOUNT_HAS_OPEN_MATTERS | 422 | `DELETE /me` while a complaint (`OPEN`/`APPROVED`) or a refund (`REQUESTED`/`APPROVED`/`PROCESSING`) is open; `errors.account[]` has one entry per kind, `code` `OPEN_COMPLAINT` or `OPEN_REFUND`. Active orders still answer 409 `INVALID_STATUS_TRANSITION` |
+| STOCK_AVAILABLE | 422 | Stock alert refused: the variant is in stock at that location now (CUS-R10) |
+| STOCK_ALERT_LIMIT_REACHED | 422 | Stock alert refused: 50 alerts already (CUS-R10) |
 
 ### Locations
 | Code | HTTP | Meaning |
@@ -365,6 +370,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | NUMBER_SERIES_IN_USE | 409 | Series period already issued numbers; prefix/next value locked |
 | GSTIN_INVALID | 422 | GSTIN format/checksum invalid |
 | PREFERENCE_REQUIRED | 422 | `ORDER_UPDATES` SMS cannot be disabled |
+| BUSINESS_PROFILE_NOT_CONFIGURED | 404 | `GET /business-profile` before the owner saved the business profile (SET-R8) |
 
 ## 3. Permissions and roles
 
@@ -395,6 +401,13 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | `settings.manage` | Business profile, order policies, number series | ✓ |  |  |  |  |  |
 | `staff.manage` | Staff, roles, location access | ✓ |  |  |  |  |  |
 | `audit.view` | Audit log | ✓ |  |  |  |  | ✓ |
+
+**Staff lookups (any staff token, no permission; G1–G3).** Reference names every admin screen needs are readable by
+every authenticated staff member, whatever their permissions: `GET /admin/me/locations` (only the caller's own
+locations), `GET /admin/cities/lookup`, `GET /admin/catalog/variants`, `GET /admin/preparation-methods`. They return
+ids, codes, names, units and statuses only — no price, stock figure, cost or customer data — and the active ones are
+already public on the storefront. Customer and anonymous tokens get 403 / 401. Editing still needs the module's
+`*.manage` permission.
 
 Rules: roles are data (`identity.roles`), default roles are `isSystem` (permissions editable, code not); custom roles allowed;
 STORE_MANAGER, PACKER, DISPATCHER are normally location-scoped. Every admin write is audited (`audit.entries`).
@@ -471,9 +484,13 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 | PUT | `/api/v1/me/addresses/{addressId}` | customer | IM | Replace address |
 | DELETE | `/api/v1/me/addresses/{addressId}` | customer | | Deactivate address |
 | POST | `/api/v1/me/addresses/{addressId}/default` | customer | | Make default |
-| GET | `/api/v1/me/wishlist` | customer | LOC optional | Wishlist products (priced when LOC given) |
+| GET | `/api/v1/me/wishlist` | customer | LOC optional (`?pincode=` or `X-Pincode`) | Wishlist items `{ productId, addedAt, product }`; `product` = `{ slug, name, imageUrl, price { unitPricePaise, compareAtPaise, perUnit } \| null, isAvailable }`, null when no longer visible; `price` only with LOC (CUS-R11) |
 | PUT | `/api/v1/me/wishlist/{productId}` | customer | | Add (idempotent by nature) |
 | DELETE | `/api/v1/me/wishlist/{productId}` | customer | | Remove |
+| GET | `/api/v1/me/stock-alerts` | customer | | Back-in-stock alerts `[{ id, variantId, fulfillmentLocationId, createdAt }]` |
+| POST | `/api/v1/me/stock-alerts` | customer | | `{ variantId, fulfillmentLocationId }` → 201 new, 200 existing (idempotent); 422 `STOCK_AVAILABLE`, `PRODUCT_NOT_AVAILABLE`, `STOCK_ALERT_LIMIT_REACHED` (CUS-R10) |
+| DELETE | `/api/v1/me/stock-alerts/{alertId}` | customer | | Remove (204, also when unknown) |
+| GET | `/api/v1/business-profile` | public | | Legal footer and contacts: `legalName, tradeName, gstin, fssaiLicenseNo, address, supportPhone, supportEmail, supportHours, timeZone`; 404 `BUSINESS_PROFILE_NOT_CONFIGURED` (SET-R8) |
 
 ### 4.3 Locations / serviceability (public)
 
@@ -486,16 +503,24 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 ```json
 {
   "pincode": "600041", "serviceable": true, "reasonCode": null,
-  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai" },
+  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai", "timeZone": "Asia/Kolkata" },
   "fulfillmentLocation": { "id": "0192b400-0002-7000-8000-000000000002", "code": "CHN-TVM", "name": "Thiruvanmiyur Store", "hasColdStorage": true },
   "serviceArea": {
     "id": "0192b400-0003-7000-8000-000000000003", "name": "Adyar - Thiruvanmiyur", "deliveryFeePaise": 3900, "freeDeliveryAbovePaise": 49900,
     "minOrderPaise": 29900
   },
-  "nextSlot": { "id": "0192b5f0-aaaa-7000-8000-000000000010", "startAt": "2026-10-23T08:30:00Z", "endAt": "2026-10-23T10:30:00Z" }
+  "nextSlot": { "id": "0192b5f0-aaaa-7000-8000-000000000010", "startAt": "2026-10-23T08:30:00Z", "endAt": "2026-10-23T10:30:00Z",
+    "date": "2026-10-23", "cutoffAt": "2026-10-23T06:30:00Z" }
 }
 ```
 Not served → 200 `{ "pincode": "600123", "serviceable": false, "reasonCode": "PINCODE_NOT_SERVICEABLE", ... null }`.
+
+`nextSlot` is the delivery ETA: the earliest bookable slot, `date` in the location's time zone (`city.timeZone`),
+`cutoffAt` the last moment to order for it; null when no slot is bookable (LOC-R18).
+
+Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
+CART-R31); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
+`GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28).
 
 ### 4.4 Catalog and search (public)
 
@@ -864,10 +889,11 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | POST | `/api/v1/admin/products/{id}/restore` | catalog.manage | IM | `ARCHIVED` → `DRAFT` |
 | POST | `/api/v1/admin/products/{id}/variants` | catalog.manage | IM (product) | Add variant |
 | PUT | `/api/v1/admin/products/{id}/variants/{variantId}` | catalog.manage | IM (product) | Update variant, preparations with `yieldBp` and `isDefault`; optional `piecesMin`, `piecesMax`, `serves` per serving basis (CAT-R21; add and update, echoed on the variant response) |
-| POST | `/api/v1/admin/products/{id}/images` | catalog.manage | IM (product), multipart `file` | Upload image (D21: local disk via `IFileStorage`, served at `/media/{key}`); stores 320/640/1280 px WebP + original under `products/{productId}/{imageId}/` |
+| POST | `/api/v1/admin/products/{id}/images` | catalog.manage | multipart `file`; no If-Match (append, §1.7); answers the product ETag | Upload image (D21: local disk via `IFileStorage`, served at `/media/{key}`); stores 320/640/1280 px WebP + original under `products/{productId}/{imageId}/` |
 | PUT | `/api/v1/admin/products/{id}/images/order` | catalog.manage | IM | Reorder images |
 | DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | catalog.manage | IM | Remove image |
-| GET | `/api/v1/admin/preparation-methods` | catalog.manage | | Reference list |
+| GET | `/api/v1/admin/preparation-methods` | any staff (§3) | | Reference list |
+| GET | `/api/v1/admin/catalog/variants` | any staff (§3) | | Variant search (G3): `q` (part of product name, variant name or SKU, ≤ 100 chars), `id` (repeatable, ≤ 100: resolve known ids), `activeOnly`; paged. Items `{ variantId, productId, productName, variantName, sku, sellUnit, stockUnit, productStatus, isActive }`, by product name then SKU |
 | GET/POST/PUT | `/api/v1/admin/promotions[/{id}]` | catalog.manage | IM on PUT | Home banners (Promotions module; `/home` returns `banners: []` until it ships) |
 
 ### 4.12 Admin pricing
@@ -880,7 +906,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | DELETE | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | IM | End the current period now (stop selling) |
 | GET/PUT | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/preparations/{code}/charge` | pricing.manage | IM / If-None-Match | Preparation charge, same period rules |
 | GET | `/api/v1/admin/pricing/tax-rules` | pricing.manage or tax.manage | | Tax rules by category |
-| POST | `/api/v1/admin/pricing/tax-rules` | tax.manage (D35) | | New period for a tax category (`taxCategoryCode`, `rateBp` 0–2800, `validFrom`, `replaceFuture`); no `If-Match`: tax rules are global and periods do not overlap |
+| POST | `/api/v1/admin/pricing/tax-rules` | tax.manage (D35) | IM, or `If-None-Match: *` when none | New period for a tax category (`taxCategoryCode`, `rateBp` 0–2800, `validFrom`, `replaceFuture`). G9: the category's schedule is versioned like a price schedule — quote its `version` from `GET /tax-rules`; missing on a category with periods → 428 `VERSION_REQUIRED`, stale (or `If-None-Match: *` when periods exist) → 412 `CONCURRENCY_CONFLICT`, lost race → 409 `CONCURRENT_SAVE` |
 | POST | `/api/v1/admin/pricing/prices/bulk` | pricing.manage | IK | CSV/JSON bulk set; all-or-nothing, returns per-row errors; `?dryRun=true` validates only; max 5000 rows. JSON `{ validFrom?, replaceFuture?, rows: [{ kind: PRICE\|PREP_CHARGE, locationCode, sku, unitPricePaise, compareAtPaise, preparationCode, chargePaise, chargeBasis, validFrom? }] }` or `text/csv` with the same column names |
 
 **PUT …/locations/{locationId}/variants/{variantId}/price** (`If-Match: "55102"`) → 200
@@ -933,6 +959,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | POST | `/api/v1/admin/inventory/cold-chain` | inventory.adjust | | Record temperature |
 
 Notes (E3, implemented):
+- G3: stock items (list and detail, with their batches), `GET /batches`, `GET /movements` and `GET /reservations` items carry `productName`, `variantName` and `sku` from Catalog (one batch read per page); movements also carry `variantId`. They are null when Catalog does not know the variant, and in write responses (receipts, waste, adjustments, counts, discard).
 - `GET /availability` (§4.5) is served by Catalog (D3), not Inventory. `GET /stock` has no `q` filter yet (Catalog names are not in the inventory schema); filter by `fulfillmentLocationId`, `variantId`, `lowStockOnly`.
 - Quantities in request bodies are `{ "value": int, "unit": "GRAM" | "PIECE" }` and must match the stock item's unit.
 - Bodies: stock-items `{fulfillmentLocationId, variantId, lowStockThreshold}`; threshold `{lowStockThreshold}`; discard `{reasonCode, notes}`; waste `{stockItemId, batchId?, quantity, reasonCode, notes}`; adjustments `{stockItemId, kind: ADJUSTMENT_IN|ADJUSTMENT_OUT|RETURN, batchId?, quantity, reasonCode, notes}` (`RETURN` needs `batchId`); counts `{stockItemId, countedQuantity, batchId?, notes}`; cold-chain `{fulfillmentLocationId, storageUnit, temperatureC, recordedAt?}`.
@@ -1043,7 +1070,7 @@ Implementation notes (Phase 2, Cart / Promotions / Ordering):
 | GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | `{ orderId, payments[], refunds[] }`; every payment (here and in the list/detail) has `createdAt`, when the attempt was first saved (G12) |
 | GET | `/api/v1/admin/webhook-events` | payments.view | all-locations staff only | Received events: `provider`, `signatureValid`, `status` `RECEIVED`/`PROCESSED`/`IGNORED`/`ERROR`/`REJECTED`, `fromDate`, `toDate`. Rows include `payloadSha256` and `payloadTruncated` (§7) |
 | POST | `/api/v1/admin/webhook-events/{id}/reprocess` | payments.manage (D15) | | Retry a valid event in `ERROR` |
-| POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK | Create refund request (`REQUESTED`); ETag = payment version |
+| POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK, no If-Match (§1.7) | Create refund request (`REQUESTED`); ETag = payment version |
 | GET | `/api/v1/admin/refunds` | payments.view | | List: `status`, `reasonCode`, `fromDate`, `toDate`, `fulfillmentLocationId` |
 | GET | `/api/v1/admin/refunds/{refundId}` | payments.view | | One refund; ETag = version of its payment (refunds change through the payment row) |
 | POST | `/api/v1/admin/refunds/{refundId}/approve` | refunds.approve | IM | `REQUESTED` → `APPROVED`; Worker calls provider → `PROCESSING` → `SUCCEEDED`/`FAILED` |
@@ -1126,6 +1153,8 @@ attemptedAt }], version }`. The delivery code is never shown to staff; the custo
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
 | GET | `/api/v1/admin/cities` | locations.manage | | All cities with status |
+| GET | `/api/v1/admin/cities/lookup` | any staff (§3) | | City lookup (G2): `status` (repeatable codes); paged items `{ id, code, name, status }` by name |
+| GET | `/api/v1/admin/me/locations` | any staff (§3) | | The caller's own fulfillment locations (G1; every location for all-locations staff); paged items `{ id, cityId, code, name, status }` by code |
 | POST | `/api/v1/admin/cities` | locations.manage | | Create (`DRAFT`) |
 | GET | `/api/v1/admin/cities/{cityId}` | locations.manage | ETag | Detail + readiness checklist |
 | PUT | `/api/v1/admin/cities/{cityId}` | locations.manage | IM | Update name, time zone |
@@ -1166,13 +1195,23 @@ Refused → 422
 ```
 `missing[].code`: `FULFILLMENT_LOCATION_MISSING`, `SERVICE_AREA_MISSING`, `PINCODE_MISSING`, `SLOT_TEMPLATE_MISSING`, `PRICE_MISSING`, `STOCK_ITEM_MISSING`.
 
+**POST …/cities/{cityId}/retire** refused → 422 `application/problem+json`, schema `CityRetirementBlockedProblem` in the OpenAPI document (G11)
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc4918#section-11.2", "title": "City cannot be retired.", "status": 422,
+  "detail": "The city cannot be retired while work is still open.", "code": "CITY_RETIREMENT_BLOCKED",
+  "traceId": "00-…-01", "blocking": ["ORDERS_OPEN"], "errors": {}
+}
+```
+`blocking`: at least one UPPER_SNAKE code, in check order, one per `ICityRetirementCheck` item: `ORDERS_OPEN` (Ordering: an order of the city is not DELIVERED, CANCELLED, PAYMENT_FAILED or RETURNED). `errors` is always empty. A retire of an ACTIVE city is a state refusal (pause first), not this code.
+
 ### 4.19 Admin customers
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/admin/customers` | customers.view | | List: `q` (phone, name), `status`, `cityId` |
-| GET | `/api/v1/admin/customers/{customerId}` | customers.view | ETag | Profile, addresses, order counts, lifetime value |
-| GET | `/api/v1/admin/customers/{customerId}/orders` | customers.view + orders.view | | Orders |
+| GET | `/api/v1/admin/customers` | customers.view | | List: `q` (phone, name), `status`, `cityId` (G6: customers with an active saved address in a pincode assigned to a service area of the city) |
+| GET | `/api/v1/admin/customers/{customerId}` | customers.view | ETag | Profile, addresses, `orderCounts { total, open, delivered, cancelled, lastPlacedAt }` (G6; orders at the caller's locations, PAYMENT_FAILED not counted). Lifetime value: see the reports |
+| GET | `/api/v1/admin/customers/{customerId}/orders` | customers.view + orders.view | | G6: paged, newest first; items `{ orderId, orderNumber, status, paymentMethod, fulfillmentLocationId, placedAt, slotStartAt, slotEndAt, totalPaise, finalTotalPaise }`; only orders at the caller's locations; unknown customer → 404 |
 | POST | `/api/v1/admin/customers/{customerId}/block` \| `/unblock` | customers.manage | IM | User `DISABLED` / `ACTIVE` (revokes refresh tokens) |
 
 ### 4.20 Reports
@@ -1202,7 +1241,8 @@ Response (daily-sales, product-performance, contribution-margin, waste; repeat-c
 ```
 `asOf` = oldest refresh of the views used (null before the first refresh); `totals` cover all matching rows. Defaults `toDate` = today at the locations in scope, `fromDate` = `toDate − 29`; range > 366 days or `fromDate > toDate` → 422 `VALIDATION_FAILED`. Scoped staff see their locations only; `fulfillmentLocationId` outside access → 403 `LOCATION_ACCESS_DENIED`; `cityId` narrows to that city's locations; inconsistent `cityId` + `fulfillmentLocationId` → 422.
 `format=csv`: UTF-8 with BOM, `Content-Disposition: attachment; filename="<view>_<from>_<to>.csv"`, snake_case header, money as `_paise` plus `_inr` (`1234.50`), text starting `= + - @` prefixed with `'`, last row `TOTAL`, header `X-Report-As-Of`; > 100 000 rows → 422 on `toDate`; dashboard has no CSV (422). All report responses `Cache-Control: private, max-age=60`.
-Dashboard: `{ asOf, date, filters, ordersByStatus[{status,count}], slots[{slotId, fulfillmentLocationId, startAt, endAt, bookedCount, capacity, fillBp}], lowStock[{stockItemId, variantId, sku, variantName, available, lowStockThreshold}], openComplaints, refundsRequested, refundsRequestedPaise, openPaymentIssues }`.
+Dashboard: `{ asOf, date, filters, ordersByStatus[{status,count}], slots[{slotId, fulfillmentLocationId, startAt, endAt, bookedCount, capacity, fillBp}], lowStock[{stockItemId, fulfillmentLocationId, variantId, sku, variantName, productName, available, lowStockThreshold, stockUnit}], openComplaints, refundsRequested, refundsRequestedPaise, openPaymentIssues, sales{ordersPlaced, ordersCancelled, orderValuePaise, averageOrderValuePaise, ordersDelivered, deliveredRevenuePaise} }`.
+G4 `sales` (today, at each location's local date, caller's locations): `ordersPlaced` excludes PAYMENT_FAILED (as `daily-sales`), `ordersCancelled` of those, `orderValuePaise` = value of today's orders not cancelled (final total once packed, else the estimate), `averageOrderValuePaise` = that ÷ (placed − cancelled), truncated, null when 0; `ordersDelivered` / `deliveredRevenuePaise` = orders delivered today and their REP-R2 revenue (equals `daily-sales` `netRevenuePaise` for today). `available` and `lowStockThreshold` are in `stockUnit` (GRAM or PIECE).
 
 ### 4.21 Settings, staff, roles, audit, notifications
 

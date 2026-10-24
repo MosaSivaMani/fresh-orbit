@@ -13,21 +13,29 @@ IP from `X-Forwarded-For` **only** when the direct peer is in `ForwardedHeaders:
 | Value | Effect |
 |---|---|
 | `[]` (default) | Nothing is forwarded, not even from loopback. Behind Caddy, every customer then shares Caddy's IP, so one client can use up the OTP and login limits for everyone. Use the empty list only when clients reach the API directly. |
-| The Caddy network, for example `["172.20.0.0/16"]` | `X-Forwarded-For` and `X-Forwarded-Proto` from Caddy are applied, one hop only (`ForwardLimit = 1`). |
+| The edge network, for example `["172.30.0.0/24"]` | `X-Forwarded-For` and `X-Forwarded-Proto` from Caddy or the website's Next.js server are applied, one hop only (`ForwardLimit = 1`). |
 | An invalid entry | The Api refuses to start. |
 
 Each entry is a CIDR network or a single address (`10.0.0.5` means `/32`).
 
 Steps:
 
-1. In the compose file, give Caddy and the API a dedicated Docker network with a fixed subnet
-   (`ipam.config.subnet`), so the CIDR stays the same between deploys.
-2. On the Api container, set `ForwardedHeaders__KnownNetworks__0=<that subnet>`. List only that network. Never list
+1. `infra/compose/docker-compose.prod.yml` puts only Caddy, the website (`web`) and the API on the `edge` network,
+   with a fixed subnet (`DOCKER_SUBNET`, default `172.30.0.0/24`), so the CIDR stays the same between deploys.
+   Postgres, migrations, worker and monitoring sit on `backend`; the admin SPA on `static` with Caddy. A request
+   from those networks keeps its own peer address (W9).
+2. On the Api container, `ForwardedHeaders__KnownNetworks__0=${DOCKER_SUBNET}` lists only that network. Never list
    `0.0.0.0/0`, a public range, or a network that other containers or tenants share.
-3. Make sure Caddy sets `X-Forwarded-For` itself (its `reverse_proxy` does this by default). Do not publish the API
-   port to the host or the internet: every client must go through Caddy to reach the API.
+3. The website's server-side `/api/v1` proxy (Next.js on `web`) calls the API from the edge network and passes on the
+   `X-Forwarded-For` it received from Caddy, so the API sees the visitor, not the web container. Because the API
+   believes only one hop, the header must hold exactly one address: the Caddyfile snippet `client_ip_header`
+   (`header_up X-Forwarded-For {client_ip}`) is imported in every `reverse_proxy` to `api:8080` and `web:3000`, and
+   replaces any client-supplied list with the address Caddy determined (CF-Connecting-IP behind trusted Cloudflare,
+   else the TCP peer). Do not publish the API or web port to the host or the internet: every client must go through
+   Caddy.
 4. Check: request an OTP twice through Caddy, from two different client IPs. The `identity.otp_challenges.request_ip`
-   values must be the two client IPs, not Caddy's.
+   values must be the two client IPs, not Caddy's. Repeat once through the website (an OTP request from the web
+   sign-in page): the stored IP must be the visitor's, not the `web` container's. Not yet checked on the server.
 
 ## 2. SMS sender: `Notifications:Sms` (Api and Worker)
 

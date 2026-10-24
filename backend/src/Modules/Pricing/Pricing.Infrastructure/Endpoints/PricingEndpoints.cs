@@ -66,8 +66,12 @@ internal static class PricingEndpoints
         group.MapGet("/tax-rules", async (PricingService service, CancellationToken ct) => TypedResults.Ok(await service.ListTaxRulesAsync(ct)))
             .RequireAuthorization(policy => policy.RequireAuthenticatedUser().RequireClaim(FreshOrbitClaimTypes.Permission, ManagePermission, TaxManagePermission));
 
-        group.MapPost("/tax-rules", async (ScheduleTaxRuleRequest request, PricingService service, HttpResponse response, CancellationToken ct) =>
-                Respond(response, await service.ScheduleTaxRuleAsync(request, ct), r => r.Version))
+        // G9: the category's schedule version (from GET /tax-rules) in If-Match, or If-None-Match: * while it has no period.
+        group.MapPost("/tax-rules", async (ScheduleTaxRuleRequest request, PricingService service, HttpContext http, CancellationToken ct) =>
+                Respond(http.Response, await service.ScheduleTaxRuleAsync(request, Precondition(http.Request), ct), r => r.Version))
+            .ProducesProblem(StatusCodes.Status412PreconditionFailed)
+            .ProducesProblem(StatusCodes.Status428PreconditionRequired)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .RequirePermission(TaxManagePermission);
 
         group.MapPost("/prices/bulk", async (bool? dryRun, DateTimeOffset? validFrom, bool? replaceFuture, HttpRequest request, BulkPriceService service, CancellationToken ct) =>

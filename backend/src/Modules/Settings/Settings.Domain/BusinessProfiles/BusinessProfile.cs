@@ -29,6 +29,9 @@ public sealed class BusinessProfile : AggregateRoot
     /// <summary>IANA time zone id, e.g. Asia/Kolkata.</summary>
     public string TimeZone { get; private set; }
 
+    /// <summary>When support answers, as shown to customers (e.g. "7 AM to 9 PM, every day"); null until entered (W7).</summary>
+    public string? SupportHours { get; private set; }
+
     public static BusinessProfile Create(BusinessProfileData data)
     {
         var profile = new BusinessProfile();
@@ -53,6 +56,7 @@ public sealed class BusinessProfile : AggregateRoot
         SupportPhone = data.SupportPhone.Trim();
         SupportEmail = data.SupportEmail.Trim();
         TimeZone = data.TimeZone.Trim();
+        SupportHours = string.IsNullOrWhiteSpace(data.SupportHours) ? null : data.SupportHours.Trim();
     }
 }
 
@@ -64,4 +68,5 @@ public sealed record BusinessProfileData(
     string Address,
     string SupportPhone,
     string SupportEmail,
-    string TimeZone);
+    string TimeZone,
+    string? SupportHours = null);

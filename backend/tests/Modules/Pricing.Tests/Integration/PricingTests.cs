@@ -204,10 +204,40 @@ public sealed class PricingTests(PricingDatabase database) : StorefrontTestBase(
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await storeManager.GetAsync("/api/v1/admin/pricing/tax-rules", Ct)).StatusCode.Should().Be(HttpStatusCode.OK, "pricing.manage may still read tax rules");
 
-        var scheduled = await SendAsync(finance, HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", rule);
+        var scheduled = await SendAsync(finance, HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", rule, await TaxRuleVersionAsync(TaxCategory));
         scheduled.StatusCode.Should().Be(HttpStatusCode.OK);
         (await ReadJsonAsync(scheduled)).GetProperty("taxCategoryCode").GetString().Should().Be(TaxCategory);
         (await finance.GetAsync("/api/v1/admin/pricing/tax-rules", Ct)).StatusCode.Should().Be(HttpStatusCode.OK, "tax.manage may read tax rules");
+    }
+
+    [Fact]
+    public async Task Tax_rule_schedule_needs_if_none_match_first_then_the_current_version()
+    {
+        // Only this test uses this category in the Pricing assembly's database.
+        const string category = "SEAFOOD_READY_TO_EAT";
+        const string url = "/api/v1/admin/pricing/tax-rules";
+        (await TaxRuleVersionAsync(category)).Should().BeNull("the category starts without periods");
+
+        (await SendAsync(Admin, HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 500 }, "1")).StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+
+        var first = await OkAsync(HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 500 }, ifNoneMatchAny: true);
+        var version = first.GetProperty("version").GetString()!;
+        (await TaxRuleVersionAsync(category)).Should().Be(version);
+
+        var noVersion = await SendAsync(Admin, HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 1200, validFrom = Factory.Clock.UtcNow.AddDays(1) });
+        noVersion.StatusCode.Should().Be(HttpStatusCode.PreconditionRequired);
+        (await CodeOfAsync(noVersion)).Should().Be("VERSION_REQUIRED");
+        var again = await SendAsync(Admin, HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 1200, validFrom = Factory.Clock.UtcNow.AddDays(1) }, ifNoneMatchAny: true);
+        again.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        var stale = await SendAsync(Admin, HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 1200, validFrom = Factory.Clock.UtcNow.AddDays(1) }, "1");
+        stale.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        (await CodeOfAsync(stale)).Should().Be("CONCURRENCY_CONFLICT");
+
+        var next = await OkAsync(HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 1200, validFrom = Factory.Clock.UtcNow.AddDays(1) }, version);
+        next.GetProperty("next").GetProperty("rateBp").GetInt32().Should().Be(1200);
+        next.GetProperty("version").GetString().Should().NotBe(version);
+        (await SendAsync(Admin, HttpMethod.Post, url, new { taxCategoryCode = category, rateBp = 1800, validFrom = Factory.Clock.UtcNow.AddDays(2), replaceFuture = true }, version))
+            .StatusCode.Should().Be(HttpStatusCode.PreconditionFailed, "the first version is stale after the second schedule");
     }
 
     /// <summary>A system role's permissions as seeded by <c>backend/data/reference/identity/roles.json</c>.</summary>

@@ -77,6 +77,7 @@ public sealed record CouponRedemptionResult(
     bool WaivesDeliveryFee,
     IReadOnlyList<CouponLineDiscount> Allocations);
 
+/// <param name="ImageKey">Storage key of the banner image (kept for existing clients; show <c>ImageUrl</c>).</param>
 /// <param name="LinkType">CATEGORY / PRODUCT / COUPON.</param>
 public sealed record BannerInfo(
     Guid Id,
@@ -87,7 +88,11 @@ public sealed record BannerInfo(
     string LinkTarget,
     DateTimeOffset StartsAt,
     DateTimeOffset? EndsAt,
-    int SortOrder);
+    int SortOrder)
+{
+    /// <summary>Public URL of <see cref="ImageKey"/> resolved by the file storage (W11); null without an image.</summary>
+    public string? ImageUrl { get; init; }
+}
 
 /// <param name="DiscountType">PERCENT (value in bp) / FLAT (paise) / FREE_DELIVERY.</param>
 public sealed record VisibleCoupon(
