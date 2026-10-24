@@ -6,6 +6,10 @@ import type { NextConfig } from "next";
 // `next dev` / `next start` are unchanged.
 const standalone = process.env.NEXT_OUTPUT === "standalone";
 
+// `next dev` in a GitHub Codespace is opened through a forwarded https URL (`<name>-3000.<domain>`); let that origin
+// load the dev-only resources. `allowedDevOrigins` has no effect on `next build` / `next start`.
+const codespacesDomain = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN?.trim();
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -19,6 +23,7 @@ const nextConfig: NextConfig = {
   ...(standalone
     ? { output: "standalone" as const, outputFileTracingRoot: path.join(process.cwd(), "..", "..") }
     : {}),
+  ...(codespacesDomain ? { allowedDevOrigins: [`*.${codespacesDomain}`] } : {}),
   images: {
     // The API already serves WebP renditions (320 / 640 / 1280 px, CAT-R16); re-optimising them here would only
     // add CPU work and a second cache. next/image still gives lazy loading and reserved space.

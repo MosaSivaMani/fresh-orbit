@@ -20,4 +20,5 @@
 | Security review and pre-release checklist | `security/` |
 | Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
 | Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
+| **Owner testing** (demo app on an Android phone; whole store in a GitHub Codespace) | `runbooks/owner-testing.md` |
 | Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`) |

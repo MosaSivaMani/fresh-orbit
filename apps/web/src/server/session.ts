@@ -11,7 +11,7 @@ import {
   type RefreshResponse,
 } from "@/api/types/auth";
 import { CART_COOKIE, REFRESH_COOKIE, SESSION_HINT_COOKIE } from "@/lib/cookies";
-import { ConfigurationMissingError, getApiOrigin, isProduction } from "./config";
+import { ConfigurationMissingError, getApiOrigin, getSiteUrl, isProduction } from "./config";
 import { problemResponse } from "./problem";
 
 export const CLIENT_HEADER = "x-fresh-client";
@@ -33,13 +33,27 @@ export interface CookieOptions {
 
 const REFRESH_COOKIE_PATH = "/bff/auth";
 
+/**
+ * Development only: a dev server behind a forwarding proxy (a GitHub Codespace forwards
+ * `https://<name>-3000.app.github.dev` to `http://localhost:3000`) sees its own URL as localhost, so the browser's
+ * Origin is also compared with the configured public origin (`NEXT_PUBLIC_SITE_URL`). Production compares it with
+ * the request URL only.
+ */
+function isConfiguredDevelopmentOrigin(origin: string): boolean {
+  return !isProduction && origin === getSiteUrl();
+}
+
 /** Refuses cross-site and scripted-from-elsewhere calls. */
 export function checkSameOrigin(request: Request): Response | null {
   if (request.headers.get(CLIENT_HEADER) !== "web") {
     return problemResponse(403, "FORBIDDEN", "This request is not allowed.");
   }
   const origin = request.headers.get("origin");
-  if (origin !== null && origin !== new URL(request.url).origin) {
+  if (
+    origin !== null &&
+    origin !== new URL(request.url).origin &&
+    !isConfiguredDevelopmentOrigin(origin)
+  ) {
     return problemResponse(403, "FORBIDDEN", "This request is not allowed.");
   }
   const site = request.headers.get("sec-fetch-site");
