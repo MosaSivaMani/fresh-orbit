@@ -158,7 +158,7 @@ function toValues(c: Coupon | null): Values {
     };
   return {
     code: c.code,
-    description: c.description,
+    description: c.description ?? "",
     discountType: c.discountType,
     discountValue:
       c.discountType === "PERCENT"
@@ -177,7 +177,7 @@ function toValues(c: Coupon | null): Values {
   };
 }
 
-function toRequest(v: Values, scopes: CouponScope[]): CouponRequest {
+function toRequest(v: Values, scopes: CouponScope[], isListed: boolean): CouponRequest {
   const value =
     v.discountType === "PERCENT"
       ? (parsePercentToBp(v.discountValue) ?? 0)
@@ -198,6 +198,7 @@ function toRequest(v: Values, scopes: CouponScope[]): CouponRequest {
     validFrom: istLocalToUtcIso(v.validFrom) ?? v.validFrom,
     validTo: istLocalToUtcIso(v.validTo) ?? v.validTo,
     scopes,
+    isListed,
   };
 }
 
@@ -251,7 +252,8 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
   ];
 
   const onSubmit = form.handleSubmit((values) => {
-    const body = toRequest(values, scopes);
+    // No control for `isListed` yet: an edit keeps the saved value, a new coupon is not listed.
+    const body = toRequest(values, scopes, coupon?.isListed ?? false);
     const onError = (error: unknown) =>
       reportError(error, {
         setError: form.setError,
@@ -526,10 +528,10 @@ function Redemptions({ couponId }: { couponId: string }) {
               to={`/orders/${row.original.orderId}`}
               className="text-accent-text hover:underline"
             >
-              {row.original.orderNumber ?? row.original.orderId.slice(-8)}
+              {row.original.orderId.slice(-8)}
             </Link>
           ) : (
-            (row.original.orderNumber ?? row.original.orderId.slice(-8))
+            row.original.orderId.slice(-8)
           ),
       },
       {

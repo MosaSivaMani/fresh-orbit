@@ -25,7 +25,7 @@ class WishlistScreen extends ConsumerWidget {
           data: (items) {
             if (items.isEmpty) {
               return EmptyState(
-                icon: Icons.favorite_border,
+                slot: IllustrationSlot.emptyWishlist,
                 title: 'Your wishlist is empty',
                 message: 'Tap the heart on a product to save it for later.',
                 action: FilledButton(onPressed: () => context.go('/shop'), child: const Text('Browse fish')),

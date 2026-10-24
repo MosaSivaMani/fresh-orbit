@@ -31,6 +31,23 @@ void main() {
     expect(find.byKey(const Key('deliveryCode')), findsOneWidget);
     expect(find.text('4821'), findsOneWidget);
     expect(find.byKey(const Key('cancelOrder')), findsNothing);
+    // The tracking illustration follows the server status.
+    expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_ON_THE_WAY')), findsOneWidget);
+  });
+
+  testWidgets('a delivered order shows the delivered illustration', (tester) async {
+    final deps = TestDeps(pincode: '600041', signedIn: true);
+    deps.orders.onOrder = (_) async => order(
+      status: 'DELIVERED',
+      allowedActions: {'cancel': false, 'raiseComplaint': false, 'downloadInvoice': false, 'reorder': false},
+    );
+    deps.orders.onTracking = (_) async => tracking('DELIVERED');
+
+    await pumpScreen(tester, deps, const OrderTrackingScreen(orderId: 'o1'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_DELIVERED')), findsOneWidget);
+    expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_ON_THE_WAY')), findsNothing);
   });
 
   testWidgets('cancel uses the reason and an Idempotency-Key when the server allows it', (tester) async {

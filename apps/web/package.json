@@ -14,6 +14,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fresh/api-client": "workspace:*",
     "@fresh/core": "workspace:*",
     "@fresh/ui": "workspace:*",
     "@tanstack/react-query": "5.104.1",

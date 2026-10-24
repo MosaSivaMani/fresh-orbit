@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 import '../../core/launch.dart';
+import '../../widgets/illustrated.dart';
 import '../../widgets/states.dart';
 
 const supportPhoneDefine = String.fromEnvironment('SUPPORT_PHONE');
@@ -53,9 +54,13 @@ class HelpScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s2),
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(FreshSpacing.s4, 0, FreshSpacing.s4, FreshSpacing.s4),
+            child: HelpHero(message: 'Find a quick answer below, or contact our team.'),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-            child: Semantics(header: true, child: Text('Questions', style: theme.textTheme.titleMedium)),
+            child: Semantics(header: true, child: Text('Questions', style: theme.textTheme.titleLarge)),
           ),
           for (final (q, a) in _faq)
             ExpansionTile(
@@ -67,7 +72,7 @@ class HelpScreen extends StatelessWidget {
           const Divider(height: FreshSpacing.s6),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-            child: Semantics(header: true, child: Text('Contact us', style: theme.textTheme.titleMedium)),
+            child: Semantics(header: true, child: Text('Contact us', style: theme.textTheme.titleLarge)),
           ),
           if (supportPhone.isEmpty && supportEmail.isEmpty)
             const Padding(

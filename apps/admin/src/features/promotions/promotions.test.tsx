@@ -24,6 +24,7 @@ function coupon(overrides: Partial<Coupon> = {}): Coupon {
     validFrom: "2026-10-01T00:00:00Z",
     validTo: "2026-12-31T18:29:00Z",
     status: "ACTIVE",
+    isListed: false,
     scopes: [],
     version: "7",
     ...overrides,

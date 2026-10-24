@@ -7,6 +7,8 @@ import 'package:fresh_theme/fresh_theme.dart';
 import '../api/models/catalog.dart';
 import '../api/models/common.dart';
 import '../core/format.dart';
+import '../theme/app_theme.dart';
+import 'illustrated.dart';
 import 'states.dart';
 
 /// Paise in, ₹ out: price, optional struck-through compare-at price ("Original price"), optional unit.
@@ -91,7 +93,7 @@ class QuantityStepper extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: freshColors(context).borderStrong),
-          borderRadius: BorderRadius.circular(FreshRadius.md),
+          borderRadius: BorderRadius.circular(FreshRadius.full),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -233,7 +235,7 @@ class ProductPhoto extends StatelessWidget {
     required this.url,
     this.semanticLabel,
     this.aspectRatio = 1,
-    this.radius = FreshRadius.lg,
+    this.radius = AppRadius.field,
   });
 
   final String? url;
@@ -277,46 +279,104 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final ill = illustratedColors(context);
     final price = product.fromPrice;
     final availability = product.availability;
     final soldOut = availability != null && !availability.canAdd;
+    final stickerLabel = switch (availability?.status) {
+      null || 'IN_STOCK' => null,
+      'LOW_STOCK' => 'Low stock',
+      'OUT_OF_STOCK' => 'Sold out',
+      'NOT_SOLD_HERE' => 'Not sold here',
+      final s => humanizeCode(s),
+    };
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Opacity(
-          opacity: soldOut ? 0.6 : 1,
-          child: Padding(
-            padding: const EdgeInsets.all(FreshSpacing.s2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ProductPhoto(url: product.imageUrl, aspectRatio: 1.1),
-                const SizedBox(height: FreshSpacing.s2),
-                Text(product.name, style: theme.textTheme.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
-                if (product.localNames.isNotEmpty)
-                  Text(
+        child: Padding(
+          padding: const EdgeInsets.all(FreshSpacing.s2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Opacity(
+                    opacity: soldOut ? 0.55 : 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: ill.sandDeep,
+                        borderRadius: BorderRadius.circular(AppRadius.field),
+                      ),
+                      child: ProductPhoto(url: product.imageUrl, aspectRatio: 1.1),
+                    ),
+                  ),
+                  if (stickerLabel != null)
+                    Positioned(
+                      top: FreshSpacing.s2,
+                      left: FreshSpacing.s2,
+                      child: Sticker(label: stickerLabel, tone: soldOut ? StickerTone.sand : StickerTone.coral),
+                    ),
+                ],
+              ),
+              const SizedBox(height: FreshSpacing.s2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s1),
+                child: Text(
+                  product.name,
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (product.localNames.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s1),
+                  child: Text(
                     product.localNames.join(' · '),
                     style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).textMuted),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                const Spacer(),
-                if (price != null)
-                  PriceTag(
-                    paise: price.unitPricePaise,
-                    compareAtPaise: price.compareAtPaise,
-                    perUnit: price.perUnit,
-                    style: theme.textTheme.titleSmall,
-                  )
-                else if (product.locationRequired)
-                  Text('Set pincode to see prices', style: theme.textTheme.bodySmall),
-                if (availability != null && availability.status != 'IN_STOCK') ...[
-                  const SizedBox(height: FreshSpacing.s1),
-                  AvailabilityBadge(status: availability.status),
-                ],
-              ],
-            ),
+                ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(FreshSpacing.s1, 0, 0, 0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: price != null
+                          ? PriceTag(
+                              paise: price.unitPricePaise,
+                              compareAtPaise: price.compareAtPaise,
+                              perUnit: price.perUnit,
+                              style: theme.textTheme.titleMedium,
+                            )
+                          : product.locationRequired
+                          ? Text('Set pincode to see prices', style: theme.textTheme.bodySmall)
+                          : const SizedBox.shrink(),
+                    ),
+                    ExcludeSemantics(
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: soldOut ? ill.sandDeep : theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 20,
+                          color: soldOut ? freshColors(context).textMuted : theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -339,7 +399,7 @@ class PrimaryButton extends StatelessWidget {
         ? const SizedBox(
             width: 20,
             height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white, semanticsLabel: 'Working'),
+            child: CircularProgressIndicator(strokeWidth: 2, semanticsLabel: 'Working'),
           )
         : Text(label);
     return SizedBox(

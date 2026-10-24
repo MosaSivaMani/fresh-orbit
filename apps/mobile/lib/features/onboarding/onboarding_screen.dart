@@ -3,29 +3,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
+import '../../widgets/illustrated.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 class _Page {
-  const _Page(this.icon, this.title, this.body);
-  final IconData icon;
+  const _Page(this.slot, this.sticker, this.title, this.body);
+  final IllustrationSlot slot;
+  final String sticker;
   final String title;
   final String body;
 }
 
 const _pages = [
   _Page(
-    Icons.set_meal_outlined,
+    IllustrationSlot.onboardingFresh,
+    'Morning catch',
     'Fresh catch, delivered chilled',
     'Fish, prawns, crabs and shellfish from the morning catch, kept cold from our store to your door.',
   ),
   _Page(
-    Icons.content_cut,
+    IllustrationSlot.onboardingCleaned,
+    'Your cut',
     'Cleaned the way you cook',
     'Choose whole, steaks, fillets or cleaned. You pay for the net weight after cleaning, never for the waste.',
   ),
   _Page(
-    Icons.payments_outlined,
+    IllustrationSlot.onboardingDelivery,
+    'Kept cold',
     'Pick a slot, pay on delivery',
     'Choose a delivery slot that suits you and pay by cash or UPI when your order arrives.',
   ),
@@ -72,19 +79,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPageChanged: (i) => setState(() => _index = i),
                 itemBuilder: (context, i) {
                   final page = _pages[i];
-                  return Padding(
+                  return SingleChildScrollView(
                     padding: const EdgeInsets.all(FreshSpacing.s6),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ExcludeSemantics(child: Icon(page.icon, size: 96, color: freshColors(context).accent)),
-                        const SizedBox(height: FreshSpacing.s6),
+                        PolaroidCard(
+                          tilt: i.isEven ? -0.012 : 0.012,
+                          stickers: [Sticker(label: page.sticker, tone: i == 1 ? StickerTone.teal : StickerTone.coral)],
+                          picture: Padding(
+                            padding: const EdgeInsets.all(FreshSpacing.s4),
+                            child: Illustration(slot: page.slot, size: 220),
+                          ),
+                        ),
+                        const SizedBox(height: FreshSpacing.s8),
                         Semantics(
                           header: true,
-                          child: Text(page.title, style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+                          child: Text(page.title, style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
                         ),
                         const SizedBox(height: FreshSpacing.s3),
-                        Text(page.body, style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+                        Text(
+                          page.body,
+                          style: theme.textTheme.bodyLarge?.copyWith(color: freshColors(context).textMuted),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
                     ),
                   );
@@ -100,10 +117,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     for (var i = 0; i < _pages.length; i++)
                       Container(
                         margin: const EdgeInsets.all(FreshSpacing.s1),
-                        width: i == _index ? 20 : 8,
+                        width: i == _index ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: i == _index ? theme.colorScheme.primary : freshColors(context).border,
+                          color: i == _index ? theme.colorScheme.primary : freshColors(context).borderStrong,
                           borderRadius: BorderRadius.circular(FreshRadius.full),
                         ),
                       ),
@@ -118,7 +135,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: FilledButton(
                   onPressed: last
                       ? _finish
-                      : () => _controller.nextPage(duration: FreshDurations.normal, curve: Curves.easeOut),
+                      : () => motionAllowed(context)
+                            ? _controller.nextPage(duration: FreshDurations.slow, curve: Curves.easeOutCubic)
+                            : _controller.jumpToPage(_index + 1),
                   child: Text(last ? 'Get started' : 'Next'),
                 ),
               ),

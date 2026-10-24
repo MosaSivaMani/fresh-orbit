@@ -1,30 +1,35 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §1 (conventions) and §5 (pricing contract).
+// Shared API shapes, generated from the backend OpenAPI document (`@fresh/api-client`).
+// Regenerate with `pnpm --filter @fresh/api-client fetch-spec && pnpm generate:api`.
+
+import { type Schema } from "@fresh/api-client";
 
 export type { Page } from "@fresh/core";
 
 /** `GRAM` for KG variants, `PIECE`, `PACK` (docs/api §1.1). */
-export type QuantityUnit = "GRAM" | "PIECE" | "PACK";
+export type QuantityUnit = Schema<"CatalogQuantityUnit">;
 
-export interface Quantity {
-  value: number;
-  unit: QuantityUnit;
-}
+export type Quantity = Schema<"QuantityValue">;
 
 /** Variant sell unit; prices are per this unit. */
-export type SellUnit = "KG" | "PIECE" | "PACK";
+export type SellUnit = Schema<"SellUnit">;
 
-/** docs/api §4.4: `availability.status`. */
-export type AvailabilityStatus = "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "NOT_SOLD_HERE";
+export type AvailabilityStatus = Schema<"AvailabilityStatus">;
 
-export interface Availability {
-  status: AvailabilityStatus;
-  /** Display text from the server; clients branch on `status`, never on this text. */
-  message: string | null;
-}
+export type Availability = Schema<"ListAvailability">;
 
-/** A refusal reported inside a 200 response (cart line issues, checkout blockers). */
-export interface Issue {
-  code: string;
-  message: string;
-}
+/** A refusal reported inside a 200 response (cart line issues). */
+export type Issue = Schema<"CartIssueView">;
+
+/**
+ * Some response records carry codes as plain `string` in the OpenAPI document (the C# field is a string; see
+ * docs/design/web.md §7). `Coded<T, { field: Union }>` narrows those fields to the codes the server documents.
+ */
+export type Coded<T, Codes extends { [K in keyof T]?: unknown }> = Omit<T, keyof Codes> & Codes;
+
+type NullableKeys<T> = { [K in keyof T]-?: null extends T[K] ? K : never }[keyof T];
+
+/**
+ * Request records list every field as required, nullable ones included; the API reads a missing field as null.
+ * `RequestBody<T>` makes the nullable fields optional so a body sends only what the user set.
+ */
+export type RequestBody<T> = Omit<T, NullableKeys<T>> & Partial<Pick<T, NullableKeys<T>>>;

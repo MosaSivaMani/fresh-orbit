@@ -1,24 +1,12 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.21 (audit log); shapes match backend Audit.Application/Entries/AuditQueries.cs.
+// Audit log (docs/api §4.21), generated from the backend OpenAPI document.
 
-import type { CalendarDate, Id, Instant } from "./common";
+import type { CalendarDate, Id, Schema } from "./common";
 
-export interface AuditEntry {
-  id: number;
-  occurredAt: Instant;
-  actorType: "CUSTOMER" | "STAFF" | "SYSTEM" | (string & {});
-  actorId: Id | null;
-  actorName: string | null;
-  action: string;
-  entityType: string;
-  entityId: string;
-  /** JSON snapshot before the change (null for creates). */
+/** `before` / `after` are JSON snapshots (null for creates / deletes); the spec types them as `JsonElement`. */
+export type AuditEntry = Omit<Schema<"AuditEntryResponse">, "before" | "after"> & {
   before: unknown;
-  /** JSON snapshot after the change (null for deletes). */
   after: unknown;
-  ip: string | null;
-  correlationId: string | null;
-}
+};
 
 export interface AuditListQuery {
   entityType?: string;

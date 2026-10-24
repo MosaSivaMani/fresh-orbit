@@ -74,15 +74,8 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
                   complaint.orderNumber
                 ),
               },
-              { label: "Item", value: complaint.productName ?? "Whole order" },
+              { label: "Item", value: complaint.orderItemId ? "One item" : "Whole order" },
               { label: "Location", value: nameOf(complaint.fulfillmentLocationId) },
-              {
-                label: "Refund limit",
-                value:
-                  complaint.maxRefundPaise != null
-                    ? formatRupees(complaint.maxRefundPaise)
-                    : "Set by the server",
-              },
               {
                 label: "Resolution",
                 value: complaint.resolution ? humanizeCode(complaint.resolution) : "—",
@@ -96,10 +89,9 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
               },
               {
                 label: "Decided",
-                value: complaint.decidedAt
-                  ? `${formatDateTime(complaint.decidedAt)}${complaint.decidedBy ? ` by ${complaint.decidedBy}` : ""}`
-                  : "—",
+                value: complaint.decidedAt ? formatDateTime(complaint.decidedAt) : "—",
               },
+              { label: "Decision note", value: complaint.decisionNote ?? "—" },
               {
                 label: "Resolved",
                 value: complaint.resolvedAt ? formatDateTime(complaint.resolvedAt) : "—",
@@ -108,14 +100,14 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
           />
           <p className="mt-3 text-sm whitespace-pre-wrap">{complaint.description}</p>
         </Section>
-        {complaint.attachments.length > 0 && (
+        {complaint.attachmentUrls.length > 0 && (
           <Section title="Photos">
             <ul className="flex flex-wrap gap-3">
-              {complaint.attachments.map((a) => (
-                <li key={a.id}>
-                  <a href={a.url} target="_blank" rel="noreferrer">
+              {complaint.attachmentUrls.map((url) => (
+                <li key={url}>
+                  <a href={url} target="_blank" rel="noreferrer">
                     <img
-                      src={a.url}
+                      src={url}
                       alt="Complaint attachment"
                       className="border-border size-32 rounded-md border object-cover"
                     />
@@ -177,7 +169,7 @@ function DecideForm({ complaint, reload }: { complaint: Complaint; reload: () =>
           resolution: approved ? v.resolution : "NONE",
           refundAmountPaise:
             approved && v.resolution === "REFUND" ? parseRupeesToPaise(v.refundAmount) : null,
-          notes: v.notes || null,
+          note: v.notes || null,
         },
       },
       {
@@ -229,11 +221,7 @@ function DecideForm({ complaint, reload }: { complaint: Complaint; reload: () =>
             name="refundAmount"
             label="Refund amount (₹)"
             inputMode="decimal"
-            hint={
-              complaint.maxRefundPaise != null
-                ? `Up to ${formatRupees(complaint.maxRefundPaise)}; the server checks the limit.`
-                : "The server checks the amount against the line total."
-            }
+            hint="The server checks the amount against the line total."
           />
         )}
         <TextAreaField form={form} name="notes" label="Notes" required={status === "REJECTED"} />

@@ -1,25 +1,13 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// docs/api/README.md §4.18; shapes match backend Locations.Application/*Contracts.cs.
+// Cities, fulfillment locations, service areas (docs/api §4.18), generated from the backend OpenAPI document.
 
-import type { CalendarDate, Id, Instant, TimeOfDay, Version } from "./common";
+import type { Coded, Schema } from "./common";
 
-export type CityStatus = "DRAFT" | "ACTIVE" | "PAUSED" | "RETIRED";
-export type LocationStatus = "DRAFT" | "ACTIVE" | "PAUSED";
-/** .NET `DayOfWeek` serialised as a string. */
-export type DayOfWeekName =
-  "SUNDAY" | "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY";
+export type CityStatus = Schema<"CityStatus">;
+export type LocationStatus = Schema<"LocationStatus">;
+/** .NET `DayOfWeek` written as its code. */
+export type DayOfWeekName = Schema<"DayOfWeek">;
 
-export interface City {
-  id: Id;
-  code: string;
-  name: string;
-  stateCode: string;
-  timeZone: string;
-  status: CityStatus;
-  activatedAt: Instant | null;
-  activatedBy: Id | null;
-  version: Version;
-}
+export type City = Schema<"CityResponse">;
 
 export type ReadinessCode =
   | "FULFILLMENT_LOCATION_MISSING"
@@ -30,138 +18,40 @@ export type ReadinessCode =
   | "STOCK_ITEM_MISSING"
   | (string & {});
 
-export interface MissingItem {
-  code: ReadinessCode;
-  fulfillmentLocationId: Id | null;
-  message: string;
-}
+export type MissingItem = Coded<Schema<"MissingItemResponse">, { code: ReadinessCode }>;
 
-export interface Readiness {
-  cityId: Id;
-  isReady: boolean;
-  missing: MissingItem[];
-}
+export type Readiness = Coded<Schema<"ReadinessResponse">, { missing: MissingItem[] }>;
 
-export interface CityDetail extends City {
-  readiness: Readiness;
-}
+export type CityDetail = Coded<Schema<"CityDetailResponse">, { readiness: Readiness }>;
 
-export interface CreateCityRequest {
-  code: string;
-  name: string;
-  stateCode: string;
-  /** IANA, e.g. `Asia/Kolkata`. */
-  timeZone: string;
-}
+export type CreateCityRequest = Schema<"CreateCityRequest">;
 
-export type UpdateCityRequest = Omit<CreateCityRequest, "code">;
+export type UpdateCityRequest = Schema<"UpdateCityRequest">;
 
-export interface OperatingHours {
-  dayOfWeek: DayOfWeekName;
-  opensAt: TimeOfDay;
-  closesAt: TimeOfDay;
-}
+export type OperatingHours = Schema<"OperatingHoursResponse">;
 
-export interface FulfillmentLocation {
-  id: Id;
-  cityId: Id;
-  code: string;
-  name: string;
-  addressLine: string | null;
-  pincode: string | null;
-  phone: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  hasColdStorage: boolean;
-  fssaiLicenseNo: string | null;
-  status: LocationStatus;
-  operatingHours: OperatingHours[];
-  version: Version;
-}
+export type FulfillmentLocation = Schema<"FulfillmentLocationResponse">;
 
-export interface CreateFulfillmentLocationRequest {
-  cityId: Id;
-  code: string;
-  name: string;
-  addressLine: string | null;
-  pincode: string | null;
-  phone: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  hasColdStorage: boolean;
-  fssaiLicenseNo: string | null;
-}
+export type CreateFulfillmentLocationRequest = Schema<"CreateFulfillmentLocationRequest">;
 
-export interface UpdateFulfillmentLocationRequest extends Omit<
-  CreateFulfillmentLocationRequest,
-  "cityId" | "code"
-> {
-  /** null keeps the current status. */
-  status: LocationStatus | null;
-}
+/** `status: null` keeps the current status. */
+export type UpdateFulfillmentLocationRequest = Schema<"UpdateFulfillmentLocationRequest">;
 
-export interface OperatingHoursDay {
-  dayOfWeek: DayOfWeekName;
-  opensAt: TimeOfDay | null;
-  closesAt: TimeOfDay | null;
-}
+export type OperatingHoursDay = Schema<"OperatingHoursDay">;
 
-export interface SetOperatingHoursRequest {
-  /** The whole week; a day not listed is closed. */
-  days: OperatingHoursDay[];
-}
+/** The whole week; a day not listed is closed. */
+export type SetOperatingHoursRequest = Schema<"SetOperatingHoursRequest">;
 
-export interface Closure {
-  id: Id;
-  fulfillmentLocationId: Id;
-  closedOn: CalendarDate;
-  reason: string | null;
-}
+export type Closure = Schema<"ClosureResponse">;
 
-export interface AddClosureRequest {
-  closedOn: CalendarDate;
-  reason: string | null;
-}
+export type AddClosureRequest = Schema<"AddClosureRequest">;
 
-export interface ServiceArea {
-  id: Id;
-  cityId: Id;
-  fulfillmentLocationId: Id;
-  name: string;
-  deliveryFeePaise: number;
-  freeDeliveryAbovePaise: number | null;
-  minOrderPaise: number;
-  isActive: boolean;
-  activePincodeCount: number;
-  version: Version;
-}
+export type ServiceArea = Schema<"ServiceAreaResponse">;
 
-export interface CreateServiceAreaRequest {
-  cityId: Id;
-  fulfillmentLocationId: Id;
-  name: string;
-  deliveryFeePaise: number;
-  freeDeliveryAbovePaise: number | null;
-  minOrderPaise: number;
-}
+export type CreateServiceAreaRequest = Schema<"CreateServiceAreaRequest">;
 
-export interface UpdateServiceAreaRequest {
-  name: string;
-  deliveryFeePaise: number;
-  freeDeliveryAbovePaise: number | null;
-  minOrderPaise: number;
-  isActive: boolean;
-}
+export type UpdateServiceAreaRequest = Schema<"UpdateServiceAreaRequest">;
 
-export interface Pincode {
-  pincode: string;
-  isActive: boolean;
-  addedAt: Instant;
-}
+export type Pincode = Schema<"PincodeResponse">;
 
-export interface AddPincodesResponse {
-  serviceAreaId: Id;
-  added: string[];
-  activePincodeCount: number;
-  version: Version;
-}
+export type AddPincodesResponse = Schema<"AddPincodesResponse">;

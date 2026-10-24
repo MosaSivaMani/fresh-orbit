@@ -70,7 +70,8 @@ export function CouponsListPage() {
         id: "validTo",
         header: "Valid until",
         enableSorting: false,
-        cell: ({ row }) => formatDateTime(row.original.validTo),
+        cell: ({ row }) =>
+          row.original.validTo ? formatDateTime(row.original.validTo) : "No end date",
       },
       {
         id: "status",

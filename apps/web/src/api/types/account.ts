@@ -1,70 +1,31 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §4.2, §4.7, §4.10, docs/product/customers.md and docs/product/notifications.md;
-// field names follow the Phase 2 Customers / Notifications contracts where the docs are silent.
+// Profile, wishlist, notifications and visible coupons (docs/api §4.2, §4.7, §4.10), generated from the backend
+// OpenAPI document (`@fresh/api-client`).
 
-import { type ProductListItem } from "./catalog";
+import { type Schema } from "@fresh/api-client";
+import { type Coded } from "./common";
 
-export interface Profile {
-  customerId: string;
-  phone: string | null;
-  fullName: string | null;
-  email: string | null;
-  marketingOptIn: boolean;
-  status: "ACTIVE" | "DELETED";
-  version: string;
-}
+export type Profile = Coded<Schema<"ProfileResponse">, { status: "ACTIVE" | "DELETED" }>;
 
 /** `PATCH /me`: null leaves a field unchanged (CUS-R2). */
-export interface UpdateProfileRequest {
-  fullName?: string | null;
-  email?: string | null;
-  marketingOptIn?: boolean | null;
-}
+export type UpdateProfileRequest = Partial<Schema<"UpdateProfileRequest">>;
 
-export interface WishlistItem {
-  productId: string;
-  addedAt: string;
-  /**
-   * docs/api §4.2 lists "wishlist products (priced when LOC given)"; Phase 2 returns ids only. The website shows the
-   * product card when the server sends it (see docs/design/web.md "API gaps").
-   */
-  product?: ProductListItem | null;
-}
+/** `GET /me/wishlist` returns ids and dates only (gap W5 in docs/design/web.md). */
+export type WishlistItem = Schema<"WishlistItemResponse">;
 
-export interface InboxItem {
-  messageId: string;
-  templateCode: string;
-  title: string | null;
-  body: string;
-  isRead: boolean;
-  createdAt: string;
-  readAt: string | null;
-}
+export type InboxItem = Schema<"InboxItem">;
 
-export interface InboxResponse {
-  items: InboxItem[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  unreadCount: number;
-}
+export type InboxResponse = Schema<"InboxResponse">;
 
 export type PreferenceCategory = "ORDER_UPDATES" | "OFFERS";
 export type PreferenceChannel = "SMS" | "EMAIL" | "PUSH" | "IN_APP";
 
-export interface PreferenceItem {
-  category: PreferenceCategory;
-  channel: PreferenceChannel;
-  enabled: boolean;
-}
+export type PreferenceItem = Coded<
+  Schema<"PreferenceItem">,
+  { category: PreferenceCategory; channel: PreferenceChannel }
+>;
 
 export interface PreferencesResponse {
   preferences: PreferenceItem[];
 }
 
-export interface VisibleCoupon {
-  code: string;
-  description: string | null;
-  minOrderPaise: number | null;
-  validTo: string | null;
-}
+export type VisibleCoupon = Schema<"VisibleCoupon">;

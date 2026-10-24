@@ -72,7 +72,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ? ProductGrid(
               query: ProductQuery(q: _submitted),
               empty: EmptyState(
-                icon: Icons.search_off,
+                slot: IllustrationSlot.noSearchResults,
                 title: 'No results for "$_submitted"',
                 message: 'Try a local name, such as vanjaram or eral, or check the spelling.',
               ),
@@ -92,7 +92,7 @@ class _Suggestions extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (query.trim().length < 2) {
       return const EmptyState(
-        icon: Icons.search,
+        slot: IllustrationSlot.noSearchResults,
         title: 'Search the catch',
         message: 'Type at least two letters. Local names work too.',
       );

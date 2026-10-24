@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDateTime, formatDayShort, formatRupees, formatTime, pageCount } from "@fresh/core";
+import { formatDayShort, formatRupees, formatTime, pageCount } from "@fresh/core";
 import { Button, EmptyState, ErrorState, Pagination, Skeleton, StatusBadge } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Package } from "lucide-react";
@@ -72,15 +72,12 @@ export function OrdersList() {
                   <StatusBadge code={o.status} map={orderStatusMap} />
                 </div>
                 <span className="text-text-muted text-sm">
-                  {o.slot
-                    ? `Delivery ${formatDayShort(o.slot.startAt)}, ${formatTime(o.slot.startAt)}`
-                    : `Placed ${formatDateTime(o.placedAt)}`}
-                  {o.itemCount != null &&
-                    ` · ${o.itemCount} ${o.itemCount === 1 ? "item" : "items"}`}
+                  {`Delivery ${formatDayShort(o.slotStartAt)}, ${formatTime(o.slotStartAt)}`}
+                  {` · ${o.itemCount} ${o.itemCount === 1 ? "item" : "items"}`}
                 </span>
               </div>
               <span className="text-text font-semibold tabular-nums">
-                {formatRupees(o.totalPaise)}
+                {formatRupees(o.finalTotalPaise ?? o.totalPaise)}
               </span>
               <ChevronRight aria-hidden="true" className="text-text-muted size-5" />
             </Link>

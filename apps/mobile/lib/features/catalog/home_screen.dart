@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/catalog_state.dart';
 import '../../state/location_state.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/illustrated.dart';
+import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 /// Pincode chip for app bars: "Delivering to 600041" → change pincode.
@@ -103,7 +107,7 @@ class _HomeBody extends ConsumerWidget {
                 excludeSemantics: true,
                 child: InkWell(
                   onTap: () => context.push('/search'),
-                  borderRadius: BorderRadius.circular(FreshRadius.md),
+                  borderRadius: BorderRadius.circular(AppRadius.field),
                   child: InputDecorator(
                     decoration: const InputDecoration(prefixIcon: Icon(Icons.search)),
                     child: Text(
@@ -114,6 +118,8 @@ class _HomeBody extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: FreshSpacing.s4),
+              const _HomeHero(),
+              const SizedBox(height: FreshSpacing.s4),
               if (data.locationRequired)
                 const InfoBanner(text: 'Set your pincode to see prices and availability.', tone: BannerTone.warning)
               else if (service?.nextSlot != null)
@@ -123,7 +129,7 @@ class _HomeBody extends ConsumerWidget {
                 ),
               if (data.featuredCategories.isNotEmpty) ...[
                 const SizedBox(height: FreshSpacing.s5),
-                Semantics(header: true, child: Text('Categories', style: theme.textTheme.titleMedium)),
+                Semantics(header: true, child: Text('Categories', style: theme.textTheme.titleLarge)),
                 const SizedBox(height: FreshSpacing.s2),
                 Wrap(
                   spacing: FreshSpacing.s2,
@@ -150,15 +156,19 @@ class _HomeBody extends ConsumerWidget {
                   ),
                 ),
               ],
+              const SizedBox(height: FreshSpacing.s6),
+              Semantics(header: true, child: Text('Why Fresh Orbit', style: theme.textTheme.titleLarge)),
+              const SizedBox(height: FreshSpacing.s2),
+              const _Features(),
               const SizedBox(height: FreshSpacing.s5),
-              Semantics(header: true, child: Text('Popular today', style: theme.textTheme.titleMedium)),
+              Semantics(header: true, child: Text('Popular today', style: theme.textTheme.titleLarge)),
             ],
           ),
         ),
         if (data.featuredProducts.isEmpty)
           const SliverToBoxAdapter(
             child: EmptyState(
-              icon: Icons.set_meal_outlined,
+              slot: IllustrationSlot.outOfStock,
               title: 'Nothing featured right now',
               message: 'Browse the shop to see everything available for your area.',
             ),
@@ -175,7 +185,7 @@ class _HomeBody extends ConsumerWidget {
               },
             ),
           ),
-        const SliverToBoxAdapter(child: _TrustRow()),
+        const SliverToBoxAdapter(child: SizedBox(height: FreshSpacing.s6)),
       ],
     );
   }
@@ -197,9 +207,9 @@ class _OfferCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (banner.badge != null) FreshBadge(label: banner.badge!, highlight: true),
+              if (banner.badge != null) Sticker(label: banner.badge!),
               const SizedBox(height: FreshSpacing.s2),
-              Text(banner.title, style: theme.textTheme.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+              Text(banner.title, style: theme.textTheme.titleMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
               if (banner.subtitle != null)
                 Text(banner.subtitle!, style: theme.textTheme.bodySmall, maxLines: 2, overflow: TextOverflow.ellipsis),
             ],
@@ -210,27 +220,78 @@ class _OfferCard extends StatelessWidget {
   }
 }
 
-class _TrustRow extends StatelessWidget {
-  const _TrustRow();
+class _HomeHero extends StatelessWidget {
+  const _HomeHero();
 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      (Icons.ac_unit, 'Cold chain from store to door'),
-      (Icons.scale_outlined, 'Pay for net weight after cleaning'),
-      (Icons.payments_outlined, 'Cash or UPI on delivery'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.all(FreshSpacing.s4),
-      child: Column(
+    final theme = Theme.of(context);
+    final ill = illustratedColors(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s3, FreshSpacing.s5),
+      decoration: BoxDecoration(color: ill.tealSoft, borderRadius: BorderRadius.circular(AppRadius.hero)),
+      child: Row(
         children: [
-          for (final (icon, text) in items)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(icon, color: freshColors(context).accent),
-              title: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Sticker(label: 'Kept cold', tone: StickerTone.coral, icon: Icons.ac_unit_rounded),
+                const SizedBox(height: FreshSpacing.s3),
+                Semantics(
+                  header: true,
+                  child: Text('Fresh from the morning catch', style: theme.textTheme.headlineSmall),
+                ),
+                const SizedBox(height: FreshSpacing.s1),
+                Text(
+                  'Cleaned the way you cook and brought to your door.',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: freshColors(context).textMuted),
+                ),
+              ],
             ),
+          ),
+          const EntranceMotion(
+            child: Illustration(slot: IllustrationSlot.homeHero, size: 140, excludeFromSemantics: true),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _Features extends StatelessWidget {
+  const _Features();
+
+  static const _items = [
+    (
+      IllustrationSlot.featureHonestWeight,
+      'Honest weight',
+      'You pay for the net weight after cleaning, never for the waste.',
+    ),
+    (
+      IllustrationSlot.featureCleanedYourWay,
+      'Cleaned your way',
+      'Choose whole, steaks, fillets or cleaned for every item.',
+    ),
+    (IllustrationSlot.featureColdChain, 'Cold all the way', 'Kept chilled from our store to your door.'),
+    (IllustrationSlot.featureSameDay, 'Same-day slots', 'Order now and pick a slot today when one is open.'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    return SizedBox(
+      height: 300 * scale.clamp(1.0, 2.0),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
+        padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s2),
+        itemCount: _items.length,
+        separatorBuilder: (_, _) => const SizedBox(width: FreshSpacing.s3),
+        itemBuilder: (context, i) {
+          final (slot, title, message) = _items[i];
+          return FeatureCard(slot: slot, number: i + 1, title: title, message: message);
+        },
       ),
     );
   }

@@ -19,3 +19,10 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 |---|---|---|
 | ONBOARDING_FRESH | `generated/onboarding_fresh.jpg` | 2026-10-24 |
 | ONBOARDING_CLEANED | `generated/onboarding_cleaned.jpg` | 2026-10-24 |
+| ONBOARDING_DELIVERY | `generated/onboarding_delivery.jpg` | 2026-10-24 |
+| LOCATION_PICK | `generated/location_pick.jpg` | 2026-10-24 |
+| NOT_SERVICEABLE | `generated/not_serviceable.jpg` | 2026-10-24 |
+| EMPTY_CART | `generated/empty_cart.jpg` | 2026-10-24 |
+| EMPTY_WISHLIST | `generated/empty_wishlist.jpg` | 2026-10-24 |
+| EMPTY_ORDERS | `generated/empty_orders.jpg` | 2026-10-24 |
+| EMPTY_NOTIFICATIONS | `generated/empty_notifications.jpg` | 2026-10-24 |

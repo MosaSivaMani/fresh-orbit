@@ -1,52 +1,21 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §1.2, §4.1 and docs/product/identity.md.
+// Customer sign-in shapes (docs/api §4.1), generated from the backend OpenAPI document (`@fresh/api-client`).
 
-export interface OtpRequestBody {
-  /** E.164, e.g. `+919876543210`. */
-  phone: string;
-  purpose: "LOGIN";
-}
+import { type Schema } from "@fresh/api-client";
 
-export interface OtpChallenge {
-  challengeId: string;
-  expiresAt: string;
-  resendAfterSeconds: number;
-  codeLength: number;
-}
+export type OtpRequestBody = Schema<"OtpRequestRequest">;
+
+export type OtpChallenge = Schema<"OtpRequestResponse">;
 
 /** Backend `POST /auth/otp/verify` body. The website's BFF adds `guestCartToken` from its httpOnly cookie. */
-export interface OtpVerifyBody {
-  challengeId: string;
-  phone: string;
-  code: string;
-  deviceLabel?: string | null;
-  guestCartToken?: string | null;
-}
+export type OtpVerifyBody = Schema<"OtpVerifyRequest">;
 
-export interface SessionUser {
-  id: string;
-  phone: string;
-  fullName: string | null;
-  isNewCustomer: boolean;
-}
+export type SessionUser = Schema<"CustomerLoginUser">;
 
 /** Backend `POST /auth/otp/verify` response. */
-export interface OtpVerifyResponse {
-  accessToken: string;
-  accessTokenExpiresAt: string;
-  refreshToken: string;
-  refreshTokenExpiresAt: string;
-  user: SessionUser;
-  cart: { id: string; mergedLineCount: number } | null;
-}
+export type OtpVerifyResponse = Schema<"CustomerLoginResponse">;
 
 /** Backend `POST /auth/refresh` response. */
-export interface RefreshResponse {
-  accessToken: string;
-  accessTokenExpiresAt: string;
-  refreshToken: string;
-  refreshTokenExpiresAt: string;
-}
+export type RefreshResponse = Schema<"SessionTokensResponse">;
 
 /** What the website's own `/bff/auth/*` handlers return to the browser: never the refresh token. */
 export interface BrowserSession {

@@ -1,4 +1,4 @@
-// Test fixtures shaped like the docs/api examples. Values are whatever the "server" says; tests assert that the UI
+// Test fixtures typed by the generated API schema (`@fresh/api-client`). Values are whatever the "server" says; tests assert that the UI
 // renders them, never that it computes them.
 import { type ProductDetail } from "@/api/types/catalog";
 import { type Cart, type CartLine } from "@/api/types/cart";
@@ -53,6 +53,7 @@ export const seerFish: ProductDetail = {
       altText: "Seer fish steaks",
       width: 1280,
       height: 960,
+      sources: [],
     },
   ],
   location: { fulfillmentLocationCode: "CHN-TVM", pincode: "600041" },
@@ -63,6 +64,8 @@ export const seerFish: ProductDetail = {
       name: "Medium (3-5 kg fish)",
       sellUnit: "KG",
       isWeightVariable: true,
+      packSizeGrams: null,
+      avgPieceGrams: null,
       minOrder: { value: 500, unit: "GRAM" },
       maxOrder: { value: 5000, unit: "GRAM" },
       orderStep: { value: 250, unit: "GRAM" },
@@ -95,7 +98,9 @@ export const seerFish: ProductDetail = {
   ],
   netWeightNote:
     "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.",
+  availability: { status: "IN_STOCK", message: null },
   isWishlisted: false,
+  locationRequired: false,
 };
 
 export const seerLine: CartLine = {
@@ -143,9 +148,12 @@ export const emptyCart: Cart = {
     taxPaise: 0,
     estimatedTotalPaise: 0,
     maxTotalPaise: 0,
+    minOrderPaise: 0,
+    minOrderShortfallPaise: 0,
+    freeDeliveryShortfallPaise: null,
   },
   canCheckout: false,
-  checkoutBlockers: [{ code: "CART_EMPTY", message: "Your cart is empty." }],
+  checkoutBlockers: [{ code: "CART_EMPTY", lineId: null, message: "Your cart is empty." }],
   messages: [],
 };
 
@@ -189,6 +197,8 @@ export const homeAddress: Address = {
   cityName: "Chennai",
   stateCode: "TN",
   pincode: "600041",
+  latitude: null,
+  longitude: null,
   isDefault: true,
   isServiceable: true,
   version: "11",

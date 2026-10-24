@@ -92,15 +92,6 @@ function CustomerView({
                 ...(customer.deletedAt
                   ? [{ label: "Deleted at", value: formatDateTime(customer.deletedAt) }]
                   : []),
-                ...(customer.orderCount != null
-                  ? [{ label: "Orders", value: customer.orderCount }]
-                  : []),
-                ...(customer.deliveredOrderCount != null
-                  ? [{ label: "Delivered orders", value: customer.deliveredOrderCount }]
-                  : []),
-                ...(customer.lifetimeValuePaise != null
-                  ? [{ label: "Lifetime value", value: formatRupees(customer.lifetimeValuePaise) }]
-                  : []),
               ]}
             />
           </Section>

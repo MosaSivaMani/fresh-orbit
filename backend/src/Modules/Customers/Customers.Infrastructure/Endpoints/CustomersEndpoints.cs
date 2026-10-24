@@ -98,10 +98,10 @@ internal static class CustomersEndpoints
         }).RequirePermission(ViewPermission);
 
         admin.MapPost("/{customerId:guid}/block", (Guid customerId, IAdminCustomerService service, HttpContext http, CancellationToken ct)
-            => SetBlockedAsync(customerId, true, service, http, ct)).RequirePermission(ManagePermission);
+            => SetBlockedAsync(customerId, true, service, http, ct)).RequirePermission(ManagePermission).Produces<CustomerDetailResponse>();
 
         admin.MapPost("/{customerId:guid}/unblock", (Guid customerId, IAdminCustomerService service, HttpContext http, CancellationToken ct)
-            => SetBlockedAsync(customerId, false, service, http, ct)).RequirePermission(ManagePermission);
+            => SetBlockedAsync(customerId, false, service, http, ct)).RequirePermission(ManagePermission).Produces<CustomerDetailResponse>();
     }
 
     private static async Task<IResult> SetBlockedAsync(Guid customerId, bool blocked, IAdminCustomerService service, HttpContext http, CancellationToken ct)

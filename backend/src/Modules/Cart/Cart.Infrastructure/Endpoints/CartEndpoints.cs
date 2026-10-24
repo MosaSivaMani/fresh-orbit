@@ -50,14 +50,14 @@ internal static class CartEndpoints
                     title: "Conflict.",
                     detail: "Some lines are not sold at the new location; confirm with force=true to remove them.",
                     extensions: new Dictionary<string, object?> { ["code"] = CartErrors.CartLocationChanged, ["lines"] = conflicts });
-        });
+        }).Produces<CartView>().ProducesProblem(StatusCodes.Status409Conflict);
 
         cart.MapPut("/coupon", async (CartCouponRequest request, HttpContext http, ICurrentActor actor, CartService service, CancellationToken ct)
             => actor.CustomerId is { } customerId ? Ok(http, await service.ApplyCouponAsync(customerId, request.Code, ct)) : (IResult)LoginRequired())
-            .RequireRateLimiting(RateLimitPolicies.Coupon);
+            .RequireRateLimiting(RateLimitPolicies.Coupon).Produces<CartView>();
 
         cart.MapDelete("/coupon", async (HttpContext http, ICurrentActor actor, CartService service, CancellationToken ct)
-            => actor.CustomerId is { } customerId ? Ok(http, await service.RemoveCouponAsync(customerId, ct)) : (IResult)LoginRequired());
+            => actor.CustomerId is { } customerId ? Ok(http, await service.RemoveCouponAsync(customerId, ct)) : (IResult)LoginRequired()).Produces<CartView>();
     }
 
     private static CartOwner Owner(HttpContext http, ICurrentActor actor)
