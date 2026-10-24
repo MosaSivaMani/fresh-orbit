@@ -10,6 +10,7 @@ import { type DroppedCartLine } from "@/api/types/cart";
 import { type ServiceabilityResponse } from "@/api/types/locations";
 import { useCart, useChangeCartLocation } from "@/cart/use-cart";
 import { isValidPincode } from "@/lib/cookies";
+import { cx } from "@/lib/cx";
 import { asApiError, describeError } from "@/lib/errors";
 import { useLocation } from "./location-context";
 
@@ -23,13 +24,16 @@ type Step =
 export interface PincodeFormProps {
   /** Called after a serviceable pincode has been stored. */
   onDone?: () => void;
+  /** `hero`: the white box in the home hero (label hidden, answer in a white card). Default: the dialog form. */
+  variant?: "default" | "hero";
 }
 
 /**
  * Pincode entry with the server's serviceability answer. A pincode is stored only when the server says it is served;
  * if the cart is priced for another location, the cart moves first (CART-R25) and dropped lines need confirmation.
  */
-export function PincodeForm({ onDone }: PincodeFormProps) {
+export function PincodeForm({ onDone, variant = "default" }: PincodeFormProps) {
+  const hero = variant === "hero";
   const { pincode: current, choosePincode } = useLocation();
   const cart = useCart();
   const moveCart = useChangeCartLocation();
@@ -97,11 +101,20 @@ export function PincodeForm({ onDone }: PincodeFormProps) {
     cart.data?.lines.find((line) => line.id === id)?.productName ?? "An item";
 
   return (
-    <div className="flex flex-col gap-4">
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3 sm:flex-row sm:items-end">
+    <div className={cx("flex flex-col gap-4", hero && "gap-2 text-left")}>
+      <form
+        onSubmit={onSubmit}
+        noValidate
+        className={cx(
+          "flex flex-col gap-3 sm:flex-row sm:items-end",
+          hero &&
+            "bg-surface flex-row items-start gap-2 rounded-2xl p-1.5 shadow-[0_6px_16px_rgb(0_0_0/0.12)] sm:items-start",
+        )}
+      >
         <FormField
           label="Delivery pincode"
-          hint="We show prices and stock for the store that delivers to you."
+          hideLabel={hero}
+          hint={hero ? undefined : "We show prices and stock for the store that delivers to you."}
           error={inputError}
           className="flex-1"
         >
@@ -111,19 +124,32 @@ export function PincodeForm({ onDone }: PincodeFormProps) {
             inputMode="numeric"
             autoComplete="postal-code"
             maxLength={6}
-            placeholder="e.g. 600041"
+            placeholder={hero ? "Enter pincode, e.g. 530017" : "e.g. 530017"}
+            className={hero ? "h-11 border-0 shadow-none" : undefined}
             startAdornment={<MapPin aria-hidden="true" className="size-4" />}
             aria-describedby={step.kind !== "idle" ? resultId : undefined}
           />
         </FormField>
-        <Button type="submit" size="lg" loading={step.kind === "checking"}>
+        <Button
+          type="submit"
+          size={hero ? "md" : "lg"}
+          className={hero ? "h-11 rounded-xl" : undefined}
+          loading={step.kind === "checking"}
+        >
           Check
         </Button>
       </form>
 
-      <div id={resultId} aria-live="polite" className="flex flex-col gap-3">
+      <div
+        id={resultId}
+        aria-live="polite"
+        className={cx("flex flex-col gap-3", hero && "[&>*]:shadow-[0_6px_16px_rgb(0_0_0/0.12)]")}
+      >
         {error && (
-          <p role="alert" className="text-danger-text text-sm">
+          <p
+            role="alert"
+            className={cx("text-danger-text text-sm", hero && "bg-surface rounded-lg px-3 py-2")}
+          >
             {error}
           </p>
         )}

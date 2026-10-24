@@ -35,7 +35,27 @@ export {
   type ProductCardProps,
   type TabBarItem,
   type TabBarProps,
+  CartAddControl,
+  type CartAddControlProps,
 } from "./components/bold-blocks";
+export {
+  AppBand,
+  CategoryCircle,
+  CharacterState,
+  FoodCard,
+  FoodHero,
+  PageBand,
+  PromiseCard,
+  type AppBandProps,
+  type AppStoreLink,
+  type CategoryCircleProps,
+  type CharacterStateProps,
+  type FoodCardProps,
+  type FoodCardTone,
+  type FoodHeroProps,
+  type PageBandProps,
+  type PromiseCardProps,
+} from "./components/food-app";
 export {
   Button,
   IconButton,

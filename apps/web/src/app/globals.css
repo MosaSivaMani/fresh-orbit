@@ -3,10 +3,10 @@
 @import "@fresh/config/tailwind.css";
 @import "@fresh/ui/styles.css";
 
-/* Bold blocks (D88, D89): Baloo 2 800 headings, Inter body, warm canvas page. */
+/* Food-app website (D95) with the D89 type: Baloo 2 800 headings, Inter body, white page. */
 @layer base {
   body {
-    background-color: var(--fo-color-canvas);
+    background-color: var(--fo-color-surface);
   }
 
   h1,

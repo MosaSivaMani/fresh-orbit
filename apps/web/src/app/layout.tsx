@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { type ReactNode } from "react";
-import { CartBar } from "@/components/header/cart-bar";
 import { SiteHeader } from "@/components/header/site-header";
-import { AppTabBar } from "@/components/header/tab-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { getSiteUrl } from "@/server/config";
 import { Providers } from "./providers";
@@ -30,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#073B4C",
+  themeColor: "#F07A5A",
   width: "device-width",
   initialScale: 1,
 };
@@ -38,8 +36,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en-IN">
-      {/* Bottom padding keeps the footer clear of the phone tab bar (hidden from md up). */}
-      <body className="flex min-h-dvh flex-col pb-[76px] md:pb-0">
+      <body className="flex min-h-dvh flex-col">
         <a
           href="#main"
           className="bg-primary text-on-primary sr-only z-[1600] rounded-md px-4 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
@@ -52,8 +49,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <SiteFooter />
-          <CartBar />
-          <AppTabBar />
         </Providers>
       </body>
     </html>

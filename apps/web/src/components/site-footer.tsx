@@ -29,13 +29,14 @@ const helpLinks = [
   { href: "/about", label: "About us" },
 ];
 
+/** The dark footer (D95): logo, shop and help links, the cities we deliver to (from the API) and the small print. */
 export async function SiteFooter() {
   const cities = await loadCities();
   return (
-    <footer className="bg-primary text-on-primary mt-16">
+    <footer className="bg-outline-ink text-on-outline-ink mt-12">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="flex flex-col gap-3">
-          <Logo inverse />
+          <Logo tone="inverse" />
           <p className="text-sm opacity-90">
             Fresh fish and seafood, cleaned and cut to order, delivered from our own store.
           </p>
@@ -69,7 +70,7 @@ export async function SiteFooter() {
           )}
         </div>
       </div>
-      <div className="border-on-primary/20 border-t">
+      <div className="border-on-outline-ink/20 border-t">
         <p className="mx-auto max-w-7xl px-4 py-4 text-xs opacity-80 lg:px-8">
           © {new Date().getFullYear()} Fresh Orbit. Prices include GST.
         </p>

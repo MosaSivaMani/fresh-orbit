@@ -86,7 +86,8 @@ export function BoldBlocksPage() {
         note="Coral welcome · cart · saved, teal home · tracking, mango orders · sign-in, ice location · alerts. No decorative motion."
       >
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <ColourBlockScreen framed
+          <ColourBlockScreen
+            framed
             tone="coral"
             eyebrow="Your cart"
             title="Basket's"
@@ -102,7 +103,8 @@ export function BoldBlocksPage() {
             </p>
             <Button>See today's catch</Button>
           </ColourBlockScreen>
-          <ColourBlockScreen framed
+          <ColourBlockScreen
+            framed
             tone="teal"
             eyebrow="Order FO-000123"
             title="On the"
@@ -117,7 +119,8 @@ export function BoldBlocksPage() {
           >
             <p className="text-text-muted text-sm">Ravi is riding to you.</p>
           </ColourBlockScreen>
-          <ColourBlockScreen framed
+          <ColourBlockScreen
+            framed
             tone="mango"
             eyebrow="My orders"
             title="No orders"
@@ -129,7 +132,8 @@ export function BoldBlocksPage() {
           >
             <Button>Start shopping</Button>
           </ColourBlockScreen>
-          <ColourBlockScreen framed
+          <ColourBlockScreen
+            framed
             tone="ice"
             eyebrow="Notifications"
             title="All"

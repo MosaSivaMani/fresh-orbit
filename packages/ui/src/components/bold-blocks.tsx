@@ -443,6 +443,112 @@ export function FilterChip({
   );
 }
 
+// ---------- CartAddControl ----------
+export interface CartAddControlProps {
+  /** Plain-text item name for button labels. */
+  label: string;
+  /** Quantity in the cart as the server last reported it; 0 shows ADD. */
+  quantity?: number;
+  onAdd?: () => void;
+  /** ADD as a link (the item needs a choice first); its name is "Choose options for X". */
+  addHref?: string;
+  renderLink?: (props: { href: string; className: string; children: ReactNode }) => ReactNode;
+  onQuantityChange?: (quantity: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  formatQuantity?: (value: number) => ReactNode;
+  pending?: boolean;
+  unavailableLabel?: ReactNode;
+  className?: string;
+}
+
+/**
+ * The ADD button of a product card, which becomes a − n + stepper once the item is in the cart (or a plain label
+ * when it can't be bought). Shared by the app card (`ProductCard`) and the website card (`FoodCard`).
+ */
+export function CartAddControl({
+  label,
+  quantity = 0,
+  onAdd,
+  addHref,
+  renderLink,
+  onQuantityChange,
+  min = 0,
+  max,
+  step = 1,
+  formatQuantity,
+  pending = false,
+  unavailableLabel,
+  className,
+}: CartAddControlProps) {
+  const addClass = cn(
+    "border-border bg-surface-paper text-accent-text shadow-soft-sm hover:bg-teal-soft hover:border-accent inline-flex h-9 min-w-[84px] cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] px-5 text-sm font-extrabold tracking-[0.04em] disabled:cursor-wait disabled:opacity-70",
+    focusRing,
+    className,
+  );
+  if (unavailableLabel) {
+    return (
+      <span
+        className={cn(
+          "border-border bg-surface-paper text-text-muted rounded-[10px] border px-3 py-1.5 text-xs font-bold whitespace-nowrap",
+          className,
+        )}
+      >
+        {unavailableLabel}
+      </span>
+    );
+  }
+  if (quantity > 0 && onQuantityChange) {
+    return (
+      <QuantityStepper
+        variant="solid"
+        size="sm"
+        allowRemove
+        value={quantity}
+        onChange={onQuantityChange}
+        min={min}
+        max={max}
+        step={step}
+        formatValue={formatQuantity}
+        label={label}
+        pending={pending}
+        className={className}
+      />
+    );
+  }
+  if (onAdd) {
+    return (
+      <button
+        type="button"
+        onClick={onAdd}
+        disabled={pending}
+        aria-busy={pending || undefined}
+        aria-label={`Add ${label} to cart`}
+        className={addClass}
+      >
+        {pending ? <Spinner size="sm" label="Adding" /> : "ADD"}
+      </button>
+    );
+  }
+  if (addHref) {
+    const children = (
+      <>
+        <span aria-hidden="true">ADD</span>
+        <span className="sr-only">{`Choose options for ${label}`}</span>
+      </>
+    );
+    return renderLink ? (
+      renderLink({ href: addHref, className: addClass, children })
+    ) : (
+      <a href={addHref} className={addClass}>
+        {children}
+      </a>
+    );
+  }
+  return null;
+}
+
 // ---------- ProductCard ----------
 const pictureTones = bubbleTones;
 
@@ -522,61 +628,25 @@ export function ProductCard({
       {name}
     </a>
   );
-  const addClass = cn(
-    "border-accent bg-surface-paper text-accent-text shadow-soft-sm hover:bg-teal-soft inline-flex h-9 min-w-[84px] cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] px-5 text-sm font-extrabold tracking-[0.04em] disabled:cursor-wait disabled:opacity-70",
-    focusRing,
+  const action = (
+    <CartAddControl
+      label={label}
+      quantity={quantity}
+      onAdd={onAdd}
+      addHref={addHref}
+      renderLink={renderLink}
+      onQuantityChange={onQuantityChange}
+      min={min}
+      max={max}
+      step={step}
+      formatQuantity={formatQuantity}
+      pending={pending}
+      unavailableLabel={unavailableLabel}
+    />
   );
-  let action: ReactNode = null;
-  if (unavailableLabel) {
-    action = (
-      <span className="border-border bg-surface-paper text-text-muted rounded-[10px] border px-3 py-1.5 text-xs font-bold whitespace-nowrap">
-        {unavailableLabel}
-      </span>
-    );
-  } else if (quantity > 0 && onQuantityChange) {
-    action = (
-      <QuantityStepper
-        variant="solid"
-        size="sm"
-        allowRemove
-        value={quantity}
-        onChange={onQuantityChange}
-        min={min}
-        max={max}
-        step={step}
-        formatValue={formatQuantity}
-        label={label}
-        pending={pending}
-      />
-    );
-  } else if (onAdd) {
-    action = (
-      <button
-        type="button"
-        onClick={onAdd}
-        disabled={pending}
-        aria-busy={pending || undefined}
-        aria-label={`Add ${label} to cart`}
-        className={addClass}
-      >
-        {pending ? <Spinner size="sm" label="Adding" /> : "ADD"}
-      </button>
-    );
-  } else if (addHref) {
-    const children = (
-      <>
-        <span aria-hidden="true">ADD</span>
-        <span className="sr-only">{`Choose options for ${label}`}</span>
-      </>
-    );
-    action = renderLink ? (
-      renderLink({ href: addHref, className: addClass, children })
-    ) : (
-      <a href={addHref} className={addClass}>
-        {children}
-      </a>
-    );
-  }
+  const hasAction = Boolean(
+    unavailableLabel || onAdd || addHref || (quantity > 0 && onQuantityChange),
+  );
   return (
     <article
       className={cn(
@@ -599,7 +669,7 @@ export function ProductCard({
             {badge}
           </span>
         )}
-        {action && (
+        {hasAction && (
           <div className="absolute bottom-0 left-1/2 z-[2] -translate-x-1/2 translate-y-1/2">
             {action}
           </div>
