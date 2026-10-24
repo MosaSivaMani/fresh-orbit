@@ -87,7 +87,7 @@ public sealed class StaffAuthServiceTests
         await ShouldRefuseAsync(() => LoginAsync());
 
         _passwords.DidNotReceive().Verify(UserHash, Arg.Any<string>(), out _);
-        _passwords.Received(1).Verify(Arg.Is<string>(h => h != UserHash), RightPassword, out _);
+        _passwords.Received(1).VerifyDummy(RightPassword);
         _failures.Received(1).Add(Arg.Is<StaffLoginFailure>(f => f.ClientIp == "203.0.113.7" && f.EmailHash == StaffLoginFailure.HashEmail(Email)));
     }
 
@@ -99,7 +99,7 @@ public sealed class StaffAuthServiceTests
         await ShouldRefuseAsync(() => LoginAsync());
 
         _passwords.DidNotReceive().Verify(UserHash, Arg.Any<string>(), out _);
-        _passwords.Received(1).Verify(Arg.Is<string>(h => h != UserHash), RightPassword, out _);
+        _passwords.Received(1).VerifyDummy(RightPassword);
     }
 
     [Fact]
@@ -171,6 +171,6 @@ public sealed class StaffAuthServiceTests
         await ShouldRefuseAsync(() => LoginAsync());
 
         _failures.Received(1).Add(Arg.Any<StaffLoginFailure>());
-        _passwords.Received(1).Verify(Arg.Is<string>(h => h != UserHash), RightPassword, out _);
+        _passwords.Received(1).VerifyDummy(RightPassword);
     }
 }

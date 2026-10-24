@@ -24,8 +24,11 @@ internal sealed class PasswordHashing : IPasswordHashing
 {
     private static readonly PasswordHasher<object> Hasher = new();
     private static readonly object User = new();
+    private static readonly Lazy<string> DummyHash = new(() => Hasher.HashPassword(User, Guid.NewGuid().ToString()));
 
     public string Hash(string password) => Hasher.HashPassword(User, password);
+
+    public void VerifyDummy(string password) => Hasher.VerifyHashedPassword(User, DummyHash.Value, password);
 
     public bool Verify(string hash, string password, out bool needsRehash)
     {

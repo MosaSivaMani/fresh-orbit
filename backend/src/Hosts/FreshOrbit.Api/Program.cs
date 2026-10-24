@@ -46,7 +46,7 @@ if (app.Environment.IsDevelopment())
 app.MapHealthChecks("/health");
 app.MapGroup("/api/v1").MapFreshOrbitModules();
 
-await app.RunAsync();
+return await app.RunFreshOrbitAsync();
 
 /// <summary>Entry point; public for <c>WebApplicationFactory&lt;Program&gt;</c> in tests.</summary>
 public partial class Program;

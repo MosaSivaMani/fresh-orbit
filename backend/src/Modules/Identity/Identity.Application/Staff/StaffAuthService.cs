@@ -34,9 +34,6 @@ public sealed class StaffAuthService(
     IClock clock,
     IdentitySettings settings) : IStaffAuthService
 {
-    // Verified against when no real hash is checked, so every refusal takes about the same time.
-    private static string? s_dummyHash;
-
     public async Task<StaffLoginResponse> LoginAsync(StaffLoginRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -52,7 +49,7 @@ public sealed class StaffAuthService(
         var member = user is null ? null : await staff.FindByUserAsync(user.Id, cancellationToken);
         if (user?.PasswordHash is null || user.Status != UserStatus.Active || member is not { IsActive: true })
         {
-            passwords.Verify(s_dummyHash ??= passwords.Hash(Guid.NewGuid().ToString()), request.Password, out _);
+            passwords.VerifyDummy(request.Password);
             throw await RefuseAsync(email, ip, now, cancellationToken);
         }
 

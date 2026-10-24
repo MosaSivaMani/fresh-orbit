@@ -60,6 +60,9 @@ public interface IPasswordHashing
 
     /// <summary>True when <paramref name="password"/> matches; <paramref name="needsRehash"/> when the hash should be upgraded.</summary>
     bool Verify(string hash, string password, out bool needsRehash);
+
+    /// <summary>Spends the time of one <see cref="Verify"/> against a hash no account has, so refusals without a real hash are not faster (D33).</summary>
+    void VerifyDummy(string password);
 }
 
 public sealed record AccessTokenClaims(

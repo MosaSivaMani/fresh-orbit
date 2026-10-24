@@ -77,10 +77,10 @@ internal sealed class RefreshTokenRepository(FreshOrbitDbContext db) : IRefreshT
 internal sealed class StaffRepository(FreshOrbitDbContext db) : IStaffRepository
 {
     public Task<StaffMember?> GetAsync(Guid staffMemberId, CancellationToken cancellationToken)
-        => db.Set<StaffMember>().FirstOrDefaultAsync(s => s.Id == staffMemberId, cancellationToken);
+        => db.Set<StaffMember>().AsSplitQuery().FirstOrDefaultAsync(s => s.Id == staffMemberId, cancellationToken);
 
     public Task<StaffMember?> FindByUserAsync(Guid userId, CancellationToken cancellationToken)
-        => db.Set<StaffMember>().FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken);
+        => db.Set<StaffMember>().AsSplitQuery().FirstOrDefaultAsync(s => s.UserId == userId, cancellationToken);
 
     public Task<int> CountActiveWithRoleAsync(Guid roleId, Guid? exceptStaffMemberId, CancellationToken cancellationToken)
         => db.Set<StaffMember>().IgnoreAutoIncludes()
