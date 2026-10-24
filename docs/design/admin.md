@@ -140,7 +140,7 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 - `GET /admin/catalog/variants` and `GET /admin/preparation-methods`
 - `GET /admin/customers/{customerId}/orders`
 
-The admin screens have not adopted them yet; the Status column above stays as the front-end status until they do.
+The admin screens adopted them on `admin/api-adoption` (Status column above).
 
 Front end, not backend: coupon `isListed` is a switch ("Show in the customer's offers") on the coupon editor (`admin/api-adoption`). Product variants edit the serving facts (CAT-R21: fewest / most pieces and serves per basis; no pieces range for PIECE variants). Still open on the admin side: G8 (a `docs/api` wording change) and G9 (tax-rule versions are quoted per category already).
 
