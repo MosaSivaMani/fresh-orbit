@@ -3,7 +3,10 @@ using System.Linq.Expressions;
 using FreshOrbit.Catalog.Domain.Preparations;
 using FreshOrbit.Catalog.Domain.Products;
 using FreshOrbit.Catalog.Public;
+using FreshOrbit.Catalog.Application.Admin;
+using FreshOrbit.Catalog.Infrastructure.Reads;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Storage;
 using Microsoft.EntityFrameworkCore;
 using DomainProductStatus = FreshOrbit.Catalog.Domain.Products.ProductStatus;
 using DomainSellUnit = FreshOrbit.Catalog.Domain.Products.SellUnit;
@@ -15,8 +18,47 @@ using PublicStockUnit = FreshOrbit.Catalog.Public.StockUnit;
 namespace FreshOrbit.Catalog.Infrastructure.Public;
 
 /// <summary><see cref="ICatalogApi"/>: a fixed number of queries per call, never one per variant.</summary>
-public sealed class CatalogApi(FreshOrbitDbContext db) : ICatalogApi
+public sealed class CatalogApi(FreshOrbitDbContext db, IFileStorage storage) : ICatalogApi
 {
+    public async Task<IReadOnlyList<ProductCard>> GetProductCardsAsync(IReadOnlyCollection<Guid> productIds, Guid? fulfillmentLocationId, DateTimeOffset at, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(productIds);
+        var ids = productIds.Distinct().ToArray();
+        if (ids.Length == 0)
+        {
+            return [];
+        }
+
+        var products = await db.Set<Product>().AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .Select(p => new
+            {
+                p.Id,
+                p.Slug,
+                p.Name,
+                p.Status,
+                ImageKey = p.Images.OrderBy(i => i.SortOrder).Select(i => i.StorageKey).FirstOrDefault(),
+                Visible = db.Set<Category>().Any(c => c.Id == p.CategoryId && c.IsActive && (c.ParentId == null || db.Set<Category>().Any(pc => pc.Id == c.ParentId && pc.IsActive))),
+            })
+            .ToListAsync(cancellationToken);
+        var offers = fulfillmentLocationId is { } locationId
+            ? await StorefrontOffers.BestByProductAsync(db, ids, locationId, at, cancellationToken)
+            : [];
+        return [.. products.Select(p =>
+        {
+            var visible = p.Status == DomainProductStatus.Active && p.Visible;
+            var offer = visible ? offers.GetValueOrDefault(p.Id) : null;
+            return new ProductCard(
+                p.Id,
+                p.Slug,
+                p.Name,
+                p.ImageKey is { } key ? storage.GetPublicUrl(ImageRenditions.Key(key, ImageRenditions.Small)) : null,
+                visible,
+                offer is null ? null : new ProductCardPrice(offer.UnitPricePaise, offer.CompareAtPaise, offer.SellUnit),
+                offer is { Available: > 0 });
+        })];
+    }
+
     public Task<IReadOnlyList<VariantInfo>> GetVariantsAsync(IReadOnlyCollection<Guid> variantIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(variantIds);

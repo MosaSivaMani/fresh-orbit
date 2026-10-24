@@ -8,6 +8,7 @@ using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace FreshOrbit.Customers.Infrastructure.Endpoints;
@@ -69,7 +70,10 @@ internal static class CustomersEndpoints
         me.MapPost("/addresses/{addressId:guid}/default", async (Guid addressId, IAddressService service, CancellationToken ct)
             => TypedResults.Ok(await service.MakeDefaultAsync(addressId, ct)));
 
-        me.MapGet("/wishlist", async (IWishlistService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)));
+        me.MapGet("/wishlist", async ([FromQuery] string? pincode, [FromHeader(Name = "X-Pincode")] string? pincodeHeader, IWishlistService service, CancellationToken ct)
+                => TypedResults.Ok(await service.ListAsync(string.IsNullOrWhiteSpace(pincode) ? pincodeHeader : pincode, ct)))
+            .Produces<IReadOnlyList<WishlistItemResponse>>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         me.MapPut("/wishlist/{productId:guid}", async (Guid productId, IWishlistService service, CancellationToken ct) =>
         {
