@@ -49,7 +49,11 @@ enum IllustrationSlot {
   String get assetPath => 'assets/illustrations/$fileStem.png';
 
   /// Files the app looks for, in order: PNG, then WebP.
-  List<String> get assetPaths => [assetPath, 'assets/illustrations/$fileStem.webp'];
+  List<String> get assetPaths => [
+    assetPath,
+    'assets/illustrations/$fileStem.webp',
+    'assets/illustrations/$fileStem.jpg',
+  ];
 }
 
 /// The tracking illustration for an order status code. Unknown codes get the placed illustration.

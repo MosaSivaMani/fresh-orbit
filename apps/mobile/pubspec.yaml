@@ -31,7 +31,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Illustrations (D53): <slot_lower_snake>.png (or .webp), copied here by the `packages/illustrations` sync-mobile
+  # Illustrations (D53): <slot_lower_snake>.png (or .webp, or a full-scene .jpg resized to 1024 px), copied here by the `packages/illustrations` sync-mobile
   # script. Missing files fall back to the drawn placeholder (lib/illustrations/illustration.dart).
   assets:
     - assets/illustrations/

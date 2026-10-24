@@ -1,4 +1,4 @@
-// Illustration(slot:, size:) shows `assets/illustrations/<slot_lower_snake>.png` (or `.webp`) when the app
+// Illustration(slot:, size:) shows `assets/illustrations/<slot_lower_snake>.png` (or `.webp`, or a full-scene `.jpg`) when the app
 // bundles it, and otherwise our own placeholder: one of the cast drawn in code on a soft clay circle, with a
 // small prop badge for the slot. The images contain no text, so the widget never needs translating.
 
@@ -21,13 +21,17 @@ abstract final class IllustrationAssets {
     _loading = AssetManifest.loadFromAssetBundle(bundle).then(
       (manifest) => available.value = manifest
           .listAssets()
-          .where((a) => a.startsWith('assets/illustrations/') && (a.endsWith('.png') || a.endsWith('.webp')))
+          .where(
+            (a) =>
+                a.startsWith('assets/illustrations/') &&
+                (a.endsWith('.png') || a.endsWith('.webp') || a.endsWith('.jpg')),
+          )
           .toSet(),
       onError: (Object _) => available.value = const <String>{},
     );
   }
 
-  /// The first bundled file for [slot] (PNG before WebP), or null when none is bundled.
+  /// The first bundled file for [slot] (PNG, then WebP, then JPEG), or null when none is bundled.
   static String? pathFor(IllustrationSlot slot, Set<String> assets) {
     for (final path in slot.assetPaths) {
       if (assets.contains(path)) return path;
@@ -82,15 +86,19 @@ class _IllustrationState extends State<Illustration> {
       builder: (context, assets, _) {
         final path = assets == null ? null : IllustrationAssets.pathFor(widget.slot, assets);
         if (path == null) return placeholder;
-        return Image.asset(
+        // A JPEG is a full scene with its own background, so it fills a rounded frame instead of floating.
+        final scene = path.endsWith('.jpg');
+        final picture = Image.asset(
           path,
           key: ValueKey('illustration-image-${widget.slot.code}'),
           width: widget.size,
           height: widget.size,
-          fit: BoxFit.contain,
+          fit: scene ? BoxFit.cover : BoxFit.contain,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) => placeholder,
         );
+        if (!scene) return picture;
+        return ClipRRect(borderRadius: BorderRadius.circular(widget.size * 0.12), child: picture);
       },
     );
     final box = SizedBox.square(dimension: widget.size, child: image);
