@@ -178,7 +178,7 @@ public sealed class NotificationsTests(E1Database database) : E1ApiTestBase(data
 
         using var admin = Factory.CreateStaffClient(["notifications.manage"]);
         var templates = await ReadJsonAsync(await admin.GetAsync("/api/v1/admin/notification-templates", Ct));
-        templates.GetArrayLength().Should().Be(54);
+        templates.GetArrayLength().Should().Be(55);
         var template = templates.EnumerateArray().Single(t => t.GetProperty("code").GetString() == "ORDER_PACKED" && t.GetProperty("channel").GetString() == "IN_APP");
 
         var bad = new HttpRequestMessage(HttpMethod.Put, "/api/v1/admin/notification-templates/ORDER_PACKED/IN_APP")

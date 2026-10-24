@@ -2,7 +2,8 @@
   "version": 1,
   "permissions": [
     { "code": "catalog.manage", "description": "Categories, products, variants, preparations, images, home promotion banners" },
-    { "code": "pricing.manage", "description": "Variant prices, preparation charges, tax rules" },
+    { "code": "pricing.manage", "description": "Variant prices, preparation charges; view tax rules" },
+    { "code": "tax.manage", "description": "Schedule GST rates (tax rules) for every city (D35)" },
     { "code": "promotions.manage", "description": "Coupons" },
     { "code": "inventory.view", "description": "Stock, batches, movements, cold-chain logs" },
     { "code": "inventory.receive", "description": "Receive stock (batches)" },

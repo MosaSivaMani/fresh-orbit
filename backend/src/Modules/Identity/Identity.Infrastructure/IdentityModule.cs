@@ -46,6 +46,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IStaffRepository, StaffRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IStaffLoginFailureRepository, StaffLoginFailureRepository>();
         services.AddScoped<IStaffReads, StaffReads>();
 
         services.AddSingleton<IOtpCodeHasher, OtpCodeHasher>();

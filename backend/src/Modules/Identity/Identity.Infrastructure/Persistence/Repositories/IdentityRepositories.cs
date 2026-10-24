@@ -26,6 +26,18 @@ internal sealed class UserRepository(FreshOrbitDbContext db) : IUserRepository
     public void Add(User user) => db.Add(user);
 }
 
+internal sealed class StaffLoginFailureRepository(FreshOrbitDbContext db) : IStaffLoginFailureRepository
+{
+    public async Task<IReadOnlyList<DateTimeOffset>> GetFailureTimesAsync(string emailHash, string clientIp, DateTimeOffset since, CancellationToken cancellationToken)
+        => await db.Set<StaffLoginFailure>().AsNoTracking()
+            .Where(f => f.EmailHash == emailHash && f.ClientIp == clientIp && f.FailedAt > since)
+            .OrderBy(f => f.FailedAt)
+            .Select(f => f.FailedAt)
+            .ToListAsync(cancellationToken);
+
+    public void Add(StaffLoginFailure failure) => db.Add(failure);
+}
+
 internal sealed class OtpChallengeRepository(FreshOrbitDbContext db) : IOtpChallengeRepository
 {
     public Task<OtpChallenge?> GetAsync(Guid challengeId, CancellationToken cancellationToken)

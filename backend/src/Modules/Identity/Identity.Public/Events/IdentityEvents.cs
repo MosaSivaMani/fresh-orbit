@@ -14,3 +14,10 @@ public sealed record StaffPasswordReset(Guid StaffMemberId, Guid UserId) : Domai
 
 /// <summary>A rotated refresh token was presented again; its whole family was revoked.</summary>
 public sealed record RefreshTokenReuseDetected(Guid UserId, Guid FamilyId, DateTimeOffset DetectedAt) : DomainEvent;
+
+/// <summary>
+/// D33: a staff account was locked after too many wrong passwords, until <paramref name="LockedUntil"/>.
+/// <paramref name="LockoutCount"/> is the number of locks since the last successful sign-in (1 = first). Notifications
+/// e-mails the staff managers (<c>STAFF_ACCOUNT_LOCKED</c>). No e-mail address in the payload; the handler reads it.
+/// </summary>
+public sealed record StaffAccountLocked(Guid UserId, DateTimeOffset LockedUntil, int LockoutCount, DateTimeOffset LockedAt) : DomainEvent;

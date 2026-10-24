@@ -41,7 +41,14 @@ public sealed class User : AggregateRoot
 
     public DateTimeOffset? LastLoginAt { get; private set; }
 
+    /// <summary>Consecutive wrong staff passwords since the last sign-in or lock (IDN-R11).</summary>
     public int FailedLoginCount { get; private set; }
+
+    /// <summary>D33: end of the current staff lock; the lock is over from this time on (IDN-R12).</summary>
+    public DateTimeOffset? LockedUntil { get; private set; }
+
+    /// <summary>D33: locks since the last successful sign-in; each one doubles the next lock's length.</summary>
+    public int LockoutCount { get; private set; }
 
     /// <summary>Set when the account was deleted and its personal data removed; it can never be re-activated.</summary>
     public DateTimeOffset? AnonymisedAt { get; private set; }
@@ -66,7 +73,7 @@ public sealed class User : AggregateRoot
         switch (Status)
         {
             case UserStatus.Locked:
-                throw new ForbiddenException(IdentityErrors.AccountLocked, "This account is locked; ask an administrator to reset the password.");
+                throw new ForbiddenException(IdentityErrors.AccountLocked, "This account is locked for a while after too many wrong passwords.");
             case UserStatus.Disabled:
                 throw new ForbiddenException(IdentityErrors.AccountDisabled, "This account is disabled.");
         }
@@ -81,21 +88,55 @@ public sealed class User : AggregateRoot
         Raise(new CustomerSignedIn(Id, customerId, isNewCustomer, string.IsNullOrWhiteSpace(guestCartToken) ? null : guestCartToken, deviceLabel, now));
     }
 
-    /// <summary>Successful staff password sign-in: resets the failure counter.</summary>
+    /// <summary>Successful staff password sign-in: resets the failure counter and the lock doubling (D33).</summary>
     public void RecordPasswordSignIn(DateTimeOffset now)
     {
         LastLoginAt = now;
         FailedLoginCount = 0;
+        LockoutCount = 0;
+        LockedUntil = null;
     }
 
-    /// <summary>IDN-R11/R12: a wrong password; locks the account at <paramref name="maxFailures"/>.</summary>
-    public void RecordFailedPassword(int maxFailures)
+    /// <summary>D33: true while a staff lock is running. A LOCKED row without an end time counts as expired.</summary>
+    public bool IsLockedAt(DateTimeOffset now) => Status == UserStatus.Locked && LockedUntil is { } until && now < until;
+
+    /// <summary>D33: a lock whose time is over turns the account ACTIVE again; <see cref="LockoutCount"/> is kept.</summary>
+    public void ReleaseExpiredLock(DateTimeOffset now)
     {
-        FailedLoginCount++;
-        if (FailedLoginCount >= maxFailures && Status == UserStatus.Active)
+        if (Status == UserStatus.Locked && !IsLockedAt(now))
         {
-            Status = UserStatus.Locked;
+            Status = UserStatus.Active;
+            LockedUntil = null;
         }
+    }
+
+    /// <summary>
+    /// IDN-R11/R12, D33: a wrong password on an ACTIVE account. The failure that reaches
+    /// <see cref="LockoutPolicy.MaxFailures"/> locks the account for <see cref="LockoutPolicy.LengthOf"/> the new
+    /// lock count, starts a fresh failure count and raises <see cref="StaffAccountLocked"/>. Failures on a LOCKED or
+    /// DISABLED account are not counted (a running lock is never extended by more guesses).
+    /// </summary>
+    /// <returns>True when this failure locked the account.</returns>
+    public bool RecordFailedPassword(LockoutPolicy policy, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(policy);
+        if (Status != UserStatus.Active)
+        {
+            return false;
+        }
+
+        FailedLoginCount++;
+        if (FailedLoginCount < policy.MaxFailures)
+        {
+            return false;
+        }
+
+        LockoutCount++;
+        FailedLoginCount = 0;
+        Status = UserStatus.Locked;
+        LockedUntil = now.Add(policy.LengthOf(LockoutCount));
+        Raise(new StaffAccountLocked(Id, LockedUntil.Value, LockoutCount, now));
+        return true;
     }
 
     public void ChangePassword(string passwordHash)
@@ -105,10 +146,12 @@ public sealed class User : AggregateRoot
         FailedLoginCount = 0;
     }
 
-    /// <summary>IDN-R14: a temporary password set by an administrator; unlocks a LOCKED account.</summary>
+    /// <summary>IDN-R14: a temporary password set by an administrator; unlocks a LOCKED account and resets the doubling.</summary>
     public void ResetPassword(string passwordHash)
     {
         ChangePassword(passwordHash);
+        LockoutCount = 0;
+        LockedUntil = null;
         if (Status == UserStatus.Locked)
         {
             Status = UserStatus.Active;
@@ -126,6 +169,8 @@ public sealed class User : AggregateRoot
 
         Status = UserStatus.Active;
         FailedLoginCount = 0;
+        LockoutCount = 0;
+        LockedUntil = null;
     }
 
     /// <summary>Account deletion: personal data removed, account disabled for good.</summary>
