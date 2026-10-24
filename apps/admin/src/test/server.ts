@@ -11,6 +11,10 @@ export const server = setupServer(
   http.get(`${API}/admin/me/locations`, () =>
     HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 }),
   ),
+  // Location lists inside the cities screens.
+  http.get(`${API}/admin/fulfillment-locations`, () =>
+    HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 }),
+  ),
   // City pickers (reports, coupons, order policies) for any staff member.
   http.get(`${API}/admin/cities/lookup`, () =>
     HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 }),

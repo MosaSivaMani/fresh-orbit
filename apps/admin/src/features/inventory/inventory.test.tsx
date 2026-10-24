@@ -42,7 +42,9 @@ describe("Stock list", () => {
 
     const table = await screen.findByRole("table", { name: "Stock items" });
     expect(await within(table).findByText("Low stock")).toBeInTheDocument();
-    expect(within(table).getByText("Seer fish · Steaks")).toBeInTheDocument();
+    expect(within(table).getByText("SEER-STEAK").parentElement).toHaveTextContent(
+      "Seer fish · Steaks",
+    );
     expect(requests[0]?.searchParams.get("fulfillmentLocationId")).toBe(LOCATION_A);
     expect(requests[0]?.searchParams.has("lowStockOnly")).toBe(false);
 

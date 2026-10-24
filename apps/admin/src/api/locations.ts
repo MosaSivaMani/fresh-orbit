@@ -1,5 +1,6 @@
 import { type Page } from "@fresh/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useHttp, useSession } from "../app/services";
 import { type Id, type ListQuery, type Version } from "./types/common";
 import {
@@ -295,6 +296,12 @@ export function useRemovePincode(serviceAreaId: Id) {
  * Locations the signed-in staff member may pick in the location switcher, with names, from
  * `GET /admin/me/locations` (any staff member; every location for all-locations staff; G1).
  */
+export interface StaffLocationOption {
+  id: Id;
+  name: string;
+  code: string | null;
+}
+
 export function useStaffLocations() {
   const http = useHttp();
   const { claims } = useSession();
@@ -308,13 +315,14 @@ export function useStaffLocations() {
   // Scoped staff keep their token's ids while the names load, so the scope is never "all locations" meanwhile.
   const named = new Map((list.data?.items ?? []).map((l) => [l.id, l]));
   const ids = claims?.allLocations ? [...named.keys()] : (claims?.locationIds ?? []);
-  return {
-    allLocations: claims?.allLocations ?? false,
-    isLoading: list.isLoading,
-    locations: ids.map((id) => ({
-      id,
-      name: named.get(id)?.name ?? `Location ${id.slice(-6)}`,
-      code: named.get(id)?.code ?? null,
-    })),
-  };
+  const rows: StaffLocationOption[] = ids.map((id) => ({
+    id,
+    name: named.get(id)?.name ?? `Location ${id.slice(-6)}`,
+    code: named.get(id)?.code ?? null,
+  }));
+  // The same list keeps the same identity, so screens that depend on it do not re-render when a refetch
+  // returns what they already show (an open row dialog would otherwise close).
+  const key = JSON.stringify(rows);
+  const locations = useMemo(() => JSON.parse(key) as StaffLocationOption[], [key]);
+  return { allLocations: claims?.allLocations ?? false, isLoading: list.isLoading, locations };
 }
