@@ -185,6 +185,13 @@ describe("ProductCard", () => {
     expect(onQuantityChange).toHaveBeenLastCalledWith(0);
   });
 
+  it("makes ADD a link to the product page when a choice is needed first", () => {
+    render(<ProductCard {...base} addHref="/products/seer-fish#buy" />);
+    expect(
+      screen.getByRole("link", { name: "Choose options for Seer fish steaks" }),
+    ).toHaveAttribute("href", "/products/seer-fish#buy");
+  });
+
   it("shows the unavailable label instead of ADD", () => {
     render(<ProductCard {...base} onAdd={vi.fn()} unavailableLabel="Out of stock" />);
     expect(screen.getByText("Out of stock")).toBeInTheDocument();
@@ -273,9 +280,12 @@ describe("OptionTile and CouponStrip", () => {
         <OptionTile name="cut" value="STEAKS" label="Steaks" defaultChecked onChange={onChange} />
       </fieldset>,
     );
-    expect(screen.getByRole("radio", { name: /Steaks/ })).toBeChecked();
-    await userEvent.click(screen.getByRole("radio", { name: /Whole/ }));
-    expect(screen.getByRole("radio", { name: /Whole/ })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Steaks" })).toBeChecked();
+    await userEvent.click(screen.getByRole("radio", { name: "Whole" }));
+    expect(screen.getByRole("radio", { name: "Whole" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Whole" })).toHaveAccessibleDescription(
+      "uncleaned weight",
+    );
     await expectNoAxeViolations();
   });
 

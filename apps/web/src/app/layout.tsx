@@ -1,19 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { type ReactNode } from "react";
+import { CartBar } from "@/components/header/cart-bar";
 import { SiteHeader } from "@/components/header/site-header";
+import { AppTabBar } from "@/components/header/tab-bar";
 import { SiteFooter } from "@/components/site-footer";
 import { getSiteUrl } from "@/server/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  display: "swap",
-  weight: ["600", "700"],
-});
+// Fonts (Bricolage Grotesque, DM Sans) are self-hosted from @fresh/ui/fonts.css, imported by globals.css (D89).
 
 const siteUrl = getSiteUrl();
 
@@ -42,8 +37,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IN" className={`${inter.variable} ${jakarta.variable}`}>
-      <body className="flex min-h-dvh flex-col">
+    <html lang="en-IN">
+      {/* Bottom padding keeps the footer clear of the phone tab bar (hidden from md up). */}
+      <body className="flex min-h-dvh flex-col pb-[76px] md:pb-0">
         <a
           href="#main"
           className="bg-primary text-on-primary sr-only z-[1600] rounded-md px-4 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
@@ -56,6 +52,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {children}
           </main>
           <SiteFooter />
+          <CartBar />
+          <AppTabBar />
         </Providers>
       </body>
     </html>

@@ -429,6 +429,11 @@ export interface ProductCardProps extends Omit<ComponentProps<"article">, "title
   quantity?: number;
   /** ADD pressed. The app sends the add and shows the server's response. */
   onAdd?: () => void;
+  /**
+   * When the item needs a choice first (size, cut), ADD is a link to this page instead of a button. Its name is
+   * "Choose options for X"; it goes through `renderLink` too.
+   */
+  addHref?: string;
   /** Stepper pressed: the proposed new quantity (0 = remove). Bounds come from the server. */
   onQuantityChange?: (quantity: number) => void;
   min?: number;
@@ -458,6 +463,7 @@ export function ProductCard({
   price,
   quantity = 0,
   onAdd,
+  addHref,
   onQuantityChange,
   min = 0,
   max,
@@ -480,6 +486,10 @@ export function ProductCard({
     <a href={href} className={linkClass}>
       {name}
     </a>
+  );
+  const addClass = cn(
+    "border-accent bg-surface-paper text-accent-text shadow-soft-sm hover:bg-teal-soft inline-flex h-9 min-w-[84px] cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] px-5 text-sm font-extrabold tracking-[0.04em] disabled:cursor-wait disabled:opacity-70",
+    focusRing,
   );
   let action: ReactNode = null;
   if (unavailableLabel) {
@@ -512,13 +522,24 @@ export function ProductCard({
         disabled={pending}
         aria-busy={pending || undefined}
         aria-label={`Add ${label} to cart`}
-        className={cn(
-          "border-accent bg-surface-paper text-accent-text shadow-soft-sm hover:bg-teal-soft inline-flex h-9 min-w-[84px] cursor-pointer items-center justify-center rounded-[10px] border-[1.5px] px-5 text-sm font-extrabold tracking-[0.04em] disabled:cursor-wait disabled:opacity-70",
-          focusRing,
-        )}
+        className={addClass}
       >
         {pending ? <Spinner size="sm" label="Adding" /> : "ADD"}
       </button>
+    );
+  } else if (addHref) {
+    const children = (
+      <>
+        <span aria-hidden="true">ADD</span>
+        <span className="sr-only">{`Choose options for ${label}`}</span>
+      </>
+    );
+    action = renderLink ? (
+      renderLink({ href: addHref, className: addClass, children })
+    ) : (
+      <a href={addHref} className={addClass}>
+        {children}
+      </a>
     );
   }
   return (
@@ -764,11 +785,22 @@ export interface OptionTileProps
 
 /** A radio drawn as a tile (cut choice, delivery slot). Group several inside a `fieldset` with a legend. */
 export function OptionTile({ label, description, look, className, ...props }: OptionTileProps) {
+  const id = useId();
   return (
     <label className={cn(optionTileVariants({ look }), className)}>
-      <input type="radio" className="sr-only" {...props} />
-      <span>{label}</span>
-      {description && <span className="text-xs font-medium opacity-75">{description}</span>}
+      <input
+        type="radio"
+        className="sr-only"
+        aria-labelledby={`${id}-label`}
+        aria-describedby={description ? `${id}-description` : undefined}
+        {...props}
+      />
+      <span id={`${id}-label`}>{label}</span>
+      {description && (
+        <span id={`${id}-description`} className="text-xs font-medium opacity-75">
+          {description}
+        </span>
+      )}
     </label>
   );
 }
