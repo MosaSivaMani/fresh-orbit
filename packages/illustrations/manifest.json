@@ -9,7 +9,8 @@
   },
   "aspects": {
     "1:1": "Square 1:1 image, subject centred, full body or three-quarter view",
-    "4:3": "Landscape 4:3 image, subject slightly off centre with room on one side"
+    "4:3": "Landscape 4:3 image, subject slightly off centre with room on one side",
+    "2:1": "Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above"
   },
   "characters": {
     "FISHMONGER": {
@@ -499,6 +500,138 @@
       "background": "TRANSPARENT",
       "status": "PLACEHOLDER",
       "prompt": "The support agent stands beside a closed rounded teal door with a chunky coral padlock and gently raises one open hand, polite and friendly. Anil, the support agent: A man, about 32, with wavy black hair and round thin glasses, calm and kind; a teal polo shirt, navy trousers with a brown belt and white sneakers; a slim black headset with a small microphone; same face, hair and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_MORNING_CATCH",
+      "file": "assets/onboarding_tile_morning_catch.svg",
+      "placeholder": "assets/onboarding_tile_morning_catch.svg",
+      "alt": "A fresh silver-blue seer fish with water droplets on its skin.",
+      "scene": "One whole fresh seer fish, silver-blue and glossy, lying slightly angled with water droplets on its wet skin and a bright clear eye, shown on its own as a single object with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "One whole fresh seer fish, silver-blue and glossy, lying slightly angled with water droplets on its wet skin and a bright clear eye, shown on its own as a single object with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_KEPT_CHILLED",
+      "file": "assets/onboarding_tile_kept_chilled.svg",
+      "placeholder": "assets/onboarding_tile_kept_chilled.svg",
+      "alt": "A small stack of glossy ice cubes with frost sparkles.",
+      "scene": "Three or four glossy pale-blue ice cubes stacked in a small pile, crisp edges catching the light, with a few tiny frost sparkles around them, shown on their own with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Three or four glossy pale-blue ice cubes stacked in a small pile, crisp edges catching the light, with a few tiny frost sparkles around them, shown on their own with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_DELIVERED_FRESH",
+      "file": "assets/onboarding_tile_delivered_fresh.svg",
+      "placeholder": "assets/onboarding_tile_delivered_fresh.svg",
+      "alt": "A small white delivery van with a teal front and speed lines.",
+      "scene": "A small, cute white delivery van with a sea-teal front and a rounded friendly shape, seen from the side, with a few soft coral speed lines behind it, plain blank sides with no writing, no driver visible, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A small, cute white delivery van with a sea-teal front and a rounded friendly shape, seen from the side, with a few soft coral speed lines behind it, plain blank sides with no writing, no driver visible, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_YOUR_CUT",
+      "file": "assets/onboarding_tile_your_cut.svg",
+      "placeholder": "assets/onboarding_tile_your_cut.svg",
+      "alt": "A fish steak, curry-cut chunks and a fillet on a small wooden board.",
+      "scene": "A small wooden chopping board with three neat cuts of fresh fish: one round fish steak, a few curry-cut chunks and one clean fillet, glistening and fresh, shown on their own with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A small wooden chopping board with three neat cuts of fresh fish: one round fish steak, a few curry-cut chunks and one clean fillet, glistening and fresh, shown on their own with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_CLEANED_BY_HAND",
+      "file": "assets/onboarding_tile_cleaned_by_hand.svg",
+      "placeholder": "assets/onboarding_tile_cleaned_by_hand.svg",
+      "alt": "A gloved hand holding a cleaned fish over a bowl of water.",
+      "scene": "A single hand in a light-blue rubber glove holding a cleaned, scaled whole fish just above a small steel bowl of clear water, a few drops falling, cropped at the wrist so no person, character or face is shown",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A single hand in a light-blue rubber glove holding a cleaned, scaled whole fish just above a small steel bowl of clear water, a few drops falling, cropped at the wrist so no person, character or face is shown. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_NET_WEIGHT",
+      "file": "assets/onboarding_tile_net_weight.svg",
+      "placeholder": "assets/onboarding_tile_net_weight.svg",
+      "alt": "A white kitchen scale with fish pieces on the tray.",
+      "scene": "A white kitchen scale with a few fresh fish pieces on its tray and a blank sea-teal display with no digits, shown on its own with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A white kitchen scale with a few fresh fish pieces on its tray and a blank sea-teal display with no digits, shown on its own with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_PICK_SLOT",
+      "file": "assets/onboarding_tile_pick_slot.svg",
+      "placeholder": "assets/onboarding_tile_pick_slot.svg",
+      "alt": "A coral alarm clock beside a calendar page with one day ringed in teal.",
+      "scene": "A coral-orange alarm clock standing beside a blank calendar page with no numbers or writing, one day square circled with a sea-teal ring, shown on their own with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A coral-orange alarm clock standing beside a blank calendar page with no numbers or writing, one day square circled with a sea-teal ring, shown on their own with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_COLD_BOX",
+      "file": "assets/onboarding_tile_cold_box.svg",
+      "placeholder": "assets/onboarding_tile_cold_box.svg",
+      "alt": "An open teal cold box with crushed ice, a fish tail and prawns.",
+      "scene": "An open sea-teal insulated cold box filled with crushed ice, its lid tilted open, a silver fish tail and two pink prawns peeking out over the rim, shown on its own with no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "An open sea-teal insulated cold box filled with crushed ice, its lid tilted open, a silver fish tail and two pink prawns peeking out over the rim, shown on its own with no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_TILE_CASH_UPI",
+      "file": "assets/onboarding_tile_cash_upi.svg",
+      "placeholder": "assets/onboarding_tile_cash_upi.svg",
+      "alt": "Rupee notes beside a phone with a green tick on its screen.",
+      "scene": "A few folded banknotes in the soft green and lilac tones of Indian rupee notes, plain with no numbers, faces or writing, beside a smartphone whose blank sea-teal screen shows only a large green tick, shown on their own with no people and no characters",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A few folded banknotes in the soft green and lilac tones of Indian rupee notes, plain with no numbers, faces or writing, beside a smartphone whose blank sea-teal screen shows only a large green tick, shown on their own with no people and no characters. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_BANNER_FRESH",
+      "file": "assets/onboarding_banner_fresh.svg",
+      "placeholder": "assets/onboarding_banner_fresh.svg",
+      "alt": "Prawns, a whole seer fish and a red crab with lemon and herbs on crushed ice.",
+      "scene": "A generous spread of fresh seafood on a bed of crushed ice: a row of pink-orange prawns on the left, a whole silver seer fish across the middle, a red crab on the right, a lemon half and a few sprigs of green herbs, with ice chips and water droplets, nothing else in the frame, no people, no characters and no faces",
+      "aspect": "2:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A generous spread of fresh seafood on a bed of crushed ice: a row of pink-orange prawns on the left, a whole silver seer fish across the middle, a red crab on the right, a lemon half and a few sprigs of green herbs, with ice chips and water droplets, nothing else in the frame, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_BANNER_CLEANED",
+      "file": "assets/onboarding_banner_cleaned.svg",
+      "placeholder": "assets/onboarding_banner_cleaned.svg",
+      "alt": "Fish steaks, curry-cut pieces and a fillet on a board with a knife, lemon, curry leaves and chillies.",
+      "scene": "A wooden chopping board with neat fish steaks, curry-cut pieces and one clean fillet, a kitchen knife beside them, a lemon half, a sprig of curry leaves and two green chillies, nothing else in the frame, no people, no characters and no faces",
+      "aspect": "2:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A wooden chopping board with neat fish steaks, curry-cut pieces and one clean fillet, a kitchen knife beside them, a lemon half, a sprig of curry leaves and two green chillies, nothing else in the frame, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "ONBOARDING_BANNER_DELIVERY",
+      "file": "assets/onboarding_banner_delivery.svg",
+      "placeholder": "assets/onboarding_banner_delivery.svg",
+      "alt": "A teal cold box of fish beside a coral scooter at an Indian doorstep.",
+      "scene": "A sea-teal insulated cold box with crushed ice and fresh fish showing at the top, standing beside a parked coral-orange electric scooter at the doorstep of a simple Indian home with a teal door, a plain stone step and a potted tulsi plant, no rider, no people, no characters and no faces",
+      "aspect": "2:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A sea-teal insulated cold box with crushed ice and fresh fish showing at the top, standing beside a parked coral-orange electric scooter at the doorstep of a simple Indian home with a teal door, a plain stone step and a potted tulsi plant, no rider, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above. No text, no letters, no numbers, no logos, no watermark. High resolution."
     }
   ]
 }

@@ -32,7 +32,22 @@ enum IllustrationSlot {
   featureHonestWeight('FEATURE_HONEST_WEIGHT', 'A fish on a kitchen scale'),
   featureCleanedYourWay('FEATURE_CLEANED_YOUR_WAY', 'Fish steaks and fillets on a chopping board'),
   featureColdChain('FEATURE_COLD_CHAIN', 'A cold box with ice and a thermometer'),
-  featureSameDay('FEATURE_SAME_DAY', 'A rider with a clock and a cold box');
+  featureSameDay('FEATURE_SAME_DAY', 'A rider with a clock and a cold box'),
+
+  // Onboarding feature tiles (1:1) and food banners (2:1): single objects on a transparent background, no
+  // character. Until their PNGs are bundled the onboarding draws its own blob-and-icon or wave fallback.
+  onboardingTileMorningCatch('ONBOARDING_TILE_MORNING_CATCH', 'A fresh silver-blue seer fish with water droplets'),
+  onboardingTileKeptChilled('ONBOARDING_TILE_KEPT_CHILLED', 'A small stack of glossy ice cubes with frost sparkles'),
+  onboardingTileDeliveredFresh('ONBOARDING_TILE_DELIVERED_FRESH', 'A small white delivery van with a teal front'),
+  onboardingTileYourCut('ONBOARDING_TILE_YOUR_CUT', 'A fish steak, curry-cut chunks and a fillet on a board'),
+  onboardingTileCleanedByHand('ONBOARDING_TILE_CLEANED_BY_HAND', 'A gloved hand holding a cleaned fish over water'),
+  onboardingTileNetWeight('ONBOARDING_TILE_NET_WEIGHT', 'A white kitchen scale with fish pieces on the tray'),
+  onboardingTilePickSlot('ONBOARDING_TILE_PICK_SLOT', 'A coral alarm clock beside a calendar page'),
+  onboardingTileColdBox('ONBOARDING_TILE_COLD_BOX', 'An open teal cold box with ice, a fish tail and prawns'),
+  onboardingTileCashUpi('ONBOARDING_TILE_CASH_UPI', 'Rupee notes beside a phone with a green tick'),
+  onboardingBannerFresh('ONBOARDING_BANNER_FRESH', 'Prawns, a whole seer fish and a red crab on crushed ice'),
+  onboardingBannerCleaned('ONBOARDING_BANNER_CLEANED', 'Fish steaks, curry cut and a fillet on a board with a knife'),
+  onboardingBannerDelivery('ONBOARDING_BANNER_DELIVERY', 'A teal cold box of fish beside a coral scooter at a door');
 
   const IllustrationSlot(this.code, this.semanticLabel);
 

@@ -1,7 +1,8 @@
 // Types and pure rules for manifest.json, shared by the scripts and their tests. No file access here.
 import { readImageSize } from "./image-size.ts";
 
-export type Aspect = "1:1" | "4:3";
+/** 1:1 square, 4:3 landscape, 2:1 wide banner (onboarding banners). */
+export type Aspect = "1:1" | "4:3" | "2:1";
 /** SAND: the sand backdrop. TRANSPARENT: cut-out subject. SCENE: a full picture with its own scenery. */
 export type Background = "TRANSPARENT" | "SAND" | "SCENE";
 export type Status = "PLACEHOLDER" | "FINAL";
@@ -23,8 +24,8 @@ export interface SlotEntry {
   placeholder: string;
   /** One plain sentence for screen readers. */
   alt: string;
-  /** Lead character (a key of `characters`). */
-  character: string;
+  /** Lead character (a key of `characters`); left out for object-only pictures (onboarding tiles and banners). */
+  character?: string;
   /** Other characters in the picture. */
   supporting?: string[];
   /** What happens in the picture, without style words. */
@@ -86,6 +87,18 @@ export const REQUIRED_SLOTS = [
   "ADMIN_EMPTY",
   "ADMIN_ALL_CAUGHT_UP",
   "ADMIN_NO_ACCESS",
+  "ONBOARDING_TILE_MORNING_CATCH",
+  "ONBOARDING_TILE_KEPT_CHILLED",
+  "ONBOARDING_TILE_DELIVERED_FRESH",
+  "ONBOARDING_TILE_YOUR_CUT",
+  "ONBOARDING_TILE_CLEANED_BY_HAND",
+  "ONBOARDING_TILE_NET_WEIGHT",
+  "ONBOARDING_TILE_PICK_SLOT",
+  "ONBOARDING_TILE_COLD_BOX",
+  "ONBOARDING_TILE_CASH_UPI",
+  "ONBOARDING_BANNER_FRESH",
+  "ONBOARDING_BANNER_CLEANED",
+  "ONBOARDING_BANNER_DELIVERY",
 ] as const;
 
 export const LIMITS = {
@@ -108,18 +121,19 @@ export const fileStem = (slot: string): string => slot.toLowerCase();
 export const PROMPT_SUFFIX =
   "No text, no letters, no numbers, no logos, no watermark. High resolution.";
 
-const ASPECT_RATIO: Record<Aspect, number> = { "1:1": 1, "4:3": 4 / 3 };
+export const ASPECT_RATIO: Record<Aspect, number> = { "1:1": 1, "4:3": 4 / 3, "2:1": 2 };
 
 /** Intrinsic pixel size we design for (placeholders use it; finals must match the ratio). */
 export function designSize(aspect: Aspect): { width: number; height: number } {
-  return aspect === "1:1" ? { width: 1024, height: 1024 } : { width: 1024, height: 768 };
+  return { width: 1024, height: Math.round(1024 / ASPECT_RATIO[aspect]) };
 }
 
 const sentence = (s: string): string => s.trim().replace(/[.\s]+$/, "");
 
 /** Builds a slot's prompt from its scene, the character sheet and the shared style block. */
 export function composePrompt(manifest: Manifest, entry: SlotEntry): string {
-  const cast = [entry.character, ...(entry.supporting ?? [])].map((key) => {
+  const lead = entry.character === undefined ? [] : [entry.character];
+  const cast = [...lead, ...(entry.supporting ?? [])].map((key) => {
     const sheet = manifest.characters[key];
     if (!sheet) throw new Error(`Slot ${entry.slot}: character "${key}" is not in the sheet.`);
     return `${sheet.role}: ${sentence(sheet.description)}`;
@@ -188,12 +202,12 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
         slot,
         "alt must be one plain sentence that starts with a capital and ends with a full stop.",
       );
-    if (!manifest.characters[entry.character])
+    if (entry.character !== undefined && !manifest.characters[entry.character])
       add(slot, `character "${entry.character}" is unknown.`);
     for (const key of entry.supporting ?? [])
       if (!manifest.characters[key]) add(slot, `supporting character "${key}" is unknown.`);
     if (!entry.scene?.trim()) add(slot, "scene is missing.");
-    if (!(entry.aspect in ASPECT_RATIO)) add(slot, "aspect must be 1:1 or 4:3.");
+    if (!(entry.aspect in ASPECT_RATIO)) add(slot, "aspect must be 1:1, 4:3 or 2:1.");
     if (!(entry.background in (manifest.backgrounds ?? {})))
       add(slot, "background must be SAND, TRANSPARENT or SCENE.");
     if (entry.status !== "PLACEHOLDER" && entry.status !== "FINAL")
