@@ -23,7 +23,7 @@ function CloseButton() {
   return (
     <DialogPrimitive.Close
       className={cn(
-        "text-text-muted hover:bg-muted hover:text-text absolute top-3 right-3 inline-flex size-9 items-center justify-center rounded-md",
+        "text-text-muted hover:bg-muted hover:text-text absolute top-3 right-3 inline-flex size-9 items-center justify-center rounded-full",
         focusRing,
       )}
       aria-label="Close"
@@ -43,7 +43,7 @@ interface PanelHeaderProps {
 function PanelHeader({ title, description, hideTitle }: PanelHeaderProps) {
   return (
     <div className={cn("flex flex-col gap-1 pr-10", hideTitle && "sr-only")}>
-      <DialogPrimitive.Title className="text-text text-lg leading-7 font-semibold">
+      <DialogPrimitive.Title className="font-display text-text text-xl leading-7 font-bold">
         {title}
       </DialogPrimitive.Title>
       {description ? (
@@ -80,7 +80,7 @@ export function DialogContent({
       <DialogPrimitive.Content
         {...(description ? {} : { "aria-describedby": undefined })}
         className={cn(
-          "border-border bg-surface text-text animate-fo-pop-in fixed top-1/2 left-1/2 z-[1400] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-xl border p-6 shadow-xl",
+          "border-border bg-surface text-text animate-fo-pop-in shadow-soft-lg fixed top-1/2 left-1/2 z-[1400] flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-3xl border p-6",
           dialogSizes[size],
           className,
         )}
@@ -110,7 +110,7 @@ const sheetVariants = cva(
         right: "animate-fo-slide-in-right inset-y-0 right-0 h-full w-full max-w-md border-l",
         left: "animate-fo-slide-in-left inset-y-0 left-0 h-full w-72 max-w-[85vw] border-r",
         bottom:
-          "animate-fo-slide-in-bottom inset-x-0 bottom-0 max-h-[85dvh] rounded-t-2xl border-t",
+          "animate-fo-slide-in-bottom inset-x-0 bottom-0 max-h-[85dvh] rounded-t-3xl border-t",
       },
     },
     defaultVariants: { side: "right" },
@@ -168,7 +168,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "text-text-muted -mb-px inline-flex h-10 cursor-pointer items-center gap-2 border-b-2 border-transparent px-3 text-sm font-medium",
+        "text-text-muted -mb-px inline-flex h-10 cursor-pointer items-center gap-2 border-b-2 border-transparent px-3 text-sm font-semibold",
         "hover:text-text data-[state=active]:border-accent data-[state=active]:text-text disabled:opacity-50",
         focusRing,
         className,

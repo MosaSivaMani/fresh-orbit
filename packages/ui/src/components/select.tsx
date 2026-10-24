@@ -66,7 +66,7 @@ export function Select({
         <SelectPrimitive.Content
           position="popper"
           sideOffset={4}
-          className="border-border bg-surface-raised text-text z-[1000] max-h-(--radix-select-content-available-height) min-w-(--radix-select-trigger-width) overflow-hidden rounded-md border shadow-lg"
+          className="border-border bg-surface-raised text-text shadow-soft-lg z-[1000] max-h-(--radix-select-content-available-height) min-w-(--radix-select-trigger-width) overflow-hidden rounded-xl border p-1"
         >
           <SelectPrimitive.Viewport className="p-1">
             {options.map((option) => (
@@ -74,7 +74,7 @@ export function Select({
                 key={option.value}
                 value={option.value}
                 {...(option.disabled ? { disabled: true } : {})}
-                className="data-[highlighted]:bg-muted relative flex cursor-pointer items-center rounded-sm py-2 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                className="data-[highlighted]:bg-muted relative flex cursor-pointer items-center rounded-lg py-2 pr-8 pl-2 text-sm outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                 <SelectPrimitive.ItemIndicator className="absolute right-2 inline-flex items-center">

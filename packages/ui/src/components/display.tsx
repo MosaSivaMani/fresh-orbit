@@ -1,15 +1,19 @@
 import { humanizeCode } from "@fresh/core";
 import { type VariantProps, cva } from "class-variance-authority";
 import { AlertTriangle, Inbox, RotateCw } from "lucide-react";
-import { type ComponentProps, type ReactNode } from "react";
+import { type ComponentProps, type ReactNode, createElement } from "react";
 import { cn } from "../lib/cn";
 import { Button } from "./button";
+import { Illustration, type IllustrationSize, type IllustrationSlot } from "./illustrated";
 
 // ---------- Card ----------
 export function Card({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
-      className={cn("border-border bg-surface text-text rounded-lg border shadow-xs", className)}
+      className={cn(
+        "border-border bg-surface text-text shadow-soft-md rounded-3xl border",
+        className,
+      )}
       {...props}
     />
   );
@@ -21,7 +25,7 @@ export function CardHeader({ className, ...props }: ComponentProps<"div">) {
 
 export function CardTitle({ className, children, ...props }: ComponentProps<"h3">) {
   return (
-    <h3 className={cn("text-lg leading-7 font-semibold", className)} {...props}>
+    <h3 className={cn("font-display text-lg leading-7 font-bold", className)} {...props}>
       {children}
     </h3>
   );
@@ -46,7 +50,7 @@ export function CardFooter({ className, ...props }: ComponentProps<"div">) {
 
 // ---------- Badge ----------
 export const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-4 font-medium whitespace-nowrap [&_svg]:size-3",
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs leading-4 font-semibold whitespace-nowrap [&_svg]:size-3",
   {
     variants: {
       tone: {
@@ -122,12 +126,34 @@ export function Skeleton({ className, ...props }: ComponentProps<"div">) {
 export interface EmptyStateProps {
   title: ReactNode;
   description?: ReactNode;
+  /** Small icon in a circle; used when no `slot` is given. */
   icon?: ReactNode;
   action?: ReactNode;
   className?: string;
+  /** Illustration slot (D53), shown instead of the icon, for example "EMPTY_CART". */
+  slot?: IllustrationSlot;
+  /** Default `md` (240 px); use `sm` inside dense admin panels. */
+  illustrationSize?: IllustrationSize;
+  /** Default true: the title already says what the picture shows. */
+  illustrationDecorative?: boolean;
+  /** Render the title as a heading of this level; without it the title is a paragraph. */
+  headingLevel?: 2 | 3 | 4;
 }
 
-export function EmptyState({ title, description, icon, action, className }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  icon,
+  action,
+  className,
+  slot,
+  illustrationSize = "md",
+  illustrationDecorative = true,
+  headingLevel,
+}: EmptyStateProps) {
+  const titleClass = slot
+    ? "font-display text-text text-2xl leading-8 font-bold text-balance"
+    : "font-display text-text text-lg leading-7 font-bold";
   return (
     <div
       className={cn(
@@ -135,12 +161,16 @@ export function EmptyState({ title, description, icon, action, className }: Empt
         className,
       )}
     >
-      <div className="bg-accent-subtle text-accent-text flex size-12 items-center justify-center rounded-full [&_svg]:size-6">
-        {icon ?? <Inbox aria-hidden="true" />}
-      </div>
+      {slot ? (
+        <Illustration slot={slot} size={illustrationSize} decorative={illustrationDecorative} />
+      ) : (
+        <div className="bg-accent-subtle text-accent-text flex size-12 items-center justify-center rounded-full [&_svg]:size-6">
+          {icon ?? <Inbox aria-hidden="true" />}
+        </div>
+      )}
       <div className="flex max-w-sm flex-col gap-1">
-        <p className="text-text text-base font-semibold">{title}</p>
-        {description && <p className="text-text-muted text-sm">{description}</p>}
+        {createElement(headingLevel ? `h${headingLevel}` : "p", { className: titleClass }, title)}
+        {description && <p className="text-text-muted text-base">{description}</p>}
       </div>
       {action}
     </div>
@@ -178,7 +208,7 @@ export function ErrorState({
         <AlertTriangle aria-hidden="true" className="size-6" />
       </div>
       <div className="flex max-w-sm flex-col gap-1">
-        <p className="text-text text-base font-semibold">{title}</p>
+        <p className="font-display text-text text-lg leading-7 font-bold">{title}</p>
         {description && <p className="text-text-muted text-sm">{description}</p>}
         {traceId && (
           <p className="text-text-muted font-mono text-xs break-all">Reference: {traceId}</p>

@@ -81,7 +81,7 @@ export function Toaster({ label = "Notifications" }: { label?: string }) {
               if (!open) dismissToast(t.id);
             }}
             className={cn(
-              "bg-surface-raised text-text animate-fo-slide-in-right pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border p-4 pr-10 shadow-lg",
+              "bg-surface-raised text-text animate-fo-slide-in-right shadow-soft-lg pointer-events-auto relative flex w-full items-start gap-3 rounded-2xl border p-4 pr-10",
               tone.className,
             )}
           >

@@ -202,13 +202,13 @@ export function DataTable<TData>({
       {enableRowSelection && selectedIds.length > 0 && (
         <div
           role="status"
-          className="border-accent/30 bg-accent-subtle text-accent-text flex flex-wrap items-center gap-3 rounded-md border px-3 py-2 text-sm"
+          className="border-accent/30 bg-accent-subtle text-accent-text flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2 text-sm"
         >
           <span className="font-medium">{selectedIds.length} selected</span>
           {selectionActions?.(selectedIds)}
         </div>
       )}
-      <div className="border-border bg-surface overflow-x-auto rounded-lg border">
+      <div className="border-border bg-surface shadow-soft-sm overflow-x-auto rounded-xl border">
         <table className="w-full border-collapse text-sm" aria-busy={isLoading || undefined}>
           <caption
             className={cn(showCaption ? "text-text p-3 text-left font-semibold" : "sr-only")}

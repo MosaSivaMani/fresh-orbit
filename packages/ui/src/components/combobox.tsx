@@ -80,7 +80,7 @@ export function Combobox({
         <Popover.Content
           align="start"
           sideOffset={4}
-          className="border-border bg-surface-raised text-text z-[1000] w-(--radix-popover-trigger-width) min-w-56 rounded-md border p-0 shadow-lg"
+          className="border-border bg-surface-raised text-text shadow-soft-lg z-[1000] w-(--radix-popover-trigger-width) min-w-56 rounded-xl border p-0"
         >
           <Command loop className="flex flex-col">
             <Command.Input
@@ -102,7 +102,7 @@ export function Combobox({
                     onValueChange(clearable && option.value === value ? null : option.value);
                     setOpen(false);
                   }}
-                  className="data-[selected=true]:bg-muted flex cursor-pointer items-center gap-2 rounded-sm px-2 py-2 text-sm select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50"
+                  className="data-[selected=true]:bg-muted flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50"
                 >
                   <Check
                     aria-hidden="true"

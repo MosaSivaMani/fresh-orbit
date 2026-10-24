@@ -17,11 +17,16 @@
     "./styles.css": {
       "style": "./styles.css",
       "default": "./styles.css"
+    },
+    "./fonts.css": {
+      "style": "./fonts.css",
+      "default": "./fonts.css"
     }
   },
   "files": [
     "dist",
-    "styles.css"
+    "styles.css",
+    "fonts.css"
   ],
   "scripts": {
     "build": "tsup",
@@ -30,7 +35,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/baloo-2": "5.3.0",
+    "@fontsource/inter": "5.3.0",
     "@fresh/core": "workspace:*",
+    "@fresh/illustrations": "workspace:*",
     "@tanstack/react-table": "8.21.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

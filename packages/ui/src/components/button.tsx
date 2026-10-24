@@ -6,22 +6,26 @@ import { cn, focusRing } from "../lib/cn";
 
 export const buttonVariants = cva(
   [
-    "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap select-none",
-    "transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
+    "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap select-none",
+    "transition-[color,background-color,box-shadow,transform] duration-150 motion-safe:active:translate-y-px",
+    "disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
     focusRing,
   ],
   {
     variants: {
       variant: {
-        primary: "bg-primary text-on-primary hover:bg-primary-hover shadow-xs",
-        accent: "bg-accent text-on-accent hover:bg-accent-hover shadow-xs",
-        highlight: "bg-highlight text-on-highlight hover:bg-highlight-hover shadow-xs",
+        primary: "bg-primary text-on-primary hover:bg-primary-hover shadow-soft-sm",
+        accent: "bg-accent text-on-accent hover:bg-accent-hover shadow-soft-sm",
+        highlight: "bg-highlight text-on-highlight hover:bg-highlight-hover shadow-soft-sm",
         secondary: "bg-muted text-text hover:bg-border",
         outline: "border-border-strong bg-surface text-text hover:bg-muted border",
         ghost: "text-text hover:bg-muted",
-        danger: "bg-danger text-on-danger shadow-xs hover:brightness-95",
+        danger: "bg-danger text-on-danger shadow-soft-sm hover:brightness-95",
         link: "text-accent-text h-auto px-0 underline-offset-4 hover:underline",
+        /** Illustrated look (D53): ink outline and offset shadow, for one playful call to action. */
+        sticker:
+          "border-outline-ink bg-accent-coral text-on-accent-coral shadow-sticker hover:shadow-sticker-sm border-2 motion-safe:hover:translate-x-0.5 motion-safe:hover:translate-y-0.5",
       },
       size: {
         sm: "h-8 px-3 text-sm [&_svg]:size-4",
