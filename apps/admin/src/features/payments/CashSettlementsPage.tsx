@@ -3,7 +3,6 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Input,
   Select,
@@ -20,6 +19,7 @@ import { useListParams } from "../../lib/list-params";
 import { SETTLEMENT_STATUS, statusOptions } from "../../lib/status";
 import { RecordSettlementDialog } from "./RecordSettlementDialog";
 import { DateFilter, FilterSelect, TextCommandDialog, activeFilters } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["riderId", "status", "fromDate", "toDate"] as const;
 const ANY = "__any";
@@ -218,7 +218,7 @@ export function CashSettlementsPage() {
           isLoading={settlements.isFetching}
           error={tableError(settlements.error)}
           onRetry={() => void settlements.refetch()}
-          emptyState={<EmptyState title="No settlements match these filters" />}
+          emptyState={<ListEmpty title="No settlements match these filters" />}
         />
       </div>
       <RecordSettlementDialog open={recording} onOpenChange={setRecording} riders={riders} />

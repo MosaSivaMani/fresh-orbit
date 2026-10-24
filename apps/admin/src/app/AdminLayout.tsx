@@ -106,8 +106,9 @@ function Shell() {
 
   return (
     <AppShell
+      className="bg-surface-sand"
       brand={
-        <span className="flex items-center gap-2 font-semibold">
+        <span className="font-display flex items-center gap-2 text-lg font-bold">
           <span className="bg-primary text-on-primary flex size-8 items-center justify-center rounded-md">
             <Fish aria-hidden="true" className="size-4" />
           </span>

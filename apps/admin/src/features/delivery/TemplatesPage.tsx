@@ -1,15 +1,7 @@
 import { formatTimeRange, isApiError } from "@fresh/core";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  EmptyState,
-  ErrorState,
-  Skeleton,
-  StatusBadge,
-} from "@fresh/ui";
-import { CalendarClock, Plus } from "lucide-react";
+import { Button, Dialog, DialogContent, ErrorState, Skeleton, StatusBadge } from "@fresh/ui";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,6 +15,7 @@ import { notifySaved } from "../../lib/feedback";
 import { ACTIVE_FLAG } from "../../lib/status";
 import { parseWholeNumber } from "../../lib/units";
 import { DAYS, DeliveryNav, FormAlert, dayLabel, reportWriteError } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 /** Weekly slot templates of one location; nightly generation turns them into dated slots. */
 export function TemplatesPage() {
@@ -77,8 +70,7 @@ export function TemplatesPage() {
           onRetry={() => void templates.refetch()}
         />
       ) : items.length === 0 ? (
-        <EmptyState
-          icon={<CalendarClock aria-hidden="true" />}
+        <ListEmpty
           title="No slot templates yet"
           description="Add the weekly delivery windows this location offers. A city cannot be activated without them."
           action={<Button onClick={() => setEditing("new")}>New template</Button>}

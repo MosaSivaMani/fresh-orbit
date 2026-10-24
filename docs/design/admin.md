@@ -8,10 +8,10 @@ Staff web app: React 19 + Vite, React Router 7 data router (lazy routes), TanSta
 
 | Concern | Implementation |
 |---|---|
-| Sign-in | `POST /admin/auth/login` (email + password). Access and refresh tokens in `sessionStorage` (`fresh-orbit.admin.session`), cleared when the tab closes. `GET /admin/auth/me` loads the profile |
+| Sign-in | `POST /admin/auth/login` (email + password). A refusal shows only `INVALID_CREDENTIALS` (D33: no locked/disabled hint; other codes show the server sentence). 429 `RATE_LIMITED` shows "Try again in …" counted down from the server's `retryAfterSeconds` (body, else `Retry-After`) and keeps Sign in disabled until then. Access and refresh tokens in `sessionStorage` (`fresh-orbit.admin.session`), cleared when the tab closes. `GET /admin/auth/me` loads the profile |
 | Refresh | `@fresh/core` `createAuthFetch`: a 401 `TOKEN_EXPIRED` refreshes once (`POST /admin/auth/refresh`) and retries. A failed refresh or any other 401 marks the session expired → `/login?reason=expired&next=…` |
 | Sign-out | `POST /admin/auth/logout` with the refresh token, then the session and query cache are cleared |
-| Permissions | JWT `perm` claim (repeated) decides menus, routes and buttons (`useCan`). A route without the permission shows "You do not have access to this page"; a 403 from the API shows the same. The API enforces everything again |
+| Permissions | JWT `perm` claim (repeated) decides menus, routes and buttons (`useCan`). A requirement is one code, a list (all of them) or `{ anyOf: [...] }`. A route without the permission shows "You do not have access to this page"; a 403 from the API shows the same. The API enforces everything again |
 | Location scope | JWT `loc` / `all_loc`. Top-bar switcher (`Fulfillment location`): "All locations" only for `all_loc`; remembered in `localStorage`. Lists send `fulfillmentLocationId` when one is chosen |
 | Lists | URL holds `page`, `pageSize`, `sort`, `q` and filters (`useListParams`); server paging/filtering only; `DataTable` + `FilterBar`; loading, empty and error (with trace id) states |
 | Writes | `If-Match` from the body `version` or `ETag` on every update; `If-None-Match: *` for first-time creates where the API says so; `Idempotency-Key` (kept across retries, `useIdempotencyKey`) where the API marks IK |
@@ -52,7 +52,7 @@ listed in §5; **left** = not built.
 | 4 | Categories | `/products/categories` | `catalog.manage` | done | categories tree, create, update (If-Match) |
 | 5 | Prices | `/pricing` | `pricing.manage` | done | `GET /admin/pricing/prices` (location required), `PUT /admin/pricing/locations/{loc}/variants/{variant}/price` (If-Match or `If-None-Match: *`) |
 | 5 | Variant prices and preparation charges | `/pricing/variants/:variantId` | `pricing.manage` | done | price schedule, stop selling (DELETE, If-Match), preparation charges |
-| 5 | Tax rules | `/pricing/tax-rules` | `pricing.manage` or `tax.manage` (list); `tax.manage` to schedule (D35) | **to update**: the screen is gated on `pricing.manage` only, so FINANCE cannot open it and store managers see a schedule action that now returns 403; also show 429 `RATE_LIMITED` (with `retryAfterSeconds`) on the login page, and drop the `ACCOUNT_LOCKED` / `ACCOUNT_DISABLED` login messages (D33: staff login answers only `INVALID_CREDENTIALS`) | list, schedule new period |
+| 5 | Tax rules | `/pricing/tax-rules` (own menu entry "Tax rules") | `pricing.manage` or `tax.manage` (list, `{ anyOf }` requirement); `tax.manage` for "New tax period" / "New rate" (D35) | done | list, schedule new period |
 | 5 | Bulk upload (dry run, then apply) | `/pricing/bulk` | `pricing.manage` | done | `POST /admin/pricing/prices/bulk` with `dryRun: true`, then apply with its own IK |
 | 5 | Coupons list / editor / redemptions | `/promotions`, `/promotions/new`, `/promotions/:id` | `promotions.manage` | done | `GET/POST /admin/coupons`, `GET/PUT /admin/coupons/{id}` (If-Match), `POST …/pause`, `…/resume`, `GET …/redemptions` |
 | 5 | Home banners | — | `catalog.manage` | **left** | `GET/POST/PUT /admin/promotions` (Promotions module not on `main`) |
@@ -136,12 +136,47 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 Front end, not backend: coupon `isListed` has no editor control yet.
 
+## 5a. Illustrated look (U3, D53)
+
+**Token-only styling rule.** The admin never names a font family, hex colour or font file. Colours are design-token
+utilities (`bg-surface-sand`, `bg-surface-paper`, `bg-teal-soft`, `bg-surface-sand-strong`,
+`bg-accent-coral-subtle`, `text-text`, `border-border`, …); headings use `font-display` / `var(--fo-font-display)`,
+body text `var(--fo-font-sans)` from the preset. Fonts are self-hosted through `@import "@fresh/ui/fonts.css"`
+(once, in `src/styles.css`). A look change (for example the unconfirmed "Bold blocks" option: Bricolage Grotesque /
+DM Sans, one strong colour per screen) is therefore one change in `@fresh/design-tokens` and `@fresh/ui/fonts.css`;
+nothing in `apps/admin` changes.
+
+| Where | Look |
+|---|---|
+| Page | Sand background (`bg-surface-sand` on the shell); cards, tables and sidebar stay on the surface tokens; `h1`–`h3` in the display font |
+| Dashboard, tables, forms, detail pages | Dense, unchanged: **no characters** |
+| Characters | Only in `src/components/states.tsx`, always inside a paper card with a tinted panel, size `sm` (160 px), decorative (the card's title says the same). Never a picture laid over a page |
+
+| State | Component | Slot | Panel tint | Used on |
+|---|---|---|---|---|
+| Login side panel | `LoginPage` | `ADMIN_LOGIN` (4:3, panel width, `priority`) | `teal-soft` | `/login`, md and wider (hidden on phones so the form comes first) |
+| Empty list | `ListEmpty` | `ADMIN_EMPTY` | `surface-sand-strong` | Every list screen's table empty state (orders, complaints, shipments, slots, templates, riders, stock, batches, movements, reservations, cold chain, products, categories, prices, tax rules, coupons, cities, customers, reports, payments, refunds, webhook events, cash settlements, staff, number series, notification templates, audit) |
+| All caught up | `AllCaughtUp` | `ADMIN_ALL_CAUGHT_UP` | `teal-soft` | No payment issues; nothing to pick for a slot; nothing low on stock (low-stock filter) |
+| No access (403) | `NoAccess` | `ADMIN_NO_ACCESS` | `surface-sand-strong` | A route without the permission; a 403 from a detail query |
+| Not found (404) | `NotFound`, `RouteError` | `NOT_FOUND` | `teal-soft` | Unknown paths; a 404 from a detail query |
+| Failed load | `LoadError`, `RouteError` | `ERROR_GENERIC` | `accent-coral-subtle` | A detail query that fails (trace id + Try again); a screen that throws or a code chunk that fails to load (route error boundary, shell kept) |
+
+Small in-panel empty states (no addresses, no photos, no variants, "choose a slot first", "choose a location",
+coupon not used yet, city without locations) keep the icon `EmptyState`, so detail pages stay dense. A list's
+*failed* load still shows `@fresh/ui` `DataTable`'s icon error (its error slot is inside the shared table).
+
+Files: `fresh-illustrations-copy public/illustrations` runs before `vite` and `vite build` (`public/illustrations/`
+is gitignored, `@fresh/illustrations` is a workspace dependency). CSP (D40) is unchanged: fonts are emitted as
+files under `/assets` (`font-src 'self'`, no `data:` fonts), pictures load from `/illustrations` (`img-src 'self'`),
+the stylesheet is a file (`style-src 'self'`), and no inline style or script is added (React sets the few
+inline styles through the CSSOM).
+
 ## 6. Tests
 
 Vitest + Testing Library + MSW (`src/test/`): real routes rendered with a fake signed-in staff session
 (`renderApp`), API mocked at `http://api.test/api/v1`. Tests assert request headers (If-Match, Idempotency-Key),
 bodies in API units, error codes landing on fields, and the 412 prompt — never message wording from the server.
-Playwright (`e2e/smoke.spec.ts`): login page renders and signed-out visitors are redirected; run with
+`src/components/states.test.tsx` checks that each illustrated state renders its slot (login, 403 route and API, 404 path and API, failed load with trace id and retry, empty list, all caught up, route error boundary); `tax-rules.test.tsx` the D35 gating; `LoginPage.test.tsx` the 429 wait and D33. Playwright (`e2e/smoke.spec.ts`): login page renders, the ADMIN_LOGIN picture and the display-font token's family load, and signed-out visitors are redirected; run with
 `pnpm --filter @fresh/admin e2e` after `pnpm exec playwright install --only-shell chromium`.
 
 ## 7. Commands

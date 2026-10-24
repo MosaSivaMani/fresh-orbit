@@ -1,18 +1,11 @@
 import { formatDateTime, humanizeCode } from "@fresh/core";
-import {
-  type ActiveFilter,
-  type ColumnDef,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  Input,
-} from "@fresh/ui";
-import { History } from "lucide-react";
+import { type ActiveFilter, type ColumnDef, DataTable, FilterBar, Input } from "@fresh/ui";
 import { useMemo } from "react";
 import { useAuditLog } from "../../api/audit";
 import { type AuditEntry } from "../../api/types/audit";
 import { PageHeader, tableError } from "../../components/page";
 import { useListParams } from "../../lib/list-params";
+import { ListEmpty } from "../../components/states";
 
 const TEXT_FILTERS = [
   { key: "entityType", label: "Entity type", upper: true },
@@ -147,8 +140,7 @@ export function AuditLogPage() {
           error={tableError(audit.error)}
           onRetry={() => void audit.refetch()}
           emptyState={
-            <EmptyState
-              icon={<History aria-hidden="true" />}
+            <ListEmpty
               title="No entries match"
               description={active.length > 0 ? "Clear the filters to see all entries." : undefined}
             />

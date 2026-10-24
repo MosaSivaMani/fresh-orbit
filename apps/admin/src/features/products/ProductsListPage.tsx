@@ -1,13 +1,5 @@
 import { formatDate } from "@fresh/core";
-import {
-  Button,
-  type ColumnDef,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  Select,
-  StatusBadge,
-} from "@fresh/ui";
+import { Button, type ColumnDef, DataTable, FilterBar, Select, StatusBadge } from "@fresh/ui";
 import { FolderTree, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
@@ -17,6 +9,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { PRODUCT_STATUS, statusOptions } from "../../lib/status";
 import { categoryOptions, flattenCategories } from "./category-options";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["categoryId", "status"] as const;
 const ALL = "__all";
@@ -171,7 +164,7 @@ export function ProductsListPage() {
           error={tableError(products.error)}
           onRetry={() => void products.refetch()}
           emptyState={
-            <EmptyState
+            <ListEmpty
               title={
                 list.q || categoryId || status
                   ? "No products match these filters"

@@ -225,6 +225,15 @@ export interface paths {
                         "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
+                /** @description Too Many Requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -4237,6 +4246,15 @@ export interface paths {
                         "application/json": components["schemas"]["WebhookReceipt"];
                     };
                 };
+                /** @description Payload Too Large */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -4314,6 +4332,43 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["CustomerSlotsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dev/sms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    phone?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DevelopmentSms"][];
                     };
                 };
             };
@@ -9146,6 +9201,13 @@ export interface components {
             displayStatus: components["schemas"]["SlotDisplayStatus"];
             version: string;
         };
+        DevelopmentSms: {
+            phone: string;
+            text: string;
+            dltTemplateId: null | string;
+            /** Format: date-time */
+            sentAt: string;
+        };
         DeviceTokenResponse: {
             pushToken: string;
             provider: string;
@@ -10968,6 +11030,8 @@ export interface components {
             /** Format: date-time */
             processedAt: null | string;
             error: null | string;
+            payloadSha256: string;
+            payloadTruncated: boolean;
         };
         /** @enum {string} */
         WebhookEventStatus: "RECEIVED" | "PROCESSED" | "IGNORED" | "ERROR" | "REJECTED";

@@ -1,6 +1,6 @@
 import { formatDateTime, formatPercentFromBp } from "@fresh/core";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, type ColumnDef, DataTable, Dialog, DialogContent, EmptyState } from "@fresh/ui";
+import { Button, type ColumnDef, DataTable, Dialog, DialogContent } from "@fresh/ui";
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,18 +8,24 @@ import { z } from "zod";
 import { useScheduleTaxRule, useTaxRules } from "../../api/pricing";
 import { type TaxCategoryRules } from "../../api/types/pricing";
 import { TextField } from "../../components/form";
+import { TAX_RULES_SCHEDULE } from "../../auth/permissions";
+import { useCan } from "../../app/services";
 import { PageHeader, tableError } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { istLocalToUtcIso, parsePercentToBp } from "../../lib/units";
 import { CheckboxField, StartField, hasCode } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 export function TaxRulesPage() {
   const rules = useTaxRules();
+  const can = useCan();
+  const canSchedule = can(TAX_RULES_SCHEDULE);
+  const canSeePrices = can("pricing.manage");
   const [dialog, setDialog] = useState<{ code: string } | null>(null);
   const data = rules.data ?? [];
 
-  const columns = useMemo<ColumnDef<TaxCategoryRules>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<TaxCategoryRules>[]>(() => {
+    const base: ColumnDef<TaxCategoryRules>[] = [
       {
         id: "category",
         header: "Tax category",
@@ -51,6 +57,10 @@ export function TaxRulesPage() {
             ? `${formatPercentFromBp(row.original.next.rateBp)} from ${formatDateTime(row.original.next.validFrom)}`
             : "—",
       },
+    ];
+    if (!canSchedule) return base;
+    return [
+      ...base,
       {
         id: "actions",
         header: () => <span className="sr-only">Actions</span>,
@@ -66,21 +76,24 @@ export function TaxRulesPage() {
           </Button>
         ),
       },
-    ],
-    [],
-  );
+    ];
+  }, [canSchedule]);
 
   return (
     <>
       <PageHeader
         title="Tax rules"
         description="GST rate per tax category. Products name their tax category; rates change by scheduling a new period."
-        backTo="/pricing"
-        backLabel="Prices"
+        {...(canSeePrices ? { backTo: "/pricing", backLabel: "Prices" } : {})}
         actions={
-          <Button leadingIcon={<Plus aria-hidden="true" />} onClick={() => setDialog({ code: "" })}>
-            New tax period
-          </Button>
+          canSchedule ? (
+            <Button
+              leadingIcon={<Plus aria-hidden="true" />}
+              onClick={() => setDialog({ code: "" })}
+            >
+              New tax period
+            </Button>
+          ) : undefined
         }
       />
       <DataTable
@@ -96,13 +109,17 @@ export function TaxRulesPage() {
         error={tableError(rules.error)}
         onRetry={() => void rules.refetch()}
         emptyState={
-          <EmptyState
+          <ListEmpty
             title="No tax rules yet"
-            description="Schedule the first rate for a tax category."
+            description={
+              canSchedule
+                ? "Schedule the first rate for a tax category."
+                : "Staff with the tax permission schedule rates."
+            }
           />
         }
       />
-      {dialog && (
+      {dialog && canSchedule && (
         <TaxRuleDialog
           code={dialog.code}
           onClose={() => setDialog(null)}

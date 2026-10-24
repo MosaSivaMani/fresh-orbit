@@ -1,5 +1,5 @@
 import { formatDateTime, formatRupees } from "@fresh/core";
-import { type ColumnDef, DataTable, EmptyState, FilterBar, StatusBadge } from "@fresh/ui";
+import { type ColumnDef, DataTable, FilterBar, StatusBadge } from "@fresh/ui";
 import { Link } from "react-router";
 import { useRefunds } from "../../api/payments";
 import { type Refund } from "../../api/types/payments";
@@ -15,6 +15,7 @@ import {
   activeFilters,
   options,
 } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status", "reasonCode", "fromDate", "toDate"] as const;
 
@@ -121,7 +122,7 @@ export function RefundsPage() {
           isLoading={refunds.isFetching}
           error={tableError(refunds.error)}
           onRetry={() => void refunds.refetch()}
-          emptyState={<EmptyState title="No refunds match these filters" />}
+          emptyState={<ListEmpty title="No refunds match these filters" />}
         />
       </div>
     </>

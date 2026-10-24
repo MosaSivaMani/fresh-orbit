@@ -4,12 +4,10 @@ import {
   Badge,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
 } from "@fresh/ui";
-import { Users } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { useCustomers } from "../../api/customers";
@@ -17,6 +15,7 @@ import { type CustomerListItem } from "../../api/types/customers";
 import { PageHeader, tableError } from "../../components/page";
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { CUSTOMER_STATUS } from "../../lib/status";
+import { ListEmpty } from "../../components/states";
 
 const FILTER_KEYS = ["status"] as const;
 const STATUSES = [
@@ -117,8 +116,7 @@ export function CustomersListPage() {
           error={tableError(customers.error)}
           onRetry={() => void customers.refetch()}
           emptyState={
-            <EmptyState
-              icon={<Users aria-hidden="true" />}
+            <ListEmpty
               title="No customers match"
               description={
                 active.length > 0 || list.q ? "Clear the filters to see all customers." : undefined

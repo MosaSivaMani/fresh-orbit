@@ -10,6 +10,7 @@ import {
   MapPinned,
   MessageSquareWarning,
   Package,
+  Percent,
   ReceiptIndianRupee,
   ScrollText,
   Settings2,
@@ -23,7 +24,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { type ReactNode } from "react";
-import { type PermissionRequirement } from "../auth/permissions";
+import { type PermissionRequirement, TAX_RULES_READ } from "../auth/permissions";
 
 export interface NavEntry {
   id: string;
@@ -99,6 +100,13 @@ export const NAVIGATION: readonly NavGroup[] = [
         href: "/pricing",
         icon: <Tag aria-hidden="true" />,
         perm: "pricing.manage",
+      },
+      {
+        id: "tax-rules",
+        label: "Tax rules",
+        href: "/pricing/tax-rules",
+        icon: <Percent aria-hidden="true" />,
+        perm: TAX_RULES_READ,
       },
       {
         id: "promotions",

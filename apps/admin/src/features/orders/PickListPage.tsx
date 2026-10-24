@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router";
 import { usePickList } from "../../api/orders";
 import { useLocationScope } from "../../app/location-scope";
 import { PageHeader, QueryView } from "../../components/page";
+import { AllCaughtUp } from "../../components/states";
 
 /**
  * Pick list for one slot at one location (ORD-R60): gross quantities per variant and preparation, summed by the
@@ -52,10 +53,7 @@ export function PickListPage() {
             }
           />
           {pick.lines.length === 0 ? (
-            <EmptyState
-              icon={<ClipboardList aria-hidden="true" />}
-              title="Nothing to pick for this slot"
-            />
+            <AllCaughtUp title="Nothing to pick for this slot" />
           ) : (
             <div className="border-border bg-surface overflow-x-auto rounded-lg border">
               <table className="w-full text-sm">

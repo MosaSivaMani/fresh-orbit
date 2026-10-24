@@ -5,7 +5,6 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   FilterBar,
   FormField,
   Input,
@@ -26,6 +25,7 @@ import { parseWholeNumber } from "../../lib/units";
 import { qty } from "./maps";
 import { InventoryNav, VariantRef } from "./shared";
 import { VariantField } from "./VariantField";
+import { AllCaughtUp, ListEmpty } from "../../components/states";
 
 const LOW_OPTIONS = [
   { value: "all", label: "All stock items" },
@@ -167,14 +167,17 @@ export function StockListPage() {
           error={tableError(stock.error)}
           onRetry={() => void stock.refetch()}
           emptyState={
-            <EmptyState
-              title={lowStockOnly ? "Nothing is low on stock" : "No stock items yet"}
-              description={
-                lowStockOnly
-                  ? "Every stock item is above its threshold."
-                  : "A stock item is created for a variant at a location on its first receipt."
-              }
-            />
+            lowStockOnly ? (
+              <AllCaughtUp
+                title="Nothing is low on stock"
+                description="Every stock item is above its threshold."
+              />
+            ) : (
+              <ListEmpty
+                title="No stock items yet"
+                description="A stock item is created for a variant at a location on its first receipt."
+              />
+            )
           }
         />
       </div>

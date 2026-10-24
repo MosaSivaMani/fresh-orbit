@@ -1,13 +1,5 @@
 import { formatDateTime } from "@fresh/core";
-import {
-  Badge,
-  Button,
-  type ColumnDef,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  StatusBadge,
-} from "@fresh/ui";
+import { Badge, Button, type ColumnDef, DataTable, FilterBar, StatusBadge } from "@fresh/ui";
 import { useReprocessWebhookEvent, useWebhookEvents } from "../../api/payments";
 import { type WebhookEvent } from "../../api/types/payments";
 import { useCan } from "../../app/services";
@@ -17,6 +9,7 @@ import { notifySaved, reportError } from "../../lib/feedback";
 import { useListParams } from "../../lib/list-params";
 import { WEBHOOK_STATUS, statusOptions } from "../../lib/status";
 import { FilterSelect, PaymentsTabs, activeFilters } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status", "provider", "signatureValid", "processed"] as const;
 
@@ -84,6 +77,21 @@ export function WebhookEventsPage() {
         ),
     },
     {
+      id: "payload",
+      header: "Payload",
+      cell: ({ row }) => (
+        <span className="flex flex-col gap-1">
+          <span
+            className="text-text-muted font-mono text-xs"
+            title={`SHA-256 ${row.original.payloadSha256}`}
+          >
+            {row.original.payloadSha256.slice(0, 12)}
+          </span>
+          {row.original.payloadTruncated && <Badge tone="warning">Truncated</Badge>}
+        </span>
+      ),
+    },
+    {
       id: "status",
       header: "Status",
       cell: ({ row }) => (
@@ -146,7 +154,7 @@ export function WebhookEventsPage() {
           isLoading={events.isFetching}
           error={tableError(events.error)}
           onRetry={() => void events.refetch()}
-          emptyState={<EmptyState title="No webhook events match these filters" />}
+          emptyState={<ListEmpty title="No webhook events match these filters" />}
         />
       </div>
     </>

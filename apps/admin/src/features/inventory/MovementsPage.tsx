@@ -1,13 +1,5 @@
 import { formatDateTime, formatRupees, humanizeCode } from "@fresh/core";
-import {
-  type ColumnDef,
-  DataTable,
-  EmptyState,
-  FilterBar,
-  Input,
-  Select,
-  StatusBadge,
-} from "@fresh/ui";
+import { type ColumnDef, DataTable, FilterBar, Input, Select, StatusBadge } from "@fresh/ui";
 import { Link } from "react-router";
 import { useMovements } from "../../api/inventory";
 import { type Movement } from "../../api/types/inventory";
@@ -17,6 +9,7 @@ import { useListParams } from "../../lib/list-params";
 import { statusOptions } from "../../lib/status";
 import { MOVEMENT_KIND, qty } from "./maps";
 import { InventoryNav } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["stockItemId", "kind", "fromDate", "toDate"];
 
@@ -174,7 +167,7 @@ export function MovementsPage() {
           error={tableError(movements.error)}
           onRetry={() => void movements.refetch()}
           emptyState={
-            <EmptyState title="No movements match" description="Change the filters or dates." />
+            <ListEmpty title="No movements match" description="Change the filters or dates." />
           }
         />
       </div>

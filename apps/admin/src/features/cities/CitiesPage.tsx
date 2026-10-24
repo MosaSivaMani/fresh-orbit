@@ -6,7 +6,6 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
@@ -24,6 +23,7 @@ import { notifySaved } from "../../lib/feedback";
 import { useListParams } from "../../lib/list-params";
 import { CITY_STATUS, statusOptions } from "../../lib/status";
 import { reportWriteError } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["status"] as const;
 const ANY = "__any";
@@ -113,10 +113,7 @@ export function CitiesPage() {
           error={tableError(cities.error)}
           onRetry={() => void cities.refetch()}
           emptyState={
-            <EmptyState
-              title="No cities"
-              description="Add the first city to start setting it up."
-            />
+            <ListEmpty title="No cities" description="Add the first city to start setting it up." />
           }
         />
       </div>

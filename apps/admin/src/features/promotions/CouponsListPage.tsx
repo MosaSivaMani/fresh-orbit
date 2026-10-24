@@ -4,12 +4,11 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
 } from "@fresh/ui";
-import { Plus, TicketPercent } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { useCoupons } from "../../api/promotions";
@@ -18,6 +17,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { COUPON_STATUS, statusOptions } from "../../lib/status";
 import { discountLabel } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTER_KEYS = ["status", "cityId"] as const;
 const ANY = "__any";
@@ -133,12 +133,7 @@ export function CouponsListPage() {
           isLoading={coupons.isFetching}
           error={tableError(coupons.error)}
           onRetry={() => void coupons.refetch()}
-          emptyState={
-            <EmptyState
-              icon={<TicketPercent aria-hidden="true" />}
-              title="No coupons match these filters"
-            />
-          }
+          emptyState={<ListEmpty title="No coupons match these filters" />}
         />
       </div>
     </>

@@ -1,5 +1,6 @@
 import { type RouteObject } from "react-router";
 import { screen } from "../../app/route-helpers";
+import { TAX_RULES_READ } from "../../auth/permissions";
 
 export const pricingRoutes: RouteObject[] = [
   screen("pricing", "pricing.manage", async () => (await import("./PricesPage")).PricesPage),
@@ -10,7 +11,7 @@ export const pricingRoutes: RouteObject[] = [
   ),
   screen(
     "pricing/tax-rules",
-    "pricing.manage",
+    TAX_RULES_READ,
     async () => (await import("./TaxRulesPage")).TaxRulesPage,
   ),
   screen(

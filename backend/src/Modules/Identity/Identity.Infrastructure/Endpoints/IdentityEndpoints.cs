@@ -60,6 +60,7 @@ internal static class IdentityEndpoints
                 => TypedResults.Ok(await service.LoginAsync(request, ct)))
             .WithValidation<StaffLoginRequest>()
             .RequireRateLimiting(RateLimitPolicies.Login)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .AllowAnonymous();
 
         group.MapPost("/logout", async (LogoutRequest request, ITokenService service, ICurrentActor actor, CancellationToken ct) =>

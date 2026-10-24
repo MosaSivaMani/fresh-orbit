@@ -6,7 +6,6 @@ import {
   DataTable,
   Dialog,
   DialogContent,
-  EmptyState,
   FilterBar,
   Select,
   StatusBadge,
@@ -25,6 +24,7 @@ import { notifySaved } from "../../lib/feedback";
 import { useListParams } from "../../lib/list-params";
 import { ACTIVE_FLAG } from "../../lib/status";
 import { DeliveryNav, FormAlert, reportWriteError } from "./shared";
+import { ListEmpty } from "../../components/states";
 
 const FILTERS = ["isActive"] as const;
 const ANY = "__any";
@@ -136,7 +136,7 @@ export function RidersPage() {
           error={tableError(riders.error)}
           onRetry={() => void riders.refetch()}
           emptyState={
-            <EmptyState
+            <ListEmpty
               title="No riders"
               description="Add the riders who deliver from this location."
             />

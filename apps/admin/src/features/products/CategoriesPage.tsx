@@ -1,13 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Badge,
-  Button,
-  type ColumnDef,
-  DataTable,
-  Dialog,
-  DialogContent,
-  EmptyState,
-} from "@fresh/ui";
+import { Badge, Button, type ColumnDef, DataTable, Dialog, DialogContent } from "@fresh/ui";
 import { Pencil, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -18,6 +10,7 @@ import { SelectField, SwitchField, TextAreaField, TextField } from "../../compon
 import { PageHeader, tableError } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { type FlatCategory, flattenCategories } from "./category-options";
+import { ListEmpty } from "../../components/states";
 
 const NO_PARENT = "__root";
 
@@ -181,7 +174,7 @@ export function CategoriesPage() {
         error={tableError(categories.error)}
         onRetry={() => void categories.refetch()}
         emptyState={
-          <EmptyState
+          <ListEmpty
             title="No categories yet"
             description="Create the first category, e.g. Sea fish."
           />

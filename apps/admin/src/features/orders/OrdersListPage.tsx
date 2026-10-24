@@ -4,14 +4,13 @@ import {
   Button,
   type ColumnDef,
   DataTable,
-  EmptyState,
   FilterBar,
   Input,
   type RowSelectionState,
   Select,
   StatusBadge,
 } from "@fresh/ui";
-import { ClipboardList, PlayCircle } from "lucide-react";
+import { PlayCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { BulkOrderError, useOrders, useStartPreparingMany } from "../../api/orders";
@@ -22,6 +21,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { reportError, notifySaved } from "../../lib/feedback";
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { ORDER_STATUS, statusOptions } from "../../lib/status";
+import { ListEmpty } from "../../components/states";
 
 const FILTER_KEYS = ["status", "slotDate", "slotId", "paymentMethod"] as const;
 const PAYMENT_METHODS = [
@@ -247,8 +247,7 @@ export function OrdersListPage() {
             <BulkActions rows={selectedRows(ids)} onDone={() => setSelection({})} />
           )}
           emptyState={
-            <EmptyState
-              icon={<ClipboardList aria-hidden="true" />}
+            <ListEmpty
               title="No orders match these filters"
               description={
                 active.length > 0 || list.q ? "Clear the filters to see all orders." : undefined

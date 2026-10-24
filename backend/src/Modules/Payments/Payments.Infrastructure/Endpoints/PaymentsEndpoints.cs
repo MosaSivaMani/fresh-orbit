@@ -67,6 +67,7 @@ internal static class PaymentsEndpoints
                 return TypedResults.Ok(await service.ReceiveAsync(provider, headers, body, ct));
             })
             .WithMetadata(new RequestSizeLimitAttribute(WebhookEvent.MaxBodyBytes))
+            .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
             .AllowAnonymous();
     }
 

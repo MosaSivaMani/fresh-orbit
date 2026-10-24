@@ -1,10 +1,11 @@
 import { isApiError } from "@fresh/core";
-import { Button, EmptyState, ErrorState, Skeleton } from "@fresh/ui";
-import { ArrowLeft, Lock, MapPin, SearchX } from "lucide-react";
+import { Button, EmptyState, Skeleton } from "@fresh/ui";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { type ReactNode } from "react";
 import { Link } from "react-router";
 import { useCan } from "../app/services";
 import { type PermissionRequirement } from "../auth/permissions";
+import { IllustratedState, LoadError } from "./states";
 
 export function PageHeader({
   title,
@@ -49,8 +50,9 @@ export function PageHeader({
 
 export function NoAccess({ title = "You do not have access to this page" }: { title?: string }) {
   return (
-    <EmptyState
-      icon={<Lock aria-hidden="true" />}
+    <IllustratedState
+      slot="ADMIN_NO_ACCESS"
+      headingLevel={1}
       title={title}
       description="Ask an administrator to give your role the permission it needs."
       action={
@@ -64,8 +66,9 @@ export function NoAccess({ title = "You do not have access to this page" }: { ti
 
 export function NotFound({ what = "page" }: { what?: string }) {
   return (
-    <EmptyState
-      icon={<SearchX aria-hidden="true" />}
+    <IllustratedState
+      slot="NOT_FOUND"
+      headingLevel={1}
       title={`This ${what} was not found`}
       description="It may have been removed, or it belongs to a location you cannot see."
       action={
@@ -127,7 +130,7 @@ export function QueryView<T>({
     if (isApiError(query.error) && query.error.status === 403) return <NoAccess />;
     if (isApiError(query.error) && query.error.status === 404) return <NotFound what={what} />;
     return (
-      <ErrorState
+      <LoadError
         title={`Could not load this ${what}`}
         traceId={isApiError(query.error) ? query.error.traceId : undefined}
         onRetry={() => void query.refetch()}
@@ -198,7 +201,7 @@ export function Section({
     <section className="border-border bg-surface flex flex-col gap-4 rounded-lg border p-5 shadow-xs">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <h2 className="text-lg leading-7 font-semibold">{title}</h2>
+          <h2 className="font-display text-lg leading-7 font-semibold">{title}</h2>
           {description && <p className="text-text-muted text-sm">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
