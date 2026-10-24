@@ -110,7 +110,8 @@ public sealed class DataProtectionSetupTests : IDisposable
     [Theory]
     [InlineData("Development")]
     [InlineData("Testing")]
-    public async Task Development_and_testing_may_leave_the_path_empty(string environment)
+    [InlineData("Demo")]
+    public async Task Development_testing_and_demo_may_leave_the_path_empty(string environment)
     {
         using var host = BuildHost(environment, path: null);
 

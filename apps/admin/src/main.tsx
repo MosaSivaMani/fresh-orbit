@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { createAdminRouter } from "./app/router";
 import { ServicesProvider, createAppServices } from "./app/services";
+import { DemoBanner, isDemoMode } from "./components/DemoBanner";
 import "./styles.css";
 
 // Theme: remembered choice, else the system preference (docs/design §4).
@@ -26,6 +27,7 @@ createRoot(root).render(
     <ServicesProvider services={services}>
       <QueryClientProvider client={services.queryClient}>
         <TooltipProvider>
+          <DemoBanner enabled={isDemoMode(import.meta.env.VITE_DEMO_MODE)} />
           <RouterProvider router={router} />
           <Toaster />
         </TooltipProvider>

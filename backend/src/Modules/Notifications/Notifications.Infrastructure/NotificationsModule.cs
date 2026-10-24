@@ -32,6 +32,13 @@ namespace FreshOrbit.Notifications.Infrastructure;
 /// <summary>Composition root of the Notifications module.</summary>
 public sealed class NotificationsModule : IModule
 {
+    /// <summary>
+    /// The sample-data-only public demo (<c>docs/runbooks/render-demo.md</c>, FreshOrbit.Hosting <c>DemoSetup</c>): like
+    /// Development it uses the development SMS sender and maps <c>/dev/sms</c>; the hosts refuse it on any database
+    /// the demo did not create.
+    /// </summary>
+    internal const string DemoEnvironmentName = "Demo";
+
     public string Name => "Notifications";
 
     public void Register(IServiceCollection services, IConfiguration configuration)
@@ -95,7 +102,7 @@ public sealed class NotificationsModule : IModule
         ArgumentNullException.ThrowIfNull(endpoints);
         NotificationsEndpoints.Map(endpoints);
         var environment = endpoints.ServiceProvider.GetService<IHostEnvironment>();
-        if (environment is not null && (environment.IsDevelopment() || environment.IsEnvironment("Testing")))
+        if (environment is not null && (environment.IsDevelopment() || environment.IsEnvironment("Testing") || environment.IsEnvironment(DemoEnvironmentName)))
         {
             NotificationsEndpoints.MapDevelopment(endpoints);
         }

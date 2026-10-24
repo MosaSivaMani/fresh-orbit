@@ -217,7 +217,9 @@ Public read members added for key → id resolution (one query each): `IIdentity
 Not supported by the loaders: staff `locationCodes` (fails the run if non-empty; the sample staff are all-location).
 
 Host: `--sample` and `--purge-sample` are refused in Production (exit 2) before any database work; a refused purge
-exits 4.
+exits 4. In the `Demo` environment (free public demo, `runbooks/render-demo.md`) the host first claims the database:
+only a completely empty database is used and marked as the demo's (`COMMENT ON DATABASE … 'FRESH_ORBIT_DEMO'`); any
+other is refused with exit 5 before anything changes. The demo runs `--sample` on every start (idempotent).
 
 Tests: `backend/tests/FreshOrbit.SampleData.Tests` (Testcontainers): load (at a fixed clock, 00:00 UTC of today =
 05:30 local, before the 11:00 slot's 09:00 cut-off; with the real clock today has no slot after 15:00 local) → counts

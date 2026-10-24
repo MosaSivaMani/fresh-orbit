@@ -30,6 +30,16 @@ public static class HostRunner
 
                 return 1;
             }
+            catch (StartupRefusedException exception)
+            {
+                var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(HostRunner));
+                if (logger.IsEnabled(LogLevel.Critical))
+                {
+                    logger.LogCritical("Start-up refused: {Reason}", exception.Message);
+                }
+
+                return 1;
+            }
 
             await host.WaitForShutdownAsync();
             return 0;

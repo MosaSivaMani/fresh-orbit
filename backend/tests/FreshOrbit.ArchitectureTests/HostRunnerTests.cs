@@ -13,11 +13,29 @@ public sealed class HostRunnerTests
         public string? Value { get; set; }
     }
 
+    private sealed class RefusingService : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) => throw new StartupRefusedException("The database is not the demo's.");
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
     [Fact]
     public async Task Refused_configuration_exits_with_code_one()
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Services.AddOptions<SampleOptions>().Validate(o => o.Value is not null, "Value is required.").ValidateOnStart();
+
+        var exitCode = await builder.Build().RunFreshOrbitAsync();
+
+        exitCode.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Start_up_refused_by_a_hosted_service_exits_with_code_one()
+    {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddHostedService<RefusingService>();
 
         var exitCode = await builder.Build().RunFreshOrbitAsync();
 

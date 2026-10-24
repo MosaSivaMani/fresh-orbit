@@ -1,3 +1,4 @@
+using FreshOrbit.Hosting;
 using FreshOrbit.Identity.Application.Bootstrap;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
@@ -22,6 +23,19 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         {
             LogSampleRefused(environment.EnvironmentName);
             return 2;
+        }
+
+        // Demo (every SMS is readable at /api/v1/dev/sms): only a database that is empty now, or that the demo
+        // claimed earlier, is used; anything else is refused before it is touched.
+        if (environment.IsDemo())
+        {
+            var connectionString = configuration.GetConnectionString(FreshOrbitDbContextOptions.ConnectionStringName) ?? string.Empty;
+            var state = await DemoDatabase.ClaimAsync(connectionString, cancellationToken);
+            if (state != DemoDatabaseState.Demo)
+            {
+                LogDemoRefused(state);
+                return 5;
+            }
         }
 
         await using (var scope = scopeFactory.CreateAsyncScope())
@@ -139,6 +153,9 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Sample data (--sample, --purge-sample) is refused in the {Environment} environment")]
     private partial void LogSampleRefused(string environment);
+
+    [LoggerMessage(Level = LogLevel.Critical, Message = "Demo refused: the database is {State}; the Demo environment runs only on a new, empty database it claims on the first run")]
+    private partial void LogDemoRefused(DemoDatabaseState state);
 }
 
 /// <summary>Command line: <c>[--sample] [--purge-sample] [--create-admin --email E --name N --password P]</c>.</summary>
