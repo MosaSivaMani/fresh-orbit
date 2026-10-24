@@ -46,7 +46,9 @@ public sealed class CatalogModule : IModule
         services.AddScoped<ProductService>();
         services.AddScoped<ProductImageService>();
         services.AddScoped<StorefrontService>();
-        services.TryAddSingleton<IImageProcessor, SkiaImageProcessor>();
+        services.TryAddSingleton<SkiaImageProcessor>();
+        services.TryAddSingleton<IImageProcessor>(sp => sp.GetRequiredService<SkiaImageProcessor>());
+        services.TryAddSingleton<IImageSanitizer>(sp => sp.GetRequiredService<SkiaImageProcessor>());
         services.AddScoped<ICatalogApi, CatalogApi>();
 
         services.AddEventHandler<ProductImageRemoved, ProductImageRemovedHandler>();

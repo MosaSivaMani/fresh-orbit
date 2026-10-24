@@ -86,6 +86,7 @@ public sealed record CouponResponse(
     }
 }
 
+/// <summary>One redemption; <c>OrderNumber</c> is read from Ordering (G16), one batch per page, null if the order is gone.</summary>
 public sealed record RedemptionResponse(
     Guid Id,
     Guid OrderId,
@@ -94,7 +95,10 @@ public sealed record RedemptionResponse(
     RedemptionStatus Status,
     DateTimeOffset RedeemedAt,
     DateTimeOffset? ReversedAt,
-    ReversalReason? ReversalReason);
+    ReversalReason? ReversalReason)
+{
+    public string? OrderNumber { get; init; }
+}
 
 /// <summary>Filters of <c>GET /admin/coupons</c>.</summary>
 public sealed record CouponListQuery(IReadOnlyList<CouponStatus>? Status, Guid? CityId, string? Q, int Page, int PageSize);

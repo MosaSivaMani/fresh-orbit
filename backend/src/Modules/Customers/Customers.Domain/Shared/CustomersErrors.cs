@@ -6,6 +6,7 @@ public static class CustomersErrors
     public const string CustomerDeleted = "CUSTOMER_DELETED";
     public const string AddressLimitReached = "ADDRESS_LIMIT_REACHED";
     public const string InvalidStatusTransition = "INVALID_STATUS_TRANSITION";
+    public const string AccountHasOpenMatters = "ACCOUNT_HAS_OPEN_MATTERS";
 
     /// <summary>CUS-R3.</summary>
     public const int MaxActiveAddresses = 20;

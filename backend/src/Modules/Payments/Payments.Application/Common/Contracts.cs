@@ -78,7 +78,8 @@ public sealed record PaymentResponse(
     string? FailureCode,
     string? FailureMessage,
     PaymentSummaryResponse Summary,
-    string Version);
+    string Version,
+    DateTimeOffset CreatedAt);
 
 /// <summary>Staff view of a refund. <see cref="Version"/> is the row version of its payment (the aggregate root).</summary>
 public sealed record RefundResponse(

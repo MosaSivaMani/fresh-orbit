@@ -111,13 +111,23 @@ public sealed record AdminOrderListItem(
     int ItemCount,
     long TotalPaise,
     long? FinalTotalPaise,
-    long AmountDuePaise);
+    long AmountDuePaise,
+    string Version);
 
 public sealed record OrderHistoryDto(string? From, string To, string ActorType, Guid? ActorId, string? ReasonCode, DateTimeOffset At);
 
 public sealed record OrderAdjustmentDto(Guid Id, Guid? OrderItemId, string Kind, long AmountPaise, string Reason, Guid? CreatedBy, DateTimeOffset At);
 
-public sealed record OrderLineStockDto(Guid OrderItemId, Guid VariantId, string? PreparationCode, QuantityDto GrossQuantity, int YieldBp);
+/// <summary>
+/// One batch a line's stock was taken from (G17): a SALE movement written when the order was packed, FEFO. Empty
+/// before packing (reservations are not tied to a batch). <c>BatchId</c>/<c>BatchCode</c> are null for the batchless
+/// pack-shortfall movement. <c>Quantity</c> is the gross quantity taken, in the stock unit.
+/// </summary>
+public sealed record OrderLineBatchDto(Guid MovementId, Guid? BatchId, string? BatchCode, QuantityDto Quantity, DateTimeOffset OccurredAt);
+
+/// <param name="ReservationStatus">ACTIVE, CONSUMED, RELEASED or EXPIRED; null when the line has no reservation (G17).</param>
+/// <param name="Batches">Batch allocations of the line (G17), oldest first.</param>
+public sealed record OrderLineStockDto(Guid OrderItemId, Guid VariantId, string? PreparationCode, QuantityDto GrossQuantity, int YieldBp, string? ReservationStatus, IReadOnlyList<OrderLineBatchDto> Batches);
 
 /// <summary>Staff detail: the customer view plus history, adjustments and gross quantities (§4.15).</summary>
 public sealed record AdminOrderDetailResponse(
@@ -159,9 +169,17 @@ public sealed record PackedLineDto(Guid OrderItemId, QuantityDto Packed, Quantit
 
 public sealed record PackResponse(Guid OrderId, string Status, string Version, IReadOnlyList<PackedLineDto> Lines, long FinalTotalPaise, long AmountDuePaise, long RefundDuePaise);
 
-public sealed record PickListLine(Guid VariantId, string ProductName, string VariantName, string? PreparationCode, string? PreparationName, string StockUnit, long GrossQuantity, int OrderCount);
+public sealed record PickListLine(Guid VariantId, string ProductName, string VariantName, string? PreparationCode, string? PreparationName, string StockUnit, long GrossQuantity, int OrderCount, string Sku);
 
-public sealed record PickListResponse(Guid FulfillmentLocationId, Guid SlotId, IReadOnlyList<PickListLine> Lines);
+/// <summary>The slot's local date and times (G18), from Delivery.</summary>
+public sealed record PickListSlotDto(DateOnly SlotDate, DateTimeOffset StartAt, DateTimeOffset EndAt, DateTimeOffset CutoffAt);
+
+/// <param name="Slot">Null when Delivery has no such slot at the location.</param>
+/// <param name="OrderCount">Distinct CONFIRMED/PREPARING orders of the slot with at least one ACTIVE line (G18).</param>
+public sealed record PickListResponse(Guid FulfillmentLocationId, Guid SlotId, IReadOnlyList<PickListLine> Lines, PickListSlotDto? Slot, int OrderCount);
+
+/// <summary>Pick list rows plus the number of distinct orders they come from (one query each).</summary>
+public sealed record PickListData(IReadOnlyList<PickListLine> Lines, int OrderCount);
 
 public sealed record InvoiceLineDto(int LineNo, string Description, string HsnCode, QuantityDto Quantity, long UnitPricePaise, long TaxablePaise, int TaxRateBp, long TaxPaise, long CgstPaise, long SgstPaise, long TotalPaise);
 
@@ -194,9 +212,10 @@ public sealed record RecordSubstitutionResponseRequest(string? Answer);
 
 public sealed record GoodwillRequest(long AmountPaise, string? Reason, Guid? OrderItemId);
 
+/// <param name="Statuses">Status codes (G14): repeated <c>status=</c> values, each may also be a comma list; OR within the field.</param>
 public sealed record AdminOrderListQuery(
     Guid? FulfillmentLocationId,
-    string? Status,
+    IReadOnlyList<string> Statuses,
     DateOnly? SlotDate,
     Guid? SlotId,
     string? PaymentMethod,
@@ -207,7 +226,7 @@ public sealed record AdminOrderListQuery(
 /// <summary>Typed staff list filter; <c>LocationIds</c> = locations the staff member may see (null = all).</summary>
 public sealed record AdminOrderFilter(
     Guid? FulfillmentLocationId,
-    OrderStatus? Status,
+    IReadOnlyCollection<OrderStatus> Statuses,
     DateTimeOffset? SlotFrom,
     DateTimeOffset? SlotUntil,
     Guid? SlotId,
@@ -252,9 +271,10 @@ public static class OrderViews
             allowedActions);
     }
 
-    public static AdminOrderDetailResponse AdminDetail(Order order, OrderDetailResponse detail)
+    public static AdminOrderDetailResponse AdminDetail(Order order, OrderDetailResponse detail, OrderStockView? stock = null)
     {
         ArgumentNullException.ThrowIfNull(order);
+        stock ??= OrderStockView.Empty;
         return new AdminOrderDetailResponse(
             detail,
             order.CustomerId,
@@ -265,7 +285,14 @@ public static class OrderViews
             order.CancelReasonCode,
             order.ColdBoxUsed,
             order.RefundDuePaise,
-            [.. order.Items.OrderBy(i => i.LineNo).Select(i => new OrderLineStockDto(i.Id, i.VariantId, i.PreparationCode, new QuantityDto(i.GrossQuantity, i.StockUnit), i.YieldBp))],
+            [.. order.Items.OrderBy(i => i.LineNo).Select(i => new OrderLineStockDto(
+                i.Id,
+                i.VariantId,
+                i.PreparationCode,
+                new QuantityDto(i.GrossQuantity, i.StockUnit),
+                i.YieldBp,
+                stock.ReservationStatusOf(i.Id),
+                stock.BatchesOf(i.Id, i.StockUnit)))],
             [.. order.History.OrderBy(h => h.At).Select(h => new OrderHistoryDto(h.FromStatus?.ToCode(), h.ToStatus.ToCode(), h.ActorType.ToCode(), h.ActorId, h.ReasonCode, h.At))],
             [.. order.Adjustments.OrderBy(a => a.At).Select(a => new OrderAdjustmentDto(a.Id, a.OrderItemId, a.Kind.ToCode(), a.AmountPaise, a.Reason, a.CreatedByActorId, a.At))]);
     }
@@ -350,6 +377,39 @@ public static class OrderViews
         substitution.RespondedAt,
         substitution.NewOrderItemId);
 }
+
+/// <summary>Inventory facts of an order (Inventory.Public <c>GetOrderStock</c>), indexed by order item (G17).</summary>
+public sealed class OrderStockView
+{
+    public static readonly OrderStockView Empty = new([], []);
+
+    private readonly ILookup<Guid, OrderStockBatch> _batches;
+    private readonly Dictionary<Guid, string> _reservations;
+
+    public OrderStockView(IEnumerable<(Guid OrderItemId, string Status)> reservations, IEnumerable<OrderStockBatch> batches)
+    {
+        ArgumentNullException.ThrowIfNull(reservations);
+        ArgumentNullException.ThrowIfNull(batches);
+
+        // One reservation per line; a replaced one (substitution) keeps the newest status seen last.
+        _reservations = [];
+        foreach (var (itemId, status) in reservations)
+        {
+            _reservations[itemId] = status;
+        }
+
+        _batches = batches.ToLookup(b => b.OrderItemId);
+    }
+
+    public string? ReservationStatusOf(Guid orderItemId) => _reservations.GetValueOrDefault(orderItemId);
+
+    public IReadOnlyList<OrderLineBatchDto> BatchesOf(Guid orderItemId, string stockUnit)
+        => [.. _batches[orderItemId].OrderBy(b => b.OccurredAt).ThenBy(b => b.MovementId)
+            .Select(b => new OrderLineBatchDto(b.MovementId, b.BatchId, b.BatchCode, new QuantityDto(Math.Abs(b.Quantity), stockUnit), b.OccurredAt))];
+}
+
+/// <summary>One SALE movement of an order line (sign as stored by Inventory).</summary>
+public sealed record OrderStockBatch(Guid MovementId, Guid OrderItemId, Guid? BatchId, string? BatchCode, int Quantity, DateTimeOffset OccurredAt);
 
 /// <summary>Payment facts shown on an order (Payments.Public).</summary>
 public sealed record OrderPaymentView(string Status, long PaidPaise, long RefundedPaise);

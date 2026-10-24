@@ -150,6 +150,21 @@ internal sealed class ComplaintConfiguration : IEntityTypeConfiguration<Complain
             .AreNullsDistinct(false)
             .HasFilter("status IN ('OPEN', 'APPROVED')")
             .HasDatabaseName("ux_complaints_open_per_line");
+
+        builder.HasMany(x => x.Photos).WithOne().HasForeignKey(x => x.ComplaintId).OnDelete(DeleteBehavior.Restrict);
+        builder.Navigation(x => x.Photos).HasField("_photos").UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+internal sealed class ComplaintPhotoConfiguration : IEntityTypeConfiguration<ComplaintPhoto>
+{
+    public void Configure(EntityTypeBuilder<ComplaintPhoto> builder)
+    {
+        builder.ToTable("complaint_photos", t => t.HasCheckConstraint("ck_complaint_photos_size", "width > 0 AND height > 0 AND size_bytes > 0"));
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.Property(x => x.StorageKey).HasMaxLength(200);
+        builder.HasIndex(x => new { x.ComplaintId, x.UploadedAt });
     }
 }
 
