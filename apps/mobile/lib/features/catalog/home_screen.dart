@@ -112,15 +112,21 @@ class HomeScreen extends ConsumerWidget {
           loading: const Center(child: CircularProgressIndicator()),
           data: (data) => LayoutBuilder(
             builder: (context, box) {
-              final page = SizedBox(width: box.maxWidth, child: _HomePage(data: data));
               if (MediaQuery.textScalerOf(context).scale(1) >= homeScrollTextScale) {
-                return SingleChildScrollView(key: const Key('homeScroll'), physics: const ClampingScrollPhysics(), child: page);
+                return SingleChildScrollView(
+                  key: const Key('homeScroll'),
+                  physics: const ClampingScrollPhysics(),
+                  child: SizedBox(width: box.maxWidth, child: _HomePage(data: data)),
+                );
               }
-              return FittedBox(
-                key: const Key('homeFit'),
-                fit: BoxFit.scaleDown,
+              // Full width always: a page taller than the screen is laid out wider and scaled down, never
+              // narrowed with side gaps (D182).
+              return Align(
                 alignment: Alignment.topCenter,
-                child: page,
+                child: FreshFitWidth(
+                  key: const Key('homeFit'),
+                  child: SizedBox(width: double.infinity, child: _HomePage(data: data)),
+                ),
               );
             },
           ),
@@ -670,6 +676,8 @@ class _SmallCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = AppText.display(FreshHighlightColors.ink, 16.5, height: 1.02);
     final second = brushed ?? secondLine;
+    // The pill: 5 + 5 padding around one line of 11.5 text.
+    final pillHeight = 10 + MediaQuery.textScalerOf(context).scale(11.5) * 1.3;
     return Semantics(
       button: true,
       label: '$title ${second ?? ''}. $body $action'.replaceAll('  ', ' '),
@@ -728,15 +736,25 @@ class _SmallCard extends StatelessWidget {
                       width: 88,
                       child: Text(body, style: _inter(FreshHighlightColors.ink, 11.5, FontWeight.w400, height: 1.3)),
                     ),
-                    const Spacer(),
-                    const SizedBox(height: 8),
-                    _Pill(
-                      text: '$action →',
-                      color: accent,
-                      size: 11.5,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    ),
+                    // Room for the pill pinned at the bottom.
+                    SizedBox(height: 8 + pillHeight),
                   ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 10,
+            child: IgnorePointer(
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: _Pill(
+                  text: '$action →',
+                  color: accent,
+                  size: 11.5,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 ),
               ),
             ),
@@ -953,7 +971,8 @@ class _SpecialsHeader extends StatelessWidget {
             header: true,
             label: 'Today’s special',
             excludeSemantics: true,
-            child: Align(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Stack(
                 clipBehavior: Clip.none,

@@ -74,6 +74,46 @@ void main() {
       expect(tester.getSize(find.byKey(const Key('short'))).height, 90);
       expect(tester.getSize(find.byKey(const Key('tall'))).height, 90);
     });
+
+    testWidgets('FreshFitWidth keeps the full width and scales a too-tall child to the height', (tester) async {
+      await _pump(
+        tester,
+        const SizedBox(
+          width: 300,
+          height: 200,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: FreshFitWidth(
+              key: Key('fit'),
+              child: SizedBox(key: Key('page'), width: double.infinity, height: 400),
+            ),
+          ),
+        ),
+      );
+      final fit = tester.getRect(find.byKey(const Key('fit')));
+      final page = tester.getRect(find.byKey(const Key('page')));
+      expect(fit.width, 300);
+      expect(fit.height, moreOrLessEquals(200, epsilon: 0.01));
+      // Laid out twice as wide, drawn at half size: edge to edge, no side gaps.
+      expect(page.left, fit.left);
+      expect(page.width, moreOrLessEquals(300, epsilon: 0.01));
+      expect(tester.getSize(find.byKey(const Key('page'))).width, moreOrLessEquals(600, epsilon: 0.01));
+    });
+
+    testWidgets('FreshFitWidth leaves a child that fits at scale 1', (tester) async {
+      await _pump(
+        tester,
+        const SizedBox(
+          width: 300,
+          height: 200,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: FreshFitWidth(child: SizedBox(key: Key('page'), width: double.infinity, height: 120)),
+          ),
+        ),
+      );
+      expect(tester.getRect(find.byKey(const Key('page'))), const Rect.fromLTWH(0, 0, 300, 120));
+    });
   });
 
   group('highlights', () {

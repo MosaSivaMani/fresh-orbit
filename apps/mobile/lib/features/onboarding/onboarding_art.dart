@@ -1,6 +1,6 @@
 // Drawn decoration that only the onboarding pages use, traced from the approved preview (D156,
 // docs/design/mockups/app-onboarding-rich.html, designed at 390 × 873): the scene on the colour block (the
-// cutting board and scooter silhouettes and the route), the banner waves and arrow, and a drawn stand-in for a
+// cutting board and scooter silhouettes and the sea), the banner waves and arrow, and a drawn stand-in for a
 // banner picture that has not arrived. The shared parts (birds, clouds, hills, the trawler, the sea bands, sparks,
 // the snowflake and the swooshes) live in the theme package (`fresh_theme`, D176). All of it is decoration:
 // callers wrap it in ExcludeSemantics, and nothing moves.
@@ -15,7 +15,7 @@ import 'package:fresh_theme/fresh_theme.dart';
 /// Which story a page tells; it picks the silhouette on the block and the banner stand-in.
 enum OnboardingScene { fresh, cleaned, delivery }
 
-/// The y of the sheet's top edge in the preview: block drawings are anchored to it.
+/// The y of the sheet's top edge in the preview: the right-hand clouds and hills are anchored to it.
 const double kDesignSheetTop = 393;
 
 const Color _paper = FreshHighlightColors.paper;
@@ -24,11 +24,21 @@ const Color _paper = FreshHighlightColors.paper;
 void _bird(Canvas canvas, double x, double y, double k, Color color, {double width = 2.2}) =>
     FreshScenery.bird(canvas, Offset(x, y), span: 20 * k, color: color, strokeWidth: width * k);
 
-/// The scene on the colour block. The painter's bottom edge is the sheet's top ([kDesignSheetTop] in the
-/// preview); left items are scaled by [scale] from the left edge, right items from the right edge. The sea bands
-/// reach below the bottom edge, under the sheet's rounded corner, so the parent must not clip.
+/// The scene on the colour block. The painter covers the block exactly (its bottom edge is the sheet's top) and
+/// draws nothing below it: the sea bands end [seaGap] above the sheet, so no wave cuts the sheet's rounded edge.
+/// The silhouette (trawler, board or scooter) sits on the sea between x 8 and [circleLeft] − 8 and below
+/// [sceneTop] (the tagline's bottom), scaled to fit, with three birds above it. The clouds and hills are drawn at
+/// [scale] from the right edge, behind the circle.
 class BlockScenePainter extends CustomPainter {
-  const BlockScenePainter({required this.scene, required this.dark, required this.soft, required this.scale});
+  const BlockScenePainter({
+    required this.scene,
+    required this.dark,
+    required this.soft,
+    required this.scale,
+    required this.circleLeft,
+    required this.circleCenter,
+    required this.sceneTop,
+  });
 
   final OnboardingScene scene;
 
@@ -39,49 +49,109 @@ class BlockScenePainter extends CustomPainter {
   final Color soft;
   final double scale;
 
+  /// The avatar circle's left edge and centre x: the silhouette stays left of it, the sea runs behind it.
+  final double circleLeft;
+  final double circleCenter;
+
+  /// The lowest y the block's text reaches; the silhouette stays below it.
+  final double sceneTop;
+
+  /// Height of the sea and the gap it keeps above the sheet.
+  static const double seaHeight = 30;
+  static const double seaGap = 4;
+
+  /// The silhouettes' design boxes (preview coordinates).
+  static const _trawlerBox = Rect.fromLTRB(2, 250, 120, 364);
+  static const _boardBox = Rect.fromLTRB(4, 250, 136, 364);
+  static const _scooterBox = Rect.fromLTRB(12, 282, 131, 365);
+
   @override
   void paint(Canvas canvas, Size size) {
     final k = scale;
-    final top = size.height - kDesignSheetTop * k;
     final fill = Paint()..color = dark;
+    final seaTop = size.height - seaGap - seaHeight;
 
-    // Right-anchored: two clouds and the hills behind the circle.
+    // Right-anchored: two clouds and the hills behind the circle, resting on the sheet's top edge.
     canvas
       ..save()
-      ..translate(size.width - 390 * k, top)
+      ..translate(size.width - 390 * k, size.height - kDesignSheetTop * k)
       ..scale(k);
     FreshScenery.cloud(canvas, const Offset(318, 150), 1.1, soft);
     FreshScenery.cloud(canvas, const Offset(250, 52), 0.7, soft);
     FreshScenery.hills(canvas, dark);
     canvas
       ..restore()
-      // Left-anchored: a cloud, the silhouette, its extras, three birds and the sea.
       ..save()
-      ..translate(0, top)
+      ..translate(0, size.height - kDesignSheetTop * k)
       ..scale(k);
     FreshScenery.cloud(canvas, const Offset(-14, 150), 0.9, soft);
-    switch (scene) {
-      case OnboardingScene.fresh:
-        FreshScenery.trawler(canvas, dark);
-      case OnboardingScene.cleaned:
-        _board(canvas, fill);
-        final ring = Paint()
-          ..color = dark
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2;
-        canvas
-          ..drawCircle(const Offset(150, 300), 6, ring)
-          ..drawCircle(const Offset(166, 282), 4, ring)
-          ..drawCircle(const Offset(140, 270), 3, ring);
-      case OnboardingScene.delivery:
-        _scooter(canvas, fill);
-        _route(canvas, dark);
-    }
-    _bird(canvas, 118, 300, 1, dark);
-    _bird(canvas, 140, 288, 0.75, dark);
-    _bird(canvas, 102, 318, 0.6, dark);
-    FreshScenery.seaBands(canvas);
     canvas.restore();
+
+    // The silhouette: fully visible left of the circle, its base in the water.
+    final box = switch (scene) {
+      OnboardingScene.fresh => _trawlerBox,
+      OnboardingScene.cleaned => _boardBox,
+      OnboardingScene.delivery => _scooterBox,
+    };
+    final base = seaTop + 8;
+    final s = math.min(0.9, math.min((circleLeft - 16) / box.width, (base - sceneTop - 18) / box.height));
+    if (s >= 0.25) {
+      canvas
+        ..save()
+        ..translate(8 - box.left * s, base - box.bottom * s)
+        ..scale(s);
+      switch (scene) {
+        case OnboardingScene.fresh:
+          FreshScenery.trawler(canvas, dark);
+        case OnboardingScene.cleaned:
+          _board(canvas, fill);
+        case OnboardingScene.delivery:
+          _scooter(canvas, fill);
+      }
+      canvas.restore();
+      // Three birds just above it.
+      final top = base - box.height * s;
+      final right = 8 + box.width * s;
+      _bird(canvas, right - 26, top - 4, 0.8, dark);
+      _bird(canvas, right - 6, top - 12, 0.6, dark);
+      _bird(canvas, right - 44, top + 6, 0.5, dark);
+    }
+
+    _sea(canvas, seaTop, size.height - seaGap, circleCenter);
+  }
+
+  /// Two sea bands (teal, then pale) with a white wave line, from the left edge to [right], ending at [bottom].
+  static void _sea(Canvas canvas, double top, double bottom, double right) {
+    Path band(double y, double amp) {
+      final path = Path()..moveTo(0, y);
+      const step = 60.0;
+      for (var x = 0.0; x < right; x += step) {
+        path
+          ..quadraticBezierTo(x + step / 4, y - amp, x + step / 2, y)
+          ..quadraticBezierTo(x + step * 3 / 4, y + amp, x + step, y);
+      }
+      return path
+        ..lineTo(right + step, bottom)
+        ..lineTo(0, bottom)
+        ..close();
+    }
+
+    canvas
+      ..drawPath(band(top + 4, 4), Paint()..color = FreshScenery.seaDeep)
+      ..drawPath(band(top + 16, 3), Paint()..color = FreshScenery.seaPale);
+    final line = Path()..moveTo(0, top + 12);
+    for (var x = 0.0; x < right; x += 60) {
+      line
+        ..quadraticBezierTo(x + 15, top + 9, x + 30, top + 12)
+        ..quadraticBezierTo(x + 45, top + 15, x + 60, top + 12);
+    }
+    canvas.drawPath(
+      line,
+      Paint()
+        ..color = _paper.withValues(alpha: 0.85)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
   }
 
   /// A cutting board with a fish outline cut into it and a knife above.
@@ -139,43 +209,15 @@ class BlockScenePainter extends CustomPainter {
       ..drawRRect(RRect.fromLTRBR(104, 282, 124, 287, const Radius.circular(2)), fill);
   }
 
-  /// The dotted route from the scooter up to a map pin.
-  static void _route(Canvas canvas, Color color) {
-    final dot = Paint()..color = color;
-    Offset quad(Offset a, Offset c, Offset b, double t) => a * ((1 - t) * (1 - t)) + c * (2 * (1 - t) * t) + b * (t * t);
-    const a = Offset(140, 356);
-    const c1 = Offset(180, 350);
-    const m = Offset(202, 316);
-    const c2 = Offset(224, 282);
-    const b = Offset(252, 250);
-    var last = a;
-    var travelled = 10.0;
-    for (var i = 0; i <= 120; i++) {
-      final t = i / 60;
-      final p = t <= 1 ? quad(a, c1, m, t) : quad(m, c2, b, t - 1);
-      travelled += (p - last).distance;
-      last = p;
-      if (travelled >= 10) {
-        canvas.drawCircle(p, 1.5, dot);
-        travelled = 0;
-      }
-    }
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(250, 212)
-          ..arcToPoint(const Offset(274, 212), radius: const Radius.circular(12))
-          ..cubicTo(274, 222, 262, 234, 262, 234)
-          ..cubicTo(262, 234, 250, 222, 250, 212)
-          ..close(),
-        dot,
-      )
-      ..drawCircle(const Offset(262, 212), 4, Paint()..color = _paper.withValues(alpha: 0.4));
-  }
-
   @override
   bool shouldRepaint(BlockScenePainter old) =>
-      old.scene != scene || old.dark != dark || old.soft != soft || old.scale != scale;
+      old.scene != scene ||
+      old.dark != dark ||
+      old.soft != soft ||
+      old.scale != scale ||
+      old.circleLeft != circleLeft ||
+      old.circleCenter != circleCenter ||
+      old.sceneTop != sceneTop;
 }
 
 /// Gulls in the sheet's top corners (grey-teal), the preview's two sheet birds.

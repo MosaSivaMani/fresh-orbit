@@ -431,25 +431,29 @@ preview of all three pages (D156, `docs/design/mockups/app-onboarding-rich.html`
 follows the preview's numbers (`lib/features/onboarding/onboarding_screen.dart`; drawings traced from the
 preview's SVG in `onboarding_art.dart`).
 
+After the owner tried it on a real phone (about 390 × 844 with Android system bars), the page is laid out to the
+screen instead of being shrunk as a whole (a whole-page `FittedBox` narrowed the block and banner and left cream
+gaps at the sides). Numbers as built (dp, 390-wide phone):
+
 | Part | What it is |
 |---|---|
-| Colour block | Skip (Inter 700, 17), eyebrow "STEP n OF 3" (Inter 700, 12.5, letter-spaced, 78%), a two-line Baloo 2 800 heading (44) whose second line sits on the yellow brush (`#F5D04A`, −1.5°), a spark after each line (cream on coral and mango, yellow on teal), and a Dancing Script tagline (23, two lines, −6°) with an underline swoosh: paper on coral and teal, ink on mango |
-| Drawn scene | `BlockScenePainter`, static and excluded from semantics: three pale clouds, darker hills behind the circle, the silhouette (coral: a trawler with hull, cabin with a window row, wheelhouse, mast, flag and rigging; teal: a cutting board with a knife and bubbles; mango: a scooter with a cold box and a dotted route to a map pin), three birds, and teal / pale sea bands with a white wave line running under the sheet's corner. Shades: coral `#C65A3F`, teal `#075E54`, mango `#CF8E22` |
-| Circle and sticker | The `ONBOARDING_*` character in a 252 px circle (7 px ink ring inside a 6 px paper ring), 20 px from the right, overlapping the sheet by 41 px; the sticker (Inter 800, 14, ink outline, 3 px ink drop shadow, −8°) on its upper-left edge with a yellow spark below it |
-| Sheet | Radius 30; grey-teal birds in both top corners; title Inter 800, 25; body Inter 400, 14.5, muted, line height 1.42 |
-| Feature tiles | The `ONBOARDING_TILE_*` picture (96 × 84) popping out of a 98 × 66 pastel blob (green, blue, peach), a spark on the corner (coral; a blue snowflake on the blue tile; coral or teal), a bold label (Inter 700, 13.5) and a muted caption (Inter 400, 12). One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`) |
-| Food banner | Full width, 150 px: two teal wave layers, the `ONBOARDING_BANNER_*` picture (2:1, 126 px tall) on the left, the Dancing Script line (22, −8°) on the right with a coral underline and a coral arrow towards the food. Read as one line. Until the PNG is bundled a drawn still life stands in (`BannerFoodPainter`) |
-| Bottom | 8 px page dots (the current one a 26 px ink pill) and the full-width ink "Next →" (54 px, stadium, Inter 700, 18) stay pinned below the pages; the last page says "Get started →" |
+| Layout | The page area (above the dots and button) is split: the colour block takes 45% of its height, clamped to 300–400 (and at most 62%); the sheet takes the rest. The block colour runs on under the sheet, whose top is a clean 28 radius curve. Block and sheet always span the full width. No scrolling below a system text scale of 1.5; at 1.5 and up the page scrolls with `ClampingScrollPhysics` (D182) |
+| Colour block | Eyebrow "STEP n OF 3" (Inter 700, 12.5, letter-spaced, 78%) and Skip (Inter 700, 17) in one 48 dp row; a two-line Baloo 2 800 heading, 40 scaled with the width (at least 34), its second line on the yellow brush (`#F5D04A`, −1.5°), a spark after each line (cream on coral and mango, yellow on teal); a Dancing Script tagline (23, two lines, −6°) with a swoosh, left of the circle. 20 dp gutters; gaps 8 |
+| Drawn scene | `BlockScenePainter`, static and excluded from semantics: pale clouds, darker hills behind the circle, the silhouette (coral: the trawler; teal: the cutting board and knife; mango: the scooter with its cold box) fully visible between x 8 and the circle's left edge − 8, scaled to fit below the tagline and sitting in the sea, three birds above it, and two sea bands with a white wave line that end 4 above the sheet (nothing cuts the sheet's edge). Shades: coral `#C65A3F`, teal `#075E54`, mango `#CF8E22` |
+| Circle and sticker | The `ONBOARDING_*` character in a ringed circle (7 px ink ring inside a 6 px paper ring), 212 on a 390 phone (shrinks with the block, 150–212), centred at 62% of the width, reaching 28 into the sheet. The sticker (Inter 800, 14, ink outline, 3 px ink drop shadow, −8°) sits on the circle's lower-left edge, 64% down (over the apron and the catch, never the face), with a yellow spark above it |
+| Sheet | Grey-teal birds in both top corners; title Inter 800, 22; body Inter 400, 14.5 / 1.4, muted; tiles 16 below; 20 dp gutters. The text starts 36 below the sheet top, clear of the circle. If even the text and tiles do not fit, they are scaled down at full width (`FreshFitWidth`), never narrowed |
+| Feature tiles | The `ONBOARDING_TILE_*` picture (96 × 84) popping out of a 98 × 66 pastel blob (green, blue, peach), a spark on the corner (coral; a blue snowflake on the blue tile; coral or teal), a label (Inter 600, 13.5) and a muted caption (Inter 400, 12), two lines at most each, the three tiles top-aligned, 8 apart. One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`); all twelve are bundled now |
+| Food banner | Inside 16 dp gutters, radius 20, as tall as the room left under the tiles (96–150; left out under 96, as on a 360 × 640 phone), the spare room split above and below it: two teal wave layers, the `ONBOARDING_BANNER_*` picture (2:1) on the left, the Dancing Script line (22, −8°) on the right with a coral underline and a coral arrow towards the food. Read as one line |
+| Bottom | 8 px page dots (the current one a 26 px ink pill) 12 above the full-width ink "Next →" (54, stadium, Inter 700, 18, 16 dp gutters), 12 below it plus the safe area; they never move. The last page says "Get started →" |
 
 Copy per page: tiles Morning catch / Kept chilled / Delivered fresh, Your cut / Cleaned by hand / Pay net weight,
 Pick a slot / Cold box / Cash or UPI; banner lines "From / today's catch / to your kitchen", "Ready / for your
 pan", "From our store / to your door".
 
-Responsive: every size is the preview's times a scale = min(1, width / 390, page height / 776), at least 0.62.
-The banner is left out when the page area is under 600 px tall (a 360 × 640 phone) and headings drop to 36 there.
-The tagline and banner line shrink to fit their boxes. A page never scrolls: it shrinks to fit above the button, and only
-system text of 1.5× and up lets it scroll (D182); the dots and the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
-Next / Get started, Skip, reduced motion and no overflow at 360 × 640 and 390 × 844 with text scale 1.0 and 1.3.
+Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the pictures and the fallbacks, semantics,
+Next / Get started, Skip, reduced motion, no overflow and no vertical scroll at 360 × 640 and 390 × 844 with text
+scale 1.0 and 1.3, the block and sheet at the full screen width, the sticker below the circle's centre and the
+circle's size, centre and overlap.
 
 Slot changes since §14: the home uses `HOME_HERO_CATCH`, `HOME_CARD_CLEANED` and `HOME_CARD_RIDER` (§16);
 `HOME_HERO` appears only on the splash; the four `FEATURE_*` slots are no longer on Home (the `FeatureCard`
@@ -490,7 +494,10 @@ content.
 | Cart bar and menu | The restyled shell `ViewCartBar` (top 746, 52 tall) and floating `FoodTabBar` (58 tall, radius 22), §15 |
 
 **Fits one screen (D182).** At a normal text size the page is laid out at its natural height inside
-`FittedBox(scaleDown, topCenter)` (key `homeFit`): no scroll view, no bounce, no pull-to-refresh. Only at a
+`FreshFitWidth` (key `homeFit`): if it is taller than the screen it is laid out wider and scaled down, so it
+always spans the full width (a `FittedBox` would narrow it and leave side gaps). No scroll view, no bounce, no
+pull-to-refresh. The two cards match heights with `FreshColumns(stretch: true)`, which lays them out twice
+instead of using intrinsic sizes. Only at a
 system text scale of 1.5 or more does it scroll (`SingleChildScrollView`, key `homeScroll`,
 `ClampingScrollPhysics`). The sideways specials row uses `ClampingScrollPhysics` too. "Popular today" moved off
 Home (it lives in Shop).

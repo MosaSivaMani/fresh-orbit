@@ -157,6 +157,9 @@ void main() {
         expect(find.descendant(of: find.byType(HomeScreen), matching: _verticalScroll), findsNothing);
         final fit = tester.getRect(find.byKey(const Key('homeFit')));
         expect(fit.bottom, lessThanOrEqualTo(size.height + 0.01));
+        // Always the full width: scaling to fit never leaves side gaps.
+        expect(fit.left, 0);
+        expect(fit.width, size.width);
       });
     }
   }
@@ -165,8 +168,14 @@ void main() {
     final handle = tester.ensureSemantics();
     await _pump(tester);
 
-    expect(find.text('Coupon day'), findsOneWidget);
+    // The third offer starts past the screen edge: slide the row to it, then back.
+    final coupon = find.text('Coupon day', skipOffstage: false);
+    expect(coupon, findsOneWidget);
+    await tester.ensureVisible(coupon);
+    await tester.pumpAndSettle();
     expect(tester.getSemantics(find.bySemanticsLabel('Coupon day')), isSemantics(isButton: false));
+    await tester.ensureVisible(find.text('Weekend seer fish', skipOffstage: false));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Weekend seer fish'));
     await tester.pumpAndSettle();
     expect(find.text('route:/shop?category=fish'), findsOneWidget);
@@ -176,6 +185,8 @@ void main() {
   testWidgets('a product offer opens the product page', (tester) async {
     await _pump(tester);
 
+    await tester.ensureVisible(find.text('Prawns, fresh catch', skipOffstage: false));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Prawns, fresh catch'));
     await tester.pumpAndSettle();
     expect(find.text('route:/product/tiger-prawns'), findsOneWidget);
