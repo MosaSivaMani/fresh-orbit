@@ -1357,7 +1357,10 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "type": "array"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         ],
@@ -10411,6 +10414,12 @@
               "null",
               "string"
             ]
+          },
+          "linkSlug": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -14210,6 +14219,12 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "linkSlug": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

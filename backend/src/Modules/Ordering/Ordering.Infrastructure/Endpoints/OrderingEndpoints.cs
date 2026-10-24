@@ -87,6 +87,7 @@ internal static class OrderingEndpoints
             })
             .DisableAntiforgery()
             .WithMetadata(new RequestSizeLimitAttribute(ComplaintPhotoRules.MaxRequestBytes))
+            .RequireRateLimiting(RateLimitPolicies.Upload)
             .WithIdempotency(required: false)
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<ComplaintResponse>(StatusCodes.Status201Created)

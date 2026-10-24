@@ -21,7 +21,7 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
     public const string SigningKey = "test-only-signing-key-0123456789-abcdefghijklmnopqrstuvwxyz";
 
     /// <summary>Every rate-limit rule of the Api (section <c>RateLimiting</c>); tests raise them because they share one client IP.</summary>
-    public static readonly IReadOnlyList<string> RateLimitRules = ["OtpRequest", "OtpVerify", "Login", "Refresh", "Checkout", "Search", "Public", "Coupon"];
+    public static readonly IReadOnlyList<string> RateLimitRules = ["OtpRequest", "OtpVerify", "Login", "Refresh", "Checkout", "Search", "Public", "Coupon", "Upload"];
 
     public TestClock Clock { get; } = new();
 

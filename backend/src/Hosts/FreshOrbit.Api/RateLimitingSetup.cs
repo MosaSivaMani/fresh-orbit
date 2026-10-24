@@ -28,6 +28,8 @@ public sealed class RateLimitingOptions
 
     public RateLimitRule Coupon { get; set; } = new() { PermitLimit = 10, WindowSeconds = 600 };
 
+    public RateLimitRule Upload { get; set; } = new() { PermitLimit = 20, WindowSeconds = 3600 };
+
     internal IEnumerable<(string Name, RateLimitRule Rule)> Rules()
     {
         yield return (nameof(OtpRequest), OtpRequest);
@@ -38,6 +40,7 @@ public sealed class RateLimitingOptions
         yield return (nameof(Search), Search);
         yield return (nameof(Public), Public);
         yield return (nameof(Coupon), Coupon);
+        yield return (nameof(Upload), Upload);
     }
 }
 
@@ -54,7 +57,7 @@ internal static class RateLimitingSetup
 
     /// <summary>
     /// Fixed window per client IP for <c>otp-request</c>, <c>otp-verify</c>, <c>staff-login</c>, <c>refresh</c>,
-    /// <c>search</c> and <c>public</c>; sliding window per user (IP when anonymous) for <c>checkout</c> and
+    /// <c>search</c> and <c>public</c>; sliding window per user (IP when anonymous) for <c>checkout</c>, <c>upload</c> and
     /// <c>coupon</c>. The client IP is the connection address after <see cref="ForwardedHeadersSetup"/>, so behind
     /// the proxy it is the real client. Rejections are 429 Problem Details with code RATE_LIMITED.
     /// </summary>
@@ -94,6 +97,7 @@ internal static class RateLimitingSetup
             options.AddPolicy(RateLimitPolicies.Public, http => FixedWindowByIp(http, Rules(http).Public, RateLimitPolicies.Public));
             options.AddPolicy(RateLimitPolicies.Checkout, http => SlidingWindowByUser(http, Rules(http).Checkout, RateLimitPolicies.Checkout));
             options.AddPolicy(RateLimitPolicies.Coupon, http => SlidingWindowByUser(http, Rules(http).Coupon, RateLimitPolicies.Coupon));
+            options.AddPolicy(RateLimitPolicies.Upload, http => SlidingWindowByUser(http, Rules(http).Upload, RateLimitPolicies.Upload));
         });
         return services;
     }
@@ -118,6 +122,7 @@ internal static class RateLimitingSetup
     {
         nameof(RateLimitingOptions.Checkout) => RateLimitPolicies.Checkout,
         nameof(RateLimitingOptions.Coupon) => RateLimitPolicies.Coupon,
+        nameof(RateLimitingOptions.Upload) => RateLimitPolicies.Upload,
         _ => null,
     };
 

@@ -24,5 +24,6 @@ internal sealed class OrderingJobs : IRecurringJobRegistration
     [
         new("ordering.expire-unpaid-orders", "* * * * *", typeof(ExpireUnpaidOrdersJob)),
         new("ordering.expire-substitutions", "* * * * *", typeof(ExpireSubstitutionsJob)),
+        new(ComplaintPhotoPurgeJob.JobId, "45 3 * * *", typeof(ComplaintPhotoPurgeJob)),
     ];
 }

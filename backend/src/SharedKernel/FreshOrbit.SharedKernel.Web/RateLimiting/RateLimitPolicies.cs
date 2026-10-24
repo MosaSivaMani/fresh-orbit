@@ -29,4 +29,7 @@ public static class RateLimitPolicies
 
     /// <summary>Applying a coupon to the cart: per user (IP when anonymous), against code guessing.</summary>
     public const string Coupon = "coupon";
+
+    /// <summary>Customer file uploads (complaint photos): per user (IP when anonymous), against storage abuse.</summary>
+    public const string Upload = "upload";
 }

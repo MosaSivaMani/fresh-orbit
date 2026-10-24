@@ -112,7 +112,7 @@ transfer to that country (DPDP Act s.16). Name the countries here if so.
   the order date); our CA is to confirm.
 - DPDP Rules 2025: we understand that logs of processing must be kept for at least one year for security. Confirm,
   and whether that one year overrides a shorter period above.
-- **Today the system keeps one-time-password requests, sent messages and complaint photos with no time limit, and
+- **Today the system keeps one-time-password requests and sent messages with no time limit, keeps complaint photos with no time limit until `Ordering:ComplaintPhotoRetentionDays` is set (the purge job exists, ORD-R66), and
   does not yet delete orders after 72 months.** These deletions must be built before this table is published
   (`docs/security/review-2026-10.md` SEC-13, `docs/team/next-steps.md`).
 

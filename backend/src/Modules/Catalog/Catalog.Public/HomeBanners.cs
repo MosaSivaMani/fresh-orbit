@@ -28,4 +28,8 @@ public sealed record HomeBanner(
     string LinkTarget,
     DateTimeOffset StartsAt,
     DateTimeOffset? EndsAt,
-    int SortOrder);
+    int SortOrder)
+{
+    /// <summary>Slug of the CATEGORY or PRODUCT link target (W14); null for COUPON or a missing target. <c>LinkTarget</c> stays the id.</summary>
+    public string? LinkSlug { get; init; }
+}

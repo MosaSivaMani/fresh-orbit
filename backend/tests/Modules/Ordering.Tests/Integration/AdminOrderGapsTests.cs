@@ -4,9 +4,19 @@ using System.Text.Json;
 using AwesomeAssertions;
 using FreshOrbit.Delivery.Public;
 using FreshOrbit.Inventory.Public;
+using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Application.Events;
+using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Orders;
+using FreshOrbit.Ordering.Infrastructure.Jobs;
+using FreshOrbit.SharedKernel.Storage;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
+using FreshOrbit.Testing;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using SkiaSharp;
 
@@ -110,6 +120,59 @@ public sealed class AdminOrderGapsTests(OrderingDatabase database) : OrderingTes
         var over = await SendWithVersionAsync(staff, HttpMethod.Post, $"/api/v1/admin/complaints/{complaintId}/decide", Quoted(detail),
             new { status = "APPROVED", resolution = "REFUND", refundAmountPaise = expected + 1 });
         CodeOf(await ReadJsonAsync(over)).Should().Be("REFUND_AMOUNT_INVALID");
+    }
+
+    [Fact]
+    public async Task ORD_R66_photos_of_complaints_closed_past_retention_are_purged_and_open_ones_kept()
+    {
+        var staff = Staff();
+        var (closedOrder, closedFish) = await DeliveredOrderAsync();
+        var closed = (await RaiseAsync(closedOrder, closedFish.Id)).GetProperty("id").GetGuid();
+        (await UploadAsync(Customer, $"/api/v1/orders/{closedOrder}/complaints/{closed}/photos", Png(400, 400))).StatusCode.Should().Be(HttpStatusCode.Created);
+        var detail = await ReadJsonAsync(await staff.GetAsync(new Uri($"/api/v1/admin/complaints/{closed}", UriKind.Relative), Ct));
+        (await SendWithVersionAsync(staff, HttpMethod.Post, $"/api/v1/admin/complaints/{closed}/decide", Quoted(detail), new { status = "REJECTED" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        var (openOrder, openFish) = await DeliveredOrderAsync();
+        var open = (await RaiseAsync(openOrder, openFish.Id)).GetProperty("id").GetGuid();
+        (await UploadAsync(Customer, $"/api/v1/orders/{openOrder}/complaints/{open}/photos", Png(400, 400))).StatusCode.Should().Be(HttpStatusCode.Created);
+        var later = new TestClock(Factory.Clock.UtcNow.AddDays(31));
+
+        await RunPurgeAsync(later, retentionDays: null);
+        (await PhotoCountAsync(closed)).Should().Be(1, "no retention period is configured, so nothing is deleted");
+        await RunPurgeAsync(new TestClock(Factory.Clock.UtcNow.AddDays(29)), retentionDays: 30);
+        (await PhotoCountAsync(closed)).Should().Be(1, "the complaint closed less than 30 days ago");
+
+        await RunPurgeAsync(later, retentionDays: 30);
+
+        (await PhotoCountAsync(closed)).Should().Be(0);
+        var folder = Path.Combine(Factory.StorageRoot, "complaints", closed.ToString());
+        (Directory.Exists(folder) ? Directory.GetFiles(folder) : []).Should().BeEmpty("the file goes with the row");
+        (await PhotoCountAsync(open)).Should().Be(1, "an OPEN complaint keeps its photos");
+        var after = await ReadJsonAsync(await staff.GetAsync(new Uri($"/api/v1/admin/complaints/{closed}", UriKind.Relative), Ct));
+        after.GetProperty("photos").GetArrayLength().Should().Be(0);
+    }
+
+    private Task<int> RunPurgeAsync(TestClock clock, int? retentionDays)
+        => InScopeAsync(async (services, db) =>
+        {
+            var job = new ComplaintPhotoPurgeJob(db, services.GetRequiredService<IFileStorage>(), clock, new OrderingOptions { ComplaintPhotoRetentionDays = retentionDays }, NullLogger<ComplaintPhotoPurgeJob>.Instance);
+            await job.ExecuteAsync(Ct);
+            return 0;
+        });
+
+    private Task<int> PhotoCountAsync(Guid complaintId)
+        => InScopeAsync((_, db) => db.Set<ComplaintPhoto>().CountAsync(p => p.ComplaintId == complaintId, Ct));
+
+    [Fact]
+    public void W12_photo_upload_is_rate_limited_per_customer()
+    {
+        var endpoint = Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Single(e => e.RoutePattern.RawText == "/api/v1/orders/{orderId:guid}/complaints/{complaintId:guid}/photos"
+                && e.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
+
+        var limit = endpoint.Metadata.GetMetadata<EnableRateLimitingAttribute>();
+        limit.Should().NotBeNull();
+        limit!.PolicyName.Should().Be(RateLimitPolicies.Upload);
     }
 
     [Fact]

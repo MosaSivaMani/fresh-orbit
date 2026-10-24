@@ -94,6 +94,12 @@ public sealed class OrderingOptions
 
     /// <summary>SAC code printed on the delivery-fee invoice line.</summary>
     public string DeliveryServiceCode { get; set; } = "996813";
+
+    /// <summary>
+    /// Days a closed complaint (RESOLVED, or REJECTED) keeps its photos before the purge job deletes them (ORD-R66).
+    /// Unset means the owner has not chosen a period (privacy policy): the job deletes nothing and logs a warning.
+    /// </summary>
+    public int? ComplaintPhotoRetentionDays { get; set; }
 }
 
 /// <summary>Read-side queries (lists and the pick list) projected straight from the tables.</summary>

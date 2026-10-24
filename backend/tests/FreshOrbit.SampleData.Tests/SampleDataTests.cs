@@ -86,6 +86,8 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         tracked.GetValueOrDefault("inventory.cold_chain_logs").Should().Be((int)await ScalarAsync("SELECT count(*) FROM inventory.cold_chain_logs"));
         (await ScalarAsync("SELECT count(*) FROM locations.cities WHERE status = 'ACTIVE'")).Should().Be(1);
         (await ScalarAsync("SELECT count(*) FROM catalog.products WHERE status = 'ACTIVE'")).Should().Be(26);
+        (await ScalarAsync("SELECT count(*) FROM catalog.product_variants WHERE serves IS NOT NULL")).Should().Be(28, "every sample variant states its serving facts (CAT-R21)");
+        (await ScalarAsync("SELECT count(*) FROM catalog.product_variants WHERE pieces_min IS NOT NULL")).Should().Be(21);
         (await ScalarAsync("SELECT count(DISTINCT slot_date) FROM delivery.delivery_slots")).Should().Be(7, "slots cover the next 7 days");
         (await ScalarAsync("SELECT count(*) FROM inventory.stock_items WHERE on_hand > 0")).Should().Be(28, "on-hand is the fold of the RECEIPT movements");
         File.Exists(Path.Combine(_mediaRoot, "sample", "banners", "prawn-week.webp")).Should().BeTrue();

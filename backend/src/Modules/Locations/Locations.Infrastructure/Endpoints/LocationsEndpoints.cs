@@ -81,9 +81,9 @@ internal static class LocationsEndpoints
 
     private static void MapCities(RouteGroupBuilder admin)
     {
-        admin.MapGet("/cities", async ([AsParameters] PagedRequest paging, [FromQuery(Name = "status")] CityStatus[]? status, ILocationsReads reads, CancellationToken ct) =>
+        admin.MapGet("/cities", async ([AsParameters] PagedRequest paging, [FromQuery(Name = "status")] string[]? status, ILocationsReads reads, CancellationToken ct) =>
             {
-                var (items, total) = await reads.ListCitiesAsync(status ?? [], paging.Skip, paging.PageSize, ct);
+                var (items, total) = await reads.ListCitiesAsync(CityStatuses(status), paging.Skip, paging.PageSize, ct);
                 return TypedResults.Ok(new PagedResponse<CityResponse>(items, paging.Page, paging.PageSize, total));
             })
             .WithValidation<PagedRequest>()
@@ -252,20 +252,26 @@ internal static class LocationsEndpoints
 
         admin.MapGet("/cities/lookup", async ([AsParameters] PagedRequest paging, [FromQuery(Name = "status")] string[]? status, ILocationsReads reads, CancellationToken ct) =>
             {
-                var statuses = new List<CityStatus>();
-                foreach (var code in status ?? [])
-                {
-                    statuses.Add(EnumCodes.TryToEnum<CityStatus>(code, out var value)
-                        ? value
-                        : throw new RefusalException(new FieldError("status", LocationsErrors.ValidationFailed, $"Status must be one of {string.Join(", ", EnumCodes.AllCodes<CityStatus>())}.")));
-                }
-
-                var (items, total) = await reads.LookupCitiesAsync(statuses, paging.Skip, paging.PageSize, ct);
+                var (items, total) = await reads.LookupCitiesAsync(CityStatuses(status), paging.Skip, paging.PageSize, ct);
                 return TypedResults.Ok(new PagedResponse<CityLookupItem>(items, paging.Page, paging.PageSize, total));
             })
             .WithValidation<PagedRequest>()
             .WithTags("Admin lookups")
             .RequireStaffActor();
+    }
+
+    /// <summary>The repeatable <c>status</c> query as UPPER_SNAKE codes (rule 8); an unknown code is refused on <c>status</c>.</summary>
+    private static List<CityStatus> CityStatuses(string[]? codes)
+    {
+        var statuses = new List<CityStatus>();
+        foreach (var code in codes ?? [])
+        {
+            statuses.Add(EnumCodes.TryToEnum<CityStatus>(code, out var value)
+                ? value
+                : throw new RefusalException(new FieldError("status", LocationsErrors.ValidationFailed, $"Status must be one of {string.Join(", ", EnumCodes.AllCodes<CityStatus>())}.")));
+        }
+
+        return statuses;
     }
 
     private static Ok<T> Respond<T>(HttpContext http, T body, Func<T, string> version)

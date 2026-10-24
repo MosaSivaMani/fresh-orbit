@@ -280,8 +280,9 @@ public sealed class SmsHostFactory(E1Database database, string environment, IRea
         builder.UseEnvironment(environment);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Information");
 
-        // Production refuses to start without a media root (Phase 3 file storage); these tests are about SMS only.
+        // Production refuses to start without a media root or an absolute https media URL (W15); these tests are about SMS only.
         builder.UseSetting("FileStorage:RootPath", Path.Combine(Path.GetTempPath(), "freshorbit-sms-host-tests"));
+        builder.UseSetting("FileStorage:PublicBaseUrl", "https://api.example.test/media");
         foreach (var (key, value) in settings)
         {
             builder.UseSetting(key, value);

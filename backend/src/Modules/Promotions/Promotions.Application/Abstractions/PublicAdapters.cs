@@ -31,6 +31,30 @@ public sealed class CatalogPromotionsCatalog(ICatalogApi catalog) : IPromotionsC
 
         return missing;
     }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetLinkSlugsAsync(IReadOnlyCollection<Guid> categoryIds, IReadOnlyCollection<Guid> productIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(categoryIds);
+        ArgumentNullException.ThrowIfNull(productIds);
+        var slugs = new Dictionary<Guid, string>();
+        if (categoryIds.Count > 0)
+        {
+            foreach (var (id, slug) in await catalog.GetCategorySlugsAsync(categoryIds, cancellationToken))
+            {
+                slugs[id] = slug;
+            }
+        }
+
+        if (productIds.Count > 0)
+        {
+            foreach (var product in await catalog.GetProductSummariesAsync(productIds, cancellationToken))
+            {
+                slugs[product.ProductId] = product.Slug;
+            }
+        }
+
+        return slugs;
+    }
 }
 
 /// <summary><see cref="ICityDirectory"/> over <c>Locations.Public</c>.</summary>

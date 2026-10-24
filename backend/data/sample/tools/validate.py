@@ -286,6 +286,16 @@ for slug, p in products.items():
                 err(vw, "PACK variants need packSizeGrams > 0 (CAT-R4)")
         else:
             err(vw, "sellUnit must be KG, PIECE or PACK")
+        # CAT-R21 serving facts (optional): both pieces bounds or neither, none on PIECE variants
+        pmin, pmax, serves = v.get("piecesMin"), v.get("piecesMax"), v.get("serves")
+        if (pmin is None) != (pmax is None):
+            err(vw, "piecesMin and piecesMax go together (CAT-R21)")
+        elif pmin is not None and (not all(isinstance(x, int) for x in (pmin, pmax)) or not 1 <= pmin <= pmax <= 1000):
+            err(vw, "pieces range must satisfy 1 <= piecesMin <= piecesMax <= 1000 (CAT-R21)")
+        if unit == "PIECE" and pmin is not None:
+            err(vw, "PIECE variants state no pieces range (CAT-R21)")
+        if serves is not None and (not isinstance(serves, int) or not 1 <= serves <= 100):
+            err(vw, "serves must be 1 to 100 (CAT-R21)")
         # CAT-R7 quantity rules
         mn, mx, st = v.get("minOrder"), v.get("maxOrder"), v.get("orderStep")
         if not all(isinstance(x, int) for x in (mn, mx, st)) or st <= 0 or mn < st or mn % st or mx < mn or mx % st:

@@ -112,6 +112,37 @@ public sealed class StorefrontShellTests(CatalogDatabase database) : StorefrontT
         onHome.GetProperty("title").GetString().Should().Be("Seer week");
         onHome.GetProperty("linkType").GetString().Should().Be("PRODUCT");
         onHome.GetProperty("linkTarget").GetString().Should().Be(product.ProductId.ToString());
+        onHome.GetProperty("linkSlug").GetString().Should().Be(product.Slug, "W14: clients link by slug");
+        listed.GetProperty("linkSlug").GetString().Should().Be(product.Slug);
+    }
+
+    [Fact]
+    public async Task Category_banner_carries_the_category_slug_and_keeps_the_id_as_target()
+    {
+        var served = await CreateServedLocationAsync();
+        var slug = Unique("cat");
+        var category = await OkAsync(HttpMethod.Post, "/api/v1/admin/categories", new { parentId = (Guid?)null, name = "Prawns", slug, sortOrder = 10 });
+        var categoryId = category.GetProperty("id").GetGuid();
+        var banner = await OkAsync(HttpMethod.Post, "/api/v1/admin/promotions", new
+        {
+            title = "Prawn week",
+            subtitle = (string?)null,
+            imageKey = (string?)null,
+            linkType = "CATEGORY",
+            linkTarget = categoryId.ToString(),
+            cityId = served.CityId,
+            startsAt = Factory.Clock.UtcNow.AddHours(-1),
+            endsAt = (DateTimeOffset?)null,
+            sortOrder = 20,
+            isActive = true,
+        });
+        var bannerId = banner.GetProperty("id").GetGuid();
+
+        var home = await GetPublicAsync("/api/v1/home", served.Pincode);
+
+        var onHome = home.GetProperty("banners").EnumerateArray().Single(b => b.GetProperty("id").GetGuid() == bannerId);
+        onHome.GetProperty("linkTarget").GetString().Should().Be(categoryId.ToString());
+        onHome.GetProperty("linkSlug").GetString().Should().Be(slug);
     }
 
     [Fact]

@@ -34,7 +34,7 @@ public sealed class LocalDiskFileStorage : IFileStorage
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(environment);
         _rootPath = ResolveRootPath(options.Value, environment);
-        _publicBaseUrl = options.Value.PublicBaseUrl.TrimEnd('/');
+        _publicBaseUrl = ResolvePublicBaseUrl(options.Value, environment);
     }
 
     /// <summary>The absolute folder files are stored in.</summary>
@@ -55,6 +55,25 @@ public sealed class LocalDiskFileStorage : IFileStorage
         }
 
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create), "freshorbit", "media");
+    }
+
+    /// <summary>
+    /// The prefix of public URLs without a trailing slash (W15). In Production it must be an absolute HTTPS URL (e.g.
+    /// <c>https://api.&lt;domain&gt;/media</c>) so every client gets absolute image URLs; elsewhere the default
+    /// <c>/media</c> path is allowed.
+    /// </summary>
+    public static string ResolvePublicBaseUrl(FileStorageOptions options, IHostEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(environment);
+        var baseUrl = options.PublicBaseUrl.Trim().TrimEnd('/');
+        if (environment.IsProduction()
+            && !(Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException($"{FileStorageOptions.SectionName}:{nameof(FileStorageOptions.PublicBaseUrl)} must be an absolute https URL in Production, e.g. https://api.example.com/media.");
+        }
+
+        return baseUrl;
     }
 
     public async Task SaveAsync(string key, Stream content, string contentType, CancellationToken cancellationToken = default)

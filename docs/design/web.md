@@ -187,7 +187,8 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W12 | Complaint photo upload, list and delete | main |
 | W13 | Variant `piecesMin` / `piecesMax` / `serves` (CAT-R21) | main (migration in PR #6) |
 | W16 | `offer` (CAT-R26), `freshness` (CAT-R25) and `discountBp` (CAT-R22) | main |
-| W14, W15 | Not changed in Track E | still open |
+| W14 | Banner `linkSlug` for CATEGORY and PRODUCT links (PROMO-R28); `linkTarget` stays the id | `backend/followups-f` |
+| W15 | Production refuses a relative or non-https `FileStorage:PublicBaseUrl`, so server image URLs are absolute (CAT-R18) | `backend/followups-f` |
 
 ## 7. API types (generated)
 
