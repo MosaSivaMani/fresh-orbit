@@ -2,15 +2,13 @@
 
 import {
   Button,
-  Card,
-  CardContent,
   Checkbox,
   Dialog,
   DialogContent,
-  ErrorState,
   FormField,
   Input,
   Skeleton,
+  StepCard,
   toast,
 } from "@fresh/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +18,8 @@ import { browserHttp } from "@/api/browser";
 import { deleteAccount, getProfile, updateProfile } from "@/api/endpoints/account";
 import { type Profile } from "@/api/types/account";
 import { signOut } from "@/auth/session-store";
-import { asApiError, describeError, fieldMessage, hasCode } from "@/lib/errors";
+import { LoadError } from "@/components/states";
+import { describeError, fieldMessage, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 function ProfileForm({ profile }: { profile: Profile }) {
@@ -105,7 +104,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
   );
 }
 
-function DeleteAccount({ profile }: { profile: Profile }) {
+export function DeleteAccount({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -163,55 +162,31 @@ function DeleteAccount({ profile }: { profile: Profile }) {
   );
 }
 
+/** Profile (D95): the customer's details, saved with `If-Match`. Session and account deletion are in Settings. */
 export function ProfileView() {
-  const router = useRouter();
   const profile = useQuery({
     queryKey: queryKeys.profile,
     queryFn: () => getProfile(browserHttp()),
   });
 
-  if (profile.isPending) return <Skeleton className="h-80 rounded-xl" />;
+  if (profile.isPending) return <Skeleton className="h-80 rounded-[22px]" />;
   if (profile.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your profile"
-        description={describeError(profile.error)}
-        traceId={asApiError(profile.error)?.traceId}
+        error={profile.error}
         onRetry={() => void profile.refetch()}
       />
     );
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-text text-2xl font-bold">Profile</h1>
-      <Card>
-        <CardContent>
-          {/* Keyed by version so a reload after a conflict resets the form to the server's values. */}
-          <ProfileForm key={profile.data.version} profile={profile.data} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="flex flex-col gap-3">
-          <h2 className="text-text text-lg font-semibold">Session</h2>
-          <Button
-            variant="secondary"
-            className="self-start"
-            onClick={() => void signOut().then(() => router.replace("/"))}
-          >
-            Sign out
-          </Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="flex flex-col gap-3">
-          <h2 className="text-text text-lg font-semibold">Delete account</h2>
-          <p className="text-text-muted text-sm">
-            Deleting is refused while an order is still in progress.
-          </p>
-          <DeleteAccount profile={profile.data} />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-2xl flex-col gap-5">
+      <h1 className="font-display text-text text-3xl font-extrabold">Profile</h1>
+      <StepCard title="Your details">
+        {/* Keyed by version so a reload after a conflict resets the form to the server's values. */}
+        <ProfileForm key={profile.data.version} profile={profile.data} />
+      </StepCard>
     </div>
   );
 }

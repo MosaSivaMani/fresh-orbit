@@ -86,6 +86,58 @@ describe("LoginForm", () => {
     expect(screen.getByText("Enter your 10-digit mobile number.")).toBeInTheDocument();
   });
 
+  it("on 429 waits for Retry-After before allowing another code request", async () => {
+    server.use(
+      http.post(`${API}/auth/otp/request`, () =>
+        HttpResponse.json(problem(429, "RATE_LIMITED"), {
+          status: 429,
+          headers: { "Retry-After": "42" },
+        }),
+      ),
+    );
+    renderWithProviders(<LoginForm next={null} />);
+    await userEvent.type(screen.getByLabelText(/Mobile number/), "9876543210");
+    await userEvent.click(screen.getByRole("button", { name: "Send code" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/wait 4[12] seconds/);
+    expect(screen.getByRole("button", { name: "Send code" })).toBeDisabled();
+    // Still on the phone step, number kept.
+    expect(screen.getByLabelText(/Mobile number/)).toHaveValue("9876543210");
+  });
+
+  it("on 503 SMS_PROVIDER_UNAVAILABLE shows the server's message and resends to the same number", async () => {
+    const requests: unknown[] = [];
+    server.use(
+      http.post(`${API}/auth/otp/request`, async ({ request }) => {
+        requests.push(await request.json());
+        if (requests.length === 1) {
+          return HttpResponse.json(
+            problem(503, "SMS_PROVIDER_UNAVAILABLE", {
+              detail: "The SMS could not be sent; try again in a few minutes.",
+            }),
+            { status: 503 },
+          );
+        }
+        return HttpResponse.json(challenge, { status: 202 });
+      }),
+    );
+    renderWithProviders(<LoginForm next={null} />);
+    await userEvent.type(screen.getByLabelText(/Mobile number/), "9876543210");
+    await userEvent.click(screen.getByRole("button", { name: "Send code" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("The SMS could not be sent; try again in a few minutes.");
+    await userEvent.click(screen.getByRole("button", { name: "Try sending again" }));
+
+    expect(await screen.findByLabelText("One-time code")).toBeInTheDocument();
+    expect(requests).toEqual([
+      { phone: "+919876543210", purpose: "LOGIN" },
+      { phone: "+919876543210", purpose: "LOGIN" },
+    ]);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("follows only same-site paths after sign-in", () => {
     expect(safeNext("/orders/1")).toBe("/orders/1");
     expect(safeNext("//evil.test")).toBe("/");

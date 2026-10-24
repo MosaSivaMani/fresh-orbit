@@ -1,13 +1,13 @@
 "use client";
 
 import { formatDate } from "@fresh/core";
-import { Button, EmptyState, ErrorState, Skeleton, toast } from "@fresh/ui";
+import { Button, Skeleton, toast } from "@fresh/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart } from "lucide-react";
 import Link from "next/link";
 import { browserHttp } from "@/api/browser";
 import { listWishlist, removeFromWishlist } from "@/api/endpoints/account";
-import { asApiError, describeError } from "@/lib/errors";
+import { EmptyPage, LoadError } from "@/components/states";
+import { describeError } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 /**
@@ -26,25 +26,24 @@ export function WishlistView() {
     onError: (e) => toast({ title: describeError(e), tone: "danger" }),
   });
 
-  if (wishlist.isPending) return <Skeleton className="h-60 rounded-xl" />;
+  if (wishlist.isPending) return <Skeleton className="h-60 rounded-[22px]" />;
   if (wishlist.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your saved items"
-        description={describeError(wishlist.error)}
-        traceId={asApiError(wishlist.error)?.traceId}
+        error={wishlist.error}
         onRetry={() => void wishlist.refetch()}
       />
     );
   }
   if (wishlist.data.length === 0) {
     return (
-      <EmptyState
-        icon={<Heart aria-hidden="true" />}
+      <EmptyPage
+        slot="EMPTY_WISHLIST"
         title="Nothing saved yet"
         description="Tap Save on a product to keep it here."
-        action={
-          <Button asChild>
+        actions={
+          <Button asChild size="lg">
             <Link href="/shop">Browse the shop</Link>
           </Button>
         }

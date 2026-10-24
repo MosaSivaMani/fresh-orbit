@@ -1,12 +1,15 @@
 "use client";
 
-import { Button, Card, CardContent, EmptyState, ErrorState, Skeleton } from "@fresh/ui";
-import { ShoppingBag } from "lucide-react";
+import { formatRupees } from "@fresh/core";
+import { Button, Skeleton, StepCard, StickyActionBar } from "@fresh/ui";
+import { MapPin } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { useSession } from "@/auth/use-session";
 import { useCart } from "@/cart/use-cart";
 import { ChangePincodeButton } from "@/components/change-pincode-button";
-import { asApiError, describeError } from "@/lib/errors";
+import { SlotPicker } from "@/components/checkout/slot-picker";
+import { EmptyPage, LoadError } from "@/components/states";
 import { useLocation } from "@/location/location-context";
 import { CartLineRow } from "./cart-line-row";
 import { CouponForm } from "./coupon-form";
@@ -14,33 +17,41 @@ import { OrderSummary } from "./order-summary";
 
 function CartSkeleton() {
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy="true">
+    <div className="grid gap-6 lg:grid-cols-[1fr_24rem]" aria-busy="true">
       <span className="sr-only" role="status">
         Loading your cart
       </span>
       <div className="flex flex-col gap-4">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
-        ))}
+        <Skeleton className="h-64 rounded-[22px]" />
+        <Skeleton className="h-36 rounded-[22px]" />
       </div>
-      <Skeleton className="h-72 rounded-xl" />
+      <Skeleton className="h-72 rounded-[22px]" />
     </div>
   );
 }
 
-/** The cart exactly as the server priced it (CART-R1); every change returns a newly priced cart. */
+/** Where Place order goes: checkout with the chosen slot, through sign-in for a guest. */
+export function checkoutHref(signedIn: boolean, slotId: string | null): string {
+  const target = slotId ? `/checkout?slot=${encodeURIComponent(slotId)}` : "/checkout";
+  return signedIn ? target : `/login?next=${encodeURIComponent(target)}`;
+}
+
+/**
+ * The cart exactly as the server priced it (CART-R1), in the food-app look (D88/D95): item rows with a − n + stepper,
+ * the coupon strip, slot buttons, the bill box and a sticky Place order bar. Every change returns a newly priced cart.
+ */
 export function CartView() {
   const cart = useCart();
   const { status } = useSession();
   const { pincode } = useLocation();
+  const [slotId, setSlotId] = useState<string | null>(null);
 
   if (cart.isPending) return <CartSkeleton />;
   if (cart.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your cart"
-        description={describeError(cart.error)}
-        traceId={asApiError(cart.error)?.traceId}
+        error={cart.error}
         onRetry={() => void cart.refetch()}
       />
     );
@@ -49,12 +60,12 @@ export function CartView() {
   const data = cart.data;
   if (data.lines.length === 0) {
     return (
-      <EmptyState
-        icon={<ShoppingBag aria-hidden="true" />}
+      <EmptyPage
+        slot="EMPTY_CART"
         title="Your cart is empty"
         description="Browse today's catch and add what you would like delivered."
-        action={
-          <Button asChild>
+        actions={
+          <Button asChild size="lg">
             <Link href="/shop">Start shopping</Link>
           </Button>
         }
@@ -62,74 +73,89 @@ export function CartView() {
     );
   }
 
-  const checkoutHref = status === "signedIn" ? "/checkout" : "/login?next=%2Fcheckout";
+  const signedIn = status === "signedIn";
   const locationDiffers = pincode !== null && data.pincode !== null && pincode !== data.pincode;
+  const itemCount = data.lines.length;
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
-      <div className="flex flex-col gap-4">
+    <div className="grid items-start gap-6 lg:grid-cols-[1fr_24rem]">
+      <div className="flex min-w-0 flex-col gap-4">
         {data.pincode && (
-          <div className="border-border bg-surface flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm">
-            <span className="text-text">
-              Priced for delivery to <span className="font-semibold">{data.pincode}</span>
-              {locationDiffers && (
-                <span className="text-highlight-text">
-                  {" "}
-                  (you are browsing {pincode}; change your pincode to move the cart)
-                </span>
-              )}
+          <div className="bg-surface-sand flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm">
+            <span className="text-text flex items-center gap-2">
+              <MapPin aria-hidden="true" className="text-accent-coral-text size-4 shrink-0" />
+              <span>
+                Priced for delivery to <span className="font-bold">{data.pincode}</span>
+                {locationDiffers && (
+                  <span className="text-highlight-text">
+                    {" "}
+                    (you are browsing {pincode}; change your pincode to move the cart)
+                  </span>
+                )}
+              </span>
             </span>
             <ChangePincodeButton label="Change" variant="ghost" size="sm" />
           </div>
         )}
         {data.messages.length > 0 && (
-          <ul className="bg-info-subtle text-info-text flex flex-col gap-1 rounded-xl px-4 py-3 text-sm">
+          <ul className="bg-info-subtle text-info-text flex flex-col gap-1 rounded-2xl px-4 py-3 text-sm">
             {data.messages.map((m) => (
               <li key={m}>{m}</li>
             ))}
           </ul>
         )}
-        <Card>
-          <CardContent>
-            <ul aria-label="Items in your cart">
-              {data.lines.map((line) => (
-                <CartLineRow key={line.id} line={line} />
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <StepCard title={itemCount === 1 ? "1 item" : `${itemCount} items`}>
+          <ul aria-label="Items in your cart">
+            {data.lines.map((line) => (
+              <CartLineRow key={line.id} line={line} />
+            ))}
+          </ul>
+        </StepCard>
+        {data.pincode && (
+          <StepCard title="Delivery slot">
+            <SlotPicker pincode={data.pincode} value={slotId} onChange={setSlotId} />
+            <p className="text-text-muted text-xs">
+              You can change the slot and the address at checkout.
+            </p>
+          </StepCard>
+        )}
       </div>
 
-      <Card className="lg:sticky lg:top-24">
-        <CardContent className="flex flex-col gap-5">
-          <h2 className="text-text text-lg font-semibold">Order summary</h2>
-          <CouponForm coupon={data.coupon} />
-          <OrderSummary totals={data.totals} coupon={data.coupon} />
-          {data.checkoutBlockers.length > 0 && (
-            <ul className="flex flex-col gap-1" aria-label="Before you check out">
-              {data.checkoutBlockers.map((b) => (
-                <li
-                  key={b.code}
-                  className="bg-warning-subtle text-warning-text rounded-md px-3 py-2 text-sm"
-                >
-                  {b.message}
-                </li>
-              ))}
-            </ul>
-          )}
-          {data.canCheckout ? (
-            <Button asChild size="lg" className="w-full">
-              <Link href={checkoutHref}>
-                {status === "signedIn" ? "Proceed to checkout" : "Sign in to check out"}
+      <div className="flex flex-col gap-4 lg:sticky lg:top-20">
+        <CouponForm coupon={data.coupon} />
+        <OrderSummary totals={data.totals} coupon={data.coupon} />
+        {data.checkoutBlockers.length > 0 && (
+          <ul className="flex flex-col gap-1" aria-label="Before you check out">
+            {data.checkoutBlockers.map((b) => (
+              <li
+                key={`${b.code}-${b.lineId ?? ""}`}
+                className="bg-warning-subtle text-warning-text rounded-xl px-3 py-2 text-sm"
+              >
+                {b.message}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <StickyActionBar
+        className="lg:col-span-2"
+        summary="Estimated total"
+        amount={formatRupees(data.totals.estimatedTotalPaise)}
+        action={
+          data.canCheckout ? (
+            <Button asChild size="lg">
+              <Link href={checkoutHref(signedIn, slotId)}>
+                {signedIn ? "Place order" : "Sign in to place order"}
               </Link>
             </Button>
           ) : (
-            <Button size="lg" className="w-full" disabled>
-              Proceed to checkout
+            <Button size="lg" disabled>
+              Place order
             </Button>
-          )}
-        </CardContent>
-      </Card>
+          )
+        }
+      />
     </div>
   );
 }

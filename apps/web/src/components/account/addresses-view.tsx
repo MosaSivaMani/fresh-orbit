@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  EmptyState,
-  ErrorState,
-  Skeleton,
-  toast,
-} from "@fresh/ui";
+import { Badge, Button, Dialog, DialogContent, Skeleton, toast } from "@fresh/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPin, MapPinPlus } from "lucide-react";
 import { useState } from "react";
@@ -24,7 +13,8 @@ import {
   replaceAddress,
 } from "@/api/endpoints/account";
 import { type Address } from "@/api/types/checkout";
-import { asApiError, describeError, hasCode } from "@/lib/errors";
+import { EmptyPage, LoadError } from "@/components/states";
+import { describeError, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { AddressForm } from "./address-form";
 
@@ -56,22 +46,21 @@ export function AddressesView() {
     }
   }
 
-  if (addresses.isPending) return <Skeleton className="h-60 rounded-xl" />;
+  if (addresses.isPending) return <Skeleton className="h-60 rounded-[22px]" />;
   if (addresses.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your addresses"
-        description={describeError(addresses.error)}
-        traceId={asApiError(addresses.error)?.traceId}
+        error={addresses.error}
         onRetry={() => void addresses.refetch()}
       />
     );
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-text text-2xl font-bold">Addresses</h1>
+        <h1 className="font-display text-text text-3xl font-extrabold">Addresses</h1>
         <Button
           leadingIcon={<MapPinPlus aria-hidden="true" />}
           onClick={() => setEditing({ kind: "new" })}
@@ -81,21 +70,27 @@ export function AddressesView() {
       </div>
 
       {addresses.data.length === 0 ? (
-        <EmptyState
-          icon={<MapPin aria-hidden="true" />}
+        <EmptyPage
+          slot="EMPTY_ADDRESSES"
           title="No saved addresses"
           description="Add one now or at checkout."
         />
       ) : (
-        <ul className="grid gap-4 lg:grid-cols-2">
+        <ul className="grid gap-4 lg:grid-cols-2" aria-label="Saved addresses">
           {addresses.data.map((a) => {
             const id = a.addressId;
             return (
               <li key={id}>
-                <Card className="h-full">
-                  <CardContent className="flex h-full flex-col gap-3">
+                <div className="border-border bg-surface-paper flex h-full gap-3 rounded-[22px] border p-4 sm:p-5">
+                  <span
+                    aria-hidden="true"
+                    className="bg-accent-coral-subtle text-accent-coral-text grid size-10 shrink-0 place-items-center rounded-full"
+                  >
+                    <MapPin className="size-5" />
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-3">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-text font-semibold">{a.recipientName}</span>
+                      <span className="text-text font-bold">{a.recipientName}</span>
                       <Badge>{LABEL_TEXT[a.label] ?? a.label}</Badge>
                       {a.isDefault && <Badge tone="accent">Default</Badge>}
                       {a.isServiceable === false && <Badge tone="warning">Not delivered yet</Badge>}
@@ -147,8 +142,8 @@ export function AddressesView() {
                         Delete
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </li>
             );
           })}

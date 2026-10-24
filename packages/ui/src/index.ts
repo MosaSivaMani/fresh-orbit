@@ -57,6 +57,19 @@ export {
   type PromiseCardProps,
 } from "./components/food-app";
 export {
+  BillBox,
+  StatusSteps,
+  StepCard,
+  StickyActionBar,
+  type BillBoxProps,
+  type BillRow,
+  type StatusStep,
+  type StatusStepState,
+  type StatusStepsProps,
+  type StepCardProps,
+  type StickyActionBarProps,
+} from "./components/food-app-checkout";
+export {
   Button,
   IconButton,
   buttonVariants,
