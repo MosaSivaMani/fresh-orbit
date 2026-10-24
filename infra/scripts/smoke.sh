@@ -188,8 +188,13 @@ SLOT=$(jq -r .nextSlot.id <<< "$BODY")
 step "product list" GET "/products" "" "" -H "X-Pincode: $PINCODE"
 check "product list shows the price" ".items[] | select(.slug == \"$PRODUCT_SLUG\") | .fromPrice.unitPricePaise == 90000"
 IMAGE_URL=$(jq -r --arg slug "$PRODUCT_SLUG" '.items[] | select(.slug == $slug) | .imageUrl' <<< "$BODY")
-MEDIA_STATUS=$(curl -s -o /dev/null -w '%{http_code}' "${API%/api/v1}$IMAGE_URL")
-[ "$MEDIA_STATUS" = 200 ] && pass "product image served from /media" || fail "product image served from /media" "HTTP $MEDIA_STATUS for $IMAGE_URL"
+# Relative (/media/..., default) or absolute (FileStorage__PublicBaseUrl on a server, e.g. https://api.<domain>/media).
+case "$IMAGE_URL" in
+  http://* | https://*) MEDIA_URL=$IMAGE_URL ;;
+  *) MEDIA_URL="${API%/api/v1}$IMAGE_URL" ;;
+esac
+MEDIA_STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL")
+[ "$MEDIA_STATUS" = 200 ] && pass "product image served from /media" || fail "product image served from /media" "HTTP $MEDIA_STATUS for $MEDIA_URL"
 
 step "add address" POST /me/addresses "$CUSTOMER" "$(jq -nc --arg pin "$PINCODE" --arg ph "$PHONE" \
   '{label:"HOME",recipientName:"Smoke Customer",phone:$ph,line1:"12 Beach Road",line2:null,landmark:null,locality:"Harbour",cityName:"Chennai",stateCode:"TN",pincode:$pin,latitude:null,longitude:null,isDefault:true}')"
