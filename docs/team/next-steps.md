@@ -71,6 +71,7 @@ Slots:
 - A check of the fish names, yields and pincode groupings in the sample data.
 
 ## 7. Notes
+- **Company laptop (CLAUDE.md rule 18):** install nothing; the owner generates character images in ChatGPT or Gemini from the prompt pack (style and cast in `design/illustrations.md` once U1 lands).
 - Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**; D54–D61 are sample data S-D1–S-D8 (D60, S-D7, still only proposed: needs a manager ruling); D62 is the Phase 3 rate limits. The next free number is **D63**.
 - Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
 
