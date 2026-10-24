@@ -517,6 +517,8 @@ class _HeroCard extends StatelessWidget {
               final pictureWidth = box.maxWidth * 236 / 358;
               return Stack(
                 children: [
+                  // Edge to edge between the gutters, whatever width the text needs.
+                  SizedBox(width: box.maxWidth),
                   // The transparent picture anchored bottom-right at its natural 3:2 shape; the teal shows through.
                   Positioned(
                     right: -2,
