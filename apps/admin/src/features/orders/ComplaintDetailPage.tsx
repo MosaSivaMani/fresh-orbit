@@ -6,7 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
 import { useComplaint, useDecideComplaint, useResolveComplaint } from "../../api/orders";
-import { type ComplaintDetail } from "../../api/types/orders";
+import { type ComplaintDetail, complaintItemLabel } from "../../api/types/orders";
 import { useLocationScope } from "../../app/location-scope";
 import { useCan } from "../../app/services";
 import { SelectField, TextAreaField, TextField } from "../../components/form";
@@ -74,7 +74,7 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
                   complaint.orderNumber
                 ),
               },
-              { label: "Item", value: complaint.orderItemId ? "One item" : "Whole order" },
+              { label: "Item", value: complaintItemLabel(complaint) },
               { label: "Location", value: nameOf(complaint.fulfillmentLocationId) },
               {
                 label: "Resolution",
@@ -158,6 +158,8 @@ function DecideForm({ complaint, reload }: { complaint: Complaint; reload: () =>
   });
   const status = useWatch({ control: form.control, name: "status" });
   const resolution = useWatch({ control: form.control, name: "resolution" });
+  // The server's refundable limit for this complaint (G15); the server still checks the amount.
+  const refundHint = `At most ${formatRupees(complaint.maxRefundPaise)} for this complaint.`;
 
   const onSubmit = form.handleSubmit((v) => {
     const approved = v.status === "APPROVED";
@@ -221,7 +223,7 @@ function DecideForm({ complaint, reload }: { complaint: Complaint; reload: () =>
             name="refundAmount"
             label="Refund amount (₹)"
             inputMode="decimal"
-            hint="The server checks the amount against the line total."
+            hint={refundHint}
           />
         )}
         <TextAreaField form={form} name="notes" label="Notes" required={status === "REJECTED"} />

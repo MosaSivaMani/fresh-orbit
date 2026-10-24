@@ -11,13 +11,14 @@ import {
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { useCustomers } from "../../api/customers";
+import { useCityLookup } from "../../api/locations";
 import { type CustomerListItem } from "../../api/types/customers";
 import { PageHeader, tableError } from "../../components/page";
 import { useDebouncedSearch, useListParams } from "../../lib/list-params";
 import { CUSTOMER_STATUS } from "../../lib/status";
 import { ListEmpty } from "../../components/states";
 
-const FILTER_KEYS = ["status"] as const;
+const FILTER_KEYS = ["status", "cityId"] as const;
 const STATUSES = [
   { value: "ACTIVE", label: "Active" },
   { value: "DELETED", label: "Deleted" },
@@ -29,6 +30,9 @@ export function CustomersListPage() {
   const search = useDebouncedSearch(list);
   const customers = useCustomers(list.query(FILTER_KEYS));
   const status = list.get("status");
+  const cityId = list.get("cityId");
+  const cities = useCityLookup();
+  const cityName = cities.data?.items.find((c) => c.id === cityId)?.name ?? "One city";
 
   const columns = useMemo<ColumnDef<CustomerListItem>[]>(
     () => [
@@ -72,15 +76,20 @@ export function CustomersListPage() {
     [],
   );
 
-  const active: ActiveFilter[] = status
-    ? [
-        {
-          id: "status",
-          label: `Status: ${STATUSES.find((s) => s.value === status)?.label ?? humanizeCode(status)}`,
-          onRemove: () => list.set({ status: null }),
-        },
-      ]
-    : [];
+  const active: ActiveFilter[] = [
+    ...(status
+      ? [
+          {
+            id: "status",
+            label: `Status: ${STATUSES.find((s) => s.value === status)?.label ?? humanizeCode(status)}`,
+            onRemove: () => list.set({ status: null }),
+          },
+        ]
+      : []),
+    ...(cityId
+      ? [{ id: "cityId", label: `City: ${cityName}`, onRemove: () => list.set({ cityId: null }) }]
+      : []),
+  ];
 
   return (
     <>
@@ -97,6 +106,17 @@ export function CustomersListPage() {
               value={status ?? ANY}
               options={[{ value: ANY, label: "Any status" }, ...STATUSES]}
               onValueChange={(v) => list.set({ status: v === ANY ? null : v })}
+            />
+          </div>
+          <div className="w-48">
+            <Select
+              aria-label="City"
+              value={cityId ?? ANY}
+              options={[
+                { value: ANY, label: "All cities" },
+                ...(cities.data?.items ?? []).map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              onValueChange={(v) => list.set({ cityId: v === ANY ? null : v })}
             />
           </div>
         </FilterBar>

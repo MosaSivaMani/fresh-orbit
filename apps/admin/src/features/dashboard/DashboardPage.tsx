@@ -2,6 +2,7 @@ import { isApiError } from "@fresh/core";
 import {
   formatDateTime,
   formatPercentFromBp,
+  formatQuantity,
   formatRupees,
   formatTime,
   humanizeCode,
@@ -19,13 +20,12 @@ import {
 } from "@fresh/ui";
 import { type ReactNode } from "react";
 import { Link } from "react-router";
-import { useDashboard, useReport } from "../../api/reports";
-import { type DashboardResponse } from "../../api/types/reports";
+import { useDashboard } from "../../api/reports";
+import { type DashboardLowStock, type DashboardResponse } from "../../api/types/reports";
 import { useLocationScope } from "../../app/location-scope";
 import { useCan, useSession } from "../../app/services";
 import { PageHeader } from "../../components/page";
 import { ORDER_STATUS } from "../../lib/status";
-import { todayInIndia } from "../../lib/units";
 
 function countOf(data: DashboardResponse | undefined, status: string): number | undefined {
   if (!data) return undefined;
@@ -78,15 +78,24 @@ function Kpi({
   );
 }
 
+/** "Seer fish · Steaks" as the server names the stock item, else its SKU or variant id. */
+function lowStockName(item: DashboardLowStock): string {
+  const named = [item.productName, item.variantName].filter(Boolean).join(" · ");
+  return named || (item.sku ?? item.variantId);
+}
+
+/** A low-stock figure in the server's stock unit (G4); the bare number when the unit is not known. */
+function stockAmount(value: number, unit: string | null): string {
+  return unit === "GRAM" || unit === "PIECE" ? formatQuantity({ value, unit }) : String(value);
+}
+
 export function DashboardPage() {
   const can = useCan();
   const { profile } = useSession();
   const { locationId, nameOf } = useLocationScope();
   const canReports = can("reports.view");
-  const today = todayInIndia();
   const scope = locationId ? { fulfillmentLocationId: locationId } : {};
   const dashboard = useDashboard(scope, canReports);
-  const sales = useReport("daily-sales", { ...scope, fromDate: today, toDate: today }, canReports);
 
   if (!canReports) {
     return (
@@ -102,9 +111,8 @@ export function DashboardPage() {
 
   const data = dashboard.data;
   const loading = dashboard.isPending;
-  const salesTotals = sales.data?.totals;
-  const ordersPlaced = salesTotals?.ordersPlaced;
-  const netRevenue = salesTotals?.netRevenuePaise;
+  // Today's figures, computed live by the server per location date (G4).
+  const sales = data?.sales;
   const orderLink = (status: string) =>
     `/orders?status=${status}${locationId ? `&fulfillmentLocationId=${locationId}` : ""}`;
 
@@ -131,23 +139,21 @@ export function DashboardPage() {
           >
             <Kpi
               label="Orders today"
-              loading={sales.isPending}
-              value={typeof ordersPlaced === "number" ? ordersPlaced : "—"}
-              sub={
-                sales.data?.asOf
-                  ? `Report as of ${formatTime(sales.data.asOf)}`
-                  : "Report not refreshed yet"
-              }
+              loading={loading}
+              value={sales ? sales.ordersPlaced : "—"}
+              sub={sales ? `Cancelled: ${sales.ordersCancelled}` : undefined}
               to="/orders"
             />
             <Kpi
               label="Sales today"
-              loading={sales.isPending}
-              value={
-                typeof netRevenue === "number" ? formatRupees(netRevenue, { paise: "never" }) : "—"
+              loading={loading}
+              value={sales ? formatRupees(sales.orderValuePaise, { paise: "never" }) : "—"}
+              sub={
+                sales
+                  ? `Delivered: ${formatRupees(sales.deliveredRevenuePaise, { paise: "never" })}`
+                  : undefined
               }
-              sub="Net revenue"
-              {...(can("reports.view") ? { to: "/reports?report=daily-sales" } : {})}
+              to="/reports?report=daily-sales"
             />
             <Kpi
               label="Waiting to pack"
@@ -268,14 +274,18 @@ export function DashboardPage() {
                               to={`/inventory/stock/${item.stockItemId}`}
                               className="text-accent-text hover:underline"
                             >
-                              {item.variantName ?? item.sku ?? item.variantId}
+                              {lowStockName(item)}
                             </Link>
                             {item.sku && (
                               <span className="text-text-muted ml-2 text-xs">{item.sku}</span>
                             )}
                           </td>
-                          <td className="py-2 text-right tabular-nums">{item.available}</td>
-                          <td className="py-2 text-right tabular-nums">{item.lowStockThreshold}</td>
+                          <td className="py-2 text-right tabular-nums">
+                            {stockAmount(item.available, item.stockUnit)}
+                          </td>
+                          <td className="py-2 text-right tabular-nums">
+                            {stockAmount(item.lowStockThreshold, item.stockUnit)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

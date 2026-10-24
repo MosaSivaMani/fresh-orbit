@@ -334,9 +334,8 @@ function ItemsTable({
         </thead>
         <tbody>
           {order.items.map((item) => {
-            // Gross stock reserved for the line, as the server reports it in `lines`.
-            const grossOf = (itemId: string) =>
-              order.lines.find((l) => l.orderItemId === itemId)?.grossQuantity;
+            // Gross stock reserved for the line and the batches it was packed from, as the server reports them.
+            const stock = order.lines.find((l) => l.orderItemId === item.id);
             const hasPending = order.substitutions.some(
               (s) => s.orderItemId === item.id && s.status === "PROPOSED",
             );
@@ -355,7 +354,12 @@ function ItemsTable({
                   {formatQuantity(item.orderedQuantity)}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
-                  {grossOf(item.id) ? formatQuantity(grossOf(item.id)!) : "—"}
+                  {stock ? formatQuantity(stock.grossQuantity) : "—"}
+                  {stock?.batches.map((b) => (
+                    <span key={b.movementId} className="text-text-muted block text-xs">
+                      {b.batchCode ?? "No batch"} · {formatQuantity(b.quantity)}
+                    </span>
+                  ))}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {item.packedQuantity ? formatQuantity(item.packedQuantity) : "—"}

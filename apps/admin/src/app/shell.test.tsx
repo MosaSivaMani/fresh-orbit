@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { fakeAccessToken, renderApp } from "../test/render";
-import { emptyDashboard, emptyReport } from "../test/fixtures";
+import { emptyDashboard } from "../test/fixtures";
 import { API, problem, server } from "../test/server";
 
 describe("admin shell", () => {
@@ -31,10 +31,7 @@ describe("admin shell", () => {
   });
 
   it("ends the session and returns to login when the API refuses the token", async () => {
-    server.use(
-      http.get(`${API}/admin/reports/dashboard`, () => problem(401, "UNAUTHENTICATED")),
-      http.get(`${API}/admin/reports/daily-sales`, () => problem(401, "UNAUTHENTICATED")),
-    );
+    server.use(http.get(`${API}/admin/reports/dashboard`, () => problem(401, "UNAUTHENTICATED")));
     const { router } = renderApp({ permissions: ["reports.view"] });
     expect(
       await screen.findByText("Your session ended. Sign in again to continue."),
@@ -53,7 +50,6 @@ describe("admin shell", () => {
         }
         return problem(401, "TOKEN_EXPIRED");
       }),
-      http.get(`${API}/admin/reports/daily-sales`, () => HttpResponse.json(emptyReport())),
       http.post(`${API}/auth/refresh`, () =>
         HttpResponse.json({ accessToken: newAccess, refreshToken: "rt_new" }),
       ),

@@ -75,6 +75,7 @@ const schema = z
     minOrder: z.string().trim(),
     cityId: z.string(),
     firstOrderOnly: z.boolean(),
+    isListed: z.boolean(),
     perCustomerLimit: optionalCount,
     totalLimit: optionalCount,
     validFrom: z.string().min(1, "Choose when the coupon starts."),
@@ -133,6 +134,7 @@ const FIELDS = [
   "minOrder",
   "cityId",
   "firstOrderOnly",
+  "isListed",
   "perCustomerLimit",
   "totalLimit",
   "validFrom",
@@ -151,6 +153,7 @@ function toValues(c: Coupon | null): Values {
       minOrder: "",
       cityId: ALL_CITIES,
       firstOrderOnly: false,
+      isListed: false,
       perCustomerLimit: "1",
       totalLimit: "",
       validFrom: "",
@@ -170,6 +173,7 @@ function toValues(c: Coupon | null): Values {
     minOrder: c.minOrderPaise > 0 ? paiseToRupeesInput(c.minOrderPaise) : "",
     cityId: c.cityId ?? ALL_CITIES,
     firstOrderOnly: c.firstOrderOnly,
+    isListed: c.isListed,
     perCustomerLimit: c.perCustomerLimit != null ? String(c.perCustomerLimit) : "",
     totalLimit: c.totalLimit != null ? String(c.totalLimit) : "",
     validFrom: utcIsoToIstLocal(c.validFrom),
@@ -177,7 +181,7 @@ function toValues(c: Coupon | null): Values {
   };
 }
 
-function toRequest(v: Values, scopes: CouponScope[], isListed: boolean): CouponRequest {
+function toRequest(v: Values, scopes: CouponScope[]): CouponRequest {
   const value =
     v.discountType === "PERCENT"
       ? (parsePercentToBp(v.discountValue) ?? 0)
@@ -198,7 +202,7 @@ function toRequest(v: Values, scopes: CouponScope[], isListed: boolean): CouponR
     validFrom: istLocalToUtcIso(v.validFrom) ?? v.validFrom,
     validTo: istLocalToUtcIso(v.validTo) ?? v.validTo,
     scopes,
-    isListed,
+    isListed: v.isListed,
   };
 }
 
@@ -252,8 +256,7 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
   ];
 
   const onSubmit = form.handleSubmit((values) => {
-    // No control for `isListed` yet: an edit keeps the saved value, a new coupon is not listed.
-    const body = toRequest(values, scopes, coupon?.isListed ?? false);
+    const body = toRequest(values, scopes);
     const onError = (error: unknown) =>
       reportError(error, {
         setError: form.setError,
@@ -411,6 +414,15 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
                   disabled={expired}
                 />
               </div>
+              <div className="flex items-end">
+                <SwitchField
+                  form={form}
+                  name="isListed"
+                  label="Show in the customer's offers"
+                  description="Unlisted coupons work only when the customer types the code."
+                  disabled={expired}
+                />
+              </div>
               <TextField
                 form={form}
                 name="perCustomerLimit"
@@ -506,6 +518,11 @@ function CouponForm({ coupon, reload }: { coupon: Coupon | null; reload: () => u
   );
 }
 
+/** The order number (G16); a short id for an order the server no longer names. */
+function orderLabel(redemption: CouponRedemption): string {
+  return redemption.orderNumber ?? `…${redemption.orderId.slice(-8)}`;
+}
+
 function Redemptions({ couponId }: { couponId: string }) {
   const can = useCan();
   const [page, setPage] = useState(1);
@@ -523,10 +540,10 @@ function Redemptions({ couponId }: { couponId: string }) {
               to={`/orders/${row.original.orderId}`}
               className="text-accent-text hover:underline"
             >
-              {row.original.orderId.slice(-8)}
+              {orderLabel(row.original)}
             </Link>
           ) : (
-            row.original.orderId.slice(-8)
+            orderLabel(row.original)
           ),
       },
       {

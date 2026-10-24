@@ -111,27 +111,20 @@ export class BulkOrderError extends Error {
 }
 
 /**
- * Start preparing several orders (orders list bulk action). The list row carries no version (gap G13), so each
- * order's detail is read for its version, then the write quotes it; stops at the first refusal. Resolves with the
- * number started.
+ * Start preparing several orders (orders list bulk action), each quoting the version from its list row (G13);
+ * stops at the first refusal. Resolves with the number started.
  */
 export function useStartPreparingMany() {
   const http = useHttp();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (orderIds: Id[]) => {
+    mutationFn: async (orders: { id: Id; version: Version }[]) => {
       let started = 0;
-      for (const orderId of orderIds) {
+      for (const { id, version } of orders) {
         try {
-          const detail = await http.request<AdminOrderDetailResponse>(
-            "GET",
-            `/admin/orders/${orderId}`,
-          );
-          await http.post(`/admin/orders/${orderId}/start-preparing`, undefined, {
-            ifMatch: detail.data.order.version || detail.version || "",
-          });
+          await http.post(`/admin/orders/${id}/start-preparing`, undefined, { ifMatch: version });
         } catch (error) {
-          throw new BulkOrderError(orderId, error);
+          throw new BulkOrderError(id, error);
         }
         started += 1;
       }

@@ -62,6 +62,7 @@ describe("coupons", () => {
     await user.type(screen.getByLabelText(/^Largest discount/), "150");
     await user.type(screen.getByLabelText(/^Starts/), "2026-11-01T00:00");
     await user.type(screen.getByLabelText(/^Ends/), "2026-11-30T23:59");
+    await user.click(screen.getByRole("switch", { name: /Show in the customer's offers/ }));
     await user.click(screen.getByRole("button", { name: "Create coupon" }));
 
     await waitFor(() => expect(body).not.toBeNull());
@@ -76,6 +77,7 @@ describe("coupons", () => {
       totalLimit: null,
       validFrom: "2026-10-31T18:30:00.000Z",
       scopes: [],
+      isListed: true,
     });
     await waitFor(() =>
       expect(screen.getByLabelText(/^Code/)).toHaveAttribute("aria-invalid", "true"),

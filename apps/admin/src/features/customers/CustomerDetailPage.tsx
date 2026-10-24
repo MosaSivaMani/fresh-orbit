@@ -1,4 +1,4 @@
-import { formatDateTime, formatRupees, humanizeCode, isApiError } from "@fresh/core";
+import { formatDateTime, formatRupees, humanizeCode } from "@fresh/core";
 import {
   Badge,
   Button,
@@ -17,8 +17,11 @@ import { ClipboardList, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useCustomer, useCustomerOrders, useSetCustomerBlocked } from "../../api/customers";
-import { type CustomerAddress, type CustomerDetail } from "../../api/types/customers";
-import { type AdminOrderSummary } from "../../api/types/orders";
+import {
+  type CustomerAddress,
+  type CustomerDetail,
+  type CustomerOrder,
+} from "../../api/types/customers";
 import { useCan } from "../../app/services";
 import { Can, DetailList, PageHeader, QueryView, Section, tableError } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
@@ -44,6 +47,7 @@ function CustomerView({
   const can = useCan();
   const [confirming, setConfirming] = useState(false);
   const deleted = customer.status === "DELETED";
+  const counts = customer.orderCounts;
 
   return (
     <>
@@ -92,6 +96,20 @@ function CustomerView({
                 ...(customer.deletedAt
                   ? [{ label: "Deleted at", value: formatDateTime(customer.deletedAt) }]
                   : []),
+              ]}
+            />
+          </Section>
+          <Section title="Orders">
+            <DetailList
+              items={[
+                { label: "Placed", value: String(counts.total) },
+                { label: "Open", value: String(counts.open) },
+                { label: "Delivered", value: String(counts.delivered) },
+                { label: "Cancelled", value: String(counts.cancelled) },
+                {
+                  label: "Last order",
+                  value: counts.lastPlacedAt ? formatDateTime(counts.lastPlacedAt) : "—",
+                },
               ]}
             />
           </Section>
@@ -151,9 +169,8 @@ function Addresses({ addresses }: { addresses: CustomerAddress[] }) {
 function CustomerOrders({ customerId }: { customerId: string }) {
   const [paging, setPaging] = useState({ page: 1, pageSize: 20 });
   const orders = useCustomerOrders(customerId, paging);
-  const notAvailable = isApiError(orders.error) && orders.error.status === 404;
 
-  const columns = useMemo<ColumnDef<AdminOrderSummary>[]>(
+  const columns = useMemo<ColumnDef<CustomerOrder>[]>(
     () => [
       {
         id: "orderNumber",
@@ -161,7 +178,7 @@ function CustomerOrders({ customerId }: { customerId: string }) {
         enableSorting: false,
         cell: ({ row }) => (
           <Link
-            to={`/orders/${row.original.id}`}
+            to={`/orders/${row.original.orderId}`}
             className="text-accent-text font-medium hover:underline"
           >
             {row.original.orderNumber}
@@ -191,28 +208,18 @@ function CustomerOrders({ customerId }: { customerId: string }) {
         header: "Total",
         enableSorting: false,
         meta: { align: "right" },
-        cell: ({ row }) => formatRupees(row.original.totalPaise),
+        cell: ({ row }) => formatRupees(row.original.finalTotalPaise ?? row.original.totalPaise),
       },
     ],
     [],
   );
-
-  if (notAvailable) {
-    return (
-      <EmptyState
-        icon={<ClipboardList aria-hidden="true" />}
-        title="Order history is not available yet"
-        description="The server does not list a customer's orders yet."
-      />
-    );
-  }
 
   return (
     <DataTable
       caption="Customer orders"
       columns={columns}
       data={orders.data?.items ?? []}
-      getRowId={(o) => o.id}
+      getRowId={(o) => o.orderId}
       getRowLabel={(o) => o.orderNumber}
       page={paging.page}
       pageSize={paging.pageSize}

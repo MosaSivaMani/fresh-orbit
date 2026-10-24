@@ -113,7 +113,8 @@ export function ShipmentsPage() {
   const slotDate = list.get("slotDate") ?? todayInIndia();
   const location = scope.locationId ? { fulfillmentLocationId: scope.locationId } : {};
 
-  const shipments = useShipments({ ...list.query(FILTERS), ...location });
+  // The board shows the chosen day's shipments (G10, the slot's local date).
+  const shipments = useShipments({ ...list.query(FILTERS), slotDate, ...location });
   const slots = useSlots({ ...location, fromDate: slotDate, toDate: slotDate, pageSize: 100 });
   const riders = useRiders({ ...location, pageSize: 100 });
 

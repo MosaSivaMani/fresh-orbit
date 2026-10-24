@@ -12,6 +12,14 @@ export function emptyDashboard() {
     refundsRequested: 0,
     refundsRequestedPaise: 0,
     openPaymentIssues: 0,
+    sales: {
+      ordersPlaced: 0,
+      ordersCancelled: 0,
+      orderValuePaise: 0,
+      averageOrderValuePaise: null,
+      ordersDelivered: 0,
+      deliveredRevenuePaise: 0,
+    },
   };
 }
 
