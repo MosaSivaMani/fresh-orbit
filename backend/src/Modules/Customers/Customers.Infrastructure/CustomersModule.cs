@@ -7,6 +7,9 @@ using FreshOrbit.Customers.Application.Admin;
 using FreshOrbit.Customers.Application.Profiles;
 using FreshOrbit.Customers.Application.Shared;
 using FreshOrbit.Customers.Application.Wishlist;
+using FreshOrbit.Customers.Application.StockAlerts;
+using FreshOrbit.Customers.Application.Handlers;
+using FreshOrbit.Inventory.Public.Events;
 using FreshOrbit.Customers.Domain.Shared;
 using FreshOrbit.Customers.Infrastructure.Endpoints;
 using FreshOrbit.Customers.Infrastructure.Persistence;
@@ -35,11 +38,15 @@ public sealed class CustomersModule : IModule
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<IWishlistService, WishlistService>();
+        services.AddScoped<IStockAlertService, StockAlertService>();
+        services.AddScoped<StockAlertTrigger>();
+        services.AddEventHandler<StockAvailableAgain, CustomersStockAvailableAgainHandler>();
         services.AddScoped<IAdminCustomerService, AdminCustomerService>();
         services.AddScoped<ICustomersApi, CustomersApi>();
         services.AddScoped<ICustomerAccountDirectory, CustomerAccountDirectory>();
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
         services.AddScoped<IValidator<CustomerListRequest>, CustomerListRequestValidator>();
+        services.AddScoped<IValidator<CustomerOrdersRequest>, CustomerOrdersRequestValidator>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, CustomersSampleDataLoader>());
     }
 

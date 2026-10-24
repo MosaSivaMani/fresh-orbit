@@ -170,6 +170,25 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W15 | Image URLs are paths on the API origin (`/media/...`) | NEW, OPEN | The website serves them through `/media/*` (route handler). Closes with absolute public image URLs, or keeps the route |
 | W16 | No product-specific offer or freshness ("caught 5:40 am") fields | NEW, OPEN | Offer line only from banners that link to the product or its category; freshness line = availability message or the next slot. Closes with an offer label and a batch time on list items |
 
+**Backend Track E (2026-10-24).** These gaps are closed in the backend: on `main` through #5, or on draft PR #6 (`backend/api-gaps-2`, not merged). The website has not adopted them yet; the rows above stay as the front-end status until it does. The generated client is not committed yet, because the new `timeZone` fields break `apps/web/test/fixtures.ts` and that fix belongs to the web owner. The CI `openapi` job uploads the regenerated client as the `api-client` artifact.
+
+| # | Backend now | Where |
+|---|---|---|
+| W1 | `GET /bestsellers` and `/home` `bestsellers` (CAT-R24) | main |
+| W2 | `GET /price-quote` for a chosen weight | main |
+| W3 | `ProductListItem.defaultVariant` (CAT-R23) | main |
+| W4 | Cart lines carry `minOrder` / `maxOrder` / `orderStep` | PR #6 |
+| W5 | Wishlist returns priced product cards (CAT-R29) | PR #6 |
+| W7 | Public `GET /business-profile` with `supportHours` | PR #6 |
+| W8 | Public `GET /preparation-methods` (CAT-R27) | main |
+| W9 | Forwarded headers trusted from the web hop only (edge network) | PR #6 |
+| W10 | `timeZone` on slots, order detail, list and tracking (ORD-R65); serviceability `nextSlot` date and `cutoffAt` for the ETA | PR #6 |
+| W11 | Typed `/home` banners with a resolved `imageUrl` (CAT-R28) | PR #6 |
+| W12 | Complaint photo upload, list and delete | main |
+| W13 | Variant `piecesMin` / `piecesMax` / `serves` (CAT-R21) | main (migration in PR #6) |
+| W16 | `offer` (CAT-R26), `freshness` (CAT-R25) and `discountBp` (CAT-R22) | main |
+| W14, W15 | Not changed in Track E | still open |
+
 ## 7. API types (generated)
 
 `src/api/types/*.ts` (`common`, `catalog`, `locations`, `cart`, `auth`, `checkout`, `orders`, `account`) are now

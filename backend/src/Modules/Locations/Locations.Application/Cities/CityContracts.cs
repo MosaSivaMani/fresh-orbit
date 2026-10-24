@@ -36,3 +36,6 @@ public sealed record CityDetailResponse(
 
 /// <summary>An active city for the customer city picker.</summary>
 public sealed record PublicCityResponse(Guid Id, string Code, string Name, string StateCode);
+
+/// <summary>A city in the staff lookup (<c>GET /admin/cities/lookup</c>, any staff): names for pickers and labels.</summary>
+public sealed record CityLookupItem(Guid Id, string Code, string Name, CityStatus Status);

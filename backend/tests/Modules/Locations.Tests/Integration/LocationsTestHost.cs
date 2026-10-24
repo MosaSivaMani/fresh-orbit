@@ -31,17 +31,33 @@ public sealed class FakeCityChecks : ICityActivationCheck, ICityRetirementCheck
         => Task.FromResult<IReadOnlyList<string>>([.. Blocking]);
 }
 
-/// <summary>The real Api with the other modules' city checks replaced by <see cref="FakeCityChecks"/>.</summary>
+/// <summary>Next bookable slot per fulfillment location, as a test sets it (Delivery's provider is replaced).</summary>
+public sealed class FakeNextSlots : INextSlotProvider
+{
+    public System.Collections.Concurrent.ConcurrentDictionary<Guid, NextSlot> Slots { get; } = new();
+
+    public Task<NextSlot?> GetNextOpenSlotAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Slots.TryGetValue(fulfillmentLocationId, out var slot) ? slot : null);
+}
+
+/// <summary>
+/// The real Api with the other modules' city checks replaced by <see cref="FakeCityChecks"/> and the next slot by
+/// <see cref="FakeNextSlots"/>.
+/// </summary>
 public sealed class LocationsApiFactory(LocationsDatabase database) : ApiFactory(database)
 {
     public FakeCityChecks Checks { get; } = new();
+
+    public FakeNextSlots NextSlots { get; } = new();
 
     protected override void ConfigureTestServices(IServiceCollection services)
     {
         services.RemoveAll<ICityActivationCheck>();
         services.RemoveAll<ICityRetirementCheck>();
+        services.RemoveAll<INextSlotProvider>();
         services.AddSingleton<ICityActivationCheck>(Checks);
         services.AddSingleton<ICityRetirementCheck>(Checks);
+        services.AddSingleton<INextSlotProvider>(NextSlots);
     }
 }
 

@@ -116,6 +116,21 @@ public sealed record AdminProductListItem(
     DateTimeOffset? PublishedAt,
     string Version);
 
+/// <summary>
+/// A variant in the staff variant search (<c>GET /admin/catalog/variants</c>, any staff, G3): names for pickers and
+/// labels on inventory, pricing, order and coupon screens. <see cref="StockUnit"/> is the unit stock is counted in.
+/// </summary>
+public sealed record VariantLookupItem(
+    Guid VariantId,
+    Guid ProductId,
+    string ProductName,
+    string VariantName,
+    string Sku,
+    SellUnit SellUnit,
+    StockUnit StockUnit,
+    ProductStatus ProductStatus,
+    bool IsActive);
+
 public sealed record PreparationMethodResponse(Guid Id, string Code, string Name, string? Description, int SortOrder, int GuidanceYieldBp);
 
 /// <summary>Admin reads that need no aggregate (lists, trees).</summary>
@@ -134,4 +149,16 @@ public interface ICatalogAdminReads
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<PreparationMethodResponse>> ListPreparationMethodsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Variants by product name, then SKU. <paramref name="q"/> matches part of the product name, variant name or SKU
+    /// (case-insensitive); <paramref name="variantIds"/> non-empty keeps only those ids (resolve labels for known ids).
+    /// </summary>
+    Task<(IReadOnlyList<VariantLookupItem> Items, int TotalCount)> SearchVariantsAsync(
+        string? q,
+        IReadOnlyCollection<Guid> variantIds,
+        bool activeOnly,
+        int skip,
+        int take,
+        CancellationToken cancellationToken);
 }

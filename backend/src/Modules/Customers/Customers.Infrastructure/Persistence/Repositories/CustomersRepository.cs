@@ -1,6 +1,7 @@
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
 using FreshOrbit.Customers.Domain.Shared;
+using FreshOrbit.Customers.Domain.StockAlerts;
 using FreshOrbit.Customers.Domain.Wishlist;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +44,16 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
 
     public void Remove(WishlistItem item) => db.Remove(item);
 
+    public async Task<IReadOnlyList<StockAlert>> GetStockAlertsAsync(Guid customerId, CancellationToken cancellationToken)
+        => await db.Set<StockAlert>().Where(a => a.CustomerId == customerId).OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StockAlert>> GetStockAlertsForAsync(Guid variantId, Guid fulfillmentLocationId, CancellationToken cancellationToken)
+        => await db.Set<StockAlert>().Where(a => a.VariantId == variantId && a.FulfillmentLocationId == fulfillmentLocationId).ToListAsync(cancellationToken);
+
+    public void Add(StockAlert alert) => db.Add(alert);
+
+    public void Remove(StockAlert alert) => db.Remove(alert);
+
     public Task FlushAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 
     public async Task<TResult> InTransactionAsync<TResult>(Func<Task<TResult>> work, CancellationToken cancellationToken)
@@ -66,6 +77,7 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
         string? name,
         IReadOnlyCollection<Guid>? userIds,
         CustomerStatus? status,
+        IReadOnlyCollection<string>? pincodes,
         int skip,
         int take,
         CancellationToken cancellationToken)
@@ -85,6 +97,13 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
         if (status is { } s)
         {
             query = query.Where(c => c.Status == s);
+        }
+
+        if (pincodes is not null)
+        {
+            var codes = pincodes.Distinct(StringComparer.Ordinal).ToList();
+            var addresses = db.Set<Address>().AsNoTracking();
+            query = query.Where(c => addresses.Any(a => a.CustomerId == c.Id && a.IsActive && codes.Contains(a.Pincode)));
         }
 
         var total = await query.CountAsync(cancellationToken);

@@ -15,6 +15,13 @@
 	# The admin API stays on localhost:2019 inside the container (compose healthcheck); it is never published.
 }
 
+# X-Forwarded-For carries only the visitor address Caddy determined ({client_ip}: CF-Connecting-IP behind trusted
+# Cloudflare, else the TCP peer). The API believes one hop from the edge network, so the header must hold exactly
+# that one address, never a client-supplied list (W9, SEC-2). The website's /api/v1 proxy passes it on unchanged.
+(client_ip_header) {
+	header_up X-Forwarded-For {client_ip}
+}
+
 (common) {
 	encode zstd gzip
 	header {
@@ -59,7 +66,9 @@
 		request_body {
 			max_size 6MB
 		}
-		reverse_proxy api:8080
+		reverse_proxy api:8080 {
+			import client_ip_header
+		}
 	}
 	@complaintUpload {
 		method POST
@@ -69,14 +78,18 @@
 		request_body {
 			max_size 21MB
 		}
-		reverse_proxy api:8080
+		reverse_proxy api:8080 {
+			import client_ip_header
+		}
 	}
 
 	handle /api/* {
 		request_body {
 			max_size 1MB
 		}
-		reverse_proxy api:8080
+		reverse_proxy api:8080 {
+			import client_ip_header
+		}
 	}
 }
 
@@ -98,13 +111,17 @@
 		request_body {
 			max_size 21MB
 		}
-		reverse_proxy web:3000
+		reverse_proxy web:3000 {
+			import client_ip_header
+		}
 	}
 	handle {
 		request_body {
 			max_size 1MB
 		}
-		reverse_proxy web:3000
+		reverse_proxy web:3000 {
+			import client_ip_header
+		}
 	}
 }
 
@@ -142,6 +159,8 @@ api.{$DOMAIN} {
 		request_body {
 			max_size 1MB
 		}
-		reverse_proxy api:8080
+		reverse_proxy api:8080 {
+			import client_ip_header
+		}
 	}
 }

@@ -3,11 +3,14 @@ using FreshOrbit.Customers.Application.Addresses;
 using FreshOrbit.Customers.Application.Admin;
 using FreshOrbit.Customers.Application.Profiles;
 using FreshOrbit.Customers.Application.Wishlist;
+using FreshOrbit.Customers.Application.StockAlerts;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 
 namespace FreshOrbit.Customers.Infrastructure.Endpoints;
@@ -17,6 +20,7 @@ internal static class CustomersEndpoints
 {
     public const string ViewPermission = "customers.view";
     public const string ManagePermission = "customers.manage";
+    public const string OrdersViewPermission = "orders.view";
     private const string CustomerActorCode = "CUSTOMER";
 
     public static void Map(IEndpointRouteBuilder endpoints)
@@ -69,7 +73,10 @@ internal static class CustomersEndpoints
         me.MapPost("/addresses/{addressId:guid}/default", async (Guid addressId, IAddressService service, CancellationToken ct)
             => TypedResults.Ok(await service.MakeDefaultAsync(addressId, ct)));
 
-        me.MapGet("/wishlist", async (IWishlistService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)));
+        me.MapGet("/wishlist", async ([FromQuery] string? pincode, [FromHeader(Name = "X-Pincode")] string? pincodeHeader, IWishlistService service, CancellationToken ct)
+                => TypedResults.Ok(await service.ListAsync(string.IsNullOrWhiteSpace(pincode) ? pincodeHeader : pincode, ct)))
+            .Produces<IReadOnlyList<WishlistItemResponse>>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         me.MapPut("/wishlist/{productId:guid}", async (Guid productId, IWishlistService service, CancellationToken ct) =>
         {
@@ -83,6 +90,32 @@ internal static class CustomersEndpoints
             return TypedResults.NoContent();
         });
 
+        // CUS-R10 back-in-stock alerts; the public per-IP limit (docs/api §1.9) until the customer limiter exists (SEC-3).
+        me.MapGet("/stock-alerts", async (IStockAlertService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)))
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces<IReadOnlyList<StockAlertResponse>>();
+
+        me.MapPost("/stock-alerts", async (CreateStockAlertRequest request, IStockAlertService service, CancellationToken ct) =>
+            {
+                var (alert, created) = await service.AddAsync(request, ct);
+                return created
+                    ? Results.Created($"/api/v1/me/stock-alerts/{alert.Id}", alert)
+                    : Results.Ok(alert);
+            })
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces<StockAlertResponse>(StatusCodes.Status201Created)
+            .Produces<StockAlertResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        me.MapDelete("/stock-alerts/{alertId:guid}", async (Guid alertId, IStockAlertService service, CancellationToken ct) =>
+            {
+                await service.RemoveAsync(alertId, ct);
+                return TypedResults.NoContent();
+            })
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces(StatusCodes.Status204NoContent);
+
         var admin = endpoints.MapGroup("/admin/customers").WithTags("Customers");
 
         admin.MapGet(string.Empty, async ([AsParameters] CustomerListRequest request, IAdminCustomerService service, CancellationToken ct)
@@ -95,7 +128,16 @@ internal static class CustomersEndpoints
             var customer = await service.GetAsync(customerId, ct);
             response.SetETag(Parse(customer.Version));
             return TypedResults.Ok(customer);
-        }).RequirePermission(ViewPermission);
+        }).RequirePermission(ViewPermission).Produces<CustomerDetailResponse>();
+
+        // G6: order history needs both customers.view and orders.view; orders at other locations are left out.
+        admin.MapGet("/{customerId:guid}/orders", async (Guid customerId, [AsParameters] CustomerOrdersRequest request, IAdminCustomerService service, CancellationToken ct)
+            => TypedResults.Ok(await service.ListOrdersAsync(customerId, request, ct)))
+            .WithValidation<CustomerOrdersRequest>()
+            .RequirePermission(ViewPermission)
+            .RequirePermission(OrdersViewPermission)
+            .Produces<CustomerOrdersResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         admin.MapPost("/{customerId:guid}/block", (Guid customerId, IAdminCustomerService service, HttpContext http, CancellationToken ct)
             => SetBlockedAsync(customerId, true, service, http, ct)).RequirePermission(ManagePermission).Produces<CustomerDetailResponse>();

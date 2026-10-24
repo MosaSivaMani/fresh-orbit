@@ -120,8 +120,12 @@ public sealed class PricingService(
         return [.. categories.OrderBy(c => c.Code, StringComparer.Ordinal).Select(c => ToTaxResponse(c, [.. rules.Where(r => r.TaxCategoryCode == c.Code)], now, false))];
     }
 
-    /// <summary>ScheduleTaxRule: needs <c>tax.manage</c> (D35), rate 0–2800 bp, PRC-R3/R4 periods. Rates are data confirmed by the CA.</summary>
-    public async Task<TaxCategoryRulesResponse> ScheduleTaxRuleAsync(ScheduleTaxRuleRequest request, CancellationToken cancellationToken)
+    /// <summary>
+    /// ScheduleTaxRule: needs <c>tax.manage</c> (D35), rate 0–2800 bp, PRC-R3/R4 periods. Rates are data confirmed by the CA.
+    /// The category's schedule is versioned like a price schedule (G9, PRC-R16): <c>If-Match</c> with its version, or
+    /// <c>If-None-Match: *</c> while it has no period; missing → 428, stale → 412.
+    /// </summary>
+    public async Task<TaxCategoryRulesResponse> ScheduleTaxRuleAsync(ScheduleTaxRuleRequest request, SchedulePrecondition precondition, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         PricingRules.EnsureCanManageTax(actor);
@@ -133,7 +137,7 @@ public sealed class PricingService(
         var category = (await repository.ListTaxCategoriesAsync(cancellationToken)).FirstOrDefault(c => c.Code == code)
             ?? throw new RefusalException(new FieldError("taxCategoryCode", PricingErrors.ValidationFailed, "Choose a tax category from the reference list."));
         var periods = await repository.GetTaxRulesAsync([code], cancellationToken);
-        var latest = SchedulePreconditions.Latest(periods);
+        var latest = SchedulePreconditions.Check(periods, precondition, unitOfWork.SetExpectedVersion);
         var plan = PeriodFactory.PlanTaxRule(periods, code, request.RateBp, start, now, request.ReplaceFuture ?? false);
         if (plan.Unchanged)
         {

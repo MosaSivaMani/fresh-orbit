@@ -195,6 +195,56 @@ public sealed class ReportTests(ReportingDatabase database) : ReportingTestBase(
         all.GetProperty("lowStock").GetArrayLength().Should().Be(2);
     }
 
+    [Fact]
+    public async Task Dashboard_sales_tiles_are_server_computed_for_the_callers_locations()
+    {
+        using var scopedClient = Reports([L1]);
+        using var allClient = Reports(all: true);
+        Factory.Clock.Set(new DateTimeOffset(2026, 10, 23, 10, 0, 0, TimeSpan.Zero)); // 15:30 IST; tokens were issued at real time
+
+        var scoped = await GetJsonAsync(scopedClient, "/api/v1/admin/reports/dashboard");
+        var all = await GetJsonAsync(allClient, "/api/v1/admin/reports/dashboard");
+
+        // L1 placed A, B, C, D on 2026-10-23 IST; C and D were cancelled; A and B delivered the same day.
+        AssertNumbers(scoped.GetProperty("sales"), new()
+        {
+            ["ordersPlaced"] = 4,
+            ["ordersCancelled"] = 2,
+            ["orderValuePaise"] = 245051 + 60255,
+            ["averageOrderValuePaise"] = (245051 + 60255) / 2,
+            ["ordersDelivered"] = 2,
+            ["deliveredRevenuePaise"] = 245051 + 60255,
+        });
+        // F at L2 adds one placed and delivered order.
+        AssertNumbers(all.GetProperty("sales"), new()
+        {
+            ["ordersPlaced"] = 5,
+            ["ordersCancelled"] = 2,
+            ["orderValuePaise"] = 245051 + 60255 + 99999,
+            ["averageOrderValuePaise"] = (245051 + 60255 + 99999) / 3,
+            ["ordersDelivered"] = 3,
+            ["deliveredRevenuePaise"] = 245051 + 60255 + 99999,
+        });
+
+        var prawns = scoped.GetProperty("lowStock").EnumerateArray().Single();
+        prawns.GetProperty("stockUnit").GetString().Should().Be("GRAM");
+        prawns.GetProperty("productName").GetString().Should().Be("Tiger Prawns");
+        prawns.GetProperty("available").GetInt64().Should().Be(900);
+    }
+
+    [Fact]
+    public async Task Dashboard_sales_are_zero_on_a_day_without_orders()
+    {
+        using var client = Reports(all: true);
+        Factory.Clock.Set(new DateTimeOffset(2026, 10, 20, 10, 0, 0, TimeSpan.Zero));
+
+        var sales = (await GetJsonAsync(client, "/api/v1/admin/reports/dashboard")).GetProperty("sales");
+
+        sales.GetProperty("ordersPlaced").GetInt64().Should().Be(0);
+        sales.GetProperty("orderValuePaise").GetInt64().Should().Be(0);
+        sales.GetProperty("averageOrderValuePaise").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+    }
+
     private static void AssertNumbers(JsonElement row, Dictionary<string, long> expected)
     {
         foreach (var (name, value) in expected)

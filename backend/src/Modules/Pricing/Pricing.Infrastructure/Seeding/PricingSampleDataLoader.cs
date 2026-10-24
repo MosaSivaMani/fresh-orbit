@@ -1,3 +1,4 @@
+using System.Globalization;
 using FreshOrbit.Pricing.Application.Contracts;
 using FreshOrbit.Pricing.Application.Schedules;
 using FreshOrbit.Pricing.Domain.Periods;
@@ -26,11 +27,15 @@ public sealed partial class PricingSampleDataLoader(
         ArgumentNullException.ThrowIfNull(context);
         var file = await SampleFiles.ReadAsync<PricingFile>(context, "pricing.json", cancellationToken);
 
-        var current = (await pricing.ListTaxRulesAsync(cancellationToken)).Where(r => r.Current is not null).Select(r => r.TaxCategoryCode).ToHashSet(StringComparer.Ordinal);
+        var listed = await pricing.ListTaxRulesAsync(cancellationToken);
+        var current = listed.Where(r => r.Current is not null).Select(r => r.TaxCategoryCode).ToHashSet(StringComparer.Ordinal);
+        var versions = listed.ToDictionary(r => r.TaxCategoryCode, r => r.Version, StringComparer.Ordinal);
         var insertedRules = 0;
         foreach (var rule in file.TaxRules.Where(r => !current.Contains(r.TaxCategoryCode)))
         {
-            var scheduled = await pricing.ScheduleTaxRuleAsync(new ScheduleTaxRuleRequest(rule.TaxCategoryCode, rule.RateBp, null, false), cancellationToken);
+            var version = versions.GetValueOrDefault(rule.TaxCategoryCode);
+            var precondition = new SchedulePrecondition(version is null ? null : uint.Parse(version, CultureInfo.InvariantCulture), version is null);
+            var scheduled = await pricing.ScheduleTaxRuleAsync(new ScheduleTaxRuleRequest(rule.TaxCategoryCode, rule.RateBp, null, false), precondition, cancellationToken);
             var period = scheduled.Current ?? scheduled.Next ?? throw new InvalidOperationException($"Tax rule {rule.TaxCategoryCode} was scheduled but cannot be read.");
             context.Track<TaxRule>(db, period.Id);
             insertedRules++;
