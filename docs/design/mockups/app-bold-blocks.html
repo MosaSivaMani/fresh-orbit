@@ -1,11 +1,11 @@
 <title>Fresh Orbit Bold Screens</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
 /* Version B "Bold blocks": every screen is a full colour block; the character sits in a big ringed circle avatar that breaks out over the top of a white sheet; navigation is a floating dark pill. */
 :root{--page:#F4EEE3;--paper:#FFFDF8;--ink:#14302F;--muted:#5B6F6B;--line:#E8DCC8;--teal:#0B7D70;--teal-deep:#075F55;--teal-soft:#D8EEEA;--coral:#F07A5A;--coral-soft:#FCE3DA;--coral-text:#B4432A;--mango:#F5B544;--mango-soft:#FBEBC8;--ice:#BFE3EE;--ice-soft:#E4F3F8;--on-ink:#FFFDF8;--frame:#0E1E1D;
 --shadow:0 2px 4px rgb(40 30 10 / .08),0 14px 30px rgb(40 30 10 / .14);
---display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;--body:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+--display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;--body:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#101918;--paper:#1A2826;--ink:#F4EBDD;--muted:#A9B8B3;--line:#2C3E3B;--teal:#2FA595;--teal-deep:#7FD9CB;--teal-soft:#16413C;--coral:#E0714F;--coral-soft:#3D2620;--coral-text:#F7A68E;--mango:#E0A43C;--mango-soft:#3A2F17;--ice:#4D93A6;--ice-soft:#1D3940;--on-ink:#0C1B1A;--frame:#030707;--shadow:0 2px 4px rgb(0 0 0 / .3),0 14px 30px rgb(0 0 0 / .4);color-scheme:dark}}
 :root[data-theme="dark"]{--page:#101918;--paper:#1A2826;--ink:#F4EBDD;--muted:#A9B8B3;--line:#2C3E3B;--teal:#2FA595;--teal-deep:#7FD9CB;--teal-soft:#16413C;--coral:#E0714F;--coral-soft:#3D2620;--coral-text:#F7A68E;--mango:#E0A43C;--mango-soft:#3A2F17;--ice:#4D93A6;--ice-soft:#1D3940;--on-ink:#0C1B1A;--frame:#030707;--shadow:0 2px 4px rgb(0 0 0 / .3),0 14px 30px rgb(0 0 0 / .4);color-scheme:dark}
 *{box-sizing:border-box}
@@ -229,6 +229,21 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
 .tile.wide span:not(.chip){max-width:55%}
 .box{padding:10px;gap:8px}
 .cpad{gap:8px}
+
+/* v7 headings after the owner's reference: a handwritten script line paired with a heavy sans line, one word on a painted brush swipe, a small doodle mark */
+.scr{font-family:"Kaushan Script","Segoe Script","Brush Script MT",cursive;font-weight:400;letter-spacing:0;display:inline-block;transform:rotate(-3deg);font-size:.92em;line-height:1.1}
+.brush{display:inline-block;padding:.02em .22em .06em;margin-top:2px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'%3E%3Cpath d='M6 14C40 6 110 4 192 9c4 1 6 6 3 10-2 3 3 7 1 12-3 8 2 12-2 17-30 6-120 8-186 3-6-1-8-8-4-12 3-3-2-8 0-13 2-5-6-8-2-12z' fill='%23F5B544'/%3E%3C/svg%3E") center/100% 100% no-repeat;color:#14302F}
+.s-mango .brush{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60' preserveAspectRatio='none'%3E%3Cpath d='M6 14C40 6 110 4 192 9c4 1 6 6 3 10-2 3 3 7 1 12-3 8 2 12-2 17-30 6-120 8-186 3-6-1-8-8-4-12 3-3-2-8 0-13 2-5-6-8-2-12z' fill='%23FFFDF8'/%3E%3C/svg%3E")}
+.block .big{position:relative;font-size:35px;line-height:1}
+.block .big .l{display:block}
+.block .big::after{content:"";position:absolute;right:0;top:-22px;width:30px;height:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cg stroke='%2314302F' stroke-width='3' stroke-linecap='round' fill='none'%3E%3Cpath d='M6 22 12 10M17 20 20 6M27 21 33 12'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;opacity:.8}
+.s-teal .block .big::after{filter:invert(1)}
+.hello b .scr{color:var(--teal);font-size:1em}
+.ttl .scr{color:var(--teal);font-size:1.05em;margin-left:2px}
+/* v9 owner's pick "6 + E": Baloo 2 for headings, Dancing Script for the handwritten words */
+.scr{font-family:"Dancing Script","Segoe Script",cursive!important;font-weight:700;transform:rotate(-3deg)!important;font-size:1.12em!important;line-height:1.05}
+.block .big{line-height:.98;letter-spacing:-.01em}
+h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.badge,.prod .info b,.ctop b,.prof b{letter-spacing:-.01em}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -258,7 +273,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
 </svg>
 <div class="wrap">
 <header style="display:grid;gap:12px">
-  <p class="eyebrow">Fresh Orbit · mobile app · version B · chosen design</p>
+  <p class="eyebrow">Fresh Orbit · mobile app · version B · chosen design · Baloo 2 + Dancing Script</p>
   <h1>Bold blocks</h1>
   <p class="lede">A newer direction. Each screen is one strong colour, the character is a big round avatar with a dark ring that breaks out over the white sheet, and the menu floats as a dark pill. Home becomes a bento grid where every tile has a character peeking from its corner.</p>
   <div class="compare"><span>Coral = welcome, cart</span><span>Teal = home, tracking</span><span>Mango = orders, sign-in</span><span>Ice = location, alerts</span></div>
@@ -268,15 +283,15 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <h2>Welcome</h2>
   <div class="row">
     <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 1 of 3</small><span class="big">Straight off the boats</span></div>
+      <div class="block"><small>Step 1 of 3</small><span class="big"><span class="l"><span class="scr">Straight off</span></span><span class="l"><span class="brush">the boats</span></span></span></div>
       <div class="stage"><span class="badge mango" style="left:28px;top:40px;transform:rotate(-8deg)">Caught at dawn</span><div class="avatar"><img src="../characters/generated/onboarding_fresh.jpg" alt="Padma holding a fresh seer fish" style="object-position:55% 22%"></div></div>
       <div class="sheet"><h3>Hours old, not days</h3><p class="muted">We buy at dawn from partner boats in Vizag harbour.</p><div class="dots"><i class="on"></i><i></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 1</figcaption></figure>
     <figure><div class="phone"><div class="screen s-teal"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 2 of 3</small><span class="big">Cleaned your way</span></div>
+      <div class="block"><small>Step 2 of 3</small><span class="big"><span class="l">Cleaned</span><span class="l"><span class="scr">your way</span></span></span></div>
       <div class="stage"><span class="badge coral" style="right:26px;top:44px;transform:rotate(7deg)">Cleaning free</span><div class="avatar"><img src="../characters/generated/onboarding_cleaned.jpg" alt="Padma cutting fish into steaks" style="object-position:50% 28%"></div></div>
       <div class="sheet"><h3>Steaks, curry cut, fillet</h3><p class="muted">Pick the cut. We weigh it after cleaning, so you pay for what you cook.</p><div class="dots"><i></i><i class="on"></i><i></i></div><span class="btn">Next →</span></div></div></div><figcaption class="cap">Welcome 2</figcaption></figure>
     <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Step 3 of 3</small><span class="big">At your door today</span></div>
+      <div class="block"><small>Step 3 of 3</small><span class="big"><span class="l">At your door</span><span class="l"><span class="brush"><span class="scr">today</span></span></span></span></div>
       <div class="stage"><span class="badge teal" style="left:24px;top:46px;transform:rotate(-6deg)">Iced all the way</span><div class="avatar"><img src="../characters/generated/onboarding_delivery.jpg" alt="Ravi waving from his scooter" style="object-position:45% 28%"></div></div>
       <div class="sheet"><h3>Same-day slots</h3><p class="muted">Ravi brings it in a cold box. Pay cash or UPI at the door.</p><div class="dots"><i></i><i></i><i class="on"></i></div><span class="btn">Get started →</span></div></div></div><figcaption class="cap">Welcome 3</figcaption></figure>
   </div>
@@ -286,15 +301,15 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <h2>Location and sign-in</h2>
   <div class="row">
     <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Delivery area</small><span class="big">Where do we deliver?</span></div>
+      <div class="block"><small>Delivery area</small><span class="big"><span class="l">Where do we</span><span class="l"><span class="scr">deliver?</span></span></span></div>
       <div class="stage"><div class="avatar sm"><img src="../characters/generated/location_pick.jpg" alt="Chanduva with a map pin" style="object-position:50% 40%"></div></div>
       <div class="sheet sm"><p class="muted">Prices, stock and slots depend on your nearest store.</p><div class="input">Pincode, e.g. 530017</div><span class="btn">Check my area</span><span class="btn ghost">Use my location</span></div></div></div><figcaption class="cap">Pick your area</figcaption></figure>
     <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>531001</small><span class="big">Not here yet</span></div>
+      <div class="block"><small>531001</small><span class="big"><span class="l">Not here</span><span class="l"><span class="brush"><span class="scr">yet</span></span></span></span></div>
       <div class="stage"><span class="badge mango" style="right:30px;top:30px;transform:rotate(6deg)">Coming soon</span><div class="avatar"><img src="../characters/generated/not_serviceable.jpg" alt="Ravi scratching his head" style="object-position:40% 28%"></div></div>
       <div class="sheet"><h3>We’re growing fast</h3><p class="muted">We’ll message you the day we start delivering here.</p><span class="btn">Notify me</span><span class="note">Try another pincode</span></div></div></div><figcaption class="cap">Area not served</figcaption></figure>
     <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Sign in</small><span class="big">Enter your code</span></div>
+      <div class="block"><small>Sign in</small><span class="big"><span class="l"><span class="scr">Enter your</span></span><span class="l"><span class="brush">code</span></span></span></div>
       <div class="stage"><span class="badge" style="left:20px;top:26px">Stand-in picture</span><div class="avatar sm"><img src="../characters/generated/onboarding_delivery.jpg" alt="" style="object-position:50% 16%"></div></div>
       <div class="sheet sm"><p class="muted">6 digits sent to +91 98xxx x4210</p><div class="otp"><span>4</span><span>8</span><span>2</span><span>1</span><span class="f"></span><span></span></div><span class="btn">Verify</span><span class="note">Resend in 0:24</span></div></div></div><figcaption class="cap">OTP login</figcaption></figure>
   </div>
@@ -305,7 +320,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <div class="row">
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
       <div class="top"><span style="font:600 12px var(--body)">530017 · MVP Colony ▾</span><span class="round"><svg class="ic"><use href="#i-cart"/></svg></span></div>
-      <div class="hello"><span class="muted">Good morning, Lakshmi</span><b>What’s cooking today?</b></div>
+      <div class="hello"><span class="muted">Good morning, Lakshmi</span><b>What’s cooking <span class="scr">today?</span></b></div>
       <div class="bento">
         <div class="tile wide"><span class="chip">Caught 5:40 am</span><b>Today’s catch is in</b><span>Seer, pomfret, tiger prawns</span><div class="peek"><img src="../characters/generated/onboarding_fresh.jpg" alt="" style="object-position:55% 22%"></div></div>
         <div class="tile" style="background:var(--coral)"><b>Cleaned free</b><span>Any cut</span><div class="peek"><img src="../characters/generated/onboarding_cleaned.jpg" alt="" style="object-position:50% 28%"></div></div>
@@ -313,7 +328,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
       </div>
       <div class="cartbar"><div><small>2 items added</small><b>₹1,339</b></div><span class="go">View cart <svg class="ic"><use href="#i-chev"/></svg></span></div><nav class="tabbar"><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg><span class="pip">2</span>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">Home, bento grid</figcaption></figure>
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em">Shop</b><span class="round"><svg class="ic"><use href="#i-filter"/></svg></span></div>
+      <div class="top"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><b style="font:800 20px var(--display);letter-spacing:-.02em" class="ttl">Shop <span class="scr">fresh</span></b><span class="round"><svg class="ic"><use href="#i-filter"/></svg></span></div>
       <div class="sbar"><svg class="ic"><use href="#i-search"/></svg>Search “seer fish”, “prawns”…</div>
       <div class="cats">
         <span class="cat on"><i style="background:var(--teal-soft)"><svg viewBox="0 0 44 30"><path d="M4 15c6-9 18-11 28-4l8-6v20l-8-6C22 26 10 24 4 15z" fill="#0B7D70"/><circle cx="12" cy="13" r="1.8" fill="#FFFDF8"/></svg></i>Fish</span>
@@ -343,7 +358,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
       <div class="addbar"><span class="qty"><svg class="ic"><use href="#i-minus"/></svg>1<svg class="ic"><use href="#i-plus"/></svg></span><span class="place" style="display:flex;justify-content:space-between;align-items:center;background:var(--teal);color:#FFFDF8;border-radius:14px;padding:11px 14px;font:800 14px var(--body)">Add to cart<span style="font:800 16px var(--display)">₹590</span></span></div>
       </div></div><figcaption class="cap">Product: pick the cut</figcaption></figure>
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="ctop"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><div><b>Your cart</b><small>MVP Colony store · 530017</small></div></div>
+      <div class="ctop"><span class="round"><svg class="ic"><use href="#i-back"/></svg></span><div><b class="ttl">Your <span class="scr">cart</span></b><small>MVP Colony store · 530017</small></div></div>
       <div class="cpad">
         <div class="box">
           <div class="line"><span class="th" style="background:var(--teal-soft)"><svg viewBox="0 0 44 30"><path d="M4 15c6-9 18-11 28-4l8-6v20l-8-6C22 26 10 24 4 15z" fill="#0B7D70"/><circle cx="12" cy="13" r="1.8" fill="#FFFDF8"/></svg></span><div><b>Seer fish steaks</b><small>500 g · cleaned free</small></div><div><span class="qty"><svg class="ic"><use href="#i-minus"/></svg>1<svg class="ic"><use href="#i-plus"/></svg></span><div class="lp">₹590</div></div></div>
@@ -356,12 +371,12 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
       <div class="paybar"><div><small>Pay on delivery</small><b>Cash / UPI ▾</b></div><span class="place">Place order<span>₹1,239</span></span></div>
       </div></div><figcaption class="cap">Cart with coupon, slot and bill</figcaption></figure>
     <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Your cart</small><span class="big">Basket’s empty</span></div>
+      <div class="block"><small>Your cart</small><span class="big"><span class="l">Basket’s</span><span class="l"><span class="scr">empty</span></span></span></div>
       <div class="stage"><span class="badge mango" style="right:26px;top:36px;transform:rotate(6deg)">Fresh today</span><div class="avatar"><img src="../characters/generated/empty_cart.jpg" alt="Chanduva peeking from a basket" style="object-position:50% 45%"></div></div>
       <div class="sheet"><h3>Nothing in here yet</h3><p class="muted">Seer, pomfret and prawns came in this morning.</p><span class="btn">See today’s catch</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">Empty cart</figcaption></figure>
     <figure><div class="phone"><div class="screen s-coral"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Saved</small><span class="big">Nothing saved yet</span></div>
+      <div class="block"><small>Saved</small><span class="big"><span class="l"><span class="scr">Nothing</span></span><span class="l"><span class="brush">saved yet</span></span></span></div>
       <div class="stage"><div class="avatar"><img src="../characters/generated/empty_wishlist.jpg" alt="Chanduva hugging a heart" style="object-position:50% 45%"></div></div>
       <div class="sheet"><h3>Tap the ♥ on any fish</h3><p class="muted">It waits here for next time.</p><span class="btn">Browse fish</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No saved items</figcaption></figure>
@@ -372,7 +387,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <h2>Orders and alerts</h2>
   <div class="row">
     <figure><div class="phone"><div class="screen s-teal"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Order FO-000123</small><span class="big">On the way</span></div>
+      <div class="block"><small>Order FO-000123</small><span class="big"><span class="l"><span class="scr">On the</span></span><span class="l"><span class="brush">way</span></span></span></div>
       <div class="stage"><span class="badge mango" style="left:26px;top:30px;transform:rotate(-6deg)">Code 4821</span><div class="avatar sm"><img src="../characters/generated/onboarding_delivery.jpg" alt="Ravi on the way" style="object-position:45% 22%"></div></div>
       <div class="track" style="padding-top:74px">
         <div class="eta"><b>12 min</b><p class="muted">Ravi is riding to MVP Colony</p></div>
@@ -383,12 +398,12 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
           <div class="rr tot"><span>Pay at the door</span><span>₹1,943</span></div>
         </div></div></div></div><figcaption class="cap">Live tracking</figcaption></figure>
     <figure><div class="phone"><div class="screen s-mango"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>My orders</small><span class="big">No orders yet</span></div>
+      <div class="block"><small>My orders</small><span class="big"><span class="l">No orders</span><span class="l"><span class="scr">yet</span></span></span></div>
       <div class="stage"><span class="badge coral" style="right:24px;top:40px;transform:rotate(6deg)">Pot’s waiting</span><div class="avatar"><img src="../characters/generated/empty_orders.jpg" alt="Ammamma at the stove" style="object-position:50% 28%"></div></div>
       <div class="sheet"><h3>Your first fish curry is one tap away</h3><span class="btn">Start shopping</span></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No orders</figcaption></figure>
     <figure><div class="phone"><div class="screen s-ice"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="block"><small>Notifications</small><span class="big">All quiet</span></div>
+      <div class="block"><small>Notifications</small><span class="big"><span class="l"><span class="scr">All</span></span><span class="l"><span class="brush">quiet</span></span></span></div>
       <div class="stage"><div class="avatar"><img src="../characters/generated/empty_notifications.jpg" alt="Chanduva relaxing on a float" style="object-position:50% 45%"></div></div>
       <div class="sheet"><h3>Nothing new</h3><p class="muted">We’ll tell you when your order is packed, on the way and delivered.</p></div>
       <nav class="tabbar"><a><svg class="ic"><use href="#i-home"/></svg>Home</a><a><svg class="ic"><use href="#i-shop"/></svg>Shop</a><a><svg class="ic"><use href="#i-cart"/></svg>Cart</a><a><svg class="ic"><use href="#i-orders"/></svg>Orders</a><a class="on"><span class="bg"></span><svg class="ic"><use href="#i-me"/></svg>Account</a></nav></div></div><figcaption class="cap">No notifications</figcaption></figure>
@@ -399,7 +414,7 @@ h1,h2,h3,.block .big,.hello b,.tile b,.pcard b,.pr,.eta b,.badge{letter-spacing:
   <h2>Account and settings</h2>
   <div class="row">
     <figure><div class="phone"><div class="screen s-page"><span class="notch"></span><div class="status"><span>9:41</span><span>●●● 5G</span></div>
-      <div class="top"><b style="font:800 22px var(--display);letter-spacing:-.02em">Account</b><span class="round"><svg class="ic"><use href="#i-gear"/></svg></span></div>
+      <div class="top"><b style="font:800 22px var(--display);letter-spacing:-.02em" class="ttl">My <span class="scr">account</span></b><span class="round"><svg class="ic"><use href="#i-gear"/></svg></span></div>
       <div class="prof"><span class="edit">Edit</span><span class="av">L</span><div><b>Lakshmi P.</b><small>+91 98xxx x4210</small></div></div>
       <div class="quick"><span><i style="background:var(--teal-soft)"><svg class="ic"><use href="#i-orders"/></svg></i>Orders</span><span><i style="background:var(--coral-soft)"><svg class="ic"><use href="#i-heart"/></svg></i>Saved</span><span><i style="background:var(--ice-soft)"><svg class="ic"><use href="#i-pin"/></svg></i>Addresses</span></div>
       <div class="menu">
