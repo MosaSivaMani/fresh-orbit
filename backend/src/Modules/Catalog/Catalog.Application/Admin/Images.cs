@@ -37,6 +37,12 @@ public static class ImageFormats
     public const int MaxBytes = 5 * 1024 * 1024;
     public const int MinShortestSide = 800;
 
+    /// <summary>SEC-5: longest side the header may claim; checked before any pixel memory is allocated.</summary>
+    public const int MaxSide = 8000;
+
+    /// <summary>SEC-5: most pixels the header may claim (40 MP, about 160 MB decoded at 4 bytes per pixel).</summary>
+    public const long MaxPixels = 40_000_000;
+
     /// <summary>The content type for the bytes' signature, or null when they are not JPEG, PNG or WebP.</summary>
     public static string? Detect(ReadOnlySpan<byte> bytes)
     {
@@ -59,7 +65,7 @@ public sealed record ImageRendition(int Width, int Height, byte[] WebP);
 /// <summary>Decodes an upload and re-encodes it to WebP renditions (EXIF dropped); no upscaling.</summary>
 public interface IImageProcessor
 {
-    /// <summary>Renditions in <see cref="ImageRenditions.Widths"/> order; throws <see cref="RefusalException"/> (IMAGE_INVALID) when the bytes cannot be decoded or are too small.</summary>
+    /// <summary>Renditions in <see cref="ImageRenditions.Widths"/> order; throws <see cref="RefusalException"/> (IMAGE_INVALID) when the bytes cannot be decoded, are too small, or claim more than <see cref="ImageFormats.MaxSide"/> px a side or <see cref="ImageFormats.MaxPixels"/> pixels.</summary>
     IReadOnlyList<ImageRendition> CreateRenditions(byte[] original);
 }
 

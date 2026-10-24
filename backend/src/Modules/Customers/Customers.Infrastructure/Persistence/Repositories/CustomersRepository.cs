@@ -25,6 +25,9 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
             .ThenByDescending(a => a.AddedAt)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<Address>> GetAllAddressesAsync(Guid customerId, CancellationToken cancellationToken)
+        => await db.Set<Address>().Where(a => a.CustomerId == customerId).ToListAsync(cancellationToken);
+
     public Task<Address?> GetAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken)
         => db.Set<Address>().FirstOrDefaultAsync(a => a.Id == addressId && a.CustomerId == customerId, cancellationToken);
 

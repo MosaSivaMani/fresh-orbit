@@ -49,13 +49,14 @@ Slots:
 - Admin: ADMIN_LOGIN, ADMIN_EMPTY, ADMIN_ALL_CAUGHT_UP, ADMIN_NO_ACCESS.
 
 ## 5. Open security work (after the merges)
-- D33 time-based staff lockout and `--create-admin`.
-- D34 address anonymisation.
-- D35 `tax.manage` permission.
-- SEC-3 remainder: staff login limit per email + IP, customer and admin limits (a per-user limit for signed-in cart use, D62), global per-IP limit.
-- SEC-5 image dimension guard.
-- SEC-6 webhook body cap.
-- SEC-7 audit writes.
+Done on `security/round-2` (waiting to merge; status table in `security/review-2026-10.md` §7): D33 lockout and the staff login limit per email + IP, D34 address anonymisation, D35 `tax.manage`, SEC-5, SEC-6, SEC-7, and the round's migration `SecurityRound2`. Still open:
+- Admin app: tax-rules gating by `tax.manage`, 429 on login, drop the `ACCOUNT_LOCKED`/`ACCOUNT_DISABLED` messages (`design/admin.md` row 5).
+- A break-glass reset for a locked or forgotten last admin (`--create-admin` is refused while it exists; SQL steps in `runbooks/security-configuration.md` §5 until then).
+- The reference loader does not add new permissions to existing system roles, so an already-seeded FINANCE role lacks `tax.manage` until an admin adds it.
+- SEC-3 remainder: customer and admin limits (a per-user limit for signed-in cart use, D62), global per-IP limit, a limit counting only rejected webhooks per IP (SEC-6).
+- SEC-5 guard for complaint photos when Ordering adds them.
+- Purge job for `identity.staff_login_failures` (with SEC-13) and for order/invoice snapshots after 72 months (CA to confirm the start).
+- Audit: `actorName` is null; move the central action table onto each module's endpoints with `.WithAuditAction`.
 - Admin refresh tokens in httpOnly cookies (D40 follow-up).
 
 ## 6. Needed from the owner
@@ -85,9 +86,9 @@ Slots:
 
 ## 9. Open items from the end-to-end deploy check (`runbooks/e2e-check.md`)
 - E2E-1 Notifications: DLT SMS sender is a stub, so OTP sign-in returns 500 in Production until a provider is chosen and wired.
-- E2E-2 Api: a failed options validation exits 139 (unhandled); catch it and exit 1.
+- E2E-2 Api: done on `security/round-2` (`HostRunner.RunFreshOrbitAsync`: Api and Worker log one Critical line and exit 1).
 - E2E-3 Data Protection keys are not persisted; persist them or confirm unused.
-- E2E-4 Identity: staff login query needs `AsSplitQuery` (EF warning).
+- E2E-4 Identity: done on `security/round-2` (staff loads use split queries).
 - E2E-5 EF logs one harmless Error on an empty database.
 - E2E-6 web: footer city list is cached 1 hour, so a newly activated city appears late.
 - E2E-7 `deploy.sh` itself is not yet run (needs Linux: flock, bash 4); run it on the staging server.

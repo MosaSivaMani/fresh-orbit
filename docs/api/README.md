@@ -158,7 +158,7 @@ Webhooks use the provider event id instead (§7).
 | `otp-request` | `POST /auth/otp/request` | 3 / 10 min and 10 / day | phone |
 | `otp-request-ip` | same | 20 / hour | IP |
 | `otp-verify` | `POST /auth/otp/verify` | 5 attempts per challenge (then `OTP_TOO_MANY_ATTEMPTS`), 30 / 10 min | challenge; IP |
-| `staff-login` | `POST /admin/auth/login` | 5 / 15 min; account `LOCKED` after 10 consecutive failures | email + IP |
+| `staff-login` | `POST /admin/auth/login` | 10 / 5 min per IP (HTTP limiter); 5 failed logins / 15 min per email + IP (Identity, IDN-R20); account `LOCKED` for 15 min after 10 consecutive failures, doubling per repeat lock up to 24 h (D33) | IP; email + IP |
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
 | `search` | `GET /products`, `/search/*` | 60 / min | IP |
@@ -173,7 +173,10 @@ Webhooks use the provider event id instead (§7).
 IP keys use the client address after forwarded-headers processing: `X-Forwarded-For` / `X-Forwarded-Proto` are
 believed only from peers in `ForwardedHeaders:KnownNetworks` (the Caddy network), one hop only; with the list empty
 (the default) nothing is forwarded (SEC-2, D36). Limits are configuration (`RateLimiting:<Rule>`), defaults as above;
-`staff-login` is still per IP, and `customer`, `admin` and a global limiter are not built yet (SEC-3).
+the `staff-login` HTTP policy is per IP, and the per email + IP part is counted by Identity from
+`identity.staff_login_failures` (failed logins only, unknown emails included; a successful sign-in clears the count;
+settings `Identity:StaffLoginFailuresPerEmailIp` and `Identity:StaffLoginFailureWindowMinutes`). `customer`, `admin`
+and a global limiter are not built yet (SEC-3).
 
 Development and Testing only: `GET /api/v1/dev/sms?phone=…` returns the messages the development SMS sender kept
 for that phone (newest first), so OTPs can be read without being logged (SEC-1). Not mapped elsewhere.
@@ -197,6 +200,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | IDEMPOTENCY_KEY_REQUIRED | 400 | Header missing |
 | IDEMPOTENCY_KEY_REUSED | 422 | Key used with a different body |
 | IDEMPOTENCY_IN_PROGRESS | 409 | Same key still processing |
+| PAYLOAD_TOO_LARGE | 413 | Request body over the endpoint's limit (webhooks: 64 KB, SEC-6) |
 | RATE_LIMITED | 429 | Too many requests |
 | INVALID_STATUS_TRANSITION | 409 | Entity is not in a state that allows this action |
 | DUPLICATE | 409 | Unique value already used (`errors` names the field) |
@@ -211,9 +215,9 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | OTP_EXPIRED | 422 | Challenge expired (5 min) or consumed |
 | OTP_TOO_MANY_ATTEMPTS | 429 | 5 wrong codes; request a new OTP |
 | OTP_RESEND_TOO_SOON | 429 | Resend before `resendAfterSeconds` |
-| INVALID_CREDENTIALS | 401 | Staff email/password wrong (same for unknown email) |
-| ACCOUNT_LOCKED | 403 | User `LOCKED` |
-| ACCOUNT_DISABLED | 403 | User `DISABLED` |
+| INVALID_CREDENTIALS | 401 | Staff login refused: wrong password, unknown email, or a `LOCKED` / `DISABLED` / inactive staff account, whatever the password (D33: one answer for all) |
+| ACCOUNT_LOCKED | 403 | User `LOCKED` (not returned by staff login since D33) |
+| ACCOUNT_DISABLED | 403 | User `DISABLED` (customer OTP login; not returned by staff login since D33) |
 | REFRESH_TOKEN_INVALID | 401 | Unknown, expired or revoked refresh token |
 | REFRESH_TOKEN_REUSED | 401 | Rotated token presented again; family revoked |
 | PASSWORD_TOO_WEAK | 422 | Under 12 characters or in breached list |
@@ -258,7 +262,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | SKU_TAKEN | 409 | SKU already used |
 | DEFAULT_PREPARATION_REQUIRED | 422 | Variant needs exactly one default preparation |
 | YIELD_INVALID | 422 | `yieldBp` outside 1–10000 |
-| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP (checked by content, not extension), over 5 MB, or shortest side under 800 px |
+| IMAGE_INVALID | 422 | Not JPEG/PNG/WebP (checked by content, not extension), over 5 MB, shortest side under 800 px, or header claiming over 8,000 px a side or 40 megapixels (SEC-5, refused before decoding) |
 | CATEGORY_NOT_FOUND, PRODUCT_NOT_FOUND, VARIANT_NOT_FOUND, IMAGE_NOT_FOUND | 404 | Specific `NOT_FOUND` codes for admin catalog |
 
 ### Pricing
@@ -363,7 +367,8 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | Permission | Allows | ADMIN | STORE_MANAGER | PACKER | DISPATCHER | SUPPORT | FINANCE |
 |---|---|---|---|---|---|---|---|
 | `catalog.manage` | Categories, products, variants, preparations, images, home promotions banners | ✓ |  |  |  |  |  |
-| `pricing.manage` | Variant prices, preparation charges, tax rules | ✓ | ✓ |  |  |  |  |
+| `pricing.manage` | Variant prices, preparation charges; view tax rules | ✓ | ✓ |  |  |  |  |
+| `tax.manage` | Schedule tax rules (GST rates, global for every city; D35); view tax rules | ✓ |  |  |  |  | ✓ |
 | `promotions.manage` | Coupons | ✓ |  |  |  |  |  |
 | `inventory.view` | Stock, batches, movements, cold-chain logs | ✓ | ✓ | ✓ |  |  | ✓ |
 | `inventory.receive` | Receive stock (batches) | ✓ | ✓ |  |  |  |  |
@@ -823,8 +828,8 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | PUT | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | IM, or `If-None-Match: *` when none | Set price: closes current period at `validFrom`, opens new one |
 | DELETE | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/price` | pricing.manage | IM | End the current period now (stop selling) |
 | GET/PUT | `/api/v1/admin/pricing/locations/{locationId}/variants/{variantId}/preparations/{code}/charge` | pricing.manage | IM / If-None-Match | Preparation charge, same period rules |
-| GET | `/api/v1/admin/pricing/tax-rules` | pricing.manage | | Tax rules by category |
-| POST | `/api/v1/admin/pricing/tax-rules` | pricing.manage | | New period for a tax category (`taxCategoryCode`, `rateBp` 0–2800, `validFrom`, `replaceFuture`); no `If-Match`: tax rules are global and periods do not overlap |
+| GET | `/api/v1/admin/pricing/tax-rules` | pricing.manage or tax.manage | | Tax rules by category |
+| POST | `/api/v1/admin/pricing/tax-rules` | tax.manage (D35) | | New period for a tax category (`taxCategoryCode`, `rateBp` 0–2800, `validFrom`, `replaceFuture`); no `If-Match`: tax rules are global and periods do not overlap |
 | POST | `/api/v1/admin/pricing/prices/bulk` | pricing.manage | IK | CSV/JSON bulk set; all-or-nothing, returns per-row errors; `?dryRun=true` validates only; max 5000 rows. JSON `{ validFrom?, replaceFuture?, rows: [{ kind: PRICE\|PREP_CHARGE, locationCode, sku, unitPricePaise, compareAtPaise, preparationCode, chargePaise, chargeBasis, validFrom? }] }` or `text/csv` with the same column names |
 
 **PUT …/locations/{locationId}/variants/{variantId}/price** (`If-Match: "55102"`) → 200
@@ -1254,9 +1259,9 @@ needs that is not here is a missing API field, not a client calculation.
 | Path | `POST /api/v1/payments/webhooks/{provider}`; `{provider}` lowercase adapter key: `fake` (dev/tests), `razorpay` (later), others by adapter |
 | COD / UPI on delivery | No webhook; collection recorded by `deliver` / `cash-collected` |
 | Auth | None; provider signature only. Not behind JWT, CSRF or rate limit |
-| Body | Read raw bytes before parsing; signature computed over raw body |
+| Body | Read raw bytes before parsing; signature computed over raw body. At most 64 KB (65,536 bytes), checked on `Content-Length` and while reading (chunked bodies too) → 413 `PAYLOAD_TOO_LARGE`, nothing stored (SEC-6) |
 | Signature | Adapter-specific: `fake` → `X-Fake-Signature` HMAC-SHA256(secret, body) hex; `razorpay` → `X-Razorpay-Signature` HMAC-SHA256(webhook secret, body) hex; constant-time compare |
-| Invalid signature | Event stored with `signatureValid=false`, not processed → 401 `WEBHOOK_SIGNATURE_INVALID` |
+| Invalid signature | Event stored with `signatureValid=false`, not processed → 401 `WEBHOOK_SIGNATURE_INVALID`. The body is kept as one JSON string (never parsed, NUL replaced), cut to its first 4 KB (`payload_truncated = true` when cut), plus `payload_sha256` of the whole body (SEC-6) |
 | Event id | Adapter extracts `providerEventId` (`fake`: `id`; `razorpay`: `X-Razorpay-Event-Id` header) |
 | Idempotency | Insert `payments.webhook_events (provider, provider_event_id)`; unique violation = duplicate → 200 `{ "received": true, "duplicate": true }`, nothing re-applied |
 | Processing | Same transaction: event row → payment status → order status → outbox (database §4) |

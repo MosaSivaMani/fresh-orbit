@@ -108,7 +108,10 @@ public sealed partial class Address : AggregateRoot
         IsDefault = false;
     }
 
-    /// <summary>CUS-R7: personal fields replaced, address inactive.</summary>
+    /// <summary>
+    /// CUS-R7/R9 (D34): personal fields replaced, address inactive. Runs on removal and again on account deletion
+    /// (idempotent). City, state and pincode stay: they are coarse and identify no one on their own.
+    /// </summary>
     public void Anonymise()
     {
         Deactivate();
@@ -117,6 +120,7 @@ public sealed partial class Address : AggregateRoot
         Line1 = "Deleted";
         Line2 = null;
         Landmark = null;
+        Locality = "Deleted";
         Latitude = null;
         Longitude = null;
     }

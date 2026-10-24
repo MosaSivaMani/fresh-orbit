@@ -11,6 +11,7 @@ public static class ProblemCodes
     public const string NotFound = "NOT_FOUND";
     public const string MethodNotAllowed = "METHOD_NOT_ALLOWED";
     public const string Conflict = "CONFLICT";
+    public const string PayloadTooLarge = "PAYLOAD_TOO_LARGE";
     public const string RateLimited = "RATE_LIMITED";
     public const string InternalError = "INTERNAL_ERROR";
     public const string IdempotencyKeyReused = "IDEMPOTENCY_KEY_REUSED";
@@ -25,6 +26,7 @@ public static class ProblemCodes
         StatusCodes.Status404NotFound => NotFound,
         StatusCodes.Status405MethodNotAllowed => MethodNotAllowed,
         StatusCodes.Status409Conflict => Conflict,
+        StatusCodes.Status413PayloadTooLarge => PayloadTooLarge,
         StatusCodes.Status429TooManyRequests => RateLimited,
         >= 500 => InternalError,
         _ => MalformedRequest,

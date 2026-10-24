@@ -8,6 +8,8 @@ namespace FreshOrbit.Catalog.Infrastructure.Images;
 /// <summary>
 /// CAT-R16 with SkiaSharp (MIT): decodes JPEG/PNG/WebP, applies the EXIF orientation, refuses images whose shortest
 /// side is under 800 px, and re-encodes WebP renditions 320/640/1280 px wide (never upscaled). Re-encoding drops EXIF.
+/// SEC-5: the dimensions in the header are checked before any pixel memory is allocated (decompression bombs), and
+/// formats that can (JPEG) are decoded straight at the smallest supported scale that still covers the largest rendition.
 /// </summary>
 public sealed class SkiaImageProcessor : IImageProcessor
 {
@@ -17,11 +19,6 @@ public sealed class SkiaImageProcessor : IImageProcessor
     {
         ArgumentNullException.ThrowIfNull(original);
         using var source = Decode(original);
-        if (Math.Min(source.Width, source.Height) < ImageFormats.MinShortestSide)
-        {
-            throw Invalid($"Upload an image at least {ImageFormats.MinShortestSide} px on its shortest side.");
-        }
-
         var renditions = new List<ImageRendition>(ImageRenditions.Widths.Count);
         foreach (var target in ImageRenditions.Widths)
         {
@@ -48,7 +45,19 @@ public sealed class SkiaImageProcessor : IImageProcessor
     {
         using var stream = new SKMemoryStream(bytes);
         using var codec = SKCodec.Create(stream) ?? throw Invalid("The file is not a readable JPEG, PNG or WebP image.");
-        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+        var (width, height) = (codec.Info.Width, codec.Info.Height);
+        if (width > ImageFormats.MaxSide || height > ImageFormats.MaxSide || (long)width * height > ImageFormats.MaxPixels)
+        {
+            throw Invalid($"Upload an image of at most {ImageFormats.MaxSide} px a side and {ImageFormats.MaxPixels / 1_000_000} megapixels.");
+        }
+
+        if (Math.Min(width, height) < ImageFormats.MinShortestSide)
+        {
+            throw Invalid($"Upload an image at least {ImageFormats.MinShortestSide} px on its shortest side.");
+        }
+
+        var size = ScaledSize(codec);
+        var info = new SKImageInfo(size.Width, size.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
         var bitmap = new SKBitmap(info);
         var result = codec.GetPixels(info, bitmap.GetPixels());
         if (result is not (SKCodecResult.Success or SKCodecResult.IncompleteInput))
@@ -58,6 +67,26 @@ public sealed class SkiaImageProcessor : IImageProcessor
         }
 
         return Orient(bitmap, codec.EncodedOrigin);
+    }
+
+    /// <summary>
+    /// The smallest size the codec can decode to directly whose upright width still covers the largest rendition;
+    /// the full size when the codec cannot scale (PNG, WebP return their own size).
+    /// </summary>
+    private static SKSizeI ScaledSize(SKCodec codec)
+    {
+        var full = codec.Info.Size;
+        var swap = codec.EncodedOrigin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+        var uprightWidth = swap ? full.Height : full.Width;
+        var largest = ImageRenditions.Widths[^1];
+        if (uprightWidth <= largest)
+        {
+            return full;
+        }
+
+        var scaled = codec.GetScaledDimensions((float)largest / uprightWidth);
+        var scaledUprightWidth = swap ? scaled.Height : scaled.Width;
+        return scaled.Width > 0 && scaled.Height > 0 && scaledUprightWidth >= largest ? scaled : full;
     }
 
     private static SKBitmap Orient(SKBitmap bitmap, SKEncodedOrigin origin)

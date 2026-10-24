@@ -138,7 +138,7 @@ public abstract class StorefrontTestBase(StorefrontDatabase database) : IAsyncLi
     protected static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     /// <summary>Staff with catalog, pricing and locations permissions on all locations.</summary>
-    protected HttpClient Admin => _admin ??= Factory.CreateStaffClient(["catalog.manage", "pricing.manage", "locations.manage", "cities.activate"], allLocations: true);
+    protected HttpClient Admin => _admin ??= Factory.CreateStaffClient(["catalog.manage", "pricing.manage", "tax.manage", "locations.manage", "cities.activate"], allLocations: true);
 
     public async ValueTask InitializeAsync()
     {
@@ -304,6 +304,9 @@ public abstract class StorefrontTestBase(StorefrontDatabase database) : IAsyncLi
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         return data.ToArray();
     }
+
+    /// <summary>SEC-5: a small 900 px PNG whose header claims <paramref name="width"/> × <paramref name="height"/>.</summary>
+    protected static byte[] PngClaiming(int width, int height) => PngHeader.Claiming(Png(), width, height);
 
     protected async Task<HttpResponseMessage> UploadImageAsync(Guid productId, byte[] bytes, string fileName = "photo.png", string? altText = "Seer fish steaks")
     {

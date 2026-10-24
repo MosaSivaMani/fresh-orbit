@@ -62,3 +62,13 @@ handles each one and queues the template below for the order's customer, with th
 | `ComplaintRaised` / `ComplaintDecided` | `COMPLAINT_RECEIVED` / `COMPLAINT_RESOLVED` | as reference data |
 
 Every mapping passes the event id as `DedupeKey` (NOT-R4).
+
+### Staff alerts
+
+`Notifications.Application/Handlers/StaffNotificationHandlers.cs`, same rules (event id as `DedupeKey`, never saves).
+
+| Event (owner) | Template | Recipients | Data |
+|---|---|---|---|
+| `StaffAccountLocked` (Identity, D33) | `STAFF_ACCOUNT_LOCKED` (EMAIL) | `IIdentityApi.GetStaffUserIdsWithPermissionAsync("staff.manage")`: active staff holding `staff.manage`, ADMIN always; a locked or disabled admin is skipped | staffEmail (read with `GetUserAsync`, not carried in the event), lockedUntilText (business time zone), lockoutCountText |
+
+One `QueueAsync` per recipient: the recipients are the few administrators, so this loop is accepted in the handler.

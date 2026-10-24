@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using FreshOrbit.Identity.Domain.Shared;
+using FreshOrbit.Identity.Domain.Users;
 using FreshOrbit.SharedKernel.Errors;
 
 namespace FreshOrbit.Identity.Application.Shared;
@@ -27,9 +28,23 @@ public sealed class IdentitySettings
 
     public int StaffRefreshTokenHours { get; set; } = 12;
 
+    /// <summary>D33: consecutive wrong passwords that lock a staff account.</summary>
     public int StaffMaxFailedLogins { get; set; } = 10;
 
+    /// <summary>D33: length of the first lock; every further lock since the last sign-in doubles it.</summary>
+    public int StaffLockoutMinutes { get; set; } = 15;
+
+    /// <summary>D33: the longest lock.</summary>
+    public int StaffMaxLockoutHours { get; set; } = 24;
+
+    /// <summary>IDN-R20 (docs/api §1.9 <c>staff-login</c>): failed logins allowed per e-mail + client IP in the window.</summary>
+    public int StaffLoginFailuresPerEmailIp { get; set; } = 5;
+
+    public int StaffLoginFailureWindowMinutes { get; set; } = 15;
+
     public const int OtpCodeLength = 6;
+
+    public LockoutPolicy StaffLockoutPolicy() => new(StaffMaxFailedLogins, TimeSpan.FromMinutes(StaffLockoutMinutes), TimeSpan.FromHours(StaffMaxLockoutHours));
 }
 
 /// <summary>Keyed hash of an OTP code (IDN-R1).</summary>
@@ -45,6 +60,9 @@ public interface IPasswordHashing
 
     /// <summary>True when <paramref name="password"/> matches; <paramref name="needsRehash"/> when the hash should be upgraded.</summary>
     bool Verify(string hash, string password, out bool needsRehash);
+
+    /// <summary>Spends the time of one <see cref="Verify"/> against a hash no account has, so refusals without a real hash are not faster (D33).</summary>
+    void VerifyDummy(string password);
 }
 
 public sealed record AccessTokenClaims(

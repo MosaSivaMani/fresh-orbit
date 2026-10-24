@@ -53,8 +53,9 @@ public sealed class AdminCatalogTests(CatalogDatabase database) : StorefrontTest
         var text = await UploadImageAsync(productId, "this is not an image at all"u8.ToArray(), "photo.jpg");
         var tooSmall = await UploadImageAsync(productId, Png(500, 500));
         var tooLarge = await UploadImageAsync(productId, [.. Png(900, 900), .. new byte[6 * 1024 * 1024]]);
+        var bomb = await UploadImageAsync(productId, PngClaiming(30_000, 30_000));
 
-        foreach (var response in new[] { text, tooSmall, tooLarge })
+        foreach (var response in new[] { text, tooSmall, tooLarge, bomb })
         {
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             (await CodeOfAsync(response)).Should().Be("IMAGE_INVALID");

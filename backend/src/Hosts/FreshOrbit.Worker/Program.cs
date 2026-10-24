@@ -26,4 +26,4 @@ builder.Services.AddScoped<RecurringJobRunner>();
 builder.Services.AddHostedService<RecurringJobScheduler>();
 builder.Services.AddHostedService<OutboxDispatcherService>();
 
-await builder.Build().RunAsync();
+return await builder.Build().RunFreshOrbitAsync();

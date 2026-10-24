@@ -12,8 +12,9 @@ namespace FreshOrbit.Identity.Tests.Integration;
 
 public sealed class StaffTests(E1Database database) : E1ApiTestBase(database)
 {
-    private const string AdminEmail = "first.admin@freshorbit.test";
-    private const string AdminPassword = "Orbit-Admin-Secret-42";
+    // The one bootstrapped admin of the shared test database (StaffLockoutTests uses it too).
+    internal const string AdminEmail = "first.admin@freshorbit.test";
+    internal const string AdminPassword = "Orbit-Admin-Secret-42";
 
     [Fact]
     public async Task Staff_without_the_permission_gets_403_and_customers_cannot_use_admin()
@@ -73,30 +74,12 @@ public sealed class StaffTests(E1Database database) : E1ApiTestBase(database)
     }
 
     [Fact]
-    public async Task Staff_login_locks_after_ten_wrong_passwords()
+    public async Task Tax_manage_is_seeded_for_admin_and_finance_only()
     {
-        using var manager = Factory.CreateStaffClient(["staff.manage"]);
-        var roles = await ReadJsonAsync(await manager.GetAsync("/api/v1/admin/roles", Ct));
-        var packerRoleId = roles.GetProperty("items").EnumerateArray().First(r => r.GetProperty("code").GetString() == "PACKER").GetProperty("id").GetGuid();
-        var email = $"packer.{Guid.NewGuid():N}@freshorbit.test";
-        var created = await manager.PostAsJsonAsync("/api/v1/admin/staff", new { email, fullName = "Packer", roleIds = new[] { packerRoleId }, allLocations = true, temporaryPassword = "Packer-Temp-Pass-77" }, Ct);
-        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var roles = await QueryAsync(db => db.Set<Domain.Roles.Role>().AsNoTracking().Where(r => r.IsSystem).ToListAsync(Ct));
 
-        using var anonymous = Factory.CreateClient();
-        for (var i = 0; i < 9; i++)
-        {
-            var wrong = await anonymous.PostAsJsonAsync("/api/v1/admin/auth/login", new { email, password = "Wrong-Password-000" }, Ct);
-            wrong.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-            (await ErrorCodeAsync(wrong)).Should().Be("INVALID_CREDENTIALS");
-        }
-
-        // The tenth failure locks the account.
-        var tenth = await anonymous.PostAsJsonAsync("/api/v1/admin/auth/login", new { email, password = "Wrong-Password-000" }, Ct);
-        tenth.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-
-        var locked = await anonymous.PostAsJsonAsync("/api/v1/admin/auth/login", new { email, password = "Packer-Temp-Pass-77" }, Ct);
-        locked.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        (await ErrorCodeAsync(locked)).Should().Be("ACCOUNT_LOCKED");
+        roles.Where(r => r.PermissionCodes.Contains("tax.manage")).Select(r => r.Code).Should().BeEquivalentTo(["ADMIN", "FINANCE"]);
+        roles.Single(r => r.Code == "STORE_MANAGER").PermissionCodes.Should().Contain("pricing.manage");
     }
 
     private async Task<Guid> EnsureFirstAdminAsync()

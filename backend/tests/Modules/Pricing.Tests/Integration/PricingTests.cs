@@ -193,6 +193,41 @@ public sealed class PricingTests(PricingDatabase database) : StorefrontTestBase(
         list.GetProperty("items").EnumerateArray().Should().ContainSingle(i => i.GetProperty("variantId").GetGuid() == product.VariantId && i.GetProperty("missing").GetBoolean());
     }
 
+    [Fact]
+    public async Task Tax_rule_writes_need_tax_manage_so_store_managers_are_refused_and_finance_succeeds()
+    {
+        using var storeManager = Factory.CreateStaffClient(SeededPermissionsOf("STORE_MANAGER"), [Guid.CreateVersion7()]);
+        using var finance = Factory.CreateStaffClient(SeededPermissionsOf("FINANCE"), allLocations: true);
+        var rule = new { taxCategoryCode = TaxCategory, rateBp = 500 };
+
+        var refused = await SendAsync(storeManager, HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", rule);
+        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await storeManager.GetAsync("/api/v1/admin/pricing/tax-rules", Ct)).StatusCode.Should().Be(HttpStatusCode.OK, "pricing.manage may still read tax rules");
+
+        var scheduled = await SendAsync(finance, HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", rule);
+        scheduled.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ReadJsonAsync(scheduled)).GetProperty("taxCategoryCode").GetString().Should().Be(TaxCategory);
+        (await finance.GetAsync("/api/v1/admin/pricing/tax-rules", Ct)).StatusCode.Should().Be(HttpStatusCode.OK, "tax.manage may read tax rules");
+    }
+
+    /// <summary>A system role's permissions as seeded by <c>backend/data/reference/identity/roles.json</c>.</summary>
+    private static string[] SeededPermissionsOf(string roleCode)
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            var path = Path.Combine(directory.FullName, "data", "reference", "identity", "roles.json");
+            if (File.Exists(path))
+            {
+                using var roles = System.Text.Json.JsonDocument.Parse(File.ReadAllText(path));
+                return [.. roles.RootElement.GetProperty("roles").EnumerateArray()
+                    .Single(r => r.GetProperty("code").GetString() == roleCode)
+                    .GetProperty("permissions").EnumerateArray().Select(p => p.GetString()!)];
+            }
+        }
+
+        throw new FileNotFoundException("backend/data/reference/identity/roles.json was not found above the test output directory.");
+    }
+
     private async Task<HttpResponseMessage> PostBulkAsync(object body, bool dryRun)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/admin/pricing/prices/bulk?dryRun={(dryRun ? "true" : "false")}") { Content = JsonContent.Create(body) };

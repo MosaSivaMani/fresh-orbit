@@ -16,6 +16,7 @@
   <ItemGroup>
     <!-- Shared scenario builder (served location, published product, prices, test stock table). -->
     <Compile Include="..\Catalog.Tests\Support\StorefrontScenario.cs" Link="Support\StorefrontScenario.cs" />
+    <Compile Include="..\Catalog.Tests\Support\PngHeader.cs" Link="Support\PngHeader.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />

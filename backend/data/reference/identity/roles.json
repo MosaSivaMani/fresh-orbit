@@ -20,7 +20,7 @@
     {
       "code": "FINANCE",
       "name": "Finance",
-      "permissions": ["inventory.view", "orders.view", "refunds.approve", "payments.view", "payments.manage", "cash.settle", "customers.view", "reports.view", "audit.view"]
+      "permissions": ["inventory.view", "orders.view", "refunds.approve", "payments.view", "payments.manage", "cash.settle", "customers.view", "reports.view", "audit.view", "tax.manage"]
     }
   ]
 }

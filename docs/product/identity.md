@@ -8,6 +8,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | Aggregate root | Tables | Children | Row version |
 |---|---|---|---|
 | User | `users` | — | `users.xmin` |
+| StaffLoginFailure (append-only record, not an aggregate) | `staff_login_failures` | — | none (never updated) |
 | OtpChallenge | `otp_challenges` | — | `otp_challenges.xmin` |
 | RefreshToken | `refresh_tokens` | — | `refresh_tokens.xmin` (two concurrent rotations of one token: one wins, the other gets 409 `CONCURRENT_SAVE`) |
 | StaffMember | `staff_members` | `staff_roles`, `staff_location_access` | `staff_members.xmin` |
@@ -40,8 +41,8 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | From | To | Trigger |
 |---|---|---|
 | — | ACTIVE | First OTP verify (customer) / staff created / `--create-admin` |
-| ACTIVE | LOCKED | 10 consecutive wrong staff passwords (IDN-R12) |
-| LOCKED | ACTIVE | Staff reset-password by `staff.manage` |
+| ACTIVE | LOCKED | 10 consecutive wrong staff passwords (IDN-R12); `locked_until` = now + lock length (D33) |
+| LOCKED | ACTIVE | The lock's time is over (applied at the next staff login attempt, no admin action), or staff reset-password by `staff.manage` |
 | ACTIVE, LOCKED | DISABLED | Customer blocked, account deleted, staff deactivated |
 | DISABLED | ACTIVE | Customer unblocked, staff re-activated (never after account deletion) |
 
@@ -67,15 +68,16 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | IDN-R8 | Refresh token: opaque `rt_` + 32 random bytes (base64url), stored as SHA-256; customer 30 days, staff 12 h; each refresh rotates (old token `revoked_at`, `replaced_by_id`), new token keeps the family. |
 | IDN-R9 | Presenting a rotated token revokes every active token of the family → 401 `REFRESH_TOKEN_REUSED`. Unknown, expired or revoked token → 401 `REFRESH_TOKEN_INVALID`. A user no longer ACTIVE → 401 `REFRESH_TOKEN_INVALID`. |
 | IDN-R10 | Logout revokes the presented token (only the caller's own), or every active token of the user with `allDevices = true`. |
-| IDN-R11 | Staff login: unknown email or wrong password → 401 `INVALID_CREDENTIALS` (same answer). Wrong password increments `failed_login_count`; success resets it. |
-| IDN-R12 | 10 consecutive failures → user LOCKED; a LOCKED user → 403 `ACCOUNT_LOCKED`; inactive staff or DISABLED user → 403 `ACCOUNT_DISABLED`. |
+| IDN-R11 | Staff login (D33): the account's status is checked **before** the password. Unknown email, LOCKED (lock still running), DISABLED user or inactive staff member → one password-hash verification against a dummy hash, then 401 `INVALID_CREDENTIALS`, whatever the password, so neither the answer nor its timing reveals the state. Otherwise a wrong password increments `failed_login_count` and answers the same 401. A successful sign-in resets `failed_login_count` and `lockout_count`. |
+| IDN-R12 | Time-based lock (D33): the failure that reaches `Identity:StaffMaxFailedLogins` (10) consecutive failures locks the user until `locked_until` = now + 15 min × 2^(`lockout_count` − 1), at most 24 h (`Identity:StaffLockoutMinutes`, `Identity:StaffMaxLockoutHours`), increments `lockout_count`, restarts `failed_login_count` at 0 and raises `StaffAccountLocked`. The locking attempt also answers 401 `INVALID_CREDENTIALS`. Failures during a running lock are not counted and never extend it. The lock ends by time: the next login attempt after `locked_until` turns the user ACTIVE again and checks the password; `lockout_count` is kept, so the next lock lasts twice as long until a successful sign-in (or an admin reset) resets the doubling. A LOCKED row without `locked_until` (locked before D33) counts as expired. While LOCKED, refresh is refused (IDN-R9) until the next successful login. Customers are never locked (OTP limits apply instead). |
+| IDN-R20 | Per email + IP limit (docs/api §1.9 `staff-login`): every refused staff login (wrong password, unknown email, locked, disabled) writes a `staff_login_failures` row (SHA-256 of the normalised email, client IP, time). Before any password check, 5 (`Identity:StaffLoginFailuresPerEmailIp`) rows for the same email hash and IP in the last 15 min (`Identity:StaffLoginFailureWindowMinutes`), counting only those after the account's last successful sign-in → 429 `RATE_LIMITED` with `retryAfterSeconds` (until the oldest counted failure leaves the window). The 429 itself is not counted. Kept in Postgres rather than in process so the limit holds across API instances and restarts and is testable with Testcontainers, like the OTP limits (IDN-R4). The HTTP `staff-login` policy (per IP) applies too. |
 | IDN-R13 | Passwords: at least 12 characters and not in a small built-in list of common passwords → 422 `PASSWORD_TOO_WEAK`. Hashed with ASP.NET Core `PasswordHasher`. |
 | IDN-R14 | Change password needs the current password (`INVALID_CREDENTIALS` 401 when wrong) and revokes every refresh token of the user. Reset by `staff.manage` sets a temporary password, unlocks and revokes sessions. |
 | IDN-R15 | Staff email is unique (citext) → 409 `DUPLICATE` (`errors.email`). Role ids must exist (`ROLE_NOT_FOUND`, 422); `allLocations=false` needs at least one location id. |
 | IDN-R16 | Last admin: an update that would leave no active staff member holding the ADMIN role (remove the role or deactivate) → 422 `LAST_ADMIN`. |
 | IDN-R17 | Roles: code UPPER_SNAKE, unique (409 `DUPLICATE`); permission codes must exist (422 `PERMISSION_UNKNOWN`). System roles cannot be renamed or deleted, and ADMIN's permissions cannot be changed (it always holds every permission) → 422 `SYSTEM_ROLE_READ_ONLY`. A role assigned to staff cannot be deleted → 409 `ROLE_IN_USE`. |
-| IDN-R18 | Reference data: `permissions.json` SYNC (a DB code missing from the file fails the load), `roles.json` INSERT_IF_MISSING; ADMIN always receives every permission. |
-| IDN-R19 | First admin (D18): `IFirstAdminService.CreateFirstAdminAsync(email, fullName, password)` creates a staff user with the ADMIN role and all locations; refused with `ADMIN_ALREADY_EXISTS` when any active staff holds ADMIN; needs the ADMIN role (reference data) → else `CONFIGURATION_MISSING`. |
+| IDN-R18 | Reference data: `permissions.json` SYNC (a DB code missing from the file fails the load), `roles.json` INSERT_IF_MISSING; ADMIN always receives every permission. A permission added to another system role in the file (for example `tax.manage` for FINANCE, D35) reaches only new databases; on an existing database an admin adds it to the role. |
+| IDN-R19 | First admin (D18): `IFirstAdminService.CreateFirstAdminAsync(email, fullName, password)` creates a staff user with the ADMIN role and all locations; refused with `ADMIN_ALREADY_EXISTS` when any active staff holds ADMIN, **locked or not** (a LOCKED admin is still an active staff member); needs the ADMIN role (reference data) → else `CONFIGURATION_MISSING`. It therefore does not unlock or reset an existing admin; the break-glass steps for a locked or forgotten last admin are in `runbooks/security-configuration.md` §5. |
 
 ## 4. Events
 
@@ -85,6 +87,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | `StaffMemberCreated` | staffMemberId, userId, email, fullName | Notifications (`STAFF_ACCOUNT_CREATED`, after the event rule allows it) |
 | `StaffPasswordReset` | staffMemberId, userId | Notifications (`STAFF_PASSWORD_RESET`) |
 | `RefreshTokenReuseDetected` | userId, familyId | (security log / future alert) |
+| `StaffAccountLocked` | userId, lockedUntil, lockoutCount, lockedAt (no email: the handler reads it) | Notifications (`STAFF_ACCOUNT_LOCKED` e-mail to active `staff.manage` holders, ADMIN always; D33) |
 
 ## 5. Commands
 
@@ -94,7 +97,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | VerifyOtp | `POST /auth/otp/verify` | R5–R8 | challenge consumed, User (new or login), Customer (via directory), RefreshToken; `CustomerSignedIn` |
 | Refresh | `POST /auth/refresh` | R8, R9 | old token rotated, new token |
 | Logout | `POST /auth/logout`, `POST /admin/auth/logout` | R10 | tokens revoked |
-| StaffLogin | `POST /admin/auth/login` | R11–R12 | User counters, RefreshToken |
+| StaffLogin | `POST /admin/auth/login` | R11, R12, R20 | User counters and lock, `staff_login_failures` (on refusal), RefreshToken; `StaffAccountLocked` |
 | ChangePassword | `POST /admin/auth/password` | R13, R14 | User, tokens |
 | CreateStaff / UpdateStaff / ResetStaffPassword | `/admin/staff…` | R13–R16 | User, StaffMember, tokens |
 | CreateRole / UpdateRole / DeleteRole | `/admin/roles…` | R17 | Role |

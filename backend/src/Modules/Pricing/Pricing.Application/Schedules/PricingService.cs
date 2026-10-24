@@ -120,10 +120,11 @@ public sealed class PricingService(
         return [.. categories.OrderBy(c => c.Code, StringComparer.Ordinal).Select(c => ToTaxResponse(c, [.. rules.Where(r => r.TaxCategoryCode == c.Code)], now, false))];
     }
 
-    /// <summary>ScheduleTaxRule: rate 0–2800 bp, PRC-R3/R4 periods. Rates are data confirmed by the CA.</summary>
+    /// <summary>ScheduleTaxRule: needs <c>tax.manage</c> (D35), rate 0–2800 bp, PRC-R3/R4 periods. Rates are data confirmed by the CA.</summary>
     public async Task<TaxCategoryRulesResponse> ScheduleTaxRuleAsync(ScheduleTaxRuleRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        PricingRules.EnsureCanManageTax(actor);
         var now = clock.UtcNow;
         var errors = new List<FieldError>();
         var code = request.TaxCategoryCode?.Trim().ToUpperInvariant() ?? string.Empty;

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FreshOrbit.Payments.Application.Common;
@@ -21,7 +22,9 @@ public sealed class WebhookService(
     private const int MaxDuplicateRaceRetries = 3;
 
     /// <summary>
-    /// Invalid signature → REJECTED row in its own save, then 401. Valid → Read (event exists?) → Decide (applier) →
+    /// The endpoint refuses a body over <see cref="WebhookEvent.MaxBodyBytes"/> before calling this (SEC-6). Invalid
+    /// signature → REJECTED row (first 4 KB as text + SHA-256 of the whole body) in its own save, then 401. Valid → Read
+    /// (event exists?) → Decide (applier) →
     /// Commit event row + payment/refund change + outbox once. A unique violation or lost race means another delivery of
     /// the same event won: the command re-reads and answers <c>duplicate: true</c>.
     /// </summary>
@@ -36,16 +39,19 @@ public sealed class WebhookService(
         }
 
         var now = clock.UtcNow;
-        var payload = ToJsonPayload(rawBody);
+        var sha256 = Sha256Hex(rawBody);
         var storedHeaders = SelectHeaders(headers);
         if (!provider.VerifySignature(headers, rawBody))
         {
             var (eventId, eventType) = TryReadIdentity(provider, headers, rawBody);
-            events.Add(WebhookEvent.Rejected(provider.Key, eventId, eventType, payload, storedHeaders, now));
+            var truncated = rawBody.Length > WebhookEvent.MaxRejectedPayloadBytes;
+            var kept = RejectedPayload(rawBody.AsSpan(0, Math.Min(rawBody.Length, WebhookEvent.MaxRejectedPayloadBytes)));
+            events.Add(WebhookEvent.Rejected(provider.Key, eventId, eventType, kept, sha256, truncated, storedHeaders, now));
             await session.SaveChangesAsync(cancellationToken);
             throw new WebhookSignatureInvalidException();
         }
 
+        var payload = ToJsonPayload(rawBody);
         ProviderWebhook webhook;
         try
         {
@@ -63,7 +69,7 @@ public sealed class WebhookService(
                 return new WebhookReceipt(true, Duplicate: true);
             }
 
-            var row = WebhookEvent.Received(provider.Key, webhook.ProviderEventId, webhook.EventType, payload, storedHeaders, now);
+            var row = WebhookEvent.Received(provider.Key, webhook.ProviderEventId, webhook.EventType, payload, sha256, storedHeaders, now);
             events.Add(row);
             var outcome = await applier.ApplyAsync(provider.Key, webhook, cancellationToken);
             Complete(row, outcome);
@@ -129,7 +135,17 @@ public sealed class WebhookService(
         }
     }
 
+    /// <summary>Lowercase hex SHA-256 stored with every webhook row (SEC-6).</summary>
+    public static string Sha256Hex(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
+
     private static string Truncate(string value) => value.Length <= 200 ? value : value[..200];
+
+    /// <summary>
+    /// A rejected body is untrusted, so it is always stored as one JSON string (never parsed as JSON), with NUL replaced
+    /// because Postgres jsonb refuses <c>\u0000</c>; a cut UTF-8 sequence at the end decodes to U+FFFD.
+    /// </summary>
+    private static string RejectedPayload(ReadOnlySpan<byte> kept)
+        => JsonSerializer.Serialize(Encoding.UTF8.GetString(kept).Replace('\0', '\uFFFD'), FreshOrbitJson.Options);
 
     /// <summary>Raw body as jsonb: the body itself when it is JSON, otherwise a JSON string.</summary>
     private static string ToJsonPayload(byte[] rawBody)

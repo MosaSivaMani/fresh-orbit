@@ -31,7 +31,7 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | Entity | States | Transitions |
 |---|---|---|
 | Customer | ACTIVE, DELETED | ACTIVE → DELETED by `DELETE /me` (terminal). Blocking is the user status (`DISABLED`), shown as `isBlocked`. |
-| Address | active, inactive | `DELETE` deactivates (never hard-deleted: orders keep their own snapshot). |
+| Address | active, inactive (anonymised) | `DELETE` deactivates and anonymises in the same save (CUS-R9). The row is never hard-deleted, so its id stays valid for `orders.address_id`; the order keeps its own snapshot. |
 
 ## 3. Rules
 
@@ -43,8 +43,23 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | CUS-R4 | Exactly one default among active addresses when there is at least one: the first address becomes default; `isDefault=true` or `POST …/default` moves the default; deleting the default promotes the newest remaining address. The partial unique index `(customer_id) where is_default and is_active` is the last line. |
 | CUS-R5 | Address fields: label HOME/WORK/OTHER, recipientName, phone (E.164), line1, locality, cityName, stateCode (2 letters), pincode (6 digits) required; latitude −90..90, longitude −180..180 when given. Non-serviceable pincodes are accepted; `isServiceable` is null until Customers may use `Locations.Public` (see report). |
 | CUS-R6 | Wishlist: PUT is idempotent (an existing item is kept), DELETE of a missing item is 204. |
-| CUS-R7 | Delete account: refused while any `ICustomerDeletionCheck` reports a reason → 409 `INVALID_STATUS_TRANSITION`; otherwise status DELETED, name/email cleared, marketing off, addresses deactivated and their personal fields replaced, wishlist removed, user anonymised (phone cleared, DISABLED, tokens revoked). |
+| CUS-R7 | Delete account: refused while any `ICustomerDeletionCheck` reports a reason → 409 `INVALID_STATUS_TRANSITION`; otherwise status DELETED, name/email cleared, marketing off, **every** address of the customer (active or removed earlier) deactivated and anonymised as in CUS-R9, wishlist removed, user anonymised (phone cleared, DISABLED, tokens revoked). |
 | CUS-R8 | Admin block/unblock (customers.manage, If-Match on the customer): user DISABLED / ACTIVE; blocking revokes refresh tokens; a DELETED customer cannot be unblocked (409 `INVALID_STATUS_TRANSITION`). |
+| CUS-R9 | Removing an address anonymises it straight away, in the same save as the deactivation (D34, SEC-8): recipientName, line1 and locality become `Deleted`, phone `+910000000000`, line2, landmark, latitude and longitude null. Label, cityName, stateCode and pincode stay (coarse, identify no one alone). An open order is not affected: it reads its own snapshot, never the address row. Repeating the removal is a no-op (204). |
+
+### Retention (D34, DPDP Act s.8(7), s.12)
+
+| Data | Kept for | Where |
+|---|---|---|
+| Delivery address, recipient name and phone copied onto an order at placement (ORD-R16) | 72 months (GST record-keeping, CGST Act s.36; the exact start date is for the CA to confirm), then purged by Ordering | `ordering.orders` (and the invoice that references the order) |
+| Invoices (seller and line amounts, PDF) | same 72 months | `ordering.invoices`, file storage |
+| Customer profile (name, email, marketing flag) | until account deletion, then cleared | `customers.customers` (row kept as DELETED for order references) |
+| Saved addresses | until removed or account deletion, then anonymised (CUS-R9, CUS-R7) | `customers.addresses` (row kept for `orders.address_id`) |
+| Wishlist | until account deletion, then deleted | `customers.wishlist_items` |
+| Phone, email, password hash of the login user | until account deletion, then cleared (Identity) | `identity.users` |
+
+Nothing else personal is kept after deletion. Known gaps owned elsewhere: OTP challenges, outbox payloads and
+webhook payloads (SEC-13). The order-snapshot purge after 72 months is not implemented yet (Ordering).
 
 ## 4. Events
 
@@ -60,6 +75,6 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 |---|---|---|---|
 | UpdateProfile | `PATCH /me` | R1, R2 | Customer |
 | DeleteAccount | `DELETE /me` | R1, R7 | Customer, Addresses, Wishlist, User (via Identity) |
-| AddAddress / ReplaceAddress / DeleteAddress / MakeDefault | `/me/addresses…` | R3–R5 | Address(es), Customer (`addresses_changed_at`) |
+| AddAddress / ReplaceAddress / DeleteAddress / MakeDefault | `/me/addresses…` | R3–R5, R9 (delete) | Address(es), Customer (`addresses_changed_at`) |
 | AddToWishlist / RemoveFromWishlist | `/me/wishlist/{productId}` | R6 | WishlistItem |
 | BlockCustomer / UnblockCustomer | `/admin/customers/{id}/block|unblock` | R8 | Customer, User (via Identity) |

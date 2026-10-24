@@ -1834,6 +1834,55 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FreshOrbit.Identity.Domain.Users.StaffLoginFailure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ClientIp")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("client_ip");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EmailHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("email_hash")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("FailedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("failed_at");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_at");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_staff_login_failures");
+
+                    b.HasIndex("EmailHash", "ClientIp", "FailedAt")
+                        .IsDescending(false, false, true)
+                        .HasDatabaseName("ix_staff_login_failures_email_hash_client_ip_failed_at");
+
+                    b.ToTable("staff_login_failures", "identity");
+                });
+
             modelBuilder.Entity("FreshOrbit.Identity.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1864,6 +1913,14 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.Property<DateTimeOffset?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_login_at");
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_until");
+
+                    b.Property<int>("LockoutCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("lockout_count");
 
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -4863,6 +4920,17 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("payload");
+
+                    b.Property<string>("PayloadSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("payload_sha256")
+                        .IsFixedLength();
+
+                    b.Property<bool>("PayloadTruncated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("payload_truncated");
 
                     b.Property<DateTimeOffset?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone")
