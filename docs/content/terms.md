@@ -1,3 +1,5 @@
+> **Superseded (2026-10-24, D107):** the current draft is `docs/legal/terms-of-use.md`. Kept for history; do not edit.
+
 > **DRAFT — needs legal review. Not published. Not legal advice.** Structure and business rules only, taken from what
 > the system enforces (decisions D15, D17, D19, D26; `docs/product/ordering.md`, `payments.md`, `delivery.md`). A
 > lawyer must review the whole text for India, including the Consumer Protection Act, 2019, the Consumer Protection

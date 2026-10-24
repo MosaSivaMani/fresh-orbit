@@ -1,3 +1,5 @@
+> **Superseded (2026-10-24, D107):** the current draft is `docs/legal/refund-cancellation-policy.md`. Kept for history; do not edit.
+
 > **DRAFT — for owner review. Not published.** This text must match the rules the system enforces. Sources:
 > decisions D15 (refunds), D17 (policy defaults: complaint window 24 h, COD limit ₹5,000, payment window 15 min,
 > substitution window 15 min), D19 (cart, promotions, ordering answers), D26 (cash / UPI on delivery at launch);
