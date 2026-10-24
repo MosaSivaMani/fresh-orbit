@@ -42,7 +42,7 @@ has been run against a live API or on a device yet (see §9).
 | Splash | `/splash` | Done. Loads prefs and session, then goes to onboarding, location or home | — |
 | Onboarding (3 pages) | `/onboarding` | Done | — |
 | Location (pincode, serviceability, unserviceable state) | `/location` (`?change=1` from the pincode chip) | Done. Moving the cart asks first on `CART_LOCATION_CHANGED` | Widget (4) |
-| Home | `/home` (tab) | Done. Banners, categories, featured products, pincode chip | — |
+| Home | `/home` (tab) | Done. Rich home on one grid (§16): delivery header, heading, harbour, hero, two cards, categories, Today's special; fits one screen (D182) | Widget (`home_screen_test.dart`) |
 | Shop (categories, filters, sort, paging) | `/shop?category=` (tab) | Done | — |
 | Search with suggestions | `/search` | Done. 250 ms debounce | — |
 | Product detail | `/product/:slug` | Done. Variant, preparation with yield note, quantity/weight stepper, server unit price and preparation charge, add to cart; the estimate and maximum come from the cart line (§8) | Widget (6) |
@@ -400,8 +400,8 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
 | `AvatarCircle` | A ringed circle: a paper border, a 3 px ink ring and the slot cropped inside (`Illustration(inCircle: true, focus:)`). A full-scene JPEG is cropped by the circle and never shown as a pasted rectangle. `BlockTone.avatarFocus` holds the mockup's `object-position` per slot. Decorative by default; key `avatar-<SLOT>` |
 | `Heading`, `HeadingLine`, `ScriptTitle`, `BrushSwipe` | Big headings in Baloo 2 800. A `script` line is Dancing Script, tilted −3°, at 1.12×. A `brush` line sits on a painted mango swipe with ink text (paper on mango blocks). Three short dashes sit at the top corner (`doodle`). Screen readers hear one header with the lines joined. `ScriptTitle` is the inline "Your *cart*" title |
 | `Sticker` | The mockup badge: a 2 px ink outline, a 2,2 offset shadow and a slight tilt. Its colours are the same in light and dark |
-| `FoodTabBar`, `FoodTab` | Home, Shop, Cart, Orders, Account: icon over label, a teal notch and a teal-soft pill on the active tab, and the cart's line count on a coral pip ("Cart, 2 items"). Keys `tab-<label>` |
-| `ViewCartBar` | A floating teal bar above the tabs on Home and Shop while the cart has lines: "2 ITEMS ADDED", the server's subtotal and "View cart". Key `viewCartBar` |
+| `FoodTabBar`, `FoodTab` | Home, Shop, Cart, Orders, Account (D181, shared by all tabs): a floating rounded paper menu (radius 22, 58 dp, 16 dp gutters, soft shadow; it sits the home-indicator inset minus 20 above the bottom, at least 8), icon over label, a 48 × 28 teal-soft pill behind the active icon, and the cart's line count on a coral pip ("Cart, 2 items"). Keys `tab-<label>` |
+| `ViewCartBar` | A floating deep-teal bar (`#0C4A43`, radius 18, 52 dp) above the menu on Home and Shop while the cart has lines: up to two overlapping line pictures, "2 ITEMS ADDED", the server's subtotal and "View cart ›". It sits in the bottom bar slot, so it never covers content. Key `viewCartBar` |
 | `ProductCard` + `CardCartControl` | Paper card with a tinted picture. The ADD pill sits on the picture's bottom edge (inside the card's bounds so it can be tapped). In the cart it becomes a − n + stepper; with several cuts in the cart it reads "n IN CART" and opens the cart |
 | `CategoryBubble`, `FilterPill` | Round category bubbles (ink ring when chosen) and small filter pills (ink when on) |
 | `CompactStepper` | The − n + stepper for cards, cart lines and the product bar. The label is the server's quantity |
@@ -415,7 +415,7 @@ applies (slots, placeholders, `Illustration`, demo mode); this section lists wha
 | Onboarding ×3 | The owner's reference layout (below): coral "Straight off / the boats", teal "Cleaned / your way", mango "At your / door", second line on the brush. Stickers: Morning catch, Your cut, Kept cold. Taglines, three feature tiles, a food banner, pinned dots and Next / Get started |
 | Location, not serviceable | Ice block: "Where do we / *deliver?*" with the pincode field; "Not here / *yet*" with the Coming soon sticker |
 | OTP | Mango block, six OTP boxes over one real text field (SMS autofill still works) |
-| Home | Greeting and "What's cooking *today?*", then a bento: today's catch (teal, wide), cleaned your way (coral), kept cold (mango). Each tile peeks at its `ONBOARDING_*` character. Then category bubbles, offers and "Popular today" cards with ADD |
+| Home | The rich home (§16): delivery header, greeting, "What's cooking *today?*", harbour scenery, today's catch hero, Cleaned your way / Kept cold cards, six category columns, Today's special |
 | Shop | "Shop *fresh*", search, bubbles, pills (Sort, In stock, Wild caught, Farmed; the filter sheet is kept), grid with ADD |
 | Product | Teal-soft hero with back and save, name and local names, price, "Choose your cut" tiles (the server's charge: Free, +₹40/kg, or Not available here), and a sticky bar with the stepper and Add to cart |
 | Cart | "Your *cart*", lines with steppers and remove, the coupon strip (mango-soft), up to three open slots, server notes, bill details, and a sticky bar ("Pay on delivery · Cash / UPI", Checkout + the server's estimated total). Empty: coral "Basket's / *empty*" |
@@ -451,9 +451,9 @@ The tagline and banner line shrink to fit their boxes. The page scrolls if text 
 and the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
 Next / Get started, Skip, reduced motion and no overflow at 360 × 640 and 390 × 844 with text scale 1.0 and 1.3.
 
-Slot changes since §14: the home bento uses `ONBOARDING_FRESH`, `ONBOARDING_CLEANED` and
-`ONBOARDING_DELIVERY` peeks; `HOME_HERO` appears only on the splash; the four `FEATURE_*` slots are no longer on
-Home (the `FeatureCard` widget stays).
+Slot changes since §14: the home uses `HOME_HERO_CATCH`, `HOME_CARD_CLEANED` and `HOME_CARD_RIDER` (§16);
+`HOME_HERO` appears only on the splash; the four `FEATURE_*` slots are no longer on Home (the `FeatureCard`
+widget stays).
 
 ### Rules kept
 
@@ -467,3 +467,51 @@ Home (the `FeatureCard` widget stays).
   limits for that size and cut first (cart lines carry none). Below the minimum, − removes the line.
 - **Language** is stored (`fo.language`) but the app is English only for now; choosing తెలుగు or हिं says so.
 - `DEMO=true` works as before; the Demo panel stays at the top of Account.
+
+## 16. Rich home on one grid (D176, D181, D182)
+
+`lib/features/catalog/home_screen.dart` follows `docs/design/mockups/app-home-rich.html` (drawn at 390 × 873;
+its CSS is the source of truth). Every size below is in dp at a 390 width.
+
+**Grid.** 16 dp gutters (`FreshLayout.gutter`), 12 dp gaps (`FreshLayout.cardGap`), the two cards are two equal
+`FreshColumns` with `stretch`, the categories are six equal columns, and the Today's special row starts on the
+gutter and scrolls sideways. The cart bar and the menu sit in the shell's bottom bar slot, so they never cover
+content.
+
+| Part | What it is |
+|---|---|
+| Delivery header | Pin, "Delivering to <pincode> ⌄" and the server's city name (`serviceability.cityName`), then 46 dp search and Saved circles. Tap: `/location?change=1`. Key `homeDeliveryTo` |
+| Greeting and heading | "Good morning, <name>" (no name when signed out), then Baloo 2 800 32 "What's cooking *today?*" with "today?" on the yellow brush and coral sparks (one header for screen readers), then a coral Dancing Script line (19, −3°) with a swoosh |
+| Harbour | `HarbourScene` from `fresh_theme` at the top right (x 168–390), soft palms at the left and right edges (`PalmsPainter`). Decoration only |
+| Hero | Radius 24, `#075E54`, 194 tall: the next slot chip (server `nextSlot`, hidden when there is none), "Today's catch / is in!" (Baloo 29) with a yellow spark, body 12.5, and the "Shop fresh catch →" pill. The `HOME_HERO_CATCH` picture is anchored bottom-right at 236 / 358 of the width, natural 3:2 aspect, no wavy edge, no fade. Tap: `/shop`. Key `homeHero` |
+| Two cards | Radius 20, 122 tall. Cleaned your way (`#F59B7C`, deep coral pill text, `HOME_CARD_CLEANED` 84 × 84 bottom-right) → `/shop`. Kept cold till your door (`#F7C66B`, teal pill text, `HOME_CARD_RIDER` overflowing the top by 14) → a sheet with the server's delivery terms (service area, next slot, fee, free above, minimum order). One label each |
+| Categories | The first five server categories in 50 dp tinted circles (picture or initial) and More → `/shop`. Keys `homeCategory-<slug>`, `homeCategoryMore` |
+| Today's special | Shown only when the server sends banners: "Today's *special*" with "See all →", then 200 × 96 cards (radius 16, picture 54 tall, title, subtitle). The chevron and the button role appear only when the banner links somewhere (`linkType` CATEGORY → `/shop?category=`, PRODUCT → `/product/<slug>`) |
+| Cart bar and menu | The restyled shell `ViewCartBar` (top 746, 52 tall) and floating `FoodTabBar` (58 tall, radius 22), §15 |
+
+**Fits one screen (D182).** At a normal text size the page is laid out at its natural height inside
+`FittedBox(scaleDown, topCenter)` (key `homeFit`): no scroll view, no bounce, no pull-to-refresh. Only at a
+system text scale of 1.5 or more does it scroll (`SingleChildScrollView`, key `homeScroll`,
+`ClampingScrollPhysics`). The sideways specials row uses `ClampingScrollPhysics` too. "Popular today" moved off
+Home (it lives in Shop).
+
+**Pictures.** The owner's hero and cleaned-cut pictures are bundled in `assets/illustrations/` (resized with
+`sips`: hero 1024 wide, card 512, alpha kept). The package manifest keeps all three home slots PLACEHOLDER until
+`import` + `optimize` run. Until a picture is bundled a stand-in shows (`ONBOARDING_FRESH` in the hero,
+`ONBOARDING_BANNER_CLEANED` and `ONBOARDING_TILE_COLD_BOX` in the cards), never a broken image.
+
+**Shared parts.** The brush, sparks, script line, swoosh, snowflake, harbour, palms, birds, trawler and the
+layout numbers come from `packages/flutter/fresh_theme` (README there); onboarding uses the same copies.
+
+**Semantics.** Harbour, palms, sparks, swooshes and pictures are excluded; the hero, cards, categories, offers
+and header are labelled buttons. No animation.
+
+**Tests** (`test/widgets/home_screen_test.dart`, `test/widgets/fresh_theme_parts_test.dart`): header, city,
+greeting, chip; gutter, equal cards, 12 dp gap and equal category columns; no vertical scroll and no
+RefreshIndicator at 390 × 844 and text scale 1.0; clamped scrolling at 1.5; no overflow at 360 × 640 and
+390 × 844 with text scale 1.0 and 1.3; offer routes and a non-link offer; specials hidden without banners;
+category tap; delivery sheet; labels; stand-ins and bundled pictures.
+
+**API gaps (rule 4).** Banners have no badge field (the sticker shows only if one is added); the city response
+has no state name (only the city is shown); there is no catch time or "kept cold" fact from the server, so the
+card copy is fixed text and the sheet shows only server delivery terms.

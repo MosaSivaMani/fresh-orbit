@@ -321,8 +321,8 @@ class _DeliveryHeader extends ConsumerWidget {
     final c = illustratedColors(context);
     final pincode = ref.watch(pincodeProvider);
     final city = service?.pincode == pincode ? service?.cityName : null;
-    return SizedBox(
-      height: 52,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -472,14 +472,16 @@ class _Heading extends StatelessWidget {
 }
 
 /// The dark-teal hero: next-slot chip (server), "Today's catch / is in!" with a yellow spark, a line, the
-/// "Shop fresh catch" pill and the picture on the right behind a wavy teal edge.
+/// "Shop fresh catch" pill and the transparent picture anchored bottom-right, the teal showing through.
 class _HeroCard extends StatelessWidget {
   const _HeroCard({required this.nextSlot});
 
   final SlotWindow? nextSlot;
 
   static const double height = 194;
-  static const double pictureWidth = 196;
+
+  /// The hero picture's width over height (1536 × 1024).
+  static const double pictureAspect = 3 / 2;
 
   @override
   Widget build(BuildContext context) {
@@ -505,38 +507,31 @@ class _HeroCard extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, box) {
               final textWidth = box.maxWidth * 0.52 < 186 ? box.maxWidth * 0.52 : 186.0;
+              // 236 of the preview's 358-wide card.
+              final pictureWidth = box.maxWidth * 236 / 358;
               return Stack(
                 children: [
-                  const Positioned(
-                    top: 0,
-                    right: 0,
+                  // The transparent picture anchored bottom-right at its natural 3:2 shape; the teal shows through.
+                  Positioned(
+                    right: -2,
                     bottom: 0,
                     width: pictureWidth,
+                    height: pictureWidth / pictureAspect,
                     child: Illustration(
-                      key: Key('homeHeroPicture'),
+                      key: const Key('homeHeroPicture'),
                       slot: IllustrationSlot.homeHeroCatch,
                       size: pictureWidth,
-                      height: height,
-                      fit: BoxFit.cover,
-                      focus: Alignment(0.2, -0.4),
+                      height: pictureWidth / pictureAspect,
                       excludeFromSemantics: true,
                       fallback: Illustration(
                         slot: IllustrationSlot.onboardingFresh,
                         size: pictureWidth,
-                        height: height,
+                        height: pictureWidth / pictureAspect,
                         fit: BoxFit.cover,
-                        focus: Alignment(0.2, -0.4),
+                        focus: const Alignment(0.2, -0.4),
                         excludeFromSemantics: true,
                       ),
                     ),
-                  ),
-                  // The wavy teal edge into the picture (preview x 150–210 of the 358 card).
-                  const Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: pictureWidth - 48,
-                    width: 60,
-                    child: ExcludeSemantics(child: CustomPaint(painter: _WavyEdgePainter(HomeColors.hero))),
                   ),
                   ConstrainedBox(
                     constraints: const BoxConstraints(minHeight: height),
@@ -585,36 +580,6 @@ class _HeroCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// The preview's `.edge`: a teal shape whose right side waves, laid over the picture's left edge (60 × 194,
-/// stretched to the card's height).
-class _WavyEdgePainter extends CustomPainter {
-  const _WavyEdgePainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas
-      ..save()
-      ..scale(size.width / 60, size.height / 194)
-      ..drawPath(
-        Path()
-          ..moveTo(0, 0)
-          ..lineTo(28, 0)
-          ..quadraticBezierTo(48, 30, 32, 62)
-          ..quadraticBezierTo(14, 98, 38, 134)
-          ..quadraticBezierTo(54, 164, 36, 194)
-          ..lineTo(0, 194)
-          ..close(),
-        Paint()..color = color,
-      )
-      ..restore();
-  }
-
-  @override
-  bool shouldRepaint(_WavyEdgePainter old) => old.color != color;
 }
 
 /// The yellow next-slot chip with a clock.
@@ -788,10 +753,11 @@ class _CardPicture extends StatelessWidget {
   const _CardPicture.cleaned()
     : slot = IllustrationSlot.homeCardCleaned,
       standIn = IllustrationSlot.onboardingBannerCleaned,
-      width = 96,
-      height = 70,
+      width = 84,
+      height = 84,
       top = null,
-      bottom = 22;
+      bottom = 26,
+      right = -6;
 
   const _CardPicture.rider()
     : slot = IllustrationSlot.homeCardRider,
@@ -799,7 +765,8 @@ class _CardPicture extends StatelessWidget {
       width = 86,
       height = 96,
       top = -14,
-      bottom = null;
+      bottom = null,
+      right = -4;
 
   final IllustrationSlot slot;
   final IllustrationSlot standIn;
@@ -807,10 +774,11 @@ class _CardPicture extends StatelessWidget {
   final double height;
   final double? top;
   final double? bottom;
+  final double right;
 
   @override
   Widget build(BuildContext context) => Positioned(
-    right: -4,
+    right: right,
     top: top,
     bottom: bottom,
     child: IgnorePointer(

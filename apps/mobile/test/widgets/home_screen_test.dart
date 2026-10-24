@@ -75,8 +75,8 @@ void main() {
 
     expect(find.text('Delivering to 600041'), findsOneWidget);
     expect(find.text('Sample City'), findsOneWidget);
-    expect(find.textContaining(','), findsNothing, reason: 'the greeting has no name when signed out');
-    expect(find.byKey(const Key('homeGreeting')), findsOneWidget);
+    final hello = tester.widget<Text>(find.byKey(const Key('homeGreeting'))).data!;
+    expect(hello, matches(RegExp(r'^Good (morning|afternoon|evening)$')), reason: 'no name when signed out');
     expect(find.byKey(const Key('homeNextSlot')), findsOneWidget);
     expect(find.text('Today’s catch'), findsOneWidget);
     expect(find.text('Shop fresh catch →'), findsOneWidget);
@@ -226,7 +226,7 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('pictures use the onboarding stand-ins until the home pictures are bundled', (tester) async {
+  testWidgets('pictures fall back to the onboarding stand-ins when a home picture is missing', (tester) async {
     IllustrationAssets.debugSetAvailable(const {
       'assets/illustrations/onboarding_fresh.jpg',
       'assets/illustrations/onboarding_banner_cleaned.png',

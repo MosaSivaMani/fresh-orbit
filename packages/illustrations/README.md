@@ -60,7 +60,7 @@ project's own `pnpm` packages.
 | Folder  | `docs/design/characters/generated/`                                                                                          |
 | Name    | `<slot>.jpg` when the picture has a full background, `<slot>.png` when it is transparent; for example `onboarding_fresh.jpg` |
 | Size    | Longest side at least 1024 px, at most 600 KB (ChatGPT's 1536 x 1024 or a 1448 x 1086 export are fine)                       |
-| Shape   | `1:1` slots square, `4:3` slots landscape, `2:1` banners wide (2% tolerance); `optimize` crops anything else                 |
+| Shape   | `1:1` square, `4:3` landscape, `2:1` banners, `3:2` home hero (2% tolerance); `optimize` crops anything else                 |
 
 Full scene backgrounds (a harbour at sunrise, the market, a kitchen) are welcome: the components crop scenes with
 `object-fit: cover` inside a rounded frame, so they fill feature cards, onboarding and the hero edge to edge.
