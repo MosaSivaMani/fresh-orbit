@@ -1,6 +1,7 @@
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
 using FreshOrbit.Customers.Domain.Shared;
+using FreshOrbit.Customers.Domain.StockAlerts;
 using FreshOrbit.Customers.Domain.Wishlist;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,16 @@ internal sealed class CustomersRepository(FreshOrbitDbContext db) : ICustomersRe
     public void Add(WishlistItem item) => db.Add(item);
 
     public void Remove(WishlistItem item) => db.Remove(item);
+
+    public async Task<IReadOnlyList<StockAlert>> GetStockAlertsAsync(Guid customerId, CancellationToken cancellationToken)
+        => await db.Set<StockAlert>().Where(a => a.CustomerId == customerId).OrderByDescending(a => a.CreatedAt).ThenByDescending(a => a.Id).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StockAlert>> GetStockAlertsForAsync(Guid variantId, Guid fulfillmentLocationId, CancellationToken cancellationToken)
+        => await db.Set<StockAlert>().Where(a => a.VariantId == variantId && a.FulfillmentLocationId == fulfillmentLocationId).ToListAsync(cancellationToken);
+
+    public void Add(StockAlert alert) => db.Add(alert);
+
+    public void Remove(StockAlert alert) => db.Remove(alert);
 
     public Task FlushAsync(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
 

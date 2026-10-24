@@ -1,5 +1,6 @@
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
+using FreshOrbit.Customers.Domain.StockAlerts;
 using FreshOrbit.Customers.Domain.Wishlist;
 
 namespace FreshOrbit.Customers.Domain.Shared;
@@ -29,6 +30,16 @@ public interface ICustomersRepository
     void Add(WishlistItem item);
 
     void Remove(WishlistItem item);
+
+    /// <summary>The customer's alerts, newest first.</summary>
+    Task<IReadOnlyList<StockAlert>> GetStockAlertsAsync(Guid customerId, CancellationToken cancellationToken);
+
+    /// <summary>Every alert waiting for the variant at the location (all customers).</summary>
+    Task<IReadOnlyList<StockAlert>> GetStockAlertsForAsync(Guid variantId, Guid fulfillmentLocationId, CancellationToken cancellationToken);
+
+    void Add(StockAlert alert);
+
+    void Remove(StockAlert alert);
 
     /// <summary>Writes pending changes so later queries in the same transaction see them (e.g. the default flag moved).</summary>
     Task FlushAsync(CancellationToken cancellationToken);

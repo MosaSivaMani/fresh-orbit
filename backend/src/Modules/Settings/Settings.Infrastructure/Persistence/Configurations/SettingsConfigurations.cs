@@ -20,6 +20,7 @@ internal sealed class BusinessProfileConfiguration : IEntityTypeConfiguration<Bu
         builder.Property(x => x.Address).HasMaxLength(500).IsRequired();
         builder.Property(x => x.SupportPhone).HasMaxLength(16).IsRequired();
         builder.Property(x => x.SupportEmail).HasMaxLength(254).IsRequired();
+        builder.Property(x => x.SupportHours).HasMaxLength(200);
         builder.Property(x => x.TimeZone).HasMaxLength(64).IsRequired();
     }
 }

@@ -163,7 +163,7 @@ Webhooks use the provider event id instead (§7).
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
 | `search` | `GET /products`, `/search/*` | 60 / min | IP |
-| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
+| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
 | `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
 | `admin` | `/admin/*` | 600 / min | user |
@@ -172,7 +172,9 @@ Webhooks use the provider event id instead (§7).
 429 body: `code: RATE_LIMITED`, `retryAfterSeconds`; header `Retry-After`.
 
 IP keys use the client address after forwarded-headers processing: `X-Forwarded-For` / `X-Forwarded-Proto` are
-believed only from peers in `ForwardedHeaders:KnownNetworks` (the Caddy network), one hop only; with the list empty
+believed only from peers in `ForwardedHeaders:KnownNetworks` (the compose `edge` network: Caddy and the website's
+Next.js server, whose `/api/v1` proxy passes on the visitor IP Caddy set), one hop only; Caddy replaces
+`X-Forwarded-For` with the one client address it determined (`{client_ip}`), so a client-supplied list is never read; with the list empty
 (the default) nothing is forwarded (SEC-2, D36). Limits are configuration (`RateLimiting:<Rule>`), defaults as above;
 the `staff-login` HTTP policy is per IP, and the per email + IP part is counted by Identity from
 `identity.staff_login_failures` (failed logins only, unknown emails included; a successful sign-in clears the count;
@@ -237,6 +239,8 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | ADDRESS_LIMIT_REACHED | 422 | More than 20 active addresses |
 | CUSTOMER_DELETED | 403 | Account deleted |
 | ACCOUNT_HAS_OPEN_MATTERS | 422 | `DELETE /me` while a complaint (`OPEN`/`APPROVED`) or a refund (`REQUESTED`/`APPROVED`/`PROCESSING`) is open; `errors.account[]` has one entry per kind, `code` `OPEN_COMPLAINT` or `OPEN_REFUND`. Active orders still answer 409 `INVALID_STATUS_TRANSITION` |
+| STOCK_AVAILABLE | 422 | Stock alert refused: the variant is in stock at that location now (CUS-R10) |
+| STOCK_ALERT_LIMIT_REACHED | 422 | Stock alert refused: 50 alerts already (CUS-R10) |
 
 ### Locations
 | Code | HTTP | Meaning |
@@ -366,6 +370,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | NUMBER_SERIES_IN_USE | 409 | Series period already issued numbers; prefix/next value locked |
 | GSTIN_INVALID | 422 | GSTIN format/checksum invalid |
 | PREFERENCE_REQUIRED | 422 | `ORDER_UPDATES` SMS cannot be disabled |
+| BUSINESS_PROFILE_NOT_CONFIGURED | 404 | `GET /business-profile` before the owner saved the business profile (SET-R8) |
 
 ## 3. Permissions and roles
 
@@ -479,9 +484,13 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 | PUT | `/api/v1/me/addresses/{addressId}` | customer | IM | Replace address |
 | DELETE | `/api/v1/me/addresses/{addressId}` | customer | | Deactivate address |
 | POST | `/api/v1/me/addresses/{addressId}/default` | customer | | Make default |
-| GET | `/api/v1/me/wishlist` | customer | LOC optional | Wishlist products (priced when LOC given) |
+| GET | `/api/v1/me/wishlist` | customer | LOC optional (`?pincode=` or `X-Pincode`) | Wishlist items `{ productId, addedAt, product }`; `product` = `{ slug, name, imageUrl, price { unitPricePaise, compareAtPaise, perUnit } \| null, isAvailable }`, null when no longer visible; `price` only with LOC (CUS-R11) |
 | PUT | `/api/v1/me/wishlist/{productId}` | customer | | Add (idempotent by nature) |
 | DELETE | `/api/v1/me/wishlist/{productId}` | customer | | Remove |
+| GET | `/api/v1/me/stock-alerts` | customer | | Back-in-stock alerts `[{ id, variantId, fulfillmentLocationId, createdAt }]` |
+| POST | `/api/v1/me/stock-alerts` | customer | | `{ variantId, fulfillmentLocationId }` → 201 new, 200 existing (idempotent); 422 `STOCK_AVAILABLE`, `PRODUCT_NOT_AVAILABLE`, `STOCK_ALERT_LIMIT_REACHED` (CUS-R10) |
+| DELETE | `/api/v1/me/stock-alerts/{alertId}` | customer | | Remove (204, also when unknown) |
+| GET | `/api/v1/business-profile` | public | | Legal footer and contacts: `legalName, tradeName, gstin, fssaiLicenseNo, address, supportPhone, supportEmail, supportHours, timeZone`; 404 `BUSINESS_PROFILE_NOT_CONFIGURED` (SET-R8) |
 
 ### 4.3 Locations / serviceability (public)
 
@@ -494,16 +503,24 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 ```json
 {
   "pincode": "600041", "serviceable": true, "reasonCode": null,
-  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai" },
+  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai", "timeZone": "Asia/Kolkata" },
   "fulfillmentLocation": { "id": "0192b400-0002-7000-8000-000000000002", "code": "CHN-TVM", "name": "Thiruvanmiyur Store", "hasColdStorage": true },
   "serviceArea": {
     "id": "0192b400-0003-7000-8000-000000000003", "name": "Adyar - Thiruvanmiyur", "deliveryFeePaise": 3900, "freeDeliveryAbovePaise": 49900,
     "minOrderPaise": 29900
   },
-  "nextSlot": { "id": "0192b5f0-aaaa-7000-8000-000000000010", "startAt": "2026-10-23T08:30:00Z", "endAt": "2026-10-23T10:30:00Z" }
+  "nextSlot": { "id": "0192b5f0-aaaa-7000-8000-000000000010", "startAt": "2026-10-23T08:30:00Z", "endAt": "2026-10-23T10:30:00Z",
+    "date": "2026-10-23", "cutoffAt": "2026-10-23T06:30:00Z" }
 }
 ```
 Not served → 200 `{ "pincode": "600123", "serviceable": false, "reasonCode": "PINCODE_NOT_SERVICEABLE", ... null }`.
+
+`nextSlot` is the delivery ETA: the earliest bookable slot, `date` in the location's time zone (`city.timeZone`),
+`cutoffAt` the last moment to order for it; null when no slot is bookable (LOC-R18).
+
+Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
+CART-R31); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
+`GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28).
 
 ### 4.4 Catalog and search (public)
 

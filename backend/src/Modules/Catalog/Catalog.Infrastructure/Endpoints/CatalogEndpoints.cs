@@ -36,7 +36,7 @@ internal static class CatalogEndpoints
 
     private static void MapStorefront(RouteGroupBuilder group)
     {
-        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IClock clock, CancellationToken ct) =>
+        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IEnumerable<FreshOrbit.Catalog.Public.IHomeBannerSource> bannerSources, IClock clock, CancellationToken ct) =>
         {
             var location = await ResolveAsync(http, service, required: false, ct);
             var categories = await reads.GetCategoryTreeAsync(ct);
@@ -44,7 +44,9 @@ internal static class CatalogEndpoints
             var (products, _) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
             var featured = await enricher.EnrichAsync(products, location, clock.UtcNow, ct);
             var bestsellers = location is null ? [] : await enricher.BestsellersAsync(location, clock.UtcNow, ct);
-            return TypedResults.Ok(new HomeResponse([], categories, featured, location is null) { Bestsellers = bestsellers });
+            var source = bannerSources.FirstOrDefault();
+            var banners = source is null ? [] : await source.GetHomeBannersAsync(location?.FulfillmentLocationId, clock.UtcNow, ct);
+            return TypedResults.Ok(new HomeResponse(banners, categories, featured, location is null) { Bestsellers = bestsellers });
         })
         .Produces<HomeResponse>()
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)

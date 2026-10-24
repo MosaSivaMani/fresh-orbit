@@ -42,6 +42,21 @@ public sealed class OrderStatusMachineTests
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Placing_an_order_whose_location_has_no_time_zone_is_refused(string timeZone)
+    {
+        var act = () => OrderFactory.Place([OrderFactory.Crabs()], timeZone: timeZone);
+
+        var refusal = act.Should().Throw<DomainException>().Which;
+        (refusal.Code, refusal.Field).Should().Be(("CONFIGURATION_MISSING", "deliveryAddressId"));
+    }
+
+    [Fact]
+    public void A_placed_order_keeps_the_time_zone_of_its_location()
+        => OrderFactory.Place([OrderFactory.Crabs()], timeZone: "Asia/Kolkata").TimeZone.Should().Be("Asia/Kolkata");
+
+    [Theory]
     [MemberData(nameof(NotAllowed))]
     public void Every_other_pair_is_not_a_transition(OrderStatus from, OrderStatus to)
         => Order.CanMove(from, to).Should().BeFalse();

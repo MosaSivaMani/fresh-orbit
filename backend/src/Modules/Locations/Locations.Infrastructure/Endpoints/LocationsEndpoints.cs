@@ -62,11 +62,18 @@ internal static class LocationsEndpoints
                 served.Pincode,
                 true,
                 null,
-                new ServiceabilityCity(served.CityId, served.CityCode, served.CityName),
+                new ServiceabilityCity(served.CityId, served.CityCode, served.CityName, served.TimeZone),
                 new ServiceabilityLocation(served.FulfillmentLocationId, served.FulfillmentLocationCode, served.FulfillmentLocationName, served.HasColdStorage),
                 new ServiceabilityArea(served.ServiceAreaId, served.ServiceAreaName, served.DeliveryFeePaise, served.FreeDeliveryAbovePaise, served.MinOrderPaise),
-                slot is null ? null : new ServiceabilitySlot(slot.SlotId, slot.StartAt, slot.EndAt)));
-        }).RequireRateLimiting(RateLimitPolicies.Public);
+                slot is null ? null : new ServiceabilitySlot(slot.SlotId, slot.StartAt, slot.EndAt)
+                {
+                    Date = Rules.Today(slot.StartAt, served.TimeZone),
+                    CutoffAt = slot.CutoffAt,
+                }));
+        })
+            .Produces<ServiceabilityResponse>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/cities", async (ILocationsReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ListActiveCitiesAsync(ct)))
             .RequireRateLimiting(RateLimitPolicies.Public);

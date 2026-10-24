@@ -4,6 +4,7 @@ namespace FreshOrbit.Settings.Domain.Shared;
 public static class SettingsErrors
 {
     public const string ConfigurationMissing = "CONFIGURATION_MISSING";
+    public const string BusinessProfileNotConfigured = "BUSINESS_PROFILE_NOT_CONFIGURED";
     public const string GstinInvalid = "GSTIN_INVALID";
     public const string NumberSeriesInUse = "NUMBER_SERIES_IN_USE";
     public const string Duplicate = "DUPLICATE";
