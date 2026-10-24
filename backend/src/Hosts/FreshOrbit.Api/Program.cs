@@ -16,6 +16,8 @@ builder.Services.AddFreshOrbitAuthentication();
 builder.Services.AddFreshOrbitDataProtection();
 builder.Services.AddFreshOrbitPersistence();
 builder.Services.AddFreshOrbitModules(builder.Configuration, Modules.All);
+// Hosting options; in Demo only: the demo database guard and, with Hosting:RunBackgroundJobsInApi, the Worker's jobs.
+builder.Services.AddFreshOrbitApiHosting(builder.Configuration, builder.Environment);
 builder.Services.AddFreshOrbitForwardedHeaders();
 builder.Services.AddFreshOrbitRateLimiting();
 builder.Services.AddOpenApi(OpenApiSetup.Configure);
@@ -33,6 +35,7 @@ app.UseForwardedHeaders();
 app.UseSerilogRequestLogging();
 app.UseFreshOrbitWeb();
 app.UseFreshOrbitMedia();
+app.UseFreshOrbitDemoMedia();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

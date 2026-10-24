@@ -108,6 +108,7 @@ public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncL
     [Theory]
     [InlineData("Development", "DEVELOPMENT")]
     [InlineData("Testing", "")]
+    [InlineData("Demo", "DEVELOPMENT")]
     [InlineData("Production", "DLT")]
     public async Task Host_starts_with_a_valid_sms_configuration(string environment, string provider)
     {

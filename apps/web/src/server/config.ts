@@ -31,3 +31,11 @@ export function getAppStoreLinks(): { label: string; href: string }[] {
 }
 
 export const isProduction = process.env.NODE_ENV === "production";
+
+/**
+ * The free public demo (render.yaml, docs/runbooks/render-demo.md): every page shows the "test data only" banner.
+ * `NEXT_PUBLIC_DEMO_MODE=true`, inlined at build time; unset everywhere else.
+ */
+export function isDemoMode(): boolean {
+  return process.env.NEXT_PUBLIC_DEMO_MODE?.trim() === "true";
+}
