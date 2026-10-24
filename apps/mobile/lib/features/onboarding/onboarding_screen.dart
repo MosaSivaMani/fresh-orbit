@@ -4,8 +4,8 @@
 // on the yellow brush, sparks, a handwritten tagline, the character in a big ringed circle that overlaps the paper
 // sheet with a sticker on its edge, and a drawn scene behind it. The sheet holds the title, one line, three feature
 // tiles and a wide food banner. Page dots and the Next button stay pinned at the bottom. Sizes follow the preview
-// on a tall phone and scale down on short ones; there the banner is left out, and the page scrolls rather than
-// overflow when text is enlarged.
+// on a tall phone and scale down on short ones; there the banner is left out. A page never scrolls: it shrinks to
+// fit above the button, and only very large system text (1.5× and up) lets it scroll (D182).
 
 import 'dart:math' as math;
 
@@ -319,6 +319,9 @@ class _Dots extends StatelessWidget {
   }
 }
 
+/// System text scale from which a page scrolls instead of shrinking to fit.
+const double _scrollTextScale = 1.5;
+
 /// Sizes for one page, from the preview's 390 × 873 design scaled to the space the page really has.
 class _Metrics {
   _Metrics(double width, double height)
@@ -351,13 +354,22 @@ class _OnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
       final m = _Metrics(box.maxWidth, box.maxHeight);
-      return SingleChildScrollView(
-        physics: const ClampingScrollPhysics(),
-        child: Column(
-          children: [
-            _Block(page: page, step: step, steps: steps, onSkip: onSkip, m: m),
-            _Sheet(page: page, m: m),
-          ],
+      final content = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _Block(page: page, step: step, steps: steps, onSkip: onSkip, m: m),
+          _Sheet(page: page, m: m),
+        ],
+      );
+      // Only very large system text may scroll; otherwise the page stands still and shrinks to fit (owner, D182).
+      if (MediaQuery.textScalerOf(context).scale(10) / 10 >= _scrollTextScale) {
+        return SingleChildScrollView(physics: const ClampingScrollPhysics(), child: content);
+      }
+      return ClipRect(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: box.maxWidth, child: content),
         ),
       );
     },

@@ -146,6 +146,12 @@ void main() {
 
         for (var i = 0; i < _pages.length; i++) {
           expect(tester.takeException(), isNull, reason: 'page ${i + 1}');
+          // The page stands still: it fits above the button instead of scrolling (D182).
+          expect(
+            find.descendant(of: find.byType(PageView), matching: find.byType(SingleChildScrollView)),
+            findsNothing,
+            reason: 'page ${i + 1}',
+          );
           // The button stays pinned inside the screen.
           final button = tester.getRect(find.byKey(const Key('onboardingNext')));
           expect(button.bottom, lessThanOrEqualTo(size.height));

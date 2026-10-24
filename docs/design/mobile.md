@@ -447,8 +447,8 @@ pan", "From our store / to your door".
 
 Responsive: every size is the preview's times a scale = min(1, width / 390, page height / 776), at least 0.62.
 The banner is left out when the page area is under 600 px tall (a 360 × 640 phone) and headings drop to 36 there.
-The tagline and banner line shrink to fit their boxes. The page scrolls if text scaling needs more room; the dots
-and the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
+The tagline and banner line shrink to fit their boxes. A page never scrolls: it shrinks to fit above the button, and only
+system text of 1.5× and up lets it scroll (D182); the dots and the button never move. Tests (`test/widgets/onboarding_screen_test.dart`) cover the copy, the fallbacks, semantics,
 Next / Get started, Skip, reduced motion and no overflow at 360 × 640 and 390 × 844 with text scale 1.0 and 1.3.
 
 Slot changes since §14: the home uses `HOME_HERO_CATCH`, `HOME_CARD_CLEANED` and `HOME_CARD_RIDER` (§16);
