@@ -197,15 +197,19 @@
     },
     {
       "slot": "EMPTY_ADDRESSES",
-      "file": "assets/empty_addresses.svg",
+      "file": "assets/empty_addresses.jpg",
       "placeholder": "assets/empty_addresses.svg",
       "alt": "A home cook stands at her front door holding a blank map card.",
       "character": "HOME_COOK",
       "scene": "The home cook stands at the open teal door of a small coastal house with a terracotta roof, holding up a blank folded map card with a friendly smile",
       "aspect": "1:1",
-      "background": "TRANSPARENT",
-      "status": "PLACEHOLDER",
-      "prompt": "The home cook stands at the open teal door of a small coastal house with a terracotta roof, holding up a blank folded map card with a friendly smile. Ammamma, the home cook: A grandmother, about 65, with silver hair in a bun, a red bindi and a warm knowing smile; a mango-yellow saree with a coral border over a coral blouse, gold bangles and a thin gold necklace; she carries a steel pot and a ladle; same face, hair and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+      "background": "SCENE",
+      "status": "FINAL",
+      "prompt": "The home cook stands at the open teal door of a small coastal house with a terracotta roof, holding up a blank folded map card with a friendly smile. Ammamma, the home cook: A grandmother, about 65, with silver hair in a bun, a red bindi and a warm knowing smile; a mango-yellow saree with a coral border over a coral blouse, gold bangles and a thin gold necklace; she carries a steel pot and a ladle; same face, hair and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: a full, softly lit scene that fits the moment (the harbour at sunrise, the fish market, a home kitchen or a city street), slightly out of focus behind the characters, with no signs or writing anywhere. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1254,
+      "height": 1254,
+      "source": "docs/design/characters/generated/empty_addresses.jpg",
+      "sourceBytes": 290231
     },
     {
       "slot": "NO_SEARCH_RESULTS",
