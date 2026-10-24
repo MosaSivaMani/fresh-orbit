@@ -7,10 +7,12 @@ import {
   CouponStrip,
   FilterChip,
   FloatingCartBar,
+  Heading,
   OptionTile,
   PriceTag,
   ProductCard,
   QuantityStepper,
+  Script,
   Sticker,
   TabBar,
 } from "@fresh/ui";
@@ -87,7 +89,8 @@ export function BoldBlocksPage() {
           <ColourBlockScreen
             tone="coral"
             eyebrow="Your cart"
-            title="Basket's empty"
+            title="Basket's"
+            title2="empty"
             slot="EMPTY_CART"
             avatarFocus="50% 45%"
             headingLevel={3}
@@ -102,7 +105,10 @@ export function BoldBlocksPage() {
           <ColourBlockScreen
             tone="teal"
             eyebrow="Order FO-000123"
-            title="On the way"
+            title="On the"
+            title2="way"
+            titleScript="line1"
+            titleBrush="line2"
             slot="ORDER_ON_THE_WAY"
             avatarSize="sm"
             headingLevel={3}
@@ -114,7 +120,8 @@ export function BoldBlocksPage() {
           <ColourBlockScreen
             tone="mango"
             eyebrow="My orders"
-            title="No orders yet"
+            title="No orders"
+            title2="yet"
             slot="EMPTY_ORDERS"
             headingLevel={3}
             stickers={[{ label: "Pot's waiting", side: "right", tone: "coral" }]}
@@ -125,7 +132,10 @@ export function BoldBlocksPage() {
           <ColourBlockScreen
             tone="ice"
             eyebrow="Notifications"
-            title="All quiet"
+            title="All"
+            title2="quiet"
+            titleScript="line1"
+            titleBrush="line2"
             slot="EMPTY_NOTIFICATIONS"
             headingLevel={3}
             sheetTitle="Nothing new"
@@ -134,6 +144,35 @@ export function BoldBlocksPage() {
               We'll tell you when your order is packed, on the way and delivered.
             </p>
           </ColourBlockScreen>
+        </div>
+      </Section>
+
+      <Section
+        title="Headings"
+        note="Baloo 2 800; optional handwritten line in Dancing Script 700 (−3°, 1.12×); optional mango brush swipe; small dash doodle."
+      >
+        <div className="grid gap-8 sm:grid-cols-2">
+          <Heading
+            level={3}
+            size="display"
+            line1="Straight off"
+            line2="the boats"
+            script="line1"
+            brush="line2"
+            doodle
+          />
+          <Heading
+            level={3}
+            size="display"
+            line1="Cleaned"
+            line2="your way"
+            scriptTone="accent"
+            doodle
+          />
+          <Heading level={3} size="page">
+            What&apos;s cooking <Script tone="accent">today?</Script>
+          </Heading>
+          <Heading level={3} size="section" line1="Bill details" />
         </div>
       </Section>
 

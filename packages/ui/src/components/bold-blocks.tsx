@@ -11,6 +11,7 @@ import { type ComponentProps, type ReactNode, createElement, useId } from "react
 import { cn, focusRing } from "../lib/cn";
 import { type IllustrationSlot, Illustration, Sticker, type StickerTone } from "./illustrated";
 import { QuantityStepper } from "./commerce";
+import { headingLines } from "./heading";
 import { Spinner } from "./spinner";
 
 type HeadingLevel = 1 | 2 | 3 | 4;
@@ -96,8 +97,16 @@ export interface ColourBlockScreenProps extends Omit<ComponentProps<"section">, 
   tone: BlockTone;
   /** Small caps line above the title ("Your cart", "Step 1 of 3", an order number). */
   eyebrow?: ReactNode;
-  /** The big line on the colour block. */
+  /** The big title on the colour block (first line). */
   title: ReactNode;
+  /** Optional second line; handwritten (Dancing Script) unless `titleScript` says otherwise (D89). */
+  title2?: ReactNode;
+  /** Which title line is handwritten. Default `line2` when there is a second line. */
+  titleScript?: "line1" | "line2" | "none";
+  /** One title line on a brush swipe (paper on mango blocks, mango elsewhere). */
+  titleBrush?: "line1" | "line2";
+  /** The small dash doodle at the title's corner. Default true. */
+  doodle?: boolean;
   slot: IllustrationSlot;
   avatarSize?: "sm" | "md";
   avatarFocus?: string;
@@ -122,6 +131,10 @@ export function ColourBlockScreen({
   tone,
   eyebrow,
   title,
+  title2,
+  titleScript,
+  titleBrush,
+  doodle = true,
   slot,
   avatarSize = "md",
   avatarFocus,
@@ -156,10 +169,18 @@ export function ColourBlockScreen({
           heading(headingLevel),
           {
             id: titleId,
-            className:
-              "font-display text-[2.25rem] leading-[0.95] font-extrabold tracking-[-0.025em] text-balance sm:text-5xl",
+            className: cn(
+              "font-display justify-self-center text-[2.25rem] leading-[0.98] font-extrabold tracking-[-0.01em] text-balance sm:text-5xl",
+              doodle && "fo-doodle px-[0.9em]",
+            ),
           },
-          title,
+          headingLines({
+            line1: title,
+            line2: title2,
+            script: titleScript,
+            brush: titleBrush,
+            brushTone: tone === "mango" ? "paper" : "mango",
+          }),
         )}
       </div>
       <div className={cn("relative z-[1] mx-auto mt-4", overlap)}>
@@ -193,7 +214,7 @@ export function ColourBlockScreen({
             heading(Math.min(headingLevel + 1, 4) as HeadingLevel),
             {
               className:
-                "font-display text-2xl leading-none font-extrabold tracking-[-0.025em] text-balance",
+                "font-display text-2xl leading-none font-extrabold tracking-[-0.01em] text-balance",
             },
             sheetTitle,
           )}
@@ -254,7 +275,7 @@ export function BentoTile({
           heading(headingLevel),
           {
             className: cn(
-              "font-display leading-none font-extrabold tracking-[-0.025em] text-balance",
+              "font-display leading-none font-extrabold tracking-[-0.01em] text-balance",
               wide ? "max-w-[60%] text-2xl sm:text-3xl" : "text-lg sm:text-xl",
             ),
           },
@@ -575,7 +596,7 @@ export function ProductCard({
           heading(headingLevel),
           {
             className:
-              "font-display text-base leading-[1.1] font-extrabold tracking-[-0.02em] text-balance",
+              "font-display text-base leading-[1.1] font-extrabold tracking-[-0.01em] text-balance",
           },
           link,
         )}
@@ -639,7 +660,7 @@ export function FloatingCartBar({
           {summary}
         </p>
         {total && (
-          <p className="font-display text-lg leading-tight font-extrabold tracking-[-0.02em] tabular-nums">
+          <p className="font-display text-lg leading-tight font-extrabold tracking-[-0.01em] tabular-nums">
             {total}
           </p>
         )}

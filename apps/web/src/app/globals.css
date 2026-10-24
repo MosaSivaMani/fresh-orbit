@@ -3,7 +3,7 @@
 @import "@fresh/config/tailwind.css";
 @import "@fresh/ui/styles.css";
 
-/* Bold blocks (D88, D89): Bricolage Grotesque headings with tight tracking, DM Sans body, warm canvas page. */
+/* Bold blocks (D88, D89): Baloo 2 800 headings, Inter body, warm canvas page. */
 @layer base {
   body {
     background-color: var(--fo-color-canvas);
@@ -14,6 +14,6 @@
   h3 {
     font-family: var(--fo-font-display);
     font-weight: 800;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
   }
 }

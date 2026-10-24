@@ -126,6 +126,17 @@ export {
   type StickerProps,
   type StickerTone,
 } from "./components/illustrated";
+export {
+  Brush,
+  Heading,
+  Script,
+  headingLines,
+  type BrushProps,
+  type HeadingLevel,
+  type HeadingProps,
+  type HeadingSize,
+  type ScriptProps,
+} from "./components/heading";
 export { Input, Textarea, type InputProps } from "./components/input";
 export {
   Dialog,

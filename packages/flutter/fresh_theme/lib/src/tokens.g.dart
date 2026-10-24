@@ -514,10 +514,11 @@ abstract final class FreshTypeScale {
 }
 
 abstract final class FreshFonts {
-  static const String sans = 'DM Sans';
+  static const String sans = 'Inter';
   static const List<String> sansFallback = <String>['Noto Sans', 'Segoe UI', 'Roboto'];
-  static const String display = 'Bricolage Grotesque';
-  static const List<String> displayFallback = <String>['DM Sans'];
+  static const String display = 'Baloo 2';
+  static const List<String> displayFallback = <String>['Inter'];
+  static const String script = 'Dancing Script';
   static const String mono = 'JetBrains Mono';
 }
 

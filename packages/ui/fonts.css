@@ -1,19 +1,22 @@
 /*
- * Self-hosted fonts for the Bold blocks look (D88, D89), both SIL Open Font License 1.1, served from the app's
- * own origin (no Google Fonts request, CSP font-src 'self'). Each weight file covers every subset with
- * unicode-range, so browsers download only the subsets a page uses.
+ * Self-hosted fonts (D84, D89), all SIL Open Font License 1.1, served from the app's own origin (no Google Fonts
+ * request, CSP font-src 'self'). Each weight file covers every subset with unicode-range, so browsers download
+ * only the subsets a page uses.
  *
- *   Bricolage Grotesque (display: headings, prices, stickers, tab labels) 600 / 700 / 800
- *   DM Sans (body)                                                          400 / 500 / 600 / 700
+ *   Baloo 2 (display: headings, prices, stickers)               500 / 600 / 700 / 800
+ *   Inter (body)                                                 400 / 500 / 600 / 700
+ *   Dancing Script (handwritten second line of big headings)     700
  *
  * Import once in the app stylesheet, before "tailwindcss":
  *   @import "@fresh/ui/fonts.css";
- * The token stacks --fo-font-display and --fo-font-sans already name these families.
+ * The token stacks --fo-font-display, --fo-font-sans and --fo-font-script name these families.
  */
-@import "@fontsource/bricolage-grotesque/600.css";
-@import "@fontsource/bricolage-grotesque/700.css";
-@import "@fontsource/bricolage-grotesque/800.css";
-@import "@fontsource/dm-sans/400.css";
-@import "@fontsource/dm-sans/500.css";
-@import "@fontsource/dm-sans/600.css";
-@import "@fontsource/dm-sans/700.css";
+@import "@fontsource/baloo-2/500.css";
+@import "@fontsource/baloo-2/600.css";
+@import "@fontsource/baloo-2/700.css";
+@import "@fontsource/baloo-2/800.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/dancing-script/700.css";

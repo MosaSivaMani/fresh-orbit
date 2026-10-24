@@ -8,7 +8,7 @@ import { getSiteUrl } from "@/server/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Fonts (Bricolage Grotesque, DM Sans) are self-hosted from @fresh/ui/fonts.css, imported by globals.css (D89).
+// Fonts (Baloo 2, Inter, Dancing Script) are self-hosted from @fresh/ui/fonts.css, imported by globals.css (D89).
 
 const siteUrl = getSiteUrl();
 
