@@ -6,12 +6,14 @@ function hrefOf(banner: HomeBanner, categorySlugs: Record<string, string>): stri
   if (!banner.linkTarget) return null;
   switch (banner.linkType) {
     case "CATEGORY": {
-      // The banner names the category by id; an unknown id gets no link rather than a broken one.
-      const slug = categorySlugs[banner.linkTarget];
+      // The server's slug for the linked category (PROMO-R28), else the featured categories' id → slug map; an
+      // unknown category gets no link rather than a broken one.
+      const slug = banner.linkSlug ?? categorySlugs[banner.linkTarget];
       return slug ? `/shop/${encodeURIComponent(slug)}` : null;
     }
     case "PRODUCT":
-      return `/products/${encodeURIComponent(banner.linkTarget)}`;
+      // The banner names the product by id; only the server's slug makes a product page link.
+      return banner.linkSlug ? `/products/${encodeURIComponent(banner.linkSlug)}` : null;
     case "COUPON":
       return "/cart";
     default:

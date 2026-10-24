@@ -39,14 +39,14 @@ export function ProductImage({
 
 /**
  * Offer lines per product slug, from the server's promotions: a banner that links to a product puts its title on
- * that product's picture. Nothing is invented for products without one.
+ * that product's picture. The banner names the product by id, so it is keyed by the server's `linkSlug`
+ * (PROMO-R28); nothing is invented for products without one.
  */
 export function offersBySlug(banners: readonly HomeBanner[]): Record<string, string> {
   const offers: Record<string, string> = {};
   for (const banner of banners) {
-    if (banner.linkType === "PRODUCT" && banner.linkTarget && !offers[banner.linkTarget]) {
-      offers[banner.linkTarget] = banner.title;
-    }
+    const slug = banner.linkSlug;
+    if (banner.linkType === "PRODUCT" && slug && !offers[slug]) offers[slug] = banner.title;
   }
   return offers;
 }
