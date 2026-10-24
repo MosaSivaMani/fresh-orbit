@@ -30,7 +30,7 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Cart | `cart` | carts, cart items (no prices) | Catalog, Pricing, Inventory, Locations, Promotions, Settings, Customers, Ordering, Identity (events) |
 | Promotions | `promotions` | coupons, scopes, redemptions, promotions (home offers) | Catalog, Locations, Ordering (events) |
 | Ordering | `ordering` | checkout, orders, items, history, adjustments, substitutions, complaints, invoices | Cart, Catalog, Pricing, Inventory, Delivery, Promotions, Locations, Customers, Settings, Payments |
-| Payments | `payments` | payments, refunds, webhook events, cash settlements, reconciliation issues, provider adapters | Ordering, Delivery, Identity |
+| Payments | `payments` | payments, refunds, webhook events, cash settlements, reconciliation issues, provider adapters | Ordering, Delivery, Identity, Customers (implements `ICustomerDeletionCheck`) |
 | Delivery | `delivery` | slot templates, slots, riders, shipments, attempts | Locations, Ordering (events) |
 | Notifications | `notifications` | templates, messages, device tokens, preferences | Identity, Audit, Settings, Customers, Ordering, Payments, Delivery |
 | Reporting | `reporting` | read-only views over other schemas | — |

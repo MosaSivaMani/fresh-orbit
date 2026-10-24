@@ -43,7 +43,7 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | CUS-R4 | Exactly one default among active addresses when there is at least one: the first address becomes default; `isDefault=true` or `POST …/default` moves the default; deleting the default promotes the newest remaining address. The partial unique index `(customer_id) where is_default and is_active` is the last line. |
 | CUS-R5 | Address fields: label HOME/WORK/OTHER, recipientName, phone (E.164), line1, locality, cityName, stateCode (2 letters), pincode (6 digits) required; latitude −90..90, longitude −180..180 when given. Non-serviceable pincodes are accepted; `isServiceable` is null until Customers may use `Locations.Public` (see report). |
 | CUS-R6 | Wishlist: PUT is idempotent (an existing item is kept), DELETE of a missing item is 204. |
-| CUS-R7 | Delete account: refused while any `ICustomerDeletionCheck` reports a reason → 409 `INVALID_STATUS_TRANSITION`; otherwise status DELETED, name/email cleared, marketing off, **every** address of the customer (active or removed earlier) deactivated and anonymised as in CUS-R9, wishlist removed, user anonymised (phone cleared, DISABLED, tokens revoked). |
+| CUS-R7 | Delete account: refused while any `ICustomerDeletionCheck` reports a reason. When every reason is an open matter (`CustomerOpenMatters`: `OPEN_COMPLAINT` from Ordering = a complaint OPEN or APPROVED; `OPEN_REFUND` from Payments = a refund REQUESTED, APPROVED or PROCESSING, e.g. a COD refund awaiting payout) → 422 `ACCOUNT_HAS_OPEN_MATTERS` with one `errors.account` entry per kind (code = the kind); any other reason (e.g. `ACTIVE_ORDERS_EXIST`) → 409 `INVALID_STATUS_TRANSITION`. Each module's check is one query. Otherwise status DELETED, name/email cleared, marketing off, **every** address of the customer (active or removed earlier) deactivated and anonymised as in CUS-R9, wishlist removed, user anonymised (phone cleared, DISABLED, tokens revoked). |
 | CUS-R8 | Admin block/unblock (customers.manage, If-Match on the customer): user DISABLED / ACTIVE; blocking revokes refresh tokens; a DELETED customer cannot be unblocked (409 `INVALID_STATUS_TRANSITION`). |
 | CUS-R9 | Removing an address anonymises it straight away, in the same save as the deactivation (D34, SEC-8): recipientName, line1 and locality become `Deleted`, phone `+910000000000`, line2, landmark, latitude and longitude null. Label, cityName, stateCode and pincode stay (coarse, identify no one alone). An open order is not affected: it reads its own snapshot, never the address row. Repeating the removal is a no-op (204). |
 
@@ -57,6 +57,11 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | Saved addresses | until removed or account deletion, then anonymised (CUS-R9, CUS-R7) | `customers.addresses` (row kept for `orders.address_id`) |
 | Wishlist | until account deletion, then deleted | `customers.wishlist_items` |
 | Phone, email, password hash of the login user | until account deletion, then cleared (Identity) | `identity.users` |
+
+An account is not deleted while a complaint or refund of the customer is still open (CUS-R7, 422
+`ACCOUNT_HAS_OPEN_MATTERS`): the store still has to decide or pay something, and the customer must stay reachable for it.
+Complaint photos (W12) are kept with the complaint as order records; their retention follows the order snapshot (open
+item: purge with the 72-month order purge).
 
 Nothing else personal is kept after deletion. Known gaps owned elsewhere: OTP challenges, outbox payloads and
 webhook payloads (SEC-13). The order-snapshot purge after 72 months is not implemented yet (Ordering).

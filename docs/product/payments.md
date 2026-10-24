@@ -251,3 +251,8 @@ Uses `.Public` of: Ordering (order facts), Delivery (shipment, rider), Identity 
 | Q9 | COD/UPI cancellation before delivery after `OrderPacked` — any payment action? | Payment → CANCELLED; nothing collected, no refund. |
 | Q10 | Store bank account details for BANK_TRANSFER refunds? | No; staff enter the UTR at mark-paid; bank details stay outside the system. UPI id stored, masked in lists. |
 | Q11 | Which online gateway and does it support partial captures/auth-only? | Out of scope for launch (ONLINE disabled in `order_policies`, see reference-data.md); adapter contract above is enough for Razorpay later. |
+
+## Admin gaps (branch `backend/api-gaps-admin-orders`)
+
+- G12: `PaymentResponse.createdAt` is the attempt's `created_at` audit column (stamped on the first save; `Payment.CreatedAt` maps the same column, no schema change).
+- Account deletion (CUS-R7): `PaymentsCustomerDeletionCheck` reports `OPEN_REFUND` while a refund of the customer's payments is `REQUESTED`, `APPROVED` or `PROCESSING` (one query). `FAILED` and `SUCCEEDED` do not block.

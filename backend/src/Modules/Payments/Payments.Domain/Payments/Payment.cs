@@ -89,6 +89,12 @@ public sealed class Payment : AggregateRoot
 
     public string? FailureMessage { get; private set; }
 
+    /// <summary>
+    /// When the attempt was created (G12): the <c>created_at</c> audit column every table carries, stamped by the
+    /// persistence layer on the first save (default until then). Never set by the domain.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; private set; }
+
     /// <summary>Σ SUCCEEDED refunds.</summary>
     public long RefundedPaise { get; private set; }
 

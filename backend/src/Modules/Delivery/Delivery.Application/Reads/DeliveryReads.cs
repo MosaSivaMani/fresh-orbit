@@ -35,6 +35,12 @@ public sealed record DeliverySlotResponse(
 
 public sealed record RiderResponse(Guid Id, Guid FulfillmentLocationId, string FullName, string Phone, bool IsActive, string Version);
 
+/// <summary>
+/// Minimal rider row for pickers of staff without <c>delivery.manage</c> (G7, cash settlement): no full phone, no
+/// version (it is not an edit source). <c>PhoneLast4</c> tells two riders of one name apart.
+/// </summary>
+public sealed record RiderLookupItem(Guid Id, Guid FulfillmentLocationId, string FullName, string PhoneLast4, bool IsActive);
+
 public sealed record DeliveryAttemptResponse(int AttemptNo, AttemptOutcome Outcome, string? Notes, DateTimeOffset AttemptedAt);
 
 /// <summary>Admin view of a shipment. The delivery code itself is never shown to staff (the customer reads it out).</summary>
@@ -77,6 +83,9 @@ public sealed record SlotQuery(Guid? FulfillmentLocationId, DateOnly? FromDate, 
 
 public sealed record RiderQuery(Guid? FulfillmentLocationId, bool? IsActive, IReadOnlyCollection<Guid>? Locations, int Skip, int Take);
 
+public sealed record RiderLookupQuery(Guid? FulfillmentLocationId, bool? IsActive, string? Q, IReadOnlyCollection<Guid>? Locations, int Skip, int Take);
+
+/// <summary>Shipment list filters; <c>SlotDate</c> = local date of the delivery slot, <c>Sort</c> = keys in order (empty = placedAt); id breaks ties (G10).</summary>
 public sealed record ShipmentQuery(
     Guid? FulfillmentLocationId,
     Guid? SlotId,
@@ -84,7 +93,65 @@ public sealed record ShipmentQuery(
     IReadOnlyCollection<ShipmentStatus> Statuses,
     IReadOnlyCollection<Guid>? Locations,
     int Skip,
-    int Take);
+    int Take)
+{
+    public DateOnly? SlotDate { get; init; }
+
+    public IReadOnlyList<ShipmentSortKey> Sort { get; init; } = [];
+}
+
+/// <summary>Shipment list sort fields (G10).</summary>
+public enum ShipmentSortField
+{
+    PlacedAt,
+    SlotStartAt,
+    Status,
+    DispatchedAt,
+}
+
+public sealed record ShipmentSortKey(ShipmentSortField Field, bool Descending);
+
+/// <summary>
+/// Parses the shipment list <c>sort</c> (docs/api §1.5): a comma list of <c>placedAt</c>, <c>slotStartAt</c>,
+/// <c>status</c>, <c>dispatchedAt</c>, each optionally prefixed with <c>-</c> for descending. Unknown or repeated
+/// fields are refused (422 VALIDATION_FAILED on <c>sort</c>).
+/// </summary>
+public static class ShipmentSort
+{
+    public static readonly IReadOnlyDictionary<string, ShipmentSortField> Fields = new Dictionary<string, ShipmentSortField>(StringComparer.Ordinal)
+    {
+        ["placedAt"] = ShipmentSortField.PlacedAt,
+        ["slotStartAt"] = ShipmentSortField.SlotStartAt,
+        ["status"] = ShipmentSortField.Status,
+        ["dispatchedAt"] = ShipmentSortField.DispatchedAt,
+    };
+
+    public static IReadOnlyList<ShipmentSortKey> Parse(string? sort)
+    {
+        if (string.IsNullOrWhiteSpace(sort))
+        {
+            return [];
+        }
+
+        var keys = new List<ShipmentSortKey>();
+        foreach (var part in sort.Split(',', StringSplitOptions.TrimEntries))
+        {
+            var descending = part.StartsWith('-');
+            var name = descending ? part[1..] : part;
+            if (!Fields.TryGetValue(name, out var field) || keys.Exists(k => k.Field == field))
+            {
+                throw new FreshOrbit.SharedKernel.Errors.RefusalException(new FreshOrbit.SharedKernel.Errors.FieldError(
+                    "sort",
+                    FreshOrbit.Delivery.Domain.Shared.DeliveryErrors.ValidationFailed,
+                    $"Sort by {string.Join(", ", Fields.Keys)} (once each, '-' for descending)."));
+            }
+
+            keys.Add(new ShipmentSortKey(field, descending));
+        }
+
+        return keys;
+    }
+}
 
 /// <summary>Read side (no tracking) of the Delivery admin and customer lists.</summary>
 public interface IDeliveryReads
@@ -94,6 +161,9 @@ public interface IDeliveryReads
     Task<Page<DeliverySlotResponse>> ListSlotsAsync(SlotQuery query, CancellationToken cancellationToken);
 
     Task<Page<RiderResponse>> ListRidersAsync(RiderQuery query, CancellationToken cancellationToken);
+
+    /// <summary>G7: minimal rider rows (name, location, last 4 phone digits), ordered by name.</summary>
+    Task<Page<RiderLookupItem>> LookupRidersAsync(RiderLookupQuery query, CancellationToken cancellationToken);
 
     Task<Page<ShipmentResponse>> ListShipmentsAsync(ShipmentQuery query, CancellationToken cancellationToken);
 

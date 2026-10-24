@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\Ordering\Ordering.Public\Ordering.Public.csproj" />
     <ProjectReference Include="..\..\Delivery\Delivery.Public\Delivery.Public.csproj" />
     <ProjectReference Include="..\..\Identity\Identity.Public\Identity.Public.csproj" />
+    <ProjectReference Include="..\..\Customers\Customers.Public\Customers.Public.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

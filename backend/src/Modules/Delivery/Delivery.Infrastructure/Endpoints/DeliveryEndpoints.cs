@@ -29,11 +29,20 @@ namespace FreshOrbit.Delivery.Infrastructure.Endpoints;
 internal static class DeliveryEndpoints
 {
     public const string Permission = "delivery.manage";
+    public const string CashSettlePermission = "cash.settle";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous()
             .Produces<CustomerSlotsResponse>();
+
+        // G7: a minimal rider picker for cash settlement; readable with delivery.manage or cash.settle, so it sits
+        // outside the delivery.manage group.
+        endpoints.MapGet("/admin/delivery/riders/lookup", LookupRidersAsync)
+            .RequireAuthorization(policy => policy.RequireAuthenticatedUser().RequireClaim(FreshOrbitClaimTypes.Permission, Permission, CashSettlePermission))
+            .Produces<PagedResponse<RiderLookupItem>>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         var admin = endpoints.MapGroup("/admin/delivery").RequirePermission(Permission);
 
@@ -48,7 +57,7 @@ internal static class DeliveryEndpoints
         admin.MapPost("/riders", CreateRiderAsync).WithValidation<CreateRiderRequest>().Produces<RiderResponse>(StatusCodes.Status201Created);
         admin.MapPut("/riders/{riderId:guid}", UpdateRiderAsync).WithValidation<UpdateRiderRequest>().Produces<RiderResponse>();
 
-        admin.MapGet("/shipments", ListShipmentsAsync).Produces<PagedResponse<ShipmentResponse>>();
+        admin.MapGet("/shipments", ListShipmentsAsync).Produces<PagedResponse<ShipmentResponse>>().ProducesProblem(StatusCodes.Status422UnprocessableEntity);
         admin.MapGet("/shipments/{shipmentId:guid}", GetShipmentAsync).Produces<ShipmentResponse>();
         admin.MapPost("/shipments/{shipmentId:guid}/assign", AssignAsync).WithValidation<AssignRiderRequest>().Produces<ShipmentResponse>();
         admin.MapPost("/shipments/{shipmentId:guid}/dispatch", DispatchAsync).WithValidation<DispatchShipmentRequest>().Produces<ShipmentResponse>();
@@ -139,6 +148,18 @@ internal static class DeliveryEndpoints
         return TypedResults.Ok(new PagedResponse<RiderResponse>(result.Items, p, size, result.TotalCount));
     }
 
+    private static async Task<IResult> LookupRidersAsync(Guid? fulfillmentLocationId, bool? isActive, string? q, int? page, int? pageSize, IDeliveryReads reads, ICurrentActor actor, CancellationToken cancellationToken)
+    {
+        var (p, size) = Paging(page, pageSize);
+        if (fulfillmentLocationId is { } locationId)
+        {
+            actor.EnsureLocation(locationId);
+        }
+
+        var result = await reads.LookupRidersAsync(new RiderLookupQuery(fulfillmentLocationId, isActive, q, actor.ScopedLocations(), (p - 1) * size, size), cancellationToken);
+        return TypedResults.Ok(new PagedResponse<RiderLookupItem>(result.Items, p, size, result.TotalCount));
+    }
+
     private static async Task<IResult> CreateRiderAsync(CreateRiderRequest request, RiderService service, FreshOrbitDbContext db, HttpResponse response, CancellationToken cancellationToken)
     {
         var rider = await SaveSupport.RetryAsync(db, () => service.CreateAsync(request, cancellationToken));
@@ -161,6 +182,8 @@ internal static class DeliveryEndpoints
         Guid? slotId,
         Guid? riderId,
         [FromQuery] string[]? status,
+        DateOnly? slotDate,
+        string? sort,
         int? page,
         int? pageSize,
         IDeliveryReads reads,
@@ -176,7 +199,12 @@ internal static class DeliveryEndpoints
                 : throw DeliveryErrors.Invalid("status", "Status must be a shipment status code such as OUT_FOR_DELIVERY."));
         }
 
-        var result = await reads.ListShipmentsAsync(new ShipmentQuery(fulfillmentLocationId, slotId, riderId, statuses, actor.ScopedLocations(), (p - 1) * size, size), cancellationToken);
+        var query = new ShipmentQuery(fulfillmentLocationId, slotId, riderId, statuses, actor.ScopedLocations(), (p - 1) * size, size)
+        {
+            SlotDate = slotDate,
+            Sort = ShipmentSort.Parse(sort),
+        };
+        var result = await reads.ListShipmentsAsync(query, cancellationToken);
         return TypedResults.Ok(new PagedResponse<ShipmentResponse>(result.Items, p, size, result.TotalCount));
     }
 

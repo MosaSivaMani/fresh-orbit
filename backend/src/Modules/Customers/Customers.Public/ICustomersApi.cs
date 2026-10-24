@@ -21,6 +21,22 @@ public interface ICustomerDeletionCheck
     Task<IReadOnlyList<string>> GetBlockingItemsAsync(Guid customerId, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Blocking items that are "open matters" of the customer (complaints, refunds): deletion is refused with 422
+/// <c>ACCOUNT_HAS_OPEN_MATTERS</c> and the kinds as field errors under <c>account</c>, so the customer can be told to wait
+/// until they are closed (DPDP: the account is kept while we still owe or decide something).
+/// </summary>
+public static class CustomerOpenMatters
+{
+    /// <summary>A complaint that is OPEN or APPROVED (not yet rejected or resolved).</summary>
+    public const string OpenComplaint = "OPEN_COMPLAINT";
+
+    /// <summary>A refund that is REQUESTED, APPROVED or PROCESSING (money not yet back, e.g. a COD refund awaiting payout).</summary>
+    public const string OpenRefund = "OPEN_REFUND";
+
+    public static IReadOnlySet<string> All { get; } = new HashSet<string>(StringComparer.Ordinal) { OpenComplaint, OpenRefund };
+}
+
 /// <summary>Stored as ACTIVE / DELETED.</summary>
 public enum CustomerStatus
 {

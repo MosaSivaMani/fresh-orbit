@@ -44,7 +44,8 @@ public static class PaymentMappings
             payment.FailureCode,
             payment.FailureMessage,
             payment.ToSummary(),
-            FormatVersion(payment.Version));
+            FormatVersion(payment.Version),
+            payment.CreatedAt);
     }
 
     public static RefundResponse ToResponse(this Refund refund, Payment payment, bool maskUpi = false)

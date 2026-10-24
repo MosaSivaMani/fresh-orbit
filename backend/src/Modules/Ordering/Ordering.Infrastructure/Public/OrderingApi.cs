@@ -1,5 +1,6 @@
 using FreshOrbit.Customers.Public;
 using FreshOrbit.Locations.Public;
+using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Orders;
 using FreshOrbit.Ordering.Public;
 using FreshOrbit.SharedKernel.Codes;
@@ -40,6 +41,18 @@ internal sealed class OrderingApi(FreshOrbitDbContext db) : IOrderingApi
         return status is { } s ? ToPublic(s) : null;
     }
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetOrderNumbersAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(orderIds);
+        if (orderIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var ids = orderIds.Distinct().ToList();
+        return await db.Set<Order>().AsNoTracking().Where(o => ids.Contains(o.Id)).ToDictionaryAsync(o => o.Id, o => o.OrderNumber, cancellationToken);
+    }
+
     private static PublicStatus ToPublic(DomainStatus status) => status.ToCode().ToEnum<PublicStatus>();
 
     private static PublicPaymentMethod ToPublic(DomainPaymentMethod method) => method.ToCode().ToEnum<PublicPaymentMethod>();
@@ -64,8 +77,8 @@ internal sealed class OrderingCityRetirementCheck(FreshOrbitDbContext db) : ICit
 }
 
 /// <summary>
-/// A customer account cannot be deleted while the customer has an active (non-terminal) order (Customers'
-/// <c>ICustomerDeletionCheck</c>).
+/// A customer account cannot be deleted while the customer has an active (non-terminal) order or an OPEN/APPROVED
+/// complaint (Customers' <c>ICustomerDeletionCheck</c>).
 /// </summary>
 public sealed class OrderingCustomerDeletionCheck(FreshOrbitDbContext db) : ICustomerDeletionCheck
 {
@@ -80,7 +93,21 @@ public sealed class OrderingCustomerDeletionCheck(FreshOrbitDbContext db) : ICus
                 && o.Status != DomainStatus.PaymentFailed
                 && o.Status != DomainStatus.Returned,
             cancellationToken);
-        return active ? [ActiveOrdersExist] : [];
+        var openComplaint = await db.Set<Complaint>().AnyAsync(
+            c => c.CustomerId == customerId && (c.Status == ComplaintStatus.Open || c.Status == ComplaintStatus.Approved),
+            cancellationToken);
+        var items = new List<string>();
+        if (active)
+        {
+            items.Add(ActiveOrdersExist);
+        }
+
+        if (openComplaint)
+        {
+            items.Add(CustomerOpenMatters.OpenComplaint);
+        }
+
+        return items;
     }
 }
 

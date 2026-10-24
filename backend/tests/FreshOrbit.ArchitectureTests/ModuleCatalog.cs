@@ -16,7 +16,7 @@ public static class ModuleCatalog
         ["Cart"] = ["Catalog", "Pricing", "Inventory", "Locations", "Promotions", "Settings", "Customers", "Ordering", "Identity"],
         ["Promotions"] = ["Catalog", "Locations", "Ordering"],
         ["Ordering"] = ["Cart", "Catalog", "Pricing", "Inventory", "Delivery", "Promotions", "Locations", "Customers", "Settings", "Payments"],
-        ["Payments"] = ["Ordering", "Delivery", "Identity"],
+        ["Payments"] = ["Ordering", "Delivery", "Identity", "Customers"],
         ["Delivery"] = ["Locations", "Ordering"],
         ["Notifications"] = ["Identity", "Audit", "Settings", "Customers", "Ordering", "Payments", "Delivery"],
         ["Reporting"] = [],

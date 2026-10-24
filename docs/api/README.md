@@ -235,6 +235,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | ADDRESS_NOT_SERVICEABLE | 422 | Address pincode has no active service area |
 | ADDRESS_LIMIT_REACHED | 422 | More than 20 active addresses |
 | CUSTOMER_DELETED | 403 | Account deleted |
+| ACCOUNT_HAS_OPEN_MATTERS | 422 | `DELETE /me` while a complaint (`OPEN`/`APPROVED`) or a refund (`REQUESTED`/`APPROVED`/`PROCESSING`) is open; `errors.account[]` has one entry per kind, `code` `OPEN_COMPLAINT` or `OPEN_REFUND`. Active orders still answer 409 `INVALID_STATUS_TRANSITION` |
 
 ### Locations
 | Code | HTTP | Meaning |
@@ -319,6 +320,8 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | SUBSTITUTION_EXPIRED | 422 | Proposal past `expiresAt` |
 | COMPLAINT_WINDOW_CLOSED | 422 | More than 24 h after delivery |
 | COMPLAINT_ALREADY_OPEN | 409 | Open complaint exists for the line |
+| COMPLAINT_PHOTO_LIMIT_REACHED | 422 | Complaint already has 4 photos (field `file`) |
+| IMAGE_INVALID | 422 | Complaint photo is not JPEG/PNG/WebP, over 5 MB, shortest side under 320 px, or over the SEC-5 size limits (field `file`) |
 | INVOICE_NOT_ISSUED | 404 | Invoice exists only after `DELIVERED` |
 
 ### Payments
@@ -704,7 +707,9 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
 | POST | `/api/v1/orders/{orderId}/substitutions/{substitutionId}/accept` | customer | | Accept proposed substitution |
 | POST | `/api/v1/orders/{orderId}/substitutions/{substitutionId}/reject` | customer | | Reject (line short-supplied) |
 | POST | `/api/v1/orders/{orderId}/complaints` | customer | IK, multipart | Raise complaint (`orderItemId`, `kind`, `description`, up to 4 images) |
-| GET | `/api/v1/orders/{orderId}/complaints` | customer | | Complaints and their status |
+| GET | `/api/v1/orders/{orderId}/complaints` | customer | | Complaints and their status, with `productName`, `variantName`, `preparationName`, `maxRefundPaise` and `photos[]` (`id`, `url`, `width`, `height`, `uploadedAt`) (G15, W12) |
+| POST | `/api/v1/orders/{orderId}/complaints/{complaintId}/photos` | customer | multipart, IK optional | W12: add one photo (form field `file`) to an `OPEN` complaint of the caller's order; ≤ 4 photos, JPEG/PNG/WebP ≤ 5 MB, shortest side ≥ 320 px. Stored re-encoded as WebP ≤ 1280 px wide, EXIF dropped, original not kept, private. 201 with the complaint; 404 not the caller's, 409 decided, 413 body too large, 422 `IMAGE_INVALID` / `COMPLAINT_PHOTO_LIMIT_REACHED` |
+| GET | `/api/v1/orders/{orderId}/complaints/{complaintId}/photos/{photoId}` | customer | | The photo (`image/webp`, `Cache-Control: private`), owner only |
 | GET | `/api/v1/orders/{orderId}/invoice` | customer | | Invoice JSON + `pdfUrl` (signed, 10 min); 404 `INVOICE_NOT_ISSUED` before delivery |
 | POST | `/api/v1/orders/{orderId}/reorder` | customer | | Add the order's sellable lines to the cart; returns priced cart |
 
@@ -906,7 +911,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | GET | `/api/v1/admin/coupons/{id}` | promotions.manage | ETag | Detail with scopes, `usedCount` |
 | PUT | `/api/v1/admin/coupons/{id}` | promotions.manage | IM | Update (code immutable once used) |
 | POST | `/api/v1/admin/coupons/{id}/pause` \| `/resume` | promotions.manage | IM | Status change |
-| GET | `/api/v1/admin/coupons/{id}/redemptions` | promotions.manage | | Redemptions |
+| GET | `/api/v1/admin/coupons/{id}/redemptions` | promotions.manage | | Redemptions; each row has `orderNumber` read from Ordering in one batch (G16), `null` when unknown |
 
 ### 4.14 Admin inventory
 
@@ -964,9 +969,9 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/admin/orders` | orders.view | | List: `fulfillmentLocationId`, `status`, `slotDate`, `slotId`, `paymentMethod`, `q` (number/phone) |
-| GET | `/api/v1/admin/orders/{orderId}` | orders.view | ETag | Detail incl. gross reserved quantities, batches, history, adjustments |
-| GET | `/api/v1/admin/orders/pick-list?fulfillmentLocationId=&slotId=` | orders.pack | | Aggregated gross quantities per variant × preparation for a slot |
+| GET | `/api/v1/admin/orders` | orders.view | | List: `fulfillmentLocationId`, `status` (repeatable and/or comma list, OR; unknown → 422 on `status`) (G14), `slotDate`, `slotId`, `paymentMethod`, `q` (number/phone). Rows carry `version` = the order ETag value, for bulk `If-Match` (G13) |
+| GET | `/api/v1/admin/orders/{orderId}` | orders.view | ETag | Detail incl. gross reserved quantities, history, adjustments; each line's `stock` has `reservationStatus` and `batches[]` (`movementId`, `batchId`, `batchCode`, `quantity`, `occurredAt`) = SALE movements written at pack (G17) |
+| GET | `/api/v1/admin/orders/pick-list?fulfillmentLocationId=&slotId=` | orders.pack | | Aggregated gross quantities per variant × preparation for a slot; lines carry `sku`; response has `slot` (`slotDate`, `startAt`, `endAt`, `cutoffAt`, or null) and `orderCount` (G18) |
 | POST | `/api/v1/admin/orders/{orderId}/start-preparing` | orders.pack | IM | `CONFIRMED` → `PREPARING` |
 | POST | `/api/v1/admin/orders/{orderId}/pack` | orders.pack | IM | Weigh and pack all lines → `PACKED` |
 | POST | `/api/v1/admin/orders/{orderId}/items/{itemId}/substitutions` | orders.pack | IM | Propose substitution (customer has 15 min; `AUTO_SIMILAR` auto-accepts) |
@@ -975,7 +980,8 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 | POST | `/api/v1/admin/orders/{orderId}/goodwill` | refunds.request | IM | Goodwill adjustment (negative amount) |
 | GET | `/api/v1/admin/orders/{orderId}/invoice` | orders.view | | Invoice + PDF URL |
 | GET | `/api/v1/admin/complaints` | complaints.manage | | List: `status`, `kind`, `fulfillmentLocationId` |
-| GET | `/api/v1/admin/complaints/{complaintId}` | complaints.manage | ETag | Detail with attachment URLs |
+| GET | `/api/v1/admin/complaints/{complaintId}` | complaints.manage | ETag | Detail with `productName`, `variantName`, `preparationName`, `maxRefundPaise` (the refund bound `decide` enforces) and `photos[]` / `attachmentUrls` pointing at the staff photo URL (G15, W12) |
+| GET | `/api/v1/admin/complaints/{complaintId}/photos/{photoId}` | complaints.manage | | The photo (`image/webp`, `Cache-Control: private`), location-scoped |
 | POST | `/api/v1/admin/complaints/{complaintId}/decide` | complaints.manage | IM | `APPROVED`/`REJECTED`, `resolution` `REFUND`/`REPLACEMENT`/`NONE`, `refundAmountPaise` (creates refund request) |
 | POST | `/api/v1/admin/complaints/{complaintId}/resolve` | complaints.manage | IM | → `RESOLVED` |
 
@@ -1034,7 +1040,7 @@ Implementation notes (Phase 2, Cart / Promotions / Ordering):
 |---|---|---|---|---|
 | GET | `/api/v1/admin/payments` | payments.view | | List: `status`, `method`, `provider`, `fromDate`, `toDate`, `fulfillmentLocationId`, `page`, `pageSize` (location-scoped) |
 | GET | `/api/v1/admin/payments/{paymentId}` | payments.view | | One payment with `summary` (`paidPaise`, `refundedPaise`, `pendingRefundPaise`, `refundablePaise`); ETag |
-| GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | `{ orderId, payments[], refunds[] }` |
+| GET | `/api/v1/admin/orders/{orderId}/payments` | payments.view | | `{ orderId, payments[], refunds[] }`; every payment (here and in the list/detail) has `createdAt`, when the attempt was first saved (G12) |
 | GET | `/api/v1/admin/webhook-events` | payments.view | all-locations staff only | Received events: `provider`, `signatureValid`, `status` `RECEIVED`/`PROCESSED`/`IGNORED`/`ERROR`/`REJECTED`, `fromDate`, `toDate`. Rows include `payloadSha256` and `payloadTruncated` (§7) |
 | POST | `/api/v1/admin/webhook-events/{id}/reprocess` | payments.manage (D15) | | Retry a valid event in `ERROR` |
 | POST | `/api/v1/admin/orders/{orderId}/refunds` | refunds.request | IK | Create refund request (`REQUESTED`); ETag = payment version |
@@ -1078,8 +1084,9 @@ Rules: `amountPaise` ≤ paid/collected − refunded − pending → else 422 `R
 | GET | `/api/v1/admin/delivery/slots` | delivery.manage | | Slots with `bookedCount`: `fulfillmentLocationId`, `fromDate`, `toDate` |
 | PATCH | `/api/v1/admin/delivery/slots/{slotId}` | delivery.manage | IM | Change capacity, `CLOSED`/`OPEN` |
 | GET/POST | `/api/v1/admin/delivery/riders` | delivery.manage | | Riders |
+| GET | `/api/v1/admin/delivery/riders/lookup` | delivery.manage **or** cash.settle | | G7 picker: `fulfillmentLocationId`, `isActive`, `q`, paging; rows `{ id, fulfillmentLocationId, fullName, phoneLast4, isActive }`; location-scoped |
 | PUT | `/api/v1/admin/delivery/riders/{riderId}` | delivery.manage | IM | Update / deactivate |
-| GET | `/api/v1/admin/delivery/shipments` | delivery.manage | | `fulfillmentLocationId`, `slotId`, `status`, `riderId` |
+| GET | `/api/v1/admin/delivery/shipments` | delivery.manage | | `fulfillmentLocationId`, `slotId`, `slotDate` (G10), `status`, `riderId`, `sort` (G10): comma list of `placedAt` (default), `slotStartAt`, `status`, `dispatchedAt`, `-` prefix descending; unknown or repeated key → 422 on `sort` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/assign` | delivery.manage | IM | Assign rider |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/dispatch` | delivery.manage | IM | Order `PACKED` → `OUT_FOR_DELIVERY` (`dispatchTemperatureC`) |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/deliver` | delivery.manage | IM | `deliveryCode`, optional `cashCollectedPaise` → `DELIVERED` + invoice |

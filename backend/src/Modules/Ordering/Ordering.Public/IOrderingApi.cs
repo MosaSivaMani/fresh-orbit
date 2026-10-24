@@ -15,6 +15,10 @@ public interface IOrderingApi
 
     /// <summary>The order's status, or null when the order does not exist (cash collection check).</summary>
     Task<OrderStatus?> GetOrderStatusAsync(Guid orderId, CancellationToken cancellationToken = default);
+
+    /// <summary>Order numbers of the requested orders in one query (G16: coupon redemptions); missing ids are absent.</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetOrderNumbersAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("Not implemented by this test double.");
 }
 
 /// <summary>Stored as PENDING_PAYMENT, CONFIRMED, … (see docs/architecture).</summary>
