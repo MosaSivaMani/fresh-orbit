@@ -53,6 +53,7 @@ public sealed class CatalogModule : IModule
         services.AddScoped<OrphanImageCleanupJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, CatalogRecurringJobs>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, PreparationMethodsLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, CatalogSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => CatalogEndpoints.Map(endpoints);

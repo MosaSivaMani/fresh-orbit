@@ -50,6 +50,13 @@ internal sealed class IdentityApi(FreshOrbitDbContext db, ICustomerAccountDirect
     public Task<Guid?> FindUserIdByPhoneAsync(string phone, CancellationToken cancellationToken = default)
         => db.Set<DomainUser>().AsNoTracking().Where(u => u.Phone == phone).Select(u => (Guid?)u.Id).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyDictionary<string, Guid>> FindUserIdsByPhonesAsync(IReadOnlyCollection<string> phones, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(phones);
+        var rows = await db.Set<DomainUser>().AsNoTracking().Where(u => u.Phone != null && phones.Contains(u.Phone)).Select(u => new { Phone = u.Phone!, u.Id }).ToListAsync(cancellationToken);
+        return rows.ToDictionary(r => r.Phone, r => r.Id, StringComparer.Ordinal);
+    }
+
     public async Task<IReadOnlyList<StaffSummary>> GetStaffMembersAsync(IReadOnlyCollection<Guid> staffMemberIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(staffMemberIds);

@@ -67,6 +67,7 @@ public sealed class InventoryModule : IModule
         services.AddScoped<LowStockDigestJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, InventoryJobRegistration>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, StorageUnitsReferenceDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, InventorySampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => InventoryEndpoints.Map(endpoints);

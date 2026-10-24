@@ -76,6 +76,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IValidator<UpdateRoleRequest>, UpdateRoleRequestValidator>();
 
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, IdentityReferenceDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, IdentitySampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => IdentityEndpoints.Map(endpoints);

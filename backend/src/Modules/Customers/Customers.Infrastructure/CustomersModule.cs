@@ -1,3 +1,6 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Customers.Infrastructure.Seeding;
 using FluentValidation;
 using FreshOrbit.Customers.Application.Addresses;
 using FreshOrbit.Customers.Application.Admin;
@@ -37,6 +40,7 @@ public sealed class CustomersModule : IModule
         services.AddScoped<ICustomerAccountDirectory, CustomerAccountDirectory>();
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
         services.AddScoped<IValidator<CustomerListRequest>, CustomerListRequestValidator>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, CustomersSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => CustomersEndpoints.Map(endpoints);

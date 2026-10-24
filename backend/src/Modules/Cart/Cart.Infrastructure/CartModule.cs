@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Cart.Infrastructure.Seeding;
 using FreshOrbit.Cart.Application.Handlers;
 using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.Cart.Application.Abstractions;
@@ -37,6 +39,7 @@ public sealed class CartModule : IModule
 
         services.AddScoped<AbandonCartsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, CartJobs>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, CartSamplePurgeParticipant>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => CartEndpoints.Map(endpoints);

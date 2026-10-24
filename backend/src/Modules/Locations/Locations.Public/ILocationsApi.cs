@@ -35,6 +35,10 @@ public interface ILocationsApi
     /// <summary>The requested cities that exist, any status (missing ids are simply absent).</summary>
     Task<IReadOnlyList<CitySummary>> GetCitiesAsync(IReadOnlyCollection<Guid> cityIds, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>The cities with the given codes that exist, any status (missing codes are simply absent); codes match exactly.</summary>
+    Task<IReadOnlyList<CitySummary>> GetCitiesByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
 
 /// <param name="Status">DRAFT, ACTIVE, PAUSED or RETIRED (stored code).</param>

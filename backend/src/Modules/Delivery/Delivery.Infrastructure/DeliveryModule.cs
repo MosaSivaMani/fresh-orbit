@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Delivery.Infrastructure.Seeding;
 using FreshOrbit.Locations.Public.Events;
 using FreshOrbit.Ordering.Public.Events;
 using FluentValidation;
@@ -74,6 +76,9 @@ public sealed class DeliveryModule : IModule
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, DeliveryJobs>());
         services.AddScoped<SlotGenerationJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, DeliverySampleDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, DeliverySlotsSampleDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, DeliverySamplePurgeParticipant>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => DeliveryEndpoints.Map(endpoints);

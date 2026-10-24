@@ -12,6 +12,10 @@ public interface IIdentityApi
     /// <summary>The user with this E.164 phone, or null.</summary>
     Task<Guid?> FindUserIdByPhoneAsync(string phone, CancellationToken cancellationToken = default);
 
+    /// <summary>User ids by E.164 phone for the phones that have a user (one query; missing phones are absent).</summary>
+    Task<IReadOnlyDictionary<string, Guid>> FindUserIdsByPhonesAsync(IReadOnlyCollection<string> phones, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("Not implemented by this test double.");
+
     /// <summary>The requested staff members that exist (missing ids are simply absent).</summary>
     Task<IReadOnlyList<StaffSummary>> GetStaffMembersAsync(IReadOnlyCollection<Guid> staffMemberIds, CancellationToken cancellationToken = default);
 

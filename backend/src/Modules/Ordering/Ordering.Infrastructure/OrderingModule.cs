@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Ordering.Infrastructure.Seeding;
 using FreshOrbit.Ordering.Application.Handlers;
 using FreshOrbit.Delivery.Public.Events;
 using FreshOrbit.Payments.Public.Events;
@@ -70,6 +72,7 @@ public sealed class OrderingModule : IModule
         services.AddScoped<ExpireUnpaidOrdersJob>();
         services.AddScoped<ExpireSubstitutionsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, OrderingJobs>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, OrderingSamplePurgeParticipant>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => OrderingEndpoints.Map(endpoints);

@@ -48,6 +48,20 @@ public sealed class CatalogApi(FreshOrbitDbContext db) : ICatalogApi
         return [.. rows.Select(r => new ProductSummary(r.Id, r.Name, r.Slug, r.ImageKey, Map(r.Status)))];
     }
 
+    public async Task<IReadOnlyDictionary<string, Guid>> GetCategoryIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(slugs);
+        var wanted = slugs.Distinct().ToList();
+        return await db.Set<Category>().AsNoTracking().Where(c => wanted.Contains(c.Slug)).ToDictionaryAsync(c => c.Slug, c => c.Id, StringComparer.Ordinal, cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, Guid>> GetProductIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(slugs);
+        var wanted = slugs.Distinct().ToList();
+        return await db.Set<Product>().AsNoTracking().Where(p => wanted.Contains(p.Slug)).ToDictionaryAsync(p => p.Slug, p => p.Id, StringComparer.Ordinal, cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> GetCategoryLineagesAsync(IReadOnlyCollection<Guid> categoryIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(categoryIds);

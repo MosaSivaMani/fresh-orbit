@@ -34,6 +34,7 @@ public sealed class PricingModule : IModule
         services.AddScoped<IPricingApi, PricingApi>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityActivationCheck, PricingCityActivationCheck>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, TaxCategoriesLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, PricingSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => PricingEndpoints.Map(endpoints);

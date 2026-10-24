@@ -8,6 +8,11 @@ internal sealed class SampleRecordTracker(FreshOrbitDbContext db) : ISampleRecor
     public void Track(string tableName, Guid recordId)
     {
         SampleDataPurger.EnsureTableName(tableName);
+        if (db.Set<SampleRecord>().Local.Any(r => r.TableName == tableName && r.RecordId == recordId))
+        {
+            return;
+        }
+
         db.Add(new SampleRecord(tableName, recordId));
     }
 }

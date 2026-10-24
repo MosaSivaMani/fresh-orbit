@@ -94,6 +94,7 @@ One `ISampleDataLoader` per module (`Order` values leave gaps for later modules)
 | 70 | `CustomersSampleDataLoader` | `customers.json` | identity (customer rows exist) | Profile fields on `customers.customers`; `customers.addresses` |
 | 80 | `PromotionsSampleDataLoader` | `promotions.json` | locations, catalog | `promotions.coupons` (scopes cascade), `promotions.promotions` |
 | 90 | `LocationsActivationSampleDataLoader` | `locations.json` (`targetStatus`) | pricing, inventory, delivery | Location → ACTIVE, then city → ACTIVE through the normal commands, so the LOC-R6 readiness check proves the set is complete |
+| 95 | `DeliverySlotsSampleDataLoader` | — | active location and city | Slots of the next 7 days through `SlotGenerationService` (as the daily job does), so the store is orderable at once. Slots are **not** tracked: they are generated rows, removed by the Delivery purge participant (§5) |
 
 ### Exact loader work for the backend team
 
@@ -125,7 +126,7 @@ Module notes:
 | Module | Note |
 |---|---|
 | Identity | Staff password: from `FRESHORBIT_SAMPLE_STAFF_PASSWORD` (≥ 12 chars, IDN-R13); when absent, generate a random one and print it once to the console. Never written to a file. A sample ADMIN makes `--create-admin` refuse (`ADMIN_ALREADY_EXISTS`) until purged — acceptable for dev and staging |
-| Catalog | `targetStatus: ACTIVE` → publish after variants and the image exist (CAT-R3). Placeholder: background colour, product name and the words "Sample image", 1200×1200 PNG, re-encoded by the normal upload path |
+| Catalog | `targetStatus: ACTIVE` → publish after variants and the image exist (CAT-R3). Placeholder (as built, replacing the `background`/`label` style of `images.json`): soft sand gradient, a pale teal disc and a simple silhouette in brand teal (`#0E9384`/`#0B7D70`) — a prawn for prawns, scampi, lobster and prawn banners, a crab for crabs, else a fish; **no text** in the image (the product name is shown by the UI). Product images are PNGs uploaded through `ProductImageService` (normal CAT-R16 renditions); category and banner images are WebP files written to `IFileStorage` at the `imageKey` of `images.json` (banners only when the file is missing) |
 | Pricing | Use the bulk service with the file's `bulk` object as-is (all-or-nothing, PRC-R13); `validFrom: null` = `T0` |
 | Inventory | `receivedAtOffsetHours` is informational if the receipt service stamps `received_at = now`; `caughtOrHarvestedOn` and `bestBeforeAt` come from the offsets |
 | Delivery | Slots are not in the file; the generation job creates them after activation (DEL-R9) |
@@ -133,8 +134,16 @@ Module notes:
 
 ## 5. Purge (`--purge-sample`)
 
-`SampleDataPurger` deletes every `platform.sample_records` row's target by `id`, table by table, retrying tables that
-hit a foreign key until nothing is left; if no table can make progress it throws and names the tables. Children with a
+`SampleDataPurger` runs in **one transaction**. It first asks every `ISamplePurgeParticipant` for blockers and refuses
+(`SamplePurgeRefusedException`, host exit code 4, nothing deleted) when any exist; then participants prepare (Delivery
+deletes unbooked slots of sample templates); then it deletes every `platform.sample_records` row's target by `id`,
+table by table under savepoints, retrying tables that hit a foreign key until nothing is left. If no table can make
+progress it rolls everything back and refuses, naming the tables and the constraint (e.g. refresh tokens of a sample
+staff user who signed in). Retried deletes appear as `ERR Failed executing DbCommand` lines in the log; they are
+expected.
+
+Participants (blockers): Delivery (booked slots of sample templates), Ordering (orders at a sample location or of a
+sample customer), Payments (payments of such orders), Cart (carts of sample customers or at the sample location). Children with a
 composite key (operating hours, variant preparations, staff roles and location access, coupon scopes, wishlist items)
 have no `id` and are removed by their `ON DELETE CASCADE` from the tracked parent.
 
@@ -142,10 +151,10 @@ Rows created **after** loading that point at sample rows block the purge:
 
 | Created later by | Rows | Proposed handling (S-D2) |
 |---|---|---|
-| Delivery slot generation (DEL-R9) | `delivery.delivery_slots` → `slot_templates` (restrict) | Delivery adds a purge hook that deletes slots of sample templates with `booked_count = 0` before the purger runs |
+| Delivery slot generation (DEL-R9) | `delivery.delivery_slots` → `slot_templates` (restrict) | Built: `DeliverySamplePurgeParticipant` deletes slots of sample templates with `booked_count = 0`; a booked one blocks the purge |
 | Demo activity | carts, orders, payments, shipments, reservations, SALE movements, complaints, notifications, refresh tokens, OTP challenges | Orders, payments and movements are never deleted (database §1). Purge refuses with the list of blocking tables; to start clean, drop the development database instead |
 | Outbox / audit | `platform.outbox`, `audit.entries` | No foreign keys; left in place (append-only history) |
-| Image files | `products/{productId}/…` objects | Rows are deleted by the purge; the daily orphan-image job (CAT-R17) removes the files |
+| Image files | `products/{productId}/…` objects; `sample/categories/*`, `sample/banners/*` | Rows are deleted by the purge; the daily orphan-image job (CAT-R17) removes product files. Category and banner files stay (a reload overwrites category files and reuses banner files) |
 
 ## 6. Validation
 
@@ -193,3 +202,29 @@ Logged in `docs/decisions/log.md` as D54 (S-D1) to D61 (S-D8); all accepted.
 | S-D6 | Business profile | Accepted: `settings.json` with a checksum-valid fake GSTIN `37AAAAA0000A1Z1`, loaded only when no profile exists |
 | S-D7 | Preparation of a pre-cut PACK (seer steaks, marinated prawns, fillets) | Proposed: the preparation code describes what is in the pack (STEAK, PEELED_DEVEINED, FILLET…), yield 10000, charge 0; RD-G2 (`display_name`) would let it read "As packed" |
 | S-D8 | Validator in CI | Accepted: done in the backend job |
+
+## 8. Implementation (L1, branch `backend/sample-loaders`)
+
+All loaders of §4 are built in `<Module>.Infrastructure/Seeding/` and registered with `TryAddEnumerable`. They call
+the Application services (validators run first with `ValidateAndThrowAsync`) under the host's SYSTEM actor; the
+Customers loader builds its profile and address services over a customer context of each sample customer. The
+context carries `StartedAt` (`T0`); helpers in SharedKernel `Seeding/SampleFiles.cs` (file reading, city-local
+dates) and `SampleTracking.cs` (track by entity type, read tracked ids).
+
+Public read members added for key → id resolution (one query each): `IIdentityApi.FindUserIdsByPhonesAsync`,
+`ICatalogApi.GetCategoryIdsBySlugsAsync`, `ICatalogApi.GetProductIdsBySlugsAsync`, `ILocationsApi.GetCitiesByCodesAsync`.
+
+Not supported by the loaders: staff `locationCodes` (fails the run if non-empty; the sample staff are all-location).
+
+Host: `--sample` and `--purge-sample` are refused in Production (exit 2) before any database work; a refused purge
+exits 4.
+
+Tests: `backend/tests/FreshOrbit.SampleData.Tests` (Testcontainers): load → counts per table and every row tracked,
+7 slot dates, banner link is the category id; second load inserts nothing; `GET /api/v1/products?pincode=530017`
+returns 26 priced products in stock with images; a booked slot blocks the purge and nothing is deleted; purge
+leaves every sample table empty; Production refusal of both flags.
+
+Loaded counts (dev database, 2026-10-24): 1 business profile, 1 city, 1 location, 1 closure, 3 service areas,
+20 pincodes, 5 users (2 staff, 3 customers), 5 addresses, 8 categories, 26 products, 28 variants, 26 images, 4 tax
+rules, 28 prices, 67 preparation charges, 28 stock items, 29 batches and RECEIPT movements, 3 cold-chain logs,
+21 slot templates, 19 slots over the next 7 days (today's slots past their cutoff are not generated), 3 riders, 2 coupons, 2 banners; 346 tracked rows.

@@ -1,3 +1,5 @@
+using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.Locations.Infrastructure.Seeding;
 using FluentValidation;
 using FreshOrbit.Locations.Application.Cities;
 using FreshOrbit.Locations.Application.Common;
@@ -44,6 +46,8 @@ public sealed class LocationsModule : IModule
         services.AddScoped<ServiceAreaService>();
         services.AddScoped<LocationsApi>();
         services.AddScoped<ILocationsApi>(provider => provider.GetRequiredService<LocationsApi>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, LocationsSampleDataLoader>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, LocationsActivationSampleDataLoader>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => LocationsEndpoints.Map(endpoints);
