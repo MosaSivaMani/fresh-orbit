@@ -173,3 +173,7 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D167 | 2026-10-24 | Codespaces size | The dev container asks for a 4-core Codespace and frees disk before starting the stack (PR #9) |
 | D168 | 2026-10-24 | BFF origin outside production | The web BFF accepts `NEXT_PUBLIC_SITE_URL` as an allowed origin outside Production, so the Codespaces URL works (PR #9) |
 | D169 | 2026-10-24 | Codespaces host binding | Codespaces host settings apply only when the Codespaces environment variable is set (PR #9) |
+| D172 | 2026-10-24 | Banner link slug | Banners keep `linkTarget` as the id and add `linkSlug` (CATEGORY or PRODUCT target; null for COUPON or a missing target), so existing clients stay valid (W14, PROMO-R28, PR #12) |
+| D173 | 2026-10-24 | Absolute media URLs in Production | A Production host refuses to start with a relative or non-https `FileStorage:PublicBaseUrl` (rule 7); other environments keep `/media` (W15, PR #12) |
+| D174 | 2026-10-24 | Complaint photo retention | Counted from closing (RESOLVED `resolvedAt`, REJECTED `decidedAt`); the period is configuration `Ordering:ComplaintPhotoRetentionDays`; until the owner sets it nothing is purged and the daily job logs a warning (ORD-R66, PR #12). Owner to choose the period |
+| D175 | 2026-10-24 | Upload rate limit | Customer file uploads have their own `upload` policy, 20 per hour per customer (PR #12) |
