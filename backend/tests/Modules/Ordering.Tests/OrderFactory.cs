@@ -97,7 +97,8 @@ public static class OrderFactory
         DateTimeOffset? placedAt = null,
         Guid? customerId = null,
         Guid? fulfillmentLocationId = null,
-        string? orderNumber = null)
+        string? orderNumber = null,
+        string timeZone = "Asia/Kolkata")
     {
         var at = placedAt ?? PlacedAt;
         var itemsPaise = Money.Sum(items.Select(i => i.ItemPaise));
@@ -113,7 +114,7 @@ public static class OrderFactory
             Guid.CreateVersion7(),
             fulfillmentLocationId ?? Guid.CreateVersion7(),
             Guid.CreateVersion7(),
-            "Asia/Kolkata",
+            timeZone,
             method,
             preference,
             new AddressSnapshot(Guid.CreateVersion7(), "Priya Raman", "+919876543210", "12, 3rd Cross Street", null, "Near RTO", "Thiruvanmiyur", "Chennai", "TN", "600041", null, null),

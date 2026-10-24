@@ -494,6 +494,11 @@ public sealed class StockItem : AggregateRoot
             Raise(new OutOfStockReached(Id, FulfillmentLocationId, VariantId, after.Available, after.Threshold));
         }
 
+        if (before.Available <= 0 && after.Available > 0)
+        {
+            Raise(new FreshOrbit.Inventory.Public.Events.StockAvailableAgain(Id, FulfillmentLocationId, VariantId, after.Available));
+        }
+
         if (before.Available <= before.Threshold && after.Available > after.Threshold)
         {
             Raise(new StockReplenished(Id, FulfillmentLocationId, VariantId, after.Available, after.Threshold));

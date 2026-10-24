@@ -851,6 +851,22 @@
         "tags": [
           "Customers"
         ],
+        "parameters": [
+          {
+            "name": "pincode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Pincode",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -861,6 +877,16 @@
                   "items": {
                     "$ref": "#/components/schemas/WishlistItemResponse"
                   }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -897,6 +923,108 @@
         "parameters": [
           {
             "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/me/stock-alerts": {
+      "get": {
+        "tags": [
+          "Customers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StockAlertResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Customers"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStockAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAlertResponse"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAlertResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/stock-alerts/{alertId}": {
+      "delete": {
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "alertId",
             "in": "path",
             "required": true,
             "schema": {
@@ -949,6 +1077,14 @@
               "format": "int32",
               "default": 20
             }
+          },
+          {
+            "name": "CityId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -998,6 +1134,74 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CustomerDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/customers/{customerId}/orders": {
+      "get": {
+        "tags": [
+          "Customers"
+        ],
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerOrdersResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1086,6 +1290,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ServiceabilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1379,6 +1593,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CityResponse"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CityRetirementBlockedProblem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition Required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1965,6 +2209,114 @@
         }
       }
     },
+    "/api/v1/admin/me/locations": {
+      "get": {
+        "tags": [
+          "Admin lookups"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfStaffLocationItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/cities/lookup": {
+      "get": {
+        "tags": [
+          "Admin lookups"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfCityLookupItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/home": {
       "get": {
         "tags": [
@@ -1977,6 +2329,77 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HomeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bestsellers": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BestsellersResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/preparation-methods": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StorefrontPreparationMethod"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -2180,6 +2603,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StorefrontProductDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -2398,6 +2841,80 @@
                   "items": {
                     "$ref": "#/components/schemas/PreparationMethodResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/catalog/variants": {
+      "get": {
+        "tags": [
+          "Admin catalog"
+        ],
+        "parameters": [
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfVariantLookupItem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -3233,6 +3750,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaxCategoryRulesResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition Required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -4214,6 +4761,74 @@
         }
       }
     },
+    "/api/v1/price-quote": {
+      "get": {
+        "tags": [
+          "Cart"
+        ],
+        "parameters": [
+          {
+            "name": "variantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "preparation",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "unit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pincode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceQuoteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/coupons": {
       "get": {
         "tags": [
@@ -4263,6 +4878,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResponseOfBannerInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -4387,6 +5012,95 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/delivery/riders/lookup": {
+      "get": {
+        "tags": [
+          "DeliveryEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "fulfillmentLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "isActive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfRiderLookupItem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -4505,6 +5219,35 @@
           },
           "422": {
             "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/business-profile": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicBusinessProfileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4769,6 +5512,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResponseOfRedemptionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -5275,6 +6028,151 @@
         }
       }
     },
+    "/api/v1/orders/{orderId}/complaints/{complaintId}/photos": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplaintResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{orderId}/complaints/{complaintId}/photos/{photoId}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orders/{orderId}/invoice": {
       "get": {
         "tags": [
@@ -5353,7 +6251,10 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           {
@@ -5412,6 +6313,26 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -5451,6 +6372,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -5478,6 +6409,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminOrderDetailResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -5845,6 +6796,78 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ComplaintResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/complaints/{complaintId}/photos/{photoId}": {
+      "get": {
+        "tags": [
+          "Admin complaints"
+        ],
+        "parameters": [
+          {
+            "name": "complaintId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -7325,6 +8348,21 @@
             }
           },
           {
+            "name": "slotDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -7348,6 +8386,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResponseOfShipmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -8662,7 +9710,8 @@
           "itemCount",
           "totalPaise",
           "finalTotalPaise",
-          "amountDuePaise"
+          "amountDuePaise",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -8727,6 +9776,9 @@
           "amountDuePaise": {
             "type": "integer",
             "format": "int64"
+          },
+          "version": {
+            "type": "string"
           }
         }
       },
@@ -9005,6 +10057,27 @@
             "items": {
               "$ref": "#/components/schemas/AdminPreparationResponse"
             }
+          },
+          "piecesMin": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMax": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "serves": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -9332,6 +10405,12 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9432,6 +10511,24 @@
           "costPerUnitPaise": {
             "type": "integer",
             "format": "int64"
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9443,6 +10540,24 @@
           "DISCARDED"
         ],
         "type": "string"
+      },
+      "BestsellersResponse": {
+        "required": [
+          "location",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            }
+          }
+        }
       },
       "BulkPriceResponse": {
         "required": [
@@ -9654,6 +10769,12 @@
           },
           "version": {
             "type": "string"
+          },
+          "supportHours": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9916,6 +11037,36 @@
             "items": {
               "$ref": "#/components/schemas/CartIssueView"
             }
+          },
+          "minOrder": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QuantityView"
+              }
+            ]
+          },
+          "maxOrder": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QuantityView"
+              }
+            ]
+          },
+          "orderStep": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QuantityView"
+              }
+            ]
           }
         }
       },
@@ -10709,6 +11860,30 @@
           }
         }
       },
+      "CityLookupItem": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CityStatus"
+          }
+        }
+      },
       "CityResponse": {
         "required": [
           "id",
@@ -10758,6 +11933,68 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "CityRetirementBlockedProblem": {
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "code",
+          "traceId",
+          "blocking",
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blocking": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ProblemError"
+              }
+            }
           }
         }
       },
@@ -10852,6 +12089,37 @@
           "string"
         ]
       },
+      "ComplaintPhotoDto": {
+        "required": [
+          "id",
+          "url",
+          "width",
+          "height",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ComplaintResponse": {
         "required": [
           "id",
@@ -10869,7 +12137,12 @@
           "raisedAt",
           "decidedAt",
           "resolvedAt",
-          "attachmentUrls"
+          "attachmentUrls",
+          "productName",
+          "variantName",
+          "preparationName",
+          "maxRefundPaise",
+          "photos"
         ],
         "type": "object",
         "properties": {
@@ -10948,6 +12221,34 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "preparationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "maxRefundPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComplaintPhotoDto"
             }
           }
         }
@@ -11601,6 +12902,23 @@
           }
         }
       },
+      "CreateStockAlertRequest": {
+        "required": [
+          "variantId",
+          "fulfillmentLocationId"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentLocationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CreateStockItemRequest": {
         "required": [
           "fulfillmentLocationId",
@@ -11635,7 +12953,8 @@
           "isBlocked",
           "deletedAt",
           "addresses",
-          "version"
+          "version",
+          "orderCounts"
         ],
         "type": "object",
         "properties": {
@@ -11689,6 +13008,9 @@
           },
           "version": {
             "type": "string"
+          },
+          "orderCounts": {
+            "$ref": "#/components/schemas/CustomerOrderCountsResponse"
           }
         }
       },
@@ -11849,6 +13171,127 @@
           }
         }
       },
+      "CustomerOrderCountsResponse": {
+        "required": [
+          "total",
+          "open",
+          "delivered",
+          "cancelled",
+          "lastPlacedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "open": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "delivered": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cancelled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastPlacedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomerOrderListItem": {
+        "required": [
+          "orderId",
+          "orderNumber",
+          "status",
+          "paymentMethod",
+          "fulfillmentLocationId",
+          "placedAt",
+          "slotStartAt",
+          "slotEndAt",
+          "totalPaise",
+          "finalTotalPaise"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/OrderingPaymentMethod"
+          },
+          "fulfillmentLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "placedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slotStartAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "slotEndAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "finalTotalPaise": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "CustomerOrdersResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerOrderListItem"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "CustomerPaymentResponse": {
         "required": [
           "id",
@@ -11997,7 +13440,8 @@
       "CustomerSlotsResponse": {
         "required": [
           "fulfillmentLocationId",
-          "items"
+          "items",
+          "timeZone"
         ],
         "type": "object",
         "properties": {
@@ -12010,6 +13454,9 @@
             "items": {
               "$ref": "#/components/schemas/CustomerSlotResponse"
             }
+          },
+          "timeZone": {
+            "type": "string"
           }
         }
       },
@@ -12037,7 +13484,9 @@
           "sku",
           "variantName",
           "available",
-          "lowStockThreshold"
+          "lowStockThreshold",
+          "stockUnit",
+          "productName"
         ],
         "type": "object",
         "properties": {
@@ -12072,6 +13521,18 @@
           "lowStockThreshold": {
             "type": "integer",
             "format": "int64"
+          },
+          "stockUnit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12086,7 +13547,8 @@
           "openComplaints",
           "refundsRequested",
           "refundsRequestedPaise",
-          "openPaymentIssues"
+          "openPaymentIssues",
+          "sales"
         ],
         "type": "object",
         "properties": {
@@ -12132,6 +13594,49 @@
             "format": "int64"
           },
           "openPaymentIssues": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sales": {
+            "$ref": "#/components/schemas/DashboardSales"
+          }
+        }
+      },
+      "DashboardSales": {
+        "required": [
+          "ordersPlaced",
+          "ordersCancelled",
+          "orderValuePaise",
+          "averageOrderValuePaise",
+          "ordersDelivered",
+          "deliveredRevenuePaise"
+        ],
+        "type": "object",
+        "properties": {
+          "ordersPlaced": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ordersCancelled": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orderValuePaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "averageOrderValuePaise": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
+          },
+          "ordersDelivered": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "deliveredRevenuePaise": {
             "type": "integer",
             "format": "int64"
           }
@@ -12479,6 +13984,26 @@
           }
         }
       },
+      "FreshnessInfo": {
+        "required": [
+          "caughtOn",
+          "receivedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "caughtOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "FromPrice": {
         "required": [
           "unitPricePaise",
@@ -12500,6 +14025,13 @@
           },
           "perUnit": {
             "$ref": "#/components/schemas/SellUnit"
+          },
+          "discountBp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -12618,6 +14150,69 @@
           }
         }
       },
+      "HomeBanner": {
+        "required": [
+          "id",
+          "title",
+          "subtitle",
+          "imageKey",
+          "imageUrl",
+          "linkType",
+          "linkTarget",
+          "startsAt",
+          "endsAt",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "subtitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "linkType": {
+            "type": "string"
+          },
+          "linkTarget": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "HomeResponse": {
         "required": [
           "banners",
@@ -12628,7 +14223,10 @@
         "type": "object",
         "properties": {
           "banners": {
-            "type": "array"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HomeBanner"
+            }
           },
           "featuredCategories": {
             "type": "array",
@@ -12644,6 +14242,12 @@
           },
           "locationRequired": {
             "type": "boolean"
+          },
+          "bestsellers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            }
           }
         }
       },
@@ -12987,6 +14591,49 @@
           }
         }
       },
+      "ListVariant": {
+        "required": [
+          "id",
+          "name",
+          "sellUnit",
+          "minOrder",
+          "maxOrder",
+          "orderStep",
+          "defaultPreparationCode",
+          "serving"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sellUnit": {
+            "$ref": "#/components/schemas/SellUnit"
+          },
+          "minOrder": {
+            "$ref": "#/components/schemas/QuantityValue"
+          },
+          "maxOrder": {
+            "$ref": "#/components/schemas/QuantityValue"
+          },
+          "orderStep": {
+            "$ref": "#/components/schemas/QuantityValue"
+          },
+          "defaultPreparationCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serving": {
+            "$ref": "#/components/schemas/ServingInfo"
+          }
+        }
+      },
       "LocationRef": {
         "required": [
           "fulfillmentLocationCode",
@@ -13159,6 +14806,31 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "variantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -13483,6 +15155,9 @@
           },
           "allowedActions": {
             "$ref": "#/components/schemas/AllowedActionsDto"
+          },
+          "timeZone": {
+            "type": "string"
           }
         }
       },
@@ -13658,13 +15333,51 @@
           }
         }
       },
+      "OrderLineBatchDto": {
+        "required": [
+          "movementId",
+          "batchId",
+          "batchCode",
+          "quantity",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "movementId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "batchCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/OrderingQuantityDto"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "OrderLineStockDto": {
         "required": [
           "orderItemId",
           "variantId",
           "preparationCode",
           "grossQuantity",
-          "yieldBp"
+          "yieldBp",
+          "reservationStatus",
+          "batches"
         ],
         "type": "object",
         "properties": {
@@ -13688,6 +15401,18 @@
           "yieldBp": {
             "type": "integer",
             "format": "int32"
+          },
+          "reservationStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "batches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderLineBatchDto"
+            }
           }
         }
       },
@@ -13750,6 +15475,9 @@
           "amountDuePaise": {
             "type": "integer",
             "format": "int64"
+          },
+          "timeZone": {
+            "type": "string"
           }
         }
       },
@@ -13879,6 +15607,21 @@
           }
         }
       },
+      "OrderStatus": {
+        "enum": [
+          "PENDING_PAYMENT",
+          "CONFIRMED",
+          "PREPARING",
+          "PACKED",
+          "OUT_FOR_DELIVERY",
+          "DELIVERED",
+          "PAYMENT_FAILED",
+          "CANCELLED",
+          "DELIVERY_FAILED",
+          "RETURNED"
+        ],
+        "type": "string"
+      },
       "OrderTrackingResponse": {
         "required": [
           "orderNumber",
@@ -13925,8 +15668,19 @@
           "amountDuePaise": {
             "type": "integer",
             "format": "int64"
+          },
+          "timeZone": {
+            "type": "string"
           }
         }
+      },
+      "OrderingPaymentMethod": {
+        "enum": [
+          "COD",
+          "UPI_ON_DELIVERY",
+          "ONLINE"
+        ],
+        "type": "string"
       },
       "OrderingQuantityDto": {
         "required": [
@@ -14277,6 +16031,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CashSettlementResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfCityLookupItem": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CityLookupItem"
             }
           },
           "page": {
@@ -14757,6 +16540,35 @@
           }
         }
       },
+      "PagedResponseOfRiderLookupItem": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiderLookupItem"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfRiderResponse": {
         "required": [
           "items",
@@ -14873,6 +16685,35 @@
           }
         }
       },
+      "PagedResponseOfStaffLocationItem": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffLocationItem"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfStockItemResponse": {
         "required": [
           "items",
@@ -14886,6 +16727,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/StockItemResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfVariantLookupItem": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantLookupItem"
             }
           },
           "page": {
@@ -15089,7 +16959,8 @@
           "failureCode",
           "failureMessage",
           "summary",
-          "version"
+          "version",
+          "createdAt"
         ],
         "type": "object",
         "properties": {
@@ -15222,6 +17093,10 @@
           },
           "version": {
             "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -15309,7 +17184,8 @@
           "preparationName",
           "stockUnit",
           "grossQuantity",
-          "orderCount"
+          "orderCount",
+          "sku"
         ],
         "type": "object",
         "properties": {
@@ -15345,6 +17221,9 @@
           "orderCount": {
             "type": "integer",
             "format": "int32"
+          },
+          "sku": {
+            "type": "string"
           }
         }
       },
@@ -15352,7 +17231,9 @@
         "required": [
           "fulfillmentLocationId",
           "slotId",
-          "lines"
+          "lines",
+          "slot",
+          "orderCount"
         ],
         "type": "object",
         "properties": {
@@ -15369,6 +17250,47 @@
             "items": {
               "$ref": "#/components/schemas/PickListLine"
             }
+          },
+          "slot": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PickListSlotDto"
+              }
+            ]
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PickListSlotDto": {
+        "required": [
+          "slotDate",
+          "startAt",
+          "endAt",
+          "cutoffAt"
+        ],
+        "type": "object",
+        "properties": {
+          "slotDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "startAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cutoffAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -15564,6 +17486,117 @@
           }
         }
       },
+      "PriceQuoteResponse": {
+        "required": [
+          "variantId",
+          "preparationCode",
+          "quantity",
+          "maxChargeableQuantity",
+          "unitPricePaise",
+          "compareAtPaise",
+          "discountBp",
+          "priceUnit",
+          "itemPaise",
+          "preparationPaise",
+          "chargeBasis",
+          "taxRateBp",
+          "taxPaise",
+          "estimatedTotalPaise",
+          "maxChargeablePaise",
+          "availability",
+          "fulfillmentLocationCode",
+          "pincode",
+          "weightNote"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "preparationCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "$ref": "#/components/schemas/QuantityView"
+          },
+          "maxChargeableQuantity": {
+            "$ref": "#/components/schemas/QuantityView"
+          },
+          "unitPricePaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "compareAtPaise": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
+          },
+          "discountBp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "priceUnit": {
+            "type": "string"
+          },
+          "itemPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "preparationPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chargeBasis": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "taxRateBp": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taxPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "estimatedTotalPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maxChargeablePaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "availability": {
+            "$ref": "#/components/schemas/CartAvailabilityView"
+          },
+          "fulfillmentLocationCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pincode": {
+            "type": "string"
+          },
+          "weightNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PriceScheduleResponse": {
         "required": [
           "fulfillmentLocationId",
@@ -15661,6 +17694,21 @@
           }
         }
       },
+      "ProblemError": {
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "ProductListItem": {
         "required": [
           "id",
@@ -15722,6 +17770,51 @@
           },
           "locationRequired": {
             "type": "boolean"
+          },
+          "defaultVariant": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ListVariant"
+              }
+            ]
+          },
+          "freshness": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FreshnessInfo"
+              }
+            ]
+          },
+          "offer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProductOffer"
+              }
+            ]
+          }
+        }
+      },
+      "ProductOffer": {
+        "required": [
+          "couponCode",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "couponCode": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
           }
         }
       },
@@ -16046,6 +18139,58 @@
                 "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
+          }
+        }
+      },
+      "PublicBusinessProfileResponse": {
+        "required": [
+          "legalName",
+          "tradeName",
+          "gstin",
+          "fssaiLicenseNo",
+          "address",
+          "supportPhone",
+          "supportEmail",
+          "supportHours",
+          "timeZone"
+        ],
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "tradeName": {
+            "type": "string"
+          },
+          "gstin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fssaiLicenseNo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "supportPhone": {
+            "type": "string"
+          },
+          "supportEmail": {
+            "type": "string"
+          },
+          "supportHours": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timeZone": {
+            "type": "string"
           }
         }
       },
@@ -16425,6 +18570,12 @@
                 "$ref": "#/components/schemas/ReversalReason"
               }
             ]
+          },
+          "orderNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -16788,6 +18939,24 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -16834,6 +19003,35 @@
           "null",
           "string"
         ]
+      },
+      "RiderLookupItem": {
+        "required": [
+          "id",
+          "fulfillmentLocationId",
+          "fullName",
+          "phoneLast4",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phoneLast4": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
       },
       "RiderResponse": {
         "required": [
@@ -17035,6 +19233,12 @@
           },
           "timeZone": {
             "type": "string"
+          },
+          "supportHours": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -17244,7 +19448,8 @@
         "required": [
           "id",
           "code",
-          "name"
+          "name",
+          "timeZone"
         ],
         "type": "object",
         "properties": {
@@ -17256,6 +19461,9 @@
             "type": "string"
           },
           "name": {
+            "type": "string"
+          },
+          "timeZone": {
             "type": "string"
           }
         }
@@ -17369,6 +19577,57 @@
           "endAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "cutoffAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ServingInfo": {
+        "required": [
+          "basis",
+          "netWeightGrams",
+          "piecesMin",
+          "piecesMax",
+          "serves"
+        ],
+        "type": "object",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/QuantityValue"
+          },
+          "netWeightGrams": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMin": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMax": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "serves": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -17826,6 +20085,35 @@
           }
         }
       },
+      "StaffLocationItem": {
+        "required": [
+          "id",
+          "cityId",
+          "code",
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LocationStatus"
+          }
+        }
+      },
       "StaffLoginRequest": {
         "required": [
           "email",
@@ -18018,6 +20306,33 @@
           }
         }
       },
+      "StockAlertResponse": {
+        "required": [
+          "id",
+          "variantId",
+          "fulfillmentLocationId",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fulfillmentLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "StockChangeResponse": {
         "required": [
           "movements",
@@ -18094,6 +20409,24 @@
             "items": {
               "$ref": "#/components/schemas/BatchResponse"
             }
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "variantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -18266,6 +20599,33 @@
           }
         }
       },
+      "StorefrontPreparationMethod": {
+        "required": [
+          "code",
+          "name",
+          "description",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "StorefrontProductDetail": {
         "required": [
           "id",
@@ -18377,6 +20737,16 @@
           },
           "locationRequired": {
             "type": "boolean"
+          },
+          "offer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProductOffer"
+              }
+            ]
           }
         }
       },
@@ -18465,6 +20835,33 @@
               },
               {
                 "$ref": "#/components/schemas/CatalogVariantAvailability"
+              }
+            ]
+          },
+          "discountBp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "serving": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ServingInfo"
+              }
+            ]
+          },
+          "freshness": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FreshnessInfo"
               }
             ]
           }
@@ -19161,6 +21558,51 @@
           }
         }
       },
+      "VariantLookupItem": {
+        "required": [
+          "variantId",
+          "productId",
+          "productName",
+          "variantName",
+          "sku",
+          "sellUnit",
+          "stockUnit",
+          "productStatus",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "variantName": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "sellUnit": {
+            "$ref": "#/components/schemas/SellUnit"
+          },
+          "stockUnit": {
+            "$ref": "#/components/schemas/CatalogStockUnit"
+          },
+          "productStatus": {
+            "$ref": "#/components/schemas/ProductStatus"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
       "VariantPreparationRequest": {
         "required": [
           "code",
@@ -19263,6 +21705,27 @@
             "items": {
               "$ref": "#/components/schemas/VariantPreparationRequest"
             }
+          },
+          "piecesMin": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMax": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "serves": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -19417,6 +21880,77 @@
           "addedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "product": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WishlistProductView"
+              }
+            ]
+          }
+        }
+      },
+      "WishlistPriceView": {
+        "required": [
+          "unitPricePaise",
+          "compareAtPaise",
+          "perUnit"
+        ],
+        "type": "object",
+        "properties": {
+          "unitPricePaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "compareAtPaise": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
+          },
+          "perUnit": {
+            "type": "string"
+          }
+        }
+      },
+      "WishlistProductView": {
+        "required": [
+          "slug",
+          "name",
+          "imageUrl",
+          "price",
+          "isAvailable"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "price": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WishlistPriceView"
+              }
+            ]
+          },
+          "isAvailable": {
+            "type": "boolean"
           }
         }
       }
@@ -19443,6 +21977,9 @@
     },
     {
       "name": "Admin locations"
+    },
+    {
+      "name": "Admin lookups"
     },
     {
       "name": "Catalog"
@@ -19475,6 +22012,9 @@
       "name": "Audit"
     },
     {
+      "name": "Settings"
+    },
+    {
       "name": "Admin promotions"
     },
     {
@@ -19491,9 +22031,6 @@
     },
     {
       "name": "Notifications"
-    },
-    {
-      "name": "Settings"
     }
   ]
 }

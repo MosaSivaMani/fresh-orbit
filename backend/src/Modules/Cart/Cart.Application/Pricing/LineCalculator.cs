@@ -67,7 +67,10 @@ public sealed record PricedLine(
             Max.TotalPaise,
             new CartAvailabilityView(Availability.Status.ToCode(), Availability.Message),
             IsSellable,
-            Issues);
+            Issues,
+            Variant is null ? null : new QuantityView(Variant.MinOrder, unit),
+            Variant is null ? null : new QuantityView(Variant.MaxOrder, unit),
+            Variant is null ? null : new QuantityView(Variant.OrderStep, unit));
     }
 
     public QuoteLine ToQuote(long discountPaise, long taxPaise)

@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using FreshOrbit.Cart.Application.Pricing;
+using FreshOrbit.Cart.Public;
 using FreshOrbit.Catalog.Public;
 using FreshOrbit.Inventory.Public;
 
@@ -55,5 +56,30 @@ public sealed class LineCalculatorTests
         LineCalculator.FormatQuantity(Crabs(), 1).Should().Be("1 piece");
         LineCalculator.QuantityUnitCode(SellUnit.Kg).Should().Be("GRAM");
         LineCalculator.QuantityUnitCode(SellUnit.Pack).Should().Be("PACK");
+    }
+
+    [Fact]
+    public void Line_view_carries_the_order_rules_the_cart_validates_with()
+    {
+        var fish = Fish(minOrder: 500, step: 250);
+        var line = new PricingLine(Guid.CreateVersion7(), fish.VariantId, null, 750);
+
+        // Unpriced (not sold at the location): the rules are still shown so the quantity editor works.
+        var view = LineCalculator.Price(new ResolvedLine(line, fish, null, null), null, null, 1000).ToView(0);
+
+        view.MinOrder.Should().Be(new QuantityView(500, "GRAM"));
+        view.MaxOrder.Should().Be(new QuantityView(5000, "GRAM"));
+        view.OrderStep.Should().Be(new QuantityView(250, "GRAM"));
+
+        var crabs = Crabs();
+        var crabView = LineCalculator.Price(new ResolvedLine(new PricingLine(Guid.CreateVersion7(), crabs.VariantId, null, 2), crabs, null, null), null, null, 0).ToView(0);
+        crabView.MinOrder.Should().Be(new QuantityView(1, "PIECE"));
+        crabView.MaxOrder!.Value.Should().Be(10);
+        crabView.OrderStep!.Value.Should().Be(1);
+
+        var gone = LineCalculator.Price(new ResolvedLine(line, null, null, "PRODUCT_NOT_AVAILABLE"), null, null, 0).ToView(0);
+        gone.MinOrder.Should().BeNull();
+        gone.MaxOrder.Should().BeNull();
+        gone.OrderStep.Should().BeNull();
     }
 }

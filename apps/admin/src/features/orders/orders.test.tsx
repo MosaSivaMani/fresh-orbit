@@ -126,6 +126,7 @@ function summary(overrides: Partial<AdminOrderSummary> = {}): AdminOrderSummary 
     totalPaise: 60000,
     finalTotalPaise: null,
     amountDuePaise: 60000,
+    version: "11",
     ...overrides,
   };
 }

@@ -200,6 +200,7 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 | ORD-R62 | Admin order list (G13, G14): each row carries `version` (the order `xmin`, same as the detail ETag) so bulk actions send `If-Match` without reading each order; `status` is repeatable and each value may be a comma list (`status=CONFIRMED&status=PREPARING` or `status=CONFIRMED,PREPARING`), OR within the field; an unknown code → 422 `VALIDATION_FAILED` on `status`. |
 | ORD-R63 | Admin order detail lines (G17) carry `reservationStatus` and `batches[]` (`movementId`, `batchId`, `batchCode`, `quantity` gross in the stock unit, `occurredAt`) from one `IInventoryApi.GetOrderStock` call: the SALE movements written at pack (FEFO); empty before packing. |
 | ORD-R64 | Account deletion check (CUS-R7): `OrderingCustomerDeletionCheck` reports `ACTIVE_ORDERS_EXIST` and `OPEN_COMPLAINT` (a complaint `OPEN` or `APPROVED`). `IOrderingApi.GetOrderNumbers(ids)` answers order numbers in one query (G16). |
+| ORD-R65 | An order keeps the IANA time zone of its fulfillment location; placing an order whose location has no time zone is refused (422 `CONFIGURATION_MISSING`, field `deliveryAddressId`). Order detail, list and tracking return `timeZone` so clients show slot times in the store's local time (W10). |
 
 ## 4. Events
 

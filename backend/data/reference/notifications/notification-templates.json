@@ -650,6 +650,45 @@
       "dltTemplateId": null
     },
     {
+      "code": "BACK_IN_STOCK",
+      "channel": "EMAIL",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "productName",
+        "variantName",
+        "productSlug"
+      ],
+      "subject": "{{productName}} is back in stock",
+      "body": "Hello {{recipientName}},\n\n{{productName}} ({{variantName}}) is back in stock at your store, as you asked us to tell you.\n\nStock is limited; order soon.\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "dltTemplateId": null
+    },
+    {
+      "code": "BACK_IN_STOCK",
+      "channel": "PUSH",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "productName",
+        "variantName",
+        "productSlug"
+      ],
+      "subject": "Back in stock",
+      "body": "{{productName}} ({{variantName}}) is back in stock. Order now before it sells out.",
+      "dltTemplateId": null
+    },
+    {
+      "code": "BACK_IN_STOCK",
+      "channel": "IN_APP",
+      "category": "ORDER_UPDATES",
+      "variables": [
+        "productName",
+        "variantName",
+        "productSlug"
+      ],
+      "subject": "Back in stock",
+      "body": "{{productName}} ({{variantName}}) is back in stock at your store.",
+      "dltTemplateId": null
+    },
+    {
       "code": "STAFF_ACCOUNT_CREATED",
       "channel": "EMAIL",
       "category": null,

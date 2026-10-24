@@ -80,7 +80,11 @@ public sealed record OrderDetailResponse(
     IReadOnlyList<SubstitutionDto> Substitutions,
     OrderPaymentDto Payment,
     OrderInvoiceRefDto? Invoice,
-    AllowedActionsDto AllowedActions);
+    AllowedActionsDto AllowedActions)
+{
+    /// <summary>IANA time zone of the order's fulfillment location (W10), e.g. <c>Asia/Kolkata</c>; show times in it.</summary>
+    public string TimeZone { get; init; } = string.Empty;
+}
 
 public sealed record OrderListItem(
     Guid Id,
@@ -93,7 +97,11 @@ public sealed record OrderListItem(
     int ItemCount,
     long TotalPaise,
     long? FinalTotalPaise,
-    long AmountDuePaise);
+    long AmountDuePaise)
+{
+    /// <summary>IANA time zone of the order's fulfillment location (W10).</summary>
+    public string TimeZone { get; init; } = string.Empty;
+}
 
 public sealed record AdminOrderListItem(
     Guid Id,
@@ -163,7 +171,11 @@ public sealed record OrderTrackingResponse(
     SlotDto Slot,
     TrackingShipmentDto? Shipment,
     string? DeliveryCode,
-    long AmountDuePaise);
+    long AmountDuePaise)
+{
+    /// <summary>IANA time zone of the order's fulfillment location (W10).</summary>
+    public string TimeZone { get; init; } = string.Empty;
+}
 
 public sealed record PackedLineDto(Guid OrderItemId, QuantityDto Packed, QuantityDto Charged, bool Capped, long FinalTotalPaise, long AdjustmentPaise, string Status);
 
@@ -268,8 +280,18 @@ public static class OrderViews
             [.. order.Substitutions.OrderBy(s => s.ProposedAt).Select(Substitution)],
             new OrderPaymentDto(order.PaymentMethod.ToCode(), payment.Status, null),
             invoice is null ? null : new OrderInvoiceRefDto(invoice.Id, invoice.InvoiceNumber, invoice.IssuedAt),
-            allowedActions);
+            allowedActions)
+        {
+            TimeZone = TimeZoneOf(order.OrderNumber, order.TimeZone),
+        };
     }
+
+    /// <summary>
+    /// The order's stored zone (W10). Checkout always stores the city's zone (cities.time_zone is required and
+    /// validated, and <c>Order.Place</c> refuses an order without one), so a missing value is corrupt data.
+    /// </summary>
+    public static string TimeZoneOf(string orderNumber, string? timeZone)
+        => string.IsNullOrWhiteSpace(timeZone) ? throw new InvalidOperationException($"Order {orderNumber} has no time zone.") : timeZone;
 
     public static AdminOrderDetailResponse AdminDetail(Order order, OrderDetailResponse detail, OrderStockView? stock = null)
     {
@@ -340,7 +362,10 @@ public static class OrderViews
             new SlotDto(order.SlotStartAt, order.SlotEndAt),
             shipment is null ? null : new TrackingShipmentDto(shipment.Status, shipment.RiderName, shipment.RiderPhone, shipment.DispatchedAt, shipment.ColdBoxUsed, shipment.Attempts),
             order.Status == OrderStatus.OutForDelivery ? shipment?.DeliveryCode : null,
-            order.AmountDuePaise);
+            order.AmountDuePaise)
+        {
+            TimeZone = TimeZoneOf(order.OrderNumber, order.TimeZone),
+        };
     }
 
     private static OrderItemDto Item(OrderItem item)

@@ -151,9 +151,14 @@ export function useTaxRules() {
   });
 }
 
+/**
+ * Tax rule schedules are versioned per category (G9): quote the category's `version` from the list, or
+ * `If-None-Match: *` while the category has no period.
+ */
 export function useScheduleTaxRule() {
-  return useScheduleWrite((http, body: ScheduleTaxRuleRequest) =>
-    http.post<TaxCategoryRules>("/admin/pricing/tax-rules", body),
+  return useScheduleWrite(
+    (http, { body, version }: { body: ScheduleTaxRuleRequest; version: Version | null }) =>
+      http.post<TaxCategoryRules>("/admin/pricing/tax-rules", body, schedulePrecondition(version)),
   );
 }
 

@@ -121,6 +121,7 @@ Displayed status (customer, `GET /delivery-slots`, checkout preview), computed, 
 | DEL-R21 | Checkout booking: DeliverySlot saved with `xmin` in Ordering's single save; lost race → Ordering retries the checkout from Read (max 3); `BookSlot` is side-effect free. DB check `booked_count <= capacity` is the last line. |
 | DEL-R22 | Template overlap (DEL-R2) is checked by reading siblings; a concurrent create can slip through → DB `EXCLUDE` constraint (A5) is the backstop, mapped to 409 `SLOT_TEMPLATE_OVERLAP`. |
 | DEL-R23 | Handlers: lost race → throw, outbox retries; inbox row in the same transaction; dead letter after max attempts. |
+| DEL-R24 | `GET /delivery-slots` returns `timeZone` (the location's IANA zone) next to `items`; slot times stay UTC (W10). |
 
 ### Events raised
 

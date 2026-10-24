@@ -217,7 +217,16 @@ public sealed class OrderLifecycleTests(OrderingDatabase database) : OrderingTes
         var orderId = await PlaceOrderAsync();
         var mine = await Customer.GetAsync(new Uri($"/api/v1/orders/{orderId}", UriKind.Relative), Ct);
         mine.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await ReadJsonAsync(mine)).GetProperty("allowedActions").GetProperty("cancel").GetBoolean().Should().BeTrue();
+        var detail = await ReadJsonAsync(mine);
+        detail.GetProperty("allowedActions").GetProperty("cancel").GetBoolean().Should().BeTrue();
+        detail.GetProperty("timeZone").GetString().Should().Be(CheckoutWorld.TimeZone);
+
+        // ORD-R65: list and tracking carry the location's time zone too (a new customer per test, so the list holds only its orders).
+        var list = await ReadJsonAsync(await Customer.GetAsync(new Uri("/api/v1/orders", UriKind.Relative), Ct));
+        list.GetProperty("items").EnumerateArray().Single(i => i.GetProperty("id").GetGuid() == orderId)
+            .GetProperty("timeZone").GetString().Should().Be(CheckoutWorld.TimeZone);
+        var tracking = await ReadJsonAsync(await Customer.GetAsync(new Uri($"/api/v1/orders/{orderId}/tracking", UriKind.Relative), Ct));
+        tracking.GetProperty("timeZone").GetString().Should().Be(CheckoutWorld.TimeZone);
 
         using var other = ClientFor(f => f.CreateCustomerClient());
         (await other.GetAsync(new Uri($"/api/v1/orders/{orderId}", UriKind.Relative), Ct)).StatusCode.Should().Be(HttpStatusCode.NotFound);

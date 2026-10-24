@@ -39,6 +39,13 @@ public interface ILocationsApi
     /// <summary>The cities with the given codes that exist, any status (missing codes are simply absent); codes match exactly.</summary>
     Task<IReadOnlyList<CitySummary>> GetCitiesByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>
+    /// Active pincodes assigned to a service area of any location of the city (any area or location status); empty
+    /// for an unknown city. Used to find customers whose saved addresses are in the city.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetCityPincodesAsync(Guid cityId, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
 
 /// <param name="Status">DRAFT, ACTIVE, PAUSED or RETIRED (stored code).</param>

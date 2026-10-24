@@ -4,6 +4,7 @@ using FreshOrbit.Inventory.Domain.ColdChain.Events;
 using FreshOrbit.Inventory.Domain.Stock;
 using FreshOrbit.Inventory.Domain.Stock.Events;
 using FreshOrbit.Inventory.Public;
+using FreshOrbit.Inventory.Public.Events;
 using FreshOrbit.SharedKernel.Errors;
 using DomainStockUnit = FreshOrbit.Inventory.Domain.Stock.StockUnit;
 
@@ -203,6 +204,46 @@ public sealed class StockItemTests
 
         item.DomainEvents.OfType<LowStockReached>().Should().BeEmpty();
         item.DomainEvents.OfType<OutOfStockReached>().Should().ContainSingle();
+    }
+
+    [Fact]
+    public void Stock_available_again_fires_only_when_available_goes_from_zero_to_above_zero()
+    {
+        var item = StockItem.Create(Guid.NewGuid(), Guid.NewGuid(), DomainStockUnit.Gram, 0);
+        item.ClearEvents();
+
+        item.Receive(new BatchReceipt("FIRST", null, null, null, 500, 50_000, Now.AddDays(2), null), Now, null, false);
+        item.Receive(new BatchReceipt("SECOND", null, null, null, 300, 30_000, Now.AddDays(2), null), Now, null, false);
+
+        var again = item.DomainEvents.OfType<StockAvailableAgain>().Should().ContainSingle().Which;
+        (again.StockItemId, again.FulfillmentLocationId, again.VariantId, again.Available)
+            .Should().Be((item.Id, item.FulfillmentLocationId, item.VariantId, 500));
+    }
+
+    [Fact]
+    public void Stock_available_again_fires_when_a_released_reservation_frees_sold_out_stock()
+    {
+        var item = Item(Batch(500, 50_000, days: 2));
+        var orderId = Guid.NewGuid();
+        item.Reserve(orderId, Guid.NewGuid(), 500, null);
+        item.ClearEvents();
+
+        item.CloseReservationsOfOrder(orderId, ReservationStatus.Released);
+
+        item.DomainEvents.OfType<StockAvailableAgain>().Should().ContainSingle().Which.Available.Should().Be(500);
+    }
+
+    [Fact]
+    public void Stock_available_again_does_not_fire_while_stock_stays_above_zero_or_stays_at_zero()
+    {
+        var item = Item(Batch(500, 50_000, days: 2));
+        item.ClearEvents();
+
+        item.Adjust(AdjustmentKind.AdjustmentIn, AdjustmentReason.Found, null, 100, null, Guid.NewGuid(), Now, null);
+        item.RecordWaste(WasteReason.Damaged, null, 600, null, Guid.NewGuid(), Now, null);
+        item.Count(0, null, null, Guid.NewGuid(), Now, null);
+
+        item.DomainEvents.OfType<StockAvailableAgain>().Should().BeEmpty();
     }
 
     [Fact]
