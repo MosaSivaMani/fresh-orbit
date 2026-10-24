@@ -53,6 +53,7 @@ public sealed class InventoryModule : IModule
 
         services.AddScoped<IInventoryApi, InventoryApi>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityActivationCheck, InventoryCityActivationCheck>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<Catalog.Public.IVariantFreshnessSource, InventoryFreshnessSource>());
 
         services.AddScoped<IValidator<CreateStockItemRequest>, CreateStockItemRequestValidator>();
         services.AddScoped<IValidator<SetThresholdRequest>, SetThresholdRequestValidator>();

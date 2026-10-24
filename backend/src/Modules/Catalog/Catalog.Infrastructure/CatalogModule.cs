@@ -46,6 +46,9 @@ public sealed class CatalogModule : IModule
         services.AddScoped<ProductService>();
         services.AddScoped<ProductImageService>();
         services.AddScoped<StorefrontService>();
+        services.AddMemoryCache();
+        services.AddScoped<IBestsellerRanking, CachedBestsellerRanking>();
+        services.AddScoped<StorefrontEnricher>();
         services.TryAddSingleton<IImageProcessor, SkiaImageProcessor>();
         services.AddScoped<ICatalogApi, CatalogApi>();
 

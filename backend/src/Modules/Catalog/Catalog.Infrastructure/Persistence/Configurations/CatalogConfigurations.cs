@@ -96,6 +96,8 @@ internal sealed class ProductVariantConfiguration : IEntityTypeConfiguration<Pro
             t.HasCheckConstraint("ck_product_variants_sell_unit", CodeCheck.In<SellUnit>("sell_unit"));
             t.HasCheckConstraint("ck_product_variants_stock_unit", CodeCheck.In<StockUnit>("stock_unit"));
             t.HasCheckConstraint("ck_product_variants_quantity_rules", "order_step > 0 AND min_order >= order_step AND min_order % order_step = 0 AND max_order >= min_order AND max_order % order_step = 0");
+            t.HasCheckConstraint("ck_product_variants_pieces", "(pieces_min IS NULL AND pieces_max IS NULL) OR (pieces_min BETWEEN 1 AND 1000 AND pieces_max BETWEEN pieces_min AND 1000)");
+            t.HasCheckConstraint("ck_product_variants_serves", "serves IS NULL OR serves BETWEEN 1 AND 100");
         });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();

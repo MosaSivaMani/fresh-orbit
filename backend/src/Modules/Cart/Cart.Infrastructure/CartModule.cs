@@ -34,6 +34,7 @@ public sealed class CartModule : IModule
         services.TryAddScoped<IDeliveryFeeTaxRate, PricingDeliveryFeeTaxRate>();
         services.AddScoped<CartPricer>();
         services.AddScoped<CartService>();
+        services.AddScoped<PriceQuoteService>();
         services.AddEventHandler<CustomerSignedIn, CartCustomerSignedInHandler>();
         services.AddScoped<ICartApi, CartApi>();
 
@@ -42,5 +43,9 @@ public sealed class CartModule : IModule
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, CartSamplePurgeParticipant>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints) => CartEndpoints.Map(endpoints);
+    public void MapEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        CartEndpoints.Map(endpoints);
+        PriceQuoteEndpoints.Map(endpoints);
+    }
 }

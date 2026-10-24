@@ -246,3 +246,5 @@ Implemented with the proposed answers, as ruled in the decision log (D3, D6, D7,
 | Unit | `stock_items.stock_unit` stores GRAM or PIECE so commands can check the request unit without calling Catalog. |
 | Low-stock | `StockReplenished` is raised when available rises back above the threshold (with threshold 0: back above zero). Digest: one `low_stock_digests` row per location and local day, built at 07:xx local time. |
 | Reservation | `ReserveAsync` is all or nothing; `ReserveStockResult.Refusals` gives the code per order item (`OUT_OF_STOCK` or `STOCK_ITEM_MISSING`). |
+
+**Freshness for the storefront (CAT-R25).** `InventoryFreshnessSource` implements Catalog's `IVariantFreshnessSource`: per variant at a location, the batch the next order is packed from (ACTIVE, `remaining_quantity > 0`, `best_before_at` after now; earliest best-before, then earliest received — the FEFO picking order), returning its `caught_or_harvested_on` (nullable) and `received_at`. Read-only, one query.

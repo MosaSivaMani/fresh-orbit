@@ -7,6 +7,7 @@ using FreshOrbit.Catalog.Domain.Preparations;
 using FreshOrbit.Catalog.Domain.Products;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Pricing;
 using FreshOrbit.SharedKernel.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -38,9 +39,9 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
     public async Task<StorefrontLocation?> ResolveLocationAsync(string pincode, CancellationToken cancellationToken)
     {
         var rows = await QueryAsync(
-            "SELECT pincode, service_area_id, fulfillment_location_id, fulfillment_location_code FROM catalog.storefront_locations WHERE pincode = @pincode LIMIT 1",
+            "SELECT pincode, service_area_id, fulfillment_location_id, fulfillment_location_code, city_id FROM catalog.storefront_locations WHERE pincode = @pincode LIMIT 1",
             [new NpgsqlParameter("pincode", NpgsqlDbType.Text) { Value = pincode }],
-            r => new StorefrontLocation(r.GetString(0), r.GetGuid(1), r.GetGuid(2), r.GetString(3)),
+            r => new StorefrontLocation(r.GetString(0), r.GetGuid(1), r.GetGuid(2), r.GetString(3)) { CityId = r.GetGuid(4) },
             cancellationToken);
         return rows.FirstOrDefault();
     }
@@ -54,7 +55,8 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             new("skip", NpgsqlDbType.Integer) { Value = query.Skip },
             new("take", NpgsqlDbType.Integer) { Value = query.Take },
         };
-        var sql = new StringBuilder("WITH base AS (SELECT p.id, p.slug, p.name, p.local_names, p.source_type, p.published_at, p.featured_rank, c.sort_order AS category_sort, ");
+        var sql = new StringBuilder("WITH base AS (SELECT p.id, p.slug, p.name, p.local_names, p.source_type, p.published_at, p.featured_rank, c.sort_order AS category_sort, p.category_id, ");
+        sql.Append("(SELECT v.id FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active AND EXISTS (SELECT 1 FROM catalog.variant_preparations x WHERE x.variant_id = v.id AND x.is_active) ORDER BY v.id LIMIT 1) AS first_variant_id, ");
         sql.Append(SearchRank(query.Q, parameters)).Append(" AS rank, ");
         sql.Append("(SELECT i.storage_key FROM catalog.product_images i WHERE i.product_id = p.id ORDER BY i.sort_order LIMIT 1) AS image_key ");
         sql.Append(VisibleProductsFrom);
@@ -82,10 +84,16 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             sql.Append(" AND p.featured_rank IS NOT NULL");
         }
 
+        if (query.ProductIds is { } productIds)
+        {
+            parameters.Add(new NpgsqlParameter("product_ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid) { Value = productIds.ToArray() });
+            sql.Append(" AND p.id = ANY(@product_ids)");
+        }
+
         sql.Append(')');
         if (location is null)
         {
-            sql.Append(" SELECT b.id, b.slug, b.name, b.local_names, b.source_type, b.image_key, NULL::bigint, NULL::bigint, NULL::text, NULL::integer, NULL::boolean, count(*) OVER () FROM base b");
+            sql.Append(" SELECT b.id, b.slug, b.name, b.local_names, b.source_type, b.image_key, NULL::bigint, NULL::bigint, NULL::text, NULL::integer, NULL::boolean, count(*) OVER (), b.first_variant_id, b.category_id FROM base b");
             sql.Append(" ORDER BY ").Append(SortExpression(query.Sort)).Append(", b.id");
         }
         else
@@ -98,9 +106,9 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
                 sql.Append(" AND ").Append(PreparationExists("o.variant_id", query.PreparationCodes, parameters));
             }
 
-            sql.Append("), best AS (SELECT DISTINCT ON (product_id) product_id, unit_price_paise, compare_at_paise, sell_unit FROM offer_rows ORDER BY product_id, unit_price_paise, variant_id)");
+            sql.Append("), best AS (SELECT DISTINCT ON (product_id) product_id, variant_id, unit_price_paise, compare_at_paise, sell_unit FROM offer_rows ORDER BY product_id, unit_price_paise, variant_id)");
             sql.Append(", stock AS (SELECT product_id, max(available) AS available, bool_or(available > low_stock_threshold) AS above_threshold FROM offer_rows GROUP BY product_id)");
-            sql.Append(" SELECT b.id, b.slug, b.name, b.local_names, b.source_type, b.image_key, best.unit_price_paise, best.compare_at_paise, best.sell_unit, s.available, s.above_threshold, count(*) OVER ()");
+            sql.Append(" SELECT b.id, b.slug, b.name, b.local_names, b.source_type, b.image_key, best.unit_price_paise, best.compare_at_paise, best.sell_unit, s.available, s.above_threshold, count(*) OVER (), best.variant_id, b.category_id");
             sql.Append(" FROM base b JOIN best ON best.product_id = b.id JOIN stock s ON s.product_id = b.id WHERE true");
             if (query.InStock is { } inStock)
             {
@@ -127,7 +135,7 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
         var items = await QueryAsync(sql.ToString(), parameters, r =>
         {
             total = (int)r.GetInt64(11);
-            return ToListItem(r, location is not null);
+            return (ToListItem(r, location is not null) with { CategoryId = r.GetGuid(13) }, r.IsDBNull(12) ? (Guid?)null : r.GetGuid(12));
         }, cancellationToken);
         if (items.Count == 0 && query.Skip > 0)
         {
@@ -135,8 +143,68 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             total = firstPageTotal;
         }
 
-        return (items, total);
+        return (await WithDefaultVariantsAsync(items, cancellationToken), total);
     }
+
+    public async Task<IReadOnlyList<ProductListItem>> ListProductsByIdsAsync(IReadOnlyList<Guid> productIds, StorefrontLocation location, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(productIds);
+        if (productIds.Count == 0)
+        {
+            return [];
+        }
+
+        var query = new ProductListQuery([], null, [], [], InStock: true, null, null, ProductSort.Default, 0, productIds.Count) { ProductIds = productIds };
+        var (items, _) = await ListProductsAsync(query, location, at, cancellationToken);
+        var rank = productIds.Select((id, index) => (id, index)).GroupBy(x => x.id).ToDictionary(g => g.Key, g => g.First().index);
+        return [.. items.OrderBy(i => rank[i.Id])];
+    }
+
+    public async Task<IReadOnlyList<StorefrontPreparationMethod>> ListPreparationMethodsAsync(StorefrontLocation? location, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        var parameters = new List<NpgsqlParameter>();
+        var sql = new StringBuilder("SELECT m.code, m.name, m.description, m.sort_order FROM catalog.preparation_methods m WHERE EXISTS (SELECT 1 FROM catalog.variant_preparations x JOIN catalog.product_variants v ON v.id = x.variant_id AND v.is_active JOIN catalog.products p ON p.id = v.product_id JOIN catalog.categories c ON c.id = p.category_id AND c.is_active LEFT JOIN catalog.categories pc ON pc.id = c.parent_id WHERE x.preparation_method_id = m.id AND x.is_active AND p.status = 'ACTIVE' AND (c.parent_id IS NULL OR pc.is_active)");
+        if (location is not null)
+        {
+            parameters.Add(new NpgsqlParameter("location", NpgsqlDbType.Uuid) { Value = location.FulfillmentLocationId });
+            parameters.Add(new NpgsqlParameter("at", NpgsqlDbType.TimestampTz) { Value = at.UtcDateTime });
+            sql.Append(" AND EXISTS (SELECT 1 FROM catalog.storefront_offers o WHERE o.variant_id = v.id AND o.fulfillment_location_id = @location AND o.has_stock_item AND ").Append(CurrentOffer).Append(')');
+            sql.Append(" AND EXISTS (SELECT 1 FROM catalog.storefront_preparation_charges o WHERE o.variant_id = v.id AND o.preparation_method_id = m.id AND o.fulfillment_location_id = @location AND ").Append(CurrentOffer).Append(')');
+        }
+
+        sql.Append(") ORDER BY m.sort_order, m.code");
+        return await QueryAsync(sql.ToString(), parameters, r => new StorefrontPreparationMethod(r.GetString(0), r.GetString(1), r.IsDBNull(2) ? null : r.GetString(2), r.GetInt32(3)), cancellationToken);
+    }
+
+    /// <summary>CAT-R23: adds each item's default variant and its order rules (one query for the page).</summary>
+    private async Task<IReadOnlyList<ProductListItem>> WithDefaultVariantsAsync(List<(ProductListItem Item, Guid? VariantId)> rows, CancellationToken cancellationToken)
+    {
+        var ids = rows.Where(r => r.VariantId is not null).Select(r => r.VariantId!.Value).Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return [.. rows.Select(r => r.Item)];
+        }
+
+        var variants = await db.Set<ProductVariant>().AsNoTracking().Include(v => v.Preparations).Where(v => ids.Contains(v.Id)).ToDictionaryAsync(v => v.Id, cancellationToken);
+        var methods = await db.Set<PreparationMethod>().AsNoTracking().ToDictionaryAsync(m => m.Id, m => m.Code, cancellationToken);
+        return [.. rows.Select(r => r.VariantId is { } id && variants.TryGetValue(id, out var v)
+            ? r.Item with
+            {
+                DefaultVariant = new ListVariant(
+                    v.Id,
+                    v.Name,
+                    v.SellUnit,
+                    Quantity(v.MinOrder, v.SellUnit),
+                    Quantity(v.MaxOrder, v.SellUnit),
+                    Quantity(v.OrderStep, v.SellUnit),
+                    v.DefaultPreparation is { } d ? methods.GetValueOrDefault(d.PreparationMethodId) : null,
+                    ServingOf(v)),
+            }
+            : r.Item)];
+    }
+
+    private static ServingInfo ServingOf(ProductVariant v)
+        => ServingInfo.From(ServingRules.ForBasis(v.SellUnit, v.PackSizeGrams, v.AvgPieceGrams, v.PiecesMin, v.PiecesMax, v.Serves));
 
     public async Task<StorefrontProductDetail?> GetProductAsync(string slug, StorefrontLocation? location, string? preparationCode, DateTimeOffset at, CancellationToken cancellationToken)
     {
@@ -190,7 +258,11 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
                 offer?.UnitPricePaise,
                 offer?.CompareAtPaise,
                 preparations,
-                location is null ? null : VariantAvailabilityFor(v, offer, yieldBp));
+                location is null ? null : VariantAvailabilityFor(v, offer, yieldBp))
+            {
+                DiscountBp = offer is null ? null : CompareAtDiscount.Bp(offer.UnitPricePaise, offer.CompareAtPaise),
+                Serving = ServingOf(v),
+            };
         }).ToList();
 
         ListAvailability? availability = null;
@@ -221,7 +293,10 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             availability,
             NetWeightNote,
             null,
-            location is null);
+            location is null)
+        {
+            CategoryId = product.CategoryId,
+        };
     }
 
     public async Task<IReadOnlyList<SuggestItem>> SuggestAsync(string q, StorefrontLocation? location, DateTimeOffset at, CancellationToken cancellationToken)
@@ -388,7 +463,9 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
         ListAvailability? availability = null;
         if (hasLocation)
         {
-            fromPrice = new FromPrice(r.GetInt64(6), r.IsDBNull(7) ? null : r.GetInt64(7), r.GetString(8).ToEnum<SellUnit>());
+            var price = r.GetInt64(6);
+            long? compareAt = r.IsDBNull(7) ? null : r.GetInt64(7);
+            fromPrice = new FromPrice(price, compareAt, r.GetString(8).ToEnum<SellUnit>()) { DiscountBp = CompareAtDiscount.Bp(price, compareAt) };
             var available = r.GetInt32(9);
             var status = available <= 0 ? AvailabilityStatus.OutOfStock : r.GetBoolean(10) ? AvailabilityStatus.InStock : AvailabilityStatus.LowStock;
             availability = new ListAvailability(status, StockMath.Message(status));

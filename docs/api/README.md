@@ -498,7 +498,9 @@ Not served → 200 `{ "pincode": "600123", "serviceable": false, "reasonCode": "
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/home` | public | LOC optional | Banners (`promotions`), featured categories, featured products |
+| GET | `/api/v1/home` | public | LOC optional | Banners (`promotions`), featured categories, featured products, `bestsellers` (empty without LOC or sales) |
+| GET | `/api/v1/bestsellers` | public | LOC required | Up to 12 best-selling in-stock products at the location from real orders of the last 30 days (CAT-R24): `{ location, items: ProductListItem[] }`; `items` empty when nothing sold |
+| GET | `/api/v1/preparation-methods` | public | LOC optional | Preparation methods offered on a visible variant (with LOC: priced, stocked and charged there), by `sortOrder`: `[{ code, name, description, sortOrder }]` (CAT-R27); for the `preparation` filter |
 | GET | `/api/v1/categories` | public | | Category tree |
 | GET | `/api/v1/categories/{slug}` | public | | Category detail |
 | GET | `/api/v1/products` | public | LOC optional, rate `search` | List: `category`, `q`, `sourceType`, `preparation`, `inStock`, `minPricePaise`, `maxPricePaise`, `sort` (`relevance`, `price`, `-price`, `name`, `-newest`) |
@@ -515,20 +517,40 @@ Not sellable at the location (no price, no stock item, product inactive) → exc
     {
       "id": "0192b410-0001-7000-8000-000000000101", "slug": "seer-fish-vanjaram", "name": "Seer Fish",
       "localNames": [ "Vanjaram", "Neymeen", "Surmai" ], "sourceType": "WILD", "imageUrl": "https://img.freshorbit.in/products/seer-fish/1-640.webp",
-      "fromPrice": { "unitPricePaise": 129900, "compareAtPaise": 149900, "perUnit": "KG" }, "availability": { "status": "IN_STOCK", "message": null },
-      "locationRequired": false
+      "fromPrice": { "unitPricePaise": 129900, "compareAtPaise": 149900, "perUnit": "KG", "discountBp": 1334 }, "availability": { "status": "IN_STOCK", "message": null },
+      "locationRequired": false,
+      "defaultVariant": {
+        "id": "0192b411-0001-7000-8000-000000000201", "name": "Medium (3-5 kg fish)", "sellUnit": "KG",
+        "minOrder": { "value": 500, "unit": "GRAM" }, "maxOrder": { "value": 5000, "unit": "GRAM" }, "orderStep": { "value": 250, "unit": "GRAM" },
+        "defaultPreparationCode": "STEAK",
+        "serving": { "basis": { "value": 1000, "unit": "GRAM" }, "netWeightGrams": 1000, "piecesMin": 10, "piecesMax": 12, "serves": 4 }
+      },
+      "freshness": { "caughtOn": "2026-10-23", "receivedAt": "2026-10-24T00:45:00Z" },
+      "offer": { "couponCode": "FRESH15", "text": "15% off up to ₹100 on orders above ₹499 with code FRESH15" }
     },
     {
       "id": "0192b410-0002-7000-8000-000000000102", "slug": "tiger-prawns", "name": "Tiger Prawns", "localNames": [ "Eral", "Konju" ],
       "sourceType": "WILD", "imageUrl": "https://img.freshorbit.in/products/tiger-prawns/1-640.webp",
-      "fromPrice": { "unitPricePaise": 89900, "compareAtPaise": null, "perUnit": "KG" },
-      "availability": { "status": "LOW_STOCK", "message": "Only a few kg left today." }, "locationRequired": false
+      "fromPrice": { "unitPricePaise": 89900, "compareAtPaise": null, "perUnit": "KG", "discountBp": null },
+      "availability": { "status": "LOW_STOCK", "message": "Only a few kg left today." }, "locationRequired": false,
+      "defaultVariant": { "id": "0192b411-0002-7000-8000-000000000202", "name": "Large (20-25 count/kg)", "sellUnit": "KG", "...": "…" },
+      "freshness": null, "offer": null
     }
   ],
   "page": 1, "pageSize": 2, "totalCount": 14
 }
 ```
 `availability.status`: `IN_STOCK`, `LOW_STOCK` (available ≤ threshold), `OUT_OF_STOCK`, `NOT_SOLD_HERE`, or `null` without LOC.
+
+Product shape fields (all server-computed; clients render them as given, never derive them):
+
+| Field | Where | Meaning |
+|---|---|---|
+| `fromPrice.discountBp`, `variants[].discountBp` | list, detail | Saving against `compareAtPaise` (MRP) = floor((compareAt − price) × 10000 / compareAt); `null` unless `compareAtPaise` > price (CAT-R22) |
+| `defaultVariant` | list | Variant for quick-add (CAT-R23): with LOC the variant behind `fromPrice`, else the first visible variant; its `minOrder` / `maxOrder` / `orderStep` (quantity + unit), `defaultPreparationCode` (what the cart uses when `preparationCode` is omitted) and `serving` |
+| `serving`, `variants[].serving` | list (in `defaultVariant`), detail | `{ basis, netWeightGrams, piecesMin, piecesMax, serves }` per serving basis: 1000 GRAM net (KG), 1 PACK, 1 PIECE (CAT-R21). `piecesMin`/`piecesMax`/`serves` are `null` when not entered; PIECE variants have no pieces range; `netWeightGrams` is pack size for PACK, average piece weight for PIECE |
+| `freshness`, `variants[].freshness` | list (default variant), detail | `{ caughtOn, receivedAt }` of the batch the next order is packed from (FEFO, Inventory, CAT-R25); `caughtOn` `null` when not recorded; whole object `null` without LOC or without sellable stock |
+| `offer` | list, detail | `{ couponCode, text }`: the most specific listed coupon of the location's city that applies to the product (PROMO-R26, CAT-R26); `null` without LOC or when none. No amount: the discount is computed only in the cart |
 
 **GET /api/v1/products/seer-fish-vanjaram** (`X-Pincode: 600041`) → 200
 ```json
@@ -542,7 +564,9 @@ Not sellable at the location (no price, no stock item, product inactive) → exc
     {
       "id": "0192b411-0001-7000-8000-000000000201", "sku": "SEER-KG", "name": "Medium (3-5 kg fish)", "sellUnit": "KG", "isWeightVariable": true,
       "minOrder": { "value": 500, "unit": "GRAM" }, "maxOrder": { "value": 5000, "unit": "GRAM" }, "orderStep": { "value": 250, "unit": "GRAM" },
-      "unitPricePaise": 129900, "compareAtPaise": 149900,
+      "unitPricePaise": 129900, "compareAtPaise": 149900, "discountBp": 1334,
+      "serving": { "basis": { "value": 1000, "unit": "GRAM" }, "netWeightGrams": 1000, "piecesMin": 10, "piecesMax": 12, "serves": 4 },
+      "freshness": { "caughtOn": "2026-10-23", "receivedAt": "2026-10-24T00:45:00Z" },
       "preparations": [
         { "code": "WHOLE", "name": "Whole, uncleaned", "yieldBp": 10000, "isDefault": false, "chargePaise": 0, "chargeBasis": "FLAT" },
         { "code": "STEAK", "name": "Steaks (1 cm)", "yieldBp": 7000, "isDefault": true, "chargePaise": 4000, "chargeBasis": "PER_KG" },
@@ -551,7 +575,8 @@ Not sellable at the location (no price, no stock item, product inactive) → exc
       "availability": { "status": "IN_STOCK", "maxOrderableNow": { "value": 5000, "unit": "GRAM" }, "message": null }
     }
   ],
-  "netWeightNote": "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.", "isWishlisted": false
+  "netWeightNote": "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.", "isWishlisted": false,
+  "offer": { "couponCode": "FRESH15", "text": "15% off up to ₹100 on orders above ₹499 with code FRESH15" }
 }
 ```
 `maxOrderableNow` is computed server-side per preparation from gross stock and yield (`?preparation=STEAK`, default preparation otherwise).
@@ -581,6 +606,24 @@ Cart is priced on every read (§5). Owner = customer JWT, else `X-Cart-Token`.
 | PUT | `/api/v1/cart/location` | customer\|guest | `force` query | Change pincode; `CART_LOCATION_CHANGED` if the location changes and lines drop |
 | PUT | `/api/v1/cart/coupon` | customer | | Apply coupon (`{ "code": "FRESH100" }`); validated and returned in totals |
 | DELETE | `/api/v1/cart/coupon` | customer | | Remove coupon |
+| GET | `/api/v1/price-quote?variantId=&preparation=&quantity=&unit=` | public | LOC required | One line priced before it is added (CART-R24): same quantity rules and line formula as a cart line |
+
+**GET /api/v1/price-quote?variantId=…0201&preparation=STEAK&quantity=500&unit=GRAM** (`X-Pincode: 600041`) → 200
+```json
+{
+  "variantId": "0192b411-0001-7000-8000-000000000201", "preparationCode": "STEAK", "quantity": { "value": 500, "unit": "GRAM" },
+  "maxChargeableQuantity": { "value": 550, "unit": "GRAM" }, "unitPricePaise": 129900, "compareAtPaise": 149900, "discountBp": 1334, "priceUnit": "KG",
+  "itemPaise": 64950, "preparationPaise": 2000, "chargeBasis": "PER_KG", "taxRateBp": 500, "taxPaise": 3188,
+  "estimatedTotalPaise": 66950, "maxChargeablePaise": 73645, "availability": { "status": "IN_STOCK", "message": null },
+  "fulfillmentLocationCode": "CHN-TVM", "pincode": "600041",
+  "weightNote": "Weight-based items are charged on actual net weight, up to 10% over the ordered weight."
+}
+```
+`preparation` omitted → the variant's default. Refusals (422, field in `errors`): `LOCATION_REQUIRED` / `PINCODE_NOT_SERVICEABLE`
+(`pincode`), `VALIDATION_FAILED` (missing `variantId`, `quantity` or `unit`), `PRODUCT_NOT_AVAILABLE` (`variantId`),
+`PREPARATION_NOT_AVAILABLE` / `PREPARATION_CHARGE_NOT_AVAILABLE` (`preparation`), `QUANTITY_UNIT_INVALID` (`unit`),
+`QUANTITY_BELOW_MIN` / `QUANTITY_ABOVE_MAX` / `QUANTITY_STEP_INVALID` (`quantity`), `PRICE_NOT_AVAILABLE` (`variantId`).
+Stock is reported in `availability` (e.g. `OUT_OF_STOCK` with "Only 1.5 kg available"), not refused. No coupon is applied.
 
 Cart writes return the full priced cart (same shape as GET). No If-Match on cart (last write wins; lines are small).
 
@@ -815,7 +858,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | POST | `/api/v1/admin/products/{id}/archive` | catalog.manage | IM | → `ARCHIVED` |
 | POST | `/api/v1/admin/products/{id}/restore` | catalog.manage | IM | `ARCHIVED` → `DRAFT` |
 | POST | `/api/v1/admin/products/{id}/variants` | catalog.manage | IM (product) | Add variant |
-| PUT | `/api/v1/admin/products/{id}/variants/{variantId}` | catalog.manage | IM (product) | Update variant, preparations with `yieldBp` and `isDefault` |
+| PUT | `/api/v1/admin/products/{id}/variants/{variantId}` | catalog.manage | IM (product) | Update variant, preparations with `yieldBp` and `isDefault`; optional `piecesMin`, `piecesMax`, `serves` per serving basis (CAT-R21; add and update, echoed on the variant response) |
 | POST | `/api/v1/admin/products/{id}/images` | catalog.manage | IM (product), multipart `file` | Upload image (D21: local disk via `IFileStorage`, served at `/media/{key}`); stores 320/640/1280 px WebP + original under `products/{productId}/{imageId}/` |
 | PUT | `/api/v1/admin/products/{id}/images/order` | catalog.manage | IM | Reorder images |
 | DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | catalog.manage | IM | Remove image |

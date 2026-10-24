@@ -32,6 +32,9 @@ public enum QuantityUnit
 public sealed record PreparationSpec(Guid PreparationMethodId, string MethodCode, int YieldBp, bool IsDefault);
 
 /// <summary>The editable definition of a variant.</summary>
+/// <param name="PiecesMin">Fewest pieces per serving basis (see <see cref="ServingRules"/>); null when not stated.</param>
+/// <param name="PiecesMax">Most pieces per serving basis; null when not stated.</param>
+/// <param name="Serves">People served per serving basis; null when not stated.</param>
 public sealed record VariantSpec(
     string? Name,
     SellUnit SellUnit,
@@ -40,7 +43,10 @@ public sealed record VariantSpec(
     int? MinOrder,
     int? MaxOrder,
     int? OrderStep,
-    IReadOnlyList<PreparationSpec> Preparations);
+    IReadOnlyList<PreparationSpec> Preparations,
+    int? PiecesMin = null,
+    int? PiecesMax = null,
+    int? Serves = null);
 
 /// <summary>The units a variant ends up with (CAT-R4).</summary>
 public sealed record VariantUnits(SellUnit SellUnit, StockUnit StockUnit, bool IsWeightVariable, int MinOrder, int MaxOrder, int OrderStep);
@@ -117,6 +123,7 @@ public static class VariantRules
         }
 
         QuantityRules.ValidateConfiguration(min, max, step, prefix, errors);
+        ServingRules.Validate(spec, prefix, errors);
         ValidatePreparations(spec, prefix, errors);
         return new VariantUnits(spec.SellUnit, stockUnit, spec.SellUnit == SellUnit.Kg, min, max, step);
     }

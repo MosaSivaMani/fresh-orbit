@@ -149,7 +149,10 @@ public sealed class ProductService(
                 [.. v.Preparations
                     .Select(p => (Preparation: p, Method: methods.GetValueOrDefault(p.PreparationMethodId)))
                     .OrderBy(x => x.Method?.SortOrder ?? int.MaxValue)
-                    .Select(x => new AdminPreparationResponse(x.Method?.Code ?? string.Empty, x.Method?.Name ?? string.Empty, x.Preparation.YieldBp, x.Preparation.IsDefault, x.Preparation.IsActive))]))],
+                    .Select(x => new AdminPreparationResponse(x.Method?.Code ?? string.Empty, x.Method?.Name ?? string.Empty, x.Preparation.YieldBp, x.Preparation.IsDefault, x.Preparation.IsActive))],
+                v.PiecesMin,
+                v.PiecesMax,
+                v.Serves))],
             [.. product.Images.OrderBy(i => i.SortOrder).Select(i => new AdminImageResponse(
                 i.Id,
                 i.StorageKey,
@@ -217,7 +220,7 @@ public sealed class ProductService(
             throw new RefusalException(errors);
         }
 
-        return new VariantSpec(request.Name, request.SellUnit, request.PackSizeGrams, request.AvgPieceGrams, request.MinOrder, request.MaxOrder, request.OrderStep, preparations);
+        return new VariantSpec(request.Name, request.SellUnit, request.PackSizeGrams, request.AvgPieceGrams, request.MinOrder, request.MaxOrder, request.OrderStep, preparations, request.PiecesMin, request.PiecesMax, request.Serves);
     }
 
     private static ProductDetails ToDetails(ProductRequest request) => new(
