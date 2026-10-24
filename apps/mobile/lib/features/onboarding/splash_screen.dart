@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../state/location_state.dart';
 import '../../theme/app_theme.dart';
@@ -48,7 +47,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const AvatarCircle(slot: IllustrationSlot.homeHero, size: 170),
+                // The owner's logo (D119) sits on white, so it gets a white card on the teal block.
+                Container(
+                  width: 300,
+                  padding: const EdgeInsets.all(FreshSpacing.s4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(FreshRadius.xl),
+                  ),
+                  child: Image.asset('assets/brand/logo.png', fit: BoxFit.contain),
+                ),
                 const SizedBox(height: FreshSpacing.s5),
                 Text('Fresh Orbit', style: AppText.blockTitle(BlockTone.teal.foreground(c))),
               ],

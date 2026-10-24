@@ -35,6 +35,7 @@ flutter:
   # script. Missing files fall back to the drawn placeholder (lib/illustrations/illustration.dart).
   assets:
     - assets/illustrations/
+    - assets/brand/
 
   # Inter (body) and Baloo 2 (headings), SIL Open Font License 1.1 (assets/fonts/*-OFL.txt). Static instances
   # cut from the Google Fonts variable fonts and subset to Latin, Latin Extended and the rupee sign.

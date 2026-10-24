@@ -15,6 +15,7 @@ They sit well with the app palette (D88): coral matches our coral, the blue goes
 ## Where it is used
 - Full logo where there is room: website hero and footer, app splash and sign-in, emails, invoices, social posts.
 - The mark in a white circle with an ink ring next to the "Fresh Orbit" wordmark: website header and footer (`components/logo.tsx`).
+- Mobile splash screen: full logo on a white card on the teal block (`apps/mobile/assets/brand/logo.png`, the 640 px copy).
 - Still to do: favicon and Android/iOS app icon from `mark.png` (the owner may give a clean square version with transparency).
 
 ## Open questions for the owner
