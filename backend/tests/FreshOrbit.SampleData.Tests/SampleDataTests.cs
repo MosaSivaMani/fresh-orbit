@@ -86,7 +86,8 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         tracked.GetValueOrDefault("inventory.cold_chain_logs").Should().Be((int)await ScalarAsync("SELECT count(*) FROM inventory.cold_chain_logs"));
         (await ScalarAsync("SELECT count(*) FROM locations.cities WHERE status = 'ACTIVE'")).Should().Be(1);
         (await ScalarAsync("SELECT count(*) FROM catalog.products WHERE status = 'ACTIVE'")).Should().Be(26);
-        (await ScalarAsync("SELECT count(DISTINCT slot_date) FROM delivery.delivery_slots")).Should().Be(7, "slots cover the next 7 days");
+        // Today has no slot once its last cutoff (17:00 − 120 min local) has passed, so 6 or 7 dates depending on the run time.
+        (await ScalarAsync("SELECT count(DISTINCT slot_date) FROM delivery.delivery_slots")).Should().BeInRange(6, 7, "slots cover the next 7 days, today only before its last cutoff");
         (await ScalarAsync("SELECT count(*) FROM inventory.stock_items WHERE on_hand > 0")).Should().Be(28, "on-hand is the fold of the RECEIPT movements");
         File.Exists(Path.Combine(_mediaRoot, "sample", "banners", "prawn-week.webp")).Should().BeTrue();
         (await ScalarAsync("SELECT count(*) FROM promotions.promotions WHERE link_type = 'CATEGORY' AND link_target = (SELECT id::text FROM catalog.categories WHERE slug = 'prawns-shrimp')")).Should().Be(1);
