@@ -19,7 +19,9 @@ They sit well with the app palette (D88): coral matches our coral, the blue goes
 - Still to do: favicon and Android/iOS app icon from `mark.png` (the owner may give a clean square version with transparency).
 
 ## Open questions for the owner
-- The logo reads **"Fresh Orbitt"** (double t); code, docs and the domain plan use **"Fresh Orbit"**. The wordmark in the app
-  keeps "Fresh Orbit" until the owner confirms the spelling.
+- The brand name is **"Fresh Orbitt"** (double t), as the logo reads; owner confirmed 2026-10-24 (D170). Every name a
+  customer or staff member sees says "Fresh Orbitt". Code names (`FreshOrbit`, `fresh-orbit`, `@fresh/*`) and the repository
+  keep the single t, because renaming them changes nothing anyone sees.
+- The hen in the logo stays: chicken will be sold, and vegetables later (D171).
 - The logo shows a **hen**: the catalogue so far is seafood only. Chicken needs its own categories, prices and storage rules
   (configuration, rule 7) before it is sold.

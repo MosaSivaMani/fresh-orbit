@@ -112,13 +112,13 @@ function Shell() {
           <span className="bg-primary text-on-primary flex size-8 items-center justify-center rounded-md">
             <Fish aria-hidden="true" className="size-4" />
           </span>
-          Fresh Orbit
+          Fresh Orbitt
         </span>
       }
       brandCollapsed={
         <span className="bg-primary text-on-primary flex size-8 items-center justify-center rounded-md">
           <Fish aria-hidden="true" className="size-4" />
-          <span className="sr-only">Fresh Orbit</span>
+          <span className="sr-only">Fresh Orbitt</span>
         </span>
       }
       navigation={navigation}

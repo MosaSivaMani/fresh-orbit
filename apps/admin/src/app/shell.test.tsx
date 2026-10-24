@@ -9,7 +9,7 @@ describe("admin shell", () => {
   it("sends signed-out visitors to the login page and keeps where they were going", async () => {
     const { router } = renderApp({ permissions: null, path: "/orders?status=CONFIRMED" });
     expect(
-      await screen.findByRole("heading", { name: "Sign in to Fresh Orbit Admin" }),
+      await screen.findByRole("heading", { name: "Sign in to Fresh Orbitt Admin" }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/login");
     expect(router.state.location.search).toContain("next=%2Forders%3Fstatus%3DCONFIRMED");

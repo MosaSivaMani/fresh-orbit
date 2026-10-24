@@ -3,8 +3,8 @@
   "module": "settings",
   "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
   "businessProfile": {
-    "legalName": "Fresh Orbit Demo Store",
-    "tradeName": "Fresh Orbit",
+    "legalName": "Fresh Orbitt Demo Store",
+    "tradeName": "Fresh Orbitt",
     "gstin": "37AAAAA0000A1Z1",
     "fssaiLicenseNo": null,
     "address": "Plot 0, Sample Commercial Complex, Sector 4, MVP Colony, Visakhapatnam, Andhra Pradesh 530017",

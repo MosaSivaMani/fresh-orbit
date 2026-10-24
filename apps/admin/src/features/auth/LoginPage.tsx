@@ -132,7 +132,7 @@ export function LoginPage() {
             <div className="bg-primary text-on-primary mb-2 flex size-10 items-center justify-center rounded-lg">
               <Fish aria-hidden="true" className="size-5" />
             </div>
-            <CardTitle>Sign in to Fresh Orbit Admin</CardTitle>
+            <CardTitle>Sign in to Fresh Orbitt Admin</CardTitle>
             <CardDescription>Sign in with your staff email and password.</CardDescription>
           </CardHeader>
           <CardContent>

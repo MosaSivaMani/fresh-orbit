@@ -19,7 +19,7 @@ export default function GlobalError({
             slot="ERROR_GENERIC"
             avatarSize="sm"
             headingLevel={1}
-            title="Fresh Orbit is having trouble"
+            title="Fresh Orbitt is having trouble"
             description={
               <>
                 <p>Please try again in a moment.</p>

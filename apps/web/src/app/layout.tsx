@@ -19,13 +19,13 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
   title: {
-    default: "Fresh Orbit — fresh fish and seafood, cleaned and delivered",
-    template: "%s · Fresh Orbit",
+    default: "Fresh Orbitt — fresh fish and seafood, cleaned and delivered",
+    template: "%s · Fresh Orbitt",
   },
   description:
     "Order fresh fish, prawns, crabs and shellfish, cleaned and cut the way you like. Pay for net weight after cleaning.",
-  applicationName: "Fresh Orbit",
-  openGraph: { type: "website", siteName: "Fresh Orbit", locale: "en_IN" },
+  applicationName: "Fresh Orbitt",
+  openGraph: { type: "website", siteName: "Fresh Orbitt", locale: "en_IN" },
   formatDetection: { telephone: false },
 };
 
