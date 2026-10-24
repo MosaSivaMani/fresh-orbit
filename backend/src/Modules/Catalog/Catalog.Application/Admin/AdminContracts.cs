@@ -41,7 +41,8 @@ public sealed record VariantPreparationRequest(string? Code, int YieldBp, bool I
 /// <summary>
 /// Body of <c>POST …/variants</c> (sku required) and <c>PUT …/variants/{variantId}</c> (sku ignored).
 /// <c>minOrder</c>, <c>maxOrder</c> and <c>orderStep</c> are in the stock unit (grams for KG, else pieces/packs);
-/// KG defaults 250 / 5000 / 250 (CAT-R7).
+/// KG defaults 250 / 5000 / 250 (CAT-R7). <c>piecesMin</c>, <c>piecesMax</c> and <c>serves</c> are optional and stated
+/// per serving basis: 1 kg net for KG, one pack for PACK, one piece for PIECE (no pieces range for PIECE, CAT-R21).
 /// </summary>
 public sealed record VariantRequest(
     string? Sku,
@@ -53,7 +54,10 @@ public sealed record VariantRequest(
     int? MaxOrder,
     int? OrderStep,
     bool? IsActive,
-    IReadOnlyList<VariantPreparationRequest>? Preparations);
+    IReadOnlyList<VariantPreparationRequest>? Preparations,
+    int? PiecesMin = null,
+    int? PiecesMax = null,
+    int? Serves = null);
 
 public sealed record ReorderImagesRequest(IReadOnlyList<Guid>? ImageIds);
 
@@ -72,7 +76,10 @@ public sealed record AdminVariantResponse(
     int OrderStep,
     bool IsWeightVariable,
     bool IsActive,
-    IReadOnlyList<AdminPreparationResponse> Preparations);
+    IReadOnlyList<AdminPreparationResponse> Preparations,
+    int? PiecesMin = null,
+    int? PiecesMax = null,
+    int? Serves = null);
 
 /// <param name="Url">Public URL of the 640 px rendition.</param>
 public sealed record AdminImageResponse(Guid Id, string StorageKey, string Url, string AltText, int Width, int Height, int SortOrder);

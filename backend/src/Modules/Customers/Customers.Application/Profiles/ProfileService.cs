@@ -75,6 +75,18 @@ public sealed class ProfileService(
             reasons.AddRange(await check.GetBlockingItemsAsync(customer.Id, cancellationToken));
         }
 
+        var distinct = reasons.Distinct(StringComparer.Ordinal).ToList();
+        if (distinct.Count > 0 && distinct.All(CustomerOpenMatters.All.Contains))
+        {
+            // Open complaints / refunds: a rule refusal the customer can act on (wait), each kind a field error.
+            throw new RefusalException(
+                CustomersErrors.AccountHasOpenMatters,
+                "The account cannot be deleted while a complaint or refund is still open.",
+                [.. distinct.Select(kind => new FieldError("account", kind, kind == CustomerOpenMatters.OpenRefund
+                    ? "Wait until your open refund is paid out, then delete the account."
+                    : "Wait until your open complaint is closed, then delete the account."))]);
+        }
+
         if (reasons.Count > 0)
         {
             throw new ConflictException(

@@ -50,6 +50,11 @@ public sealed class Complaint : AggregateRoot
     public const int MinDescriptionLength = 10;
     public const int MaxDescriptionLength = 1000;
 
+    /// <summary>W12: most photos one complaint may carry.</summary>
+    public const int MaxPhotos = 4;
+
+    private readonly List<ComplaintPhoto> _photos = [];
+
     private Complaint()
     {
         OrderNumber = Description = string.Empty;
@@ -100,6 +105,9 @@ public sealed class Complaint : AggregateRoot
     public DateTimeOffset? ResolvedAt { get; private set; }
 
     public DateTimeOffset RaisedAt { get; private set; }
+
+    /// <summary>Photos the customer attached (W12), in upload order.</summary>
+    public IReadOnlyList<ComplaintPhoto> Photos => _photos;
 
     /// <summary>
     /// Raises a complaint (ORD-R54, R55): within <paramref name="windowHours"/> of delivery, a line unless LATE, one
@@ -187,6 +195,42 @@ public sealed class Complaint : AggregateRoot
         Raise(new ComplaintDecided(Id, OrderId, OrderNumber, CustomerId, FulfillmentLocationId, OrderItemId, status.ToCode(), resolution.ToCode(), RefundAmountPaise, null, decidedBy, now));
     }
 
+    /// <summary>
+    /// W12: attaches a photo the customer uploaded (already re-encoded and stored under <paramref name="storageKey"/>).
+    /// Only the complaint's customer, only while the complaint is OPEN (staff decide on what was there), at most
+    /// <see cref="MaxPhotos"/>.
+    /// </summary>
+    public ComplaintPhoto AddPhoto(Guid photoId, Guid customerId, string storageKey, int width, int height, int sizeBytes, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(storageKey);
+        EnsureCanAddPhoto(customerId);
+        var photo = new ComplaintPhoto(photoId, Id, storageKey, width, height, sizeBytes, now);
+        _photos.Add(photo);
+        return photo;
+    }
+
+    /// <summary>The <see cref="AddPhoto"/> checks alone, so a refused upload is refused before the image is processed.</summary>
+    public void EnsureCanAddPhoto(Guid customerId)
+    {
+        if (customerId != CustomerId)
+        {
+            throw new NotFoundException("The complaint does not exist.");
+        }
+
+        if (Status != ComplaintStatus.Open)
+        {
+            throw new ConflictException(OrderingErrors.InvalidStatusTransition, "Photos can be added only while the complaint is open.");
+        }
+
+        if (_photos.Count >= MaxPhotos)
+        {
+            throw new DomainException(OrderingErrors.ComplaintPhotoLimitReached, $"A complaint can have at most {MaxPhotos} photos.", "file");
+        }
+    }
+
+    /// <summary>Storage key of a complaint photo. No file extension, so the public <c>/media</c> route never serves it (SEC-20).</summary>
+    public static string PhotoKey(Guid complaintId, Guid photoId) => $"complaints/{complaintId:D}/{photoId:D}";
+
     /// <summary>APPROVED → RESOLVED.</summary>
     public void Resolve(Guid? resolvedBy, DateTimeOffset now)
     {
@@ -199,4 +243,56 @@ public sealed class Complaint : AggregateRoot
         ResolvedBy = resolvedBy;
         ResolvedAt = now;
     }
+}
+
+/// <summary>
+/// ORD-R57 refund bound of a complaint, shown to staff before deciding (G15) and enforced by
+/// <see cref="Complaint.Decide"/>: a line complaint up to the line's final total less its final discount; an order-level
+/// (LATE) complaint, or one whose line no longer exists, up to the order's final total (estimated total before packing).
+/// Never below 0. Payments still caps the refund by what the payment can refund.
+/// </summary>
+public static class ComplaintRefundLimit
+{
+    public static long ForLine(long? lineFinalTotalPaise, long? lineFinalDiscountPaise)
+        => Math.Max(0, (lineFinalTotalPaise ?? 0) - (lineFinalDiscountPaise ?? 0));
+
+    public static long ForOrder(long? orderFinalTotalPaise, long orderTotalPaise)
+        => Math.Max(0, orderFinalTotalPaise ?? orderTotalPaise);
+}
+
+/// <summary>
+/// A photo attached to a complaint (<c>ordering.complaint_photos</c>, W12). The file is the re-encoded WebP (metadata
+/// stripped, no original kept); it is private and served only through the complaint's customer and staff endpoints.
+/// </summary>
+public sealed class ComplaintPhoto : Entity
+{
+    public const string ContentType = "image/webp";
+
+    private ComplaintPhoto()
+    {
+        StorageKey = string.Empty;
+    }
+
+    internal ComplaintPhoto(Guid id, Guid complaintId, string storageKey, int width, int height, int sizeBytes, DateTimeOffset uploadedAt)
+        : base(id)
+    {
+        ComplaintId = complaintId;
+        StorageKey = storageKey;
+        Width = width;
+        Height = height;
+        SizeBytes = sizeBytes;
+        UploadedAt = uploadedAt;
+    }
+
+    public Guid ComplaintId { get; private set; }
+
+    public string StorageKey { get; private set; }
+
+    public int Width { get; private set; }
+
+    public int Height { get; private set; }
+
+    public int SizeBytes { get; private set; }
+
+    public DateTimeOffset UploadedAt { get; private set; }
 }

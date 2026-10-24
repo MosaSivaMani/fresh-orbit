@@ -1,3 +1,5 @@
+using FreshOrbit.Delivery.Public;
+using FreshOrbit.Inventory.Public;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Application.Shared;
@@ -21,6 +23,8 @@ public sealed class OrderQueryService(
     ISettingsApi settings,
     IShipmentTracking shipments,
     ILocationsApi locations,
+    IInventoryApi inventory,
+    IDeliveryApi delivery,
     IClock clock)
 {
     /// <summary>Parses the policy's <c>cancelAllowedUntilStatus</c>; CONFIRMED when missing or unknown.</summary>
@@ -90,14 +94,19 @@ public sealed class OrderQueryService(
     public async Task<AdminOrderDetailResponse> AdminDetailAsync(ICurrentActor actor, Guid orderId, CancellationToken cancellationToken)
     {
         var order = await GetForStaffAsync(actor, orderId, cancellationToken);
-        return OrderViews.AdminDetail(order, await CustomerDetailAsync(order, cancellationToken));
+        var detail = await CustomerDetailAsync(order, cancellationToken);
+        var stock = await inventory.GetOrderStockAsync(order.Id, cancellationToken);
+        var view = new OrderStockView(
+            stock.Reservations.Select(r => (r.OrderItemId, r.Status)),
+            stock.Sales.Select(s => new OrderStockBatch(s.MovementId, s.OrderItemId, s.BatchId, s.BatchCode, s.Quantity, s.OccurredAt)));
+        return OrderViews.AdminDetail(order, detail, view);
     }
 
     public async Task<(IReadOnlyList<AdminOrderListItem> Items, int Total)> AdminListAsync(ICurrentActor actor, AdminOrderListQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(actor);
         ArgumentNullException.ThrowIfNull(query);
-        var status = ParseOptional<OrderStatus>(query.Status, "status");
+        var statuses = ParseList<OrderStatus>(query.Statuses, "status");
         var method = ParseOptional<PaymentMethod>(query.PaymentMethod, "paymentMethod");
         if (query.FulfillmentLocationId is { } locationId && !actor.CanAccessLocation(locationId))
         {
@@ -120,7 +129,7 @@ public sealed class OrderQueryService(
             slotUntil = slotFrom.Value.AddDays(1);
         }
 
-        var filter = new AdminOrderFilter(query.FulfillmentLocationId, status, slotFrom, slotUntil, query.SlotId, method, query.Q, actor.IsAllLocations ? null : actor.LocationIds, query.Page, query.PageSize);
+        var filter = new AdminOrderFilter(query.FulfillmentLocationId, statuses, slotFrom, slotUntil, query.SlotId, method, query.Q, actor.IsAllLocations ? null : actor.LocationIds, query.Page, query.PageSize);
         return await reads.ListForStaffAsync(filter, cancellationToken);
     }
 
@@ -132,7 +141,14 @@ public sealed class OrderQueryService(
             throw OrderingAccess.LocationDenied();
         }
 
-        return new PickListResponse(fulfillmentLocationId, slotId, await reads.PickListAsync(fulfillmentLocationId, slotId, cancellationToken));
+        var data = await reads.PickListAsync(fulfillmentLocationId, slotId, cancellationToken);
+        var slot = await delivery.GetSlotAsync(slotId, fulfillmentLocationId, cancellationToken);
+        return new PickListResponse(
+            fulfillmentLocationId,
+            slotId,
+            data.Lines,
+            slot is null ? null : new PickListSlotDto(slot.SlotDate, slot.StartAt, slot.EndAt, slot.CutoffAt),
+            data.OrderCount);
     }
 
     public async Task<InvoiceResponse> CustomerInvoiceAsync(Guid customerId, Guid orderId, CancellationToken cancellationToken)
@@ -152,6 +168,25 @@ public sealed class OrderQueryService(
         return EnumCodes.TryToEnum<TEnum>(code.Trim(), out var value)
             ? value
             : throw new RefusalException(new FieldError(field, OrderingErrors.ValidationFailed, $"Unknown {field} '{code}'."));
+    }
+
+    /// <summary>
+    /// Codes from repeated query values, each of which may also be a comma list (<c>status=CONFIRMED&amp;status=PREPARING</c>
+    /// or <c>status=CONFIRMED,PREPARING</c>); blanks ignored, duplicates removed, an unknown code is refused (G14).
+    /// </summary>
+    internal static IReadOnlyCollection<TEnum> ParseList<TEnum>(IEnumerable<string?>? values, string field)
+        where TEnum : struct, Enum
+    {
+        var parsed = new HashSet<TEnum>();
+        foreach (var value in values ?? [])
+        {
+            foreach (var code in (value ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                parsed.Add(ParseOptional<TEnum>(code, field)!.Value);
+            }
+        }
+
+        return parsed;
     }
 
     private async Task<InvoiceResponse> InvoiceOfAsync(Order order, CancellationToken cancellationToken)

@@ -1,3 +1,4 @@
+using FreshOrbit.Ordering.Public;
 using System.Globalization;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.Promotions.Application.Banners;
@@ -62,13 +63,19 @@ internal static class PromotionsEndpoints
             SetETag(http.HttpContext.Response, coupon.Version);
             return TypedResults.Ok(coupon);
         });
-        coupons.MapGet("/{couponId:guid}/redemptions", async (Guid couponId, int? page, int? pageSize, CouponAdminService service, IPromotionsReads reads, CancellationToken ct) =>
+        coupons.MapGet("/{couponId:guid}/redemptions", async (Guid couponId, int? page, int? pageSize, CouponAdminService service, IPromotionsReads reads, IOrderingApi ordering, CancellationToken ct) =>
         {
             await service.GetAsync(couponId, ct);
             var (p, size) = Paging(page, pageSize);
             var (items, total) = await reads.ListRedemptionsAsync(couponId, p, size, ct);
-            return TypedResults.Ok(new PagedResponse<RedemptionResponse>(items, p, size, total));
-        });
+
+            // G16: order numbers from Ordering.Public in one batch for the page (nothing stored twice).
+            var numbers = await ordering.GetOrderNumbersAsync([.. items.Select(r => r.OrderId)], ct);
+            var withNumbers = items.Select(r => r with { OrderNumber = numbers.GetValueOrDefault(r.OrderId) }).ToList();
+            return TypedResults.Ok(new PagedResponse<RedemptionResponse>(withNumbers, p, size, total));
+        })
+            .Produces<PagedResponse<RedemptionResponse>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var banners = endpoints.MapGroup("/admin/promotions").RequirePermission(CatalogManage).WithTags("Admin promotions");
         banners.MapGet(string.Empty, async (Guid? cityId, int? page, int? pageSize, IPromotionsReads reads, CancellationToken ct) =>

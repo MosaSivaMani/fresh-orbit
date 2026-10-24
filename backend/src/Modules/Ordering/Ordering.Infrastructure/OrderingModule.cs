@@ -18,6 +18,7 @@ using FreshOrbit.Ordering.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
+using FreshOrbit.SharedKernel.Web.Storage;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,7 @@ public sealed class OrderingModule : IModule
     public void Register(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleModel<OrderingModuleModel>();
+        services.AddFreshOrbitFileStorage();
 
         var options = new OrderingOptions();
         configuration?.GetSection(OrderingOptions.SectionName).Bind(options);
@@ -66,6 +68,7 @@ public sealed class OrderingModule : IModule
 
         services.AddScoped<IOrderingApi, OrderingApi>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityRetirementCheck, OrderingCityRetirementCheck>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<Catalog.Public.IBestsellerSource, OrderingBestsellerSource>());
         services.AddScoped<OrderingCustomerDeletionCheck>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICustomerDeletionCheck, OrderingCustomerDeletionCheck>());
 

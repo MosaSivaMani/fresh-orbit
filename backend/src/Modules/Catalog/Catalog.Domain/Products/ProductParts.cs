@@ -55,6 +55,15 @@ public sealed class ProductVariant : Entity
 
     public int OrderStep { get; private set; }
 
+    /// <summary>Fewest pieces per serving basis (1 kg net for KG, one pack for PACK; never for PIECE).</summary>
+    public int? PiecesMin { get; private set; }
+
+    /// <summary>Most pieces per serving basis.</summary>
+    public int? PiecesMax { get; private set; }
+
+    /// <summary>People served per serving basis (1 kg net for KG, one pack, one piece).</summary>
+    public int? Serves { get; private set; }
+
     public bool IsWeightVariable { get; private set; }
 
     public bool IsActive { get; private set; }
@@ -71,7 +80,10 @@ public sealed class ProductVariant : Entity
         MinOrder,
         MaxOrder,
         OrderStep,
-        [.. _preparations.Where(p => p.IsActive).Select(p => new PreparationSpec(p.PreparationMethodId, methodCode(p.PreparationMethodId), p.YieldBp, p.IsDefault))]);
+        [.. _preparations.Where(p => p.IsActive).Select(p => new PreparationSpec(p.PreparationMethodId, methodCode(p.PreparationMethodId), p.YieldBp, p.IsDefault))],
+        PiecesMin,
+        PiecesMax,
+        Serves);
 
     /// <summary>Applies an already validated spec; returns whether the active preparations changed.</summary>
     internal bool Apply(VariantSpec spec, VariantUnits units, bool isActive)
@@ -85,6 +97,9 @@ public sealed class ProductVariant : Entity
         MinOrder = units.MinOrder;
         MaxOrder = units.MaxOrder;
         OrderStep = units.OrderStep;
+        PiecesMin = spec.PiecesMin;
+        PiecesMax = spec.PiecesMax;
+        Serves = spec.Serves;
         IsActive = isActive;
         return ReplacePreparations(spec.Preparations);
     }

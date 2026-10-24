@@ -55,7 +55,7 @@ internal sealed class OrderRepository(FreshOrbitDbContext db) : IOrderRepository
 internal sealed class ComplaintRepository(FreshOrbitDbContext db) : IComplaintRepository
 {
     public Task<Complaint?> GetAsync(Guid complaintId, CancellationToken cancellationToken)
-        => db.Set<Complaint>().FirstOrDefaultAsync(c => c.Id == complaintId, cancellationToken);
+        => db.Set<Complaint>().Include(c => c.Photos).FirstOrDefaultAsync(c => c.Id == complaintId, cancellationToken);
 
     public Task<bool> HasOpenAsync(Guid orderId, Guid? orderItemId, CancellationToken cancellationToken)
         => db.Set<Complaint>().AnyAsync(
@@ -63,6 +63,15 @@ internal sealed class ComplaintRepository(FreshOrbitDbContext db) : IComplaintRe
             cancellationToken);
 
     public void Add(Complaint complaint) => db.Add(complaint);
+
+    public void MarkChanged(Complaint complaint)
+    {
+        var entry = db.Entry(complaint);
+        if (entry.State == EntityState.Unchanged)
+        {
+            entry.Property(AuditColumns.ModifiedAt).IsModified = true;
+        }
+    }
 }
 
 internal sealed class InvoiceRepository(FreshOrbitDbContext db) : IInvoiceRepository
@@ -121,9 +130,10 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
             query = query.Where(o => o.FulfillmentLocationId == locationId);
         }
 
-        if (filter.Status is { } status)
+        if (filter.Statuses.Count > 0)
         {
-            query = query.Where(o => o.Status == status);
+            var statuses = filter.Statuses.ToList();
+            query = query.Where(o => statuses.Contains(o.Status));
         }
 
         if (filter.PaymentMethod is { } method)
@@ -171,21 +181,25 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
                 o.TotalPaise,
                 o.FinalTotalPaise,
                 o.AmountDuePaise,
+                o.Version,
             })
             .ToListAsync(cancellationToken);
-        return ([.. items.Select(o => new AdminOrderListItem(o.Id, o.OrderNumber, o.Status.ToCode(), o.PaymentMethod.ToCode(), o.CustomerId, o.RecipientName, o.Phone, o.FulfillmentLocationId, o.DeliverySlotId, o.PlacedAt, o.SlotStartAt, o.SlotEndAt, o.ItemCount, o.TotalPaise, o.FinalTotalPaise, o.AmountDuePaise))], total);
+        return ([.. items.Select(o => new AdminOrderListItem(o.Id, o.OrderNumber, o.Status.ToCode(), o.PaymentMethod.ToCode(), o.CustomerId, o.RecipientName, o.Phone, o.FulfillmentLocationId, o.DeliverySlotId, o.PlacedAt, o.SlotStartAt, o.SlotEndAt, o.ItemCount, o.TotalPaise, o.FinalTotalPaise, o.AmountDuePaise, OrderViews.VersionOf(o.Version)))], total);
     }
 
-    public async Task<IReadOnlyList<PickListLine>> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken)
+    public async Task<PickListData> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken)
     {
-        var lines = await (
+        var rows =
             from o in db.Set<Order>().AsNoTracking()
             join i in db.Set<OrderItem>().AsNoTracking() on o.Id equals i.OrderId
             where o.FulfillmentLocationId == fulfillmentLocationId
                 && o.DeliverySlotId == slotId
                 && (o.Status == OrderStatus.Confirmed || o.Status == OrderStatus.Preparing)
                 && i.Status == OrderItemStatus.Active
-            group new { i.GrossQuantity, i.OrderId } by new { i.VariantId, i.ProductName, i.VariantName, i.PreparationCode, i.PreparationName, i.StockUnit } into g
+            select new { i.OrderId, i.VariantId, i.ProductName, i.VariantName, i.Sku, i.PreparationCode, i.PreparationName, i.StockUnit, i.GrossQuantity };
+        var lines = await (
+            from r in rows
+            group new { r.GrossQuantity, r.OrderId } by new { r.VariantId, r.ProductName, r.VariantName, r.Sku, r.PreparationCode, r.PreparationName, r.StockUnit } into g
             select new PickListLine(
                 g.Key.VariantId,
                 g.Key.ProductName,
@@ -194,15 +208,19 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
                 g.Key.PreparationName,
                 g.Key.StockUnit,
                 g.Sum(x => (long)x.GrossQuantity),
-                g.Select(x => x.OrderId).Distinct().Count()))
+                g.Select(x => x.OrderId).Distinct().Count(),
+                g.Key.Sku))
             .ToListAsync(cancellationToken);
-        return [.. lines.OrderBy(l => l.ProductName, StringComparer.Ordinal).ThenBy(l => l.VariantName, StringComparer.Ordinal).ThenBy(l => l.PreparationCode, StringComparer.Ordinal)];
+        var orderCount = await rows.Select(r => r.OrderId).Distinct().CountAsync(cancellationToken);
+        return new PickListData(
+            [.. lines.OrderBy(l => l.ProductName, StringComparer.Ordinal).ThenBy(l => l.VariantName, StringComparer.Ordinal).ThenBy(l => l.PreparationCode, StringComparer.Ordinal)],
+            orderCount);
     }
 
     public async Task<IReadOnlyList<ComplaintResponse>> ListComplaintsForOrderAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        var complaints = await db.Set<Complaint>().AsNoTracking().Where(c => c.OrderId == orderId).OrderBy(c => c.RaisedAt).ToListAsync(cancellationToken);
-        return [.. complaints.Select(ComplaintResponse.From)];
+        var complaints = await db.Set<Complaint>().AsNoTracking().Include(c => c.Photos).Where(c => c.OrderId == orderId).OrderBy(c => c.RaisedAt).ToListAsync(cancellationToken);
+        return await WithFactsAsync(complaints, ComplaintAudience.Customer, cancellationToken);
     }
 
     public async Task<(IReadOnlyList<ComplaintResponse> Items, int Total)> ListComplaintsAsync(ComplaintStatus? status, ComplaintKind? kind, Guid? fulfillmentLocationId, IReadOnlySet<Guid>? locationIds, int page, int pageSize, CancellationToken cancellationToken)
@@ -230,9 +248,45 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
         }
 
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.OrderByDescending(c => c.RaisedAt).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
-        return ([.. items.Select(ComplaintResponse.From)], total);
+        var items = await query.Include(c => c.Photos).OrderByDescending(c => c.RaisedAt).ThenBy(c => c.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize).AsSplitQuery().ToListAsync(cancellationToken);
+        return (await WithFactsAsync(items, ComplaintAudience.Staff, cancellationToken), total);
     }
+
+    /// <summary>G15 facts for a page of complaints: one query for the lines, one for the orders (never per complaint).</summary>
+    private async Task<IReadOnlyList<ComplaintResponse>> WithFactsAsync(List<Complaint> complaints, ComplaintAudience audience, CancellationToken cancellationToken)
+    {
+        if (complaints.Count == 0)
+        {
+            return [];
+        }
+
+        var itemIds = complaints.Where(c => c.OrderItemId is not null).Select(c => c.OrderItemId!.Value).Distinct().ToList();
+        var orderIds = complaints.Select(c => c.OrderId).Distinct().ToList();
+        var lines = await db.Set<OrderItem>().AsNoTracking().Where(i => itemIds.Contains(i.Id))
+            .Select(i => new LineFacts(i.Id, i.ProductName, i.VariantName, i.PreparationName, i.FinalTotalPaise, i.FinalDiscountPaise))
+            .ToDictionaryAsync(i => i.Id, cancellationToken);
+        var totals = await db.Set<Order>().AsNoTracking().Where(o => orderIds.Contains(o.Id))
+            .Select(o => new OrderTotals(o.Id, o.FinalTotalPaise, o.TotalPaise))
+            .ToDictionaryAsync(o => o.Id, cancellationToken);
+        return [.. complaints.Select(c => ComplaintResponse.From(c, FactsOf(c, lines, totals), audience))];
+    }
+
+    private static ComplaintFacts FactsOf(Complaint complaint, Dictionary<Guid, LineFacts> lines, Dictionary<Guid, OrderTotals> totals)
+    {
+        if (complaint.OrderItemId is { } itemId && lines.TryGetValue(itemId, out var line))
+        {
+            return new ComplaintFacts(line.ProductName, line.VariantName, line.PreparationName, ComplaintRefundLimit.ForLine(line.FinalTotalPaise, line.FinalDiscountPaise));
+        }
+
+        return totals.TryGetValue(complaint.OrderId, out var order)
+            ? new ComplaintFacts(null, null, null, ComplaintRefundLimit.ForOrder(order.FinalTotalPaise, order.TotalPaise))
+            : new ComplaintFacts(null, null, null, 0);
+    }
+
+    private sealed record LineFacts(Guid Id, string ProductName, string VariantName, string? PreparationName, long? FinalTotalPaise, long? FinalDiscountPaise);
+
+    private sealed record OrderTotals(Guid Id, long? FinalTotalPaise, long TotalPaise);
 }
 
 /// <summary>

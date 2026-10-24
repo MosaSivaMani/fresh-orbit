@@ -22,6 +22,8 @@ public static class OrderingErrors
     public const string SubstitutionNotAllowed = "SUBSTITUTION_NOT_ALLOWED";
     public const string ComplaintWindowClosed = "COMPLAINT_WINDOW_CLOSED";
     public const string ComplaintAlreadyOpen = "COMPLAINT_ALREADY_OPEN";
+    public const string ComplaintPhotoLimitReached = "COMPLAINT_PHOTO_LIMIT_REACHED";
+    public const string ImageInvalid = "IMAGE_INVALID";
     public const string InvoiceNotIssued = "INVOICE_NOT_ISSUED";
     public const string LoginRequired = "LOGIN_REQUIRED";
     public const string CustomerDeleted = "CUSTOMER_DELETED";

@@ -27,6 +27,7 @@ Error codes: `docs/api/README.md` §2 (Catalog, Common).
 | `GetSellableVariantIdsAsync()` | ids of active variants of ACTIVE products | Pricing (readiness), Inventory |
 | Quantity rules (no member) | Callers apply CAT-R7 to the min/max/step returned by `GetVariantsAsync`, through a `QuantityRules` value in SharedKernel (Q5) | Cart, Ordering |
 | `GetProductSummariesAsync(productIds)` | name, slug, image, status | Customers (wishlist), Promotions |
+| `IBestsellerSource`, `IVariantFreshnessSource`, `IProductOfferSource` (implemented, not called, by others) | Storefront facts Catalog asks every registered implementation for (CAT-R24–R26); Catalog uses no other module, so the owners implement Catalog's interfaces (pattern of D4) | implemented by Ordering, Inventory, Promotions |
 
 ## 2. States and transitions
 
@@ -79,6 +80,13 @@ Error codes: `docs/api/README.md` §2 (Catalog, Common).
 | CAT-R18 | Image URLs are public and cacheable (`https://img.freshorbit.in/{key}`); no signed URLs for product images. |
 | CAT-R19 | `localNames`: up to 10 names, each ≤ 40 chars, de-duplicated case-insensitively. |
 | CAT-R20 | Admin product list includes all statuses; customer endpoints never return DRAFT or ARCHIVED (404). |
+| CAT-R21 | **Serving facts.** A variant may state `piecesMin`/`piecesMax` (both or neither, 1 ≤ min ≤ max ≤ 1000) and `serves` (1–100), per serving basis: 1 kg net for KG, one pack for PACK, one piece for PIECE (PIECE variants state no pieces range). Customer reads return `serving { basis, netWeightGrams, piecesMin, piecesMax, serves }` (net weight = 1000 g for KG, `packSizeGrams`, `avgPieceGrams`). Scaling to another quantity (`ServingRules.ForQuantity`): pieces floor(min × q / basis) … ceil(max × q / basis), serves floor(serves × q / basis), each at least 1. Missing data stays `null`, never guessed. |
+| CAT-R22 | **Compare-at saving.** `discountBp` = floor((compareAt − price) × 10000 / compareAt) on `fromPrice` and on each variant; `null` without `compareAtPaise`, when it is not above the price, or when the saving floors to 0. Computed by `CompareAtDiscount` (SharedKernel), also used by the price quote. |
+| CAT-R23 | **Default variant** on a list item: with a location, the variant behind `fromPrice` (lowest current price, ties by variant id); without one, the first visible variant (by id). Carries `minOrder`/`maxOrder`/`orderStep`, `defaultPreparationCode` and `serving`, so a card can add to cart without the detail call. |
+| CAT-R24 | **Bestsellers** (`GET /bestsellers`, `/home` `bestsellers`): products ranked by distinct sold orders at the location in the last 30 days (Ordering's `IBestsellerSource`: orders CONFIRMED…DELIVERED, lines ACTIVE or SHORT_SUPPLIED; ties by latest order, then id). The ranking (top 40 ids) is cached in memory per location for 10 minutes; visibility, price and stock are read fresh, and only in-stock sellable products are returned (at most 12). No sales → empty list, never filler. |
+| CAT-R25 | **Freshness**: `{ caughtOn, receivedAt }` of the batch the next order is packed from (Inventory's `IVariantFreshnessSource`: ACTIVE, quantity left, best-before after now, FEFO). `null` without location or sellable stock; `caughtOn` `null` when not recorded at receipt. |
+| CAT-R26 | **Offer line**: `{ couponCode, text }` from Promotions' `IProductOfferSource` (PROMO-R26) for the location's city; `null` without location or when none applies. No amount is shown or computed outside the cart. |
+| CAT-R27 | **Public preparation methods** (`GET /preparation-methods`): reference methods offered on at least one active preparation of an active variant of a visible product; with a location, also priced, stocked and charged there. Ordered by `sortOrder`, then code. |
 
 ## 4. Events
 
@@ -126,6 +134,8 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | U7 | Change slug after publish | refused (`VALIDATION_FAILED` on `slug`) |
 | U8 | Category third level / cycle | `VALIDATION_FAILED` |
 | U9 | Archive ACTIVE, restore ARCHIVED → DRAFT, ACTIVE → DRAFT | ok, ok, `INVALID_STATUS_TRANSITION` |
+| U10 | Pieces range inverted / half given / on a PIECE variant; serves 0 or 101 (`ServingRulesTests`) | `VALIDATION_FAILED` on `piecesMax` / `piecesMin` / `piecesMin` / `serves` |
+| U11 | Serving scaled to 750 g and 3 packs; compare-at ₹1,499 → ₹1,299 | 7–9 pieces, serves 3; 18–24 pieces, 1500 g; 1334 bp; no compare-at / not higher / floors to 0 → `null` |
 
 ### Integration (Postgres, Testcontainers; `LocalDiskFileStorage` on a temp directory, D21)
 
@@ -142,6 +152,12 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | I9 | Remove image → handler run | MinIO objects gone (Testcontainers MinIO) |
 | I10 | Update variant with stale `If-Match` | 412; missing → 428 |
 | I11 | Browse SQL count | 1 statement for list, 1 for detail |
+| I12 | List and detail at a location (`StorefrontProductShapeTests`) | `defaultVariant` with GRAM order rules, `CURRY_CUT` default, serving 10–12 pieces / 4; `discountBp` 1334; without location `defaultVariant` still set |
+| I13 | Two receipts (yesterday's catch with earlier best-before, today's) | `freshness.caughtOn` = yesterday on list and detail; `null` without location |
+| I14 | Listed product-scope coupon, listed city-wide coupon, unlisted coupon | scoped product shows the product coupon, other product the city-wide one; unlisted never shown |
+| I15 | COD orders (2 × A, 1 × B), ONLINE unpaid order (C), order at another location (D) | `/bestsellers` = [A, B]; `/home` same; quiet location empty; no pincode → `LOCATION_REQUIRED` |
+| I16 | `/preparation-methods` with and without pincode, one product charged for CURRY_CUT only | all in-use methods by sort order; at the location only `CURRY_CUT` |
+| I17 | `/price-quote` 750 g CURRY_CUT (cart.md CART-R24) | amounts equal `LinePricing` (estimate, max at 825 g, contained tax); invalid step / zero / above max / wrong unit / unknown preparation / unknown variant / missing quantity / no pincode / no price → 422 with code and field |
 
 ## 7. Open questions (with proposed answers)
 
@@ -157,3 +173,5 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | Q8 | `-newest` sort and PublishProduct need a publish time; no column. | Add `products.published_at timestamptz null` (set on first publish); needs a DB doc change. |
 
 **Implementation notes (Phase 2).** Q1: done as SQL views (`catalog.storefront_offers`, `storefront_preparation_charges`, `storefront_locations`) read by `Reads/` only. Q2, Q3, Q4, Q6, Q8: done as proposed. Q5: `QuantityRules` lives in `Catalog.Domain` for now; moving it to SharedKernel is a manager decision. Images: EXIF orientation is applied before resizing; shortest side must be ≥ 800 px; an orphan-image cleanup job (`catalog.cleanup-orphan-images`, 03:30 daily) deletes storage prefixes with no `product_images` row. Banners on `/home` stay empty until Promotions ships; `isWishlisted` is null until Customers exposes wishlists.
+
+**Implementation notes (storefront product shapes, W1–W3, W8).** CAT-R21–R27 added. Schema: `catalog.product_variants` gains `pieces_min`, `pieces_max`, `serves` (nullable int, check constraints `ck_product_variants_pieces`, `ck_product_variants_serves`); view `catalog.storefront_locations` gains `city_id` (last column). Sample variants may carry optional `piecesMin`/`piecesMax`/`serves` (none set yet). Facts owned by Ordering, Inventory and Promotions are composed in `Catalog.Application/Storefront/StorefrontEnricher` (one call per source per response). The pre-add price quote lives in Cart (CART-R24) to reuse the cart's line code.

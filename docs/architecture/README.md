@@ -30,7 +30,7 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Cart | `cart` | carts, cart items (no prices) | Catalog, Pricing, Inventory, Locations, Promotions, Settings, Customers, Ordering, Identity (events) |
 | Promotions | `promotions` | coupons, scopes, redemptions, promotions (home offers) | Catalog, Locations, Ordering (events) |
 | Ordering | `ordering` | checkout, orders, items, history, adjustments, substitutions, complaints, invoices | Cart, Catalog, Pricing, Inventory, Delivery, Promotions, Locations, Customers, Settings, Payments |
-| Payments | `payments` | payments, refunds, webhook events, cash settlements, reconciliation issues, provider adapters | Ordering, Delivery, Identity |
+| Payments | `payments` | payments, refunds, webhook events, cash settlements, reconciliation issues, provider adapters | Ordering, Delivery, Identity, Customers (implements `ICustomerDeletionCheck`) |
 | Delivery | `delivery` | slot templates, slots, riders, shipments, attempts | Locations, Ordering (events) |
 | Notifications | `notifications` | templates, messages, device tokens, preferences | Identity, Audit, Settings, Customers, Ordering, Payments, Delivery |
 | Reporting | `reporting` | read-only views over other schemas | — |
@@ -69,6 +69,7 @@ backend/
 | Need | Solution |
 |---|---|
 | Catalog browse shows price and stock | Read-only SQL view `catalog.storefront_offers` joining pricing and inventory tables; no project reference |
+| Catalog browse shows bestsellers, freshness and an offer line owned by Ordering, Inventory, Promotions | Interfaces in `Catalog.Public` (`IBestsellerSource`, `IVariantFreshnessSource`, `IProductOfferSource`) implemented by those modules; Catalog asks every registered one and shows `null`/empty when none (CAT-R24–R26) |
 | City readiness, retirement and next-slot need modules that depend on Locations | Interfaces in `Locations.Public` (`ICityActivationCheck`, `ICityRetirementCheck`, `INextSlotProvider`) implemented by Pricing, Inventory, Delivery, Ordering |
 | Delivery needs `max_delivery_attempts` from the order policy but does not use Settings | `IDeliveryAttemptPolicy` in `Delivery.Public`, implemented by Settings (same pattern as D4) |
 | Customer deletion must be refused while orders are open | `ICustomerDeletionCheck` in `Customers.Public`, implemented by Ordering |

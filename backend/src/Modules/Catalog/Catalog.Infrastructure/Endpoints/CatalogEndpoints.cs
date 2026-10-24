@@ -35,14 +35,38 @@ internal static class CatalogEndpoints
 
     private static void MapStorefront(RouteGroupBuilder group)
     {
-        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
+        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IClock clock, CancellationToken ct) =>
         {
             var location = await ResolveAsync(http, service, required: false, ct);
             var categories = await reads.GetCategoryTreeAsync(ct);
             var query = new ProductListQuery([], null, [], [], null, null, null, ProductSort.Featured, 0, 12) { FeaturedOnly = true };
             var (products, _) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
-            return TypedResults.Ok(new HomeResponse([], categories, products, location is null));
-        }).RequireRateLimiting(RateLimitPolicies.Public);
+            var featured = await enricher.EnrichAsync(products, location, clock.UtcNow, ct);
+            var bestsellers = location is null ? [] : await enricher.BestsellersAsync(location, clock.UtcNow, ct);
+            return TypedResults.Ok(new HomeResponse([], categories, featured, location is null) { Bestsellers = bestsellers });
+        })
+        .Produces<HomeResponse>()
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .RequireRateLimiting(RateLimitPolicies.Public);
+
+        group.MapGet("/bestsellers", async (HttpContext http, StorefrontService service, StorefrontEnricher enricher, IClock clock, CancellationToken ct) =>
+        {
+            var location = (await ResolveAsync(http, service, required: true, ct))!;
+            var items = await enricher.BestsellersAsync(location, clock.UtcNow, ct);
+            return TypedResults.Ok(new BestsellersResponse(new LocationRef(location.FulfillmentLocationCode, location.Pincode), items));
+        })
+        .Produces<BestsellersResponse>()
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .RequireRateLimiting(RateLimitPolicies.Public);
+
+        group.MapGet("/preparation-methods", async (HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
+        {
+            var location = await ResolveAsync(http, service, required: false, ct);
+            return TypedResults.Ok(await reads.ListPreparationMethodsAsync(location, clock.UtcNow, ct));
+        })
+        .Produces<IReadOnlyList<StorefrontPreparationMethod>>()
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/categories", async (IStorefrontReads reads, CancellationToken ct) => TypedResults.Ok(await reads.GetCategoryTreeAsync(ct)))
             .RequireRateLimiting(RateLimitPolicies.Public);
@@ -76,24 +100,32 @@ internal static class CatalogEndpoints
                 string? sort,
                 StorefrontService service,
                 IStorefrontReads reads,
+                StorefrontEnricher enricher,
                 IClock clock,
                 CancellationToken ct) =>
             {
                 var location = await ResolveAsync(http, service, required: false, ct);
                 var query = StorefrontService.BuildQuery(category, q, sourceType, preparation, inStock, minPricePaise, maxPricePaise, sort, paging.Skip, paging.PageSize, location is not null);
                 var (items, total) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
-                return TypedResults.Ok(new PagedResponse<ProductListItem>(items, paging.Page, paging.PageSize, total));
+                var enriched = await enricher.EnrichAsync(items, location, clock.UtcNow, ct);
+                return TypedResults.Ok(new PagedResponse<ProductListItem>(enriched, paging.Page, paging.PageSize, total));
             })
+            .Produces<PagedResponse<ProductListItem>>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .WithValidation<PagedRequest>()
             .RequireRateLimiting(RateLimitPolicies.Search);
 
-        group.MapGet("/products/{slug}", async (string slug, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
+        group.MapGet("/products/{slug}", async (string slug, string? preparation, HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IClock clock, CancellationToken ct) =>
         {
             var location = await ResolveAsync(http, service, required: false, ct);
             var product = await reads.GetProductAsync(slug, location, preparation?.Trim().ToUpperInvariant(), clock.UtcNow, ct)
                 ?? throw new NotFoundException(CatalogErrors.ProductNotFound, "No product has this slug.");
-            return TypedResults.Ok(product);
-        }).RequireRateLimiting(RateLimitPolicies.Public);
+            return TypedResults.Ok(await enricher.EnrichAsync(product, location, clock.UtcNow, ct));
+        })
+        .Produces<StorefrontProductDetail>()
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+        .RequireRateLimiting(RateLimitPolicies.Public);
 
         group.MapGet("/search/suggest", async (string? q, HttpContext http, StorefrontService service, IStorefrontReads reads, IClock clock, CancellationToken ct) =>
         {

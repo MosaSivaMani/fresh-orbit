@@ -109,7 +109,10 @@ public sealed partial class CatalogSampleDataLoader(
                         variant.MaxOrder,
                         variant.OrderStep,
                         variant.IsActive,
-                        [.. variant.Preparations.Select(p => new VariantPreparationRequest(p.Code, p.YieldBp, p.IsDefault))]),
+                        [.. variant.Preparations.Select(p => new VariantPreparationRequest(p.Code, p.YieldBp, p.IsDefault))],
+                        variant.PiecesMin,
+                        variant.PiecesMax,
+                        variant.Serves),
                     cancellationToken);
                 version = Version(withVariant.Version);
                 context.Track<ProductVariant>(db, withVariant.Variants.Single(v => string.Equals(v.Sku, variant.Sku, StringComparison.OrdinalIgnoreCase)).Id);
@@ -182,7 +185,10 @@ public sealed partial class CatalogSampleDataLoader(
         int? MaxOrder,
         int? OrderStep,
         bool? IsActive,
-        IReadOnlyList<PreparationRow> Preparations);
+        IReadOnlyList<PreparationRow> Preparations,
+        int? PiecesMin = null,
+        int? PiecesMax = null,
+        int? Serves = null);
 
     private sealed record PreparationRow(string Code, int YieldBp, bool IsDefault);
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using FreshOrbit.Catalog.Domain.Products;
 using FreshOrbit.Catalog.Domain.Products.Events;
 using FreshOrbit.Catalog.Domain.Shared;
+using ImageLimits = FreshOrbit.Catalog.Public.ImageLimits;
 using FreshOrbit.SharedKernel.Domain;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Events;
@@ -34,14 +35,14 @@ public static class ImageRenditions
 /// <summary>JPEG, PNG or WebP recognised by magic bytes, never by file name (CAT-R16).</summary>
 public static class ImageFormats
 {
-    public const int MaxBytes = 5 * 1024 * 1024;
+    public const int MaxBytes = ImageLimits.MaxBytes;
     public const int MinShortestSide = 800;
 
     /// <summary>SEC-5: longest side the header may claim; checked before any pixel memory is allocated.</summary>
-    public const int MaxSide = 8000;
+    public const int MaxSide = ImageLimits.MaxSide;
 
     /// <summary>SEC-5: most pixels the header may claim (40 MP, about 160 MB decoded at 4 bytes per pixel).</summary>
-    public const long MaxPixels = 40_000_000;
+    public const long MaxPixels = ImageLimits.MaxPixels;
 
     /// <summary>The content type for the bytes' signature, or null when they are not JPEG, PNG or WebP.</summary>
     public static string? Detect(ReadOnlySpan<byte> bytes)

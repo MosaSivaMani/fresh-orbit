@@ -32,6 +32,9 @@ public interface IComplaintRepository
     Task<bool> HasOpenAsync(Guid orderId, Guid? orderItemId, CancellationToken cancellationToken);
 
     void Add(Complaint complaint);
+
+    /// <summary>Makes the save update the complaint row (row version checked and bumped) when only a child changed (photo added).</summary>
+    void MarkChanged(Complaint complaint);
 }
 
 public interface IInvoiceRepository
@@ -100,8 +103,11 @@ public interface IOrderReads
 
     Task<(IReadOnlyList<AdminOrderListItem> Items, int Total)> ListForStaffAsync(AdminOrderFilter filter, CancellationToken cancellationToken);
 
-    /// <summary>ORD-R60: ACTIVE lines of CONFIRMED/PREPARING orders of the slot, sum of gross per variant x preparation, one query.</summary>
-    Task<IReadOnlyList<PickListLine>> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken);
+    /// <summary>
+    /// ORD-R60: ACTIVE lines of CONFIRMED/PREPARING orders of the slot, sum of gross per variant x preparation (one
+    /// query), and the number of distinct orders those lines belong to (one count query, G18).
+    /// </summary>
+    Task<PickListData> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ComplaintResponse>> ListComplaintsForOrderAsync(Guid orderId, CancellationToken cancellationToken);
 

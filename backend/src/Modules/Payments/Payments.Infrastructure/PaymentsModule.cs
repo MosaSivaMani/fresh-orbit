@@ -1,3 +1,4 @@
+using FreshOrbit.Customers.Public;
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
 using FreshOrbit.Payments.Infrastructure.Seeding;
 using FreshOrbit.Delivery.Public.Events;
@@ -90,6 +91,7 @@ public sealed class PaymentsModule : IModule
 
         // Public API, own event handlers and jobs.
         services.TryAddScoped<IPaymentsApi, PaymentsApi>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ICustomerDeletionCheck, PaymentsCustomerDeletionCheck>());
         services.AddEventHandler<RefundApproved, RefundApprovedHandler>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PaymentsJobRegistration>());
         services.TryAddScoped<ReconciliationJob>();

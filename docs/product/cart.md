@@ -83,6 +83,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 | CART-R20 | Every write sets `expires_at = now + lifetime`: customer 30 days, guest 7 days (Q2). |
 | CART-R21 | Owner: customer JWT wins; `X-Cart-Token` ignored when a JWT is present. Unknown token or non-`ACTIVE` cart → 404 `CART_NOT_FOUND` (except `GET /cart`, which returns an empty cart). |
 | CART-R22 | Guest token is issued on the first write without token or JWT; returned once in `X-Cart-Token` and `cartToken`; only its hash is stored. |
+| CART-R24 | **Price quote** (`GET /price-quote`, public, location required): one line priced before it is added, with the same loaders, `QuantityRules` and `LineCalculator.Price` as a cart line, so the quote equals the line it becomes (no coupon). Checks in order: parameters present (`VALIDATION_FAILED`), pincode (`LOCATION_REQUIRED` / `PINCODE_NOT_SERVICEABLE`), variant active on an ACTIVE product (`PRODUCT_NOT_AVAILABLE`), preparation enabled (`PREPARATION_NOT_AVAILABLE`; omitted → default), unit (`QUANTITY_UNIT_INVALID`), min / max / step (`QUANTITY_*` on `quantity`), price and charge (`PRICE_NOT_AVAILABLE`, `PREPARATION_CHARGE_NOT_AVAILABLE`). Returns item, preparation, contained tax, estimate, max chargeable quantity and amount (city order policy `maxOverweightBp`), `discountBp` (CAT-R22) and availability; stock is reported, not refused. Rate limit `public`. |
 | CART-R23 | Coupon endpoints require a customer JWT (guest → 401 `LOGIN_REQUIRED`). `PUT /cart/coupon` validates now and refuses with the `COUPON_*` code; reads never throw for coupons (`PROMO-R12`). Rate limits (API §1.9, D62): every cart route is under the per-IP `public` limit (guests use the cart); `PUT /cart/coupon` instead has the `coupon` limit, 10 per 10 minutes per customer (IP when anonymous), against code guessing. |
 
 ### Location change
@@ -187,6 +188,7 @@ None. (Prices, stock, catalog changes are seen on the next read.)
 | I11 | `AbandonCarts` with no due carts | no writes, no events |
 | I12 | `AbandonCarts` with 2 due carts | both `ABANDONED`, 2 outbox rows |
 | I13 | Reads per request | one query per dependency regardless of line count (query counter) |
+| I14 | `GET /price-quote` (in `Catalog.Tests/Integration/StorefrontProductShapeTests`, which has the storefront fixtures) | amounts equal `LinePricing`; each refusal code with its field |
 
 ## 8. Open questions
 

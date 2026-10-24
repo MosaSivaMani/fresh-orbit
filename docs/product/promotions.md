@@ -96,6 +96,7 @@ Order `DELIVERED`, `RETURNED`, `DELIVERY_FAILED` keep the redemption `APPLIED` (
 | PROMO-R22 | `city_id` must exist (Locations.Public); scope ids must exist (Catalog.Public). |
 | PROMO-R23 | PUT, pause, resume need `If-Match`; every admin write audited. |
 | PROMO-R24 | `GET /coupons` lists `ACTIVE`, started, not expired, city-matching coupons that are marked listed (gap: `is_listed`) and not exhausted for the customer. |
+| PROMO-R26 | **Product offer line** (Catalog's `IProductOfferSource`, CAT-R26): for each product, among the listed coupons usable in the city now (as PROMO-R24, not customer-specific), those whose scope covers the product (no scope = all; CATEGORY covers sub-categories); the most specific wins (PRODUCT, then CATEGORY, then store-wide), then lowest `min_order_paise`, then code. Text composed by the server: "15% off up to ₹100" / "₹50 off" / "Free delivery", + " on orders above ₹499", + " on your first order", + " with code CODE". No amount is computed for display. |
 | PROMO-R25 | Banners: `link_type COUPON` target must be an existing coupon code; `CATEGORY`/`PRODUCT` target must exist (Catalog.Public). Permission `catalog.manage` (API §4.11). |
 
 ## 4. Events
@@ -193,3 +194,9 @@ Redeem runs through `IPromotionsApi.Redeem` inside Ordering's checkout transacti
 | Q4 | Private coupons (not listed) | Add `is_listed` (API gap) |
 | Q5 | Should category scope include descendants? | Yes |
 | Q6 | One coupon per order only? | Yes (`unique order_id`), no stacking |
+
+## Admin gap G16 (branch `backend/api-gaps-admin-orders`)
+
+`GET /api/v1/admin/coupons/{id}/redemptions` rows carry `orderNumber`, read from Ordering through
+`IOrderingApi.GetOrderNumbers(orderIds)` in one call per page (not stored in Promotions: no schema change, numbers never
+drift, old redemptions get them too). `null` when Ordering has no such order.

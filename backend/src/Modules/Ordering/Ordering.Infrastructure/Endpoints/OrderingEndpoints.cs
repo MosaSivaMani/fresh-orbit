@@ -3,6 +3,7 @@ using FreshOrbit.Ordering.Application.Checkout;
 using FreshOrbit.Ordering.Application.Complaints;
 using FreshOrbit.Ordering.Application.Orders;
 using FreshOrbit.Ordering.Application.Shared;
+using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Shared;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.Errors;
@@ -69,7 +70,34 @@ internal static class OrderingEndpoints
             })
             .WithIdempotency(required: true);
         orders.MapGet("/{orderId:guid}/complaints", async (Guid orderId, ICurrentActor actor, ComplaintService complaints, CancellationToken ct)
-            => TypedResults.Ok(await complaints.ListForOrderAsync(CustomerOf(actor), orderId, ct)));
+                => TypedResults.Ok(await complaints.ListForOrderAsync(CustomerOf(actor), orderId, ct)))
+            .Produces<IReadOnlyList<ComplaintResponse>>();
+
+        // W12: one photo per request (multipart field "file"); optional Idempotency-Key (a rebuilt multipart body has a new boundary).
+        orders.MapPost("/{orderId:guid}/complaints/{complaintId:guid}/photos", async (Guid orderId, Guid complaintId, IFormFile? file, ICurrentActor actor, ComplaintService complaints, CancellationToken ct) =>
+            {
+                if (file is null || file.Length == 0)
+                {
+                    throw new RefusalException(new FieldError("file", OrderingErrors.ImageInvalid, "Attach the photo as the multipart field 'file'."));
+                }
+
+                await using var stream = file.OpenReadStream();
+                var complaint = await complaints.AddPhotoAsync(CustomerOf(actor), orderId, complaintId, stream, ct);
+                return TypedResults.Created($"/api/v1/orders/{orderId}/complaints/{complaintId}", complaint);
+            })
+            .DisableAntiforgery()
+            .WithMetadata(new RequestSizeLimitAttribute(ComplaintPhotoRules.MaxRequestBytes))
+            .WithIdempotency(required: false)
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces<ComplaintResponse>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+        orders.MapGet("/{orderId:guid}/complaints/{complaintId:guid}/photos/{photoId:guid}", async (Guid orderId, Guid complaintId, Guid photoId, ICurrentActor actor, ComplaintService complaints, HttpResponse response, CancellationToken ct)
+                => PhotoResult(response, await complaints.OpenPhotoForCustomerAsync(CustomerOf(actor), orderId, complaintId, photoId, ct)))
+            .Produces(StatusCodes.Status200OK, contentType: ComplaintPhoto.ContentType)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         orders.MapGet("/{orderId:guid}/invoice", async (Guid orderId, ICurrentActor actor, OrderQueryService queries, CancellationToken ct)
             => TypedResults.Ok(await queries.CustomerInvoiceAsync(CustomerOf(actor), orderId, ct)));
         orders.MapPost("/{orderId:guid}/reorder", async (Guid orderId, ICurrentActor actor, OrderCommandService commands, CancellationToken ct)
@@ -81,7 +109,7 @@ internal static class OrderingEndpoints
         var orders = root.MapGroup("/admin/orders").WithTags("Admin orders");
         orders.MapGet(string.Empty, async (
                 [FromQuery] Guid? fulfillmentLocationId,
-                [FromQuery] string? status,
+                [FromQuery] string[]? status,
                 [FromQuery] string? slotDate,
                 [FromQuery] Guid? slotId,
                 [FromQuery] string? paymentMethod,
@@ -93,17 +121,25 @@ internal static class OrderingEndpoints
                 CancellationToken ct) =>
             {
                 var (p, size) = Paging(page, pageSize);
-                var query = new AdminOrderListQuery(fulfillmentLocationId, status, ParseDate(slotDate), slotId, paymentMethod, q, p, size);
+                var query = new AdminOrderListQuery(fulfillmentLocationId, status ?? [], ParseDate(slotDate), slotId, paymentMethod, q, p, size);
                 var (items, total) = await queries.AdminListAsync(actor, query, ct);
                 return TypedResults.Ok(new PagedResponse<AdminOrderListItem>(items, p, size, total));
             })
-            .RequirePermission(OrdersView);
+            .RequirePermission(OrdersView)
+            .Produces<PagedResponse<AdminOrderListItem>>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
         orders.MapGet("/pick-list", async ([FromQuery] Guid fulfillmentLocationId, [FromQuery] Guid slotId, ICurrentActor actor, OrderQueryService queries, CancellationToken ct)
                 => TypedResults.Ok(await queries.PickListAsync(actor, fulfillmentLocationId, slotId, ct)))
-            .RequirePermission(OrdersPack);
+            .RequirePermission(OrdersPack)
+            .Produces<PickListResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
         orders.MapGet("/{orderId:guid}", async (Guid orderId, ICurrentActor actor, OrderQueryService queries, HttpResponse response, CancellationToken ct)
                 => WithETag(response, await queries.AdminDetailAsync(actor, orderId, ct)))
-            .RequirePermission(OrdersView);
+            .RequirePermission(OrdersView)
+            .Produces<AdminOrderDetailResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         orders.MapPost("/{orderId:guid}/start-preparing", async (Guid orderId, HttpRequest request, ICurrentActor actor, OrderCommandService commands, CancellationToken ct)
                 => WithETag(request.HttpContext.Response, await commands.StartPreparingAsync(actor, orderId, IfMatch.GetRequiredVersion(request), ct)))
             .RequirePermission(OrdersPack);
@@ -136,13 +172,24 @@ internal static class OrderingEndpoints
             var (p, size) = Paging(page, pageSize);
             var (items, total) = await service.AdminListAsync(actor, status, kind, fulfillmentLocationId, p, size, ct);
             return TypedResults.Ok(new PagedResponse<ComplaintResponse>(items, p, size, total));
-        });
+        })
+            .Produces<PagedResponse<ComplaintResponse>>();
         complaints.MapGet("/{complaintId:guid}", async (Guid complaintId, ICurrentActor actor, ComplaintService service, HttpResponse response, CancellationToken ct)
-            => WithETag(response, ComplaintResponse.From(await service.GetForStaffAsync(actor, complaintId, ct))));
+                => WithETag(response, await service.GetStaffViewAsync(actor, complaintId, ct)))
+            .Produces<ComplaintResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        complaints.MapGet("/{complaintId:guid}/photos/{photoId:guid}", async (Guid complaintId, Guid photoId, ICurrentActor actor, ComplaintService service, HttpResponse response, CancellationToken ct)
+                => PhotoResult(response, await service.OpenPhotoForStaffAsync(actor, complaintId, photoId, ct)))
+            .Produces(StatusCodes.Status200OK, contentType: ComplaintPhoto.ContentType)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         complaints.MapPost("/{complaintId:guid}/decide", async (Guid complaintId, DecideComplaintRequest body, HttpRequest request, ICurrentActor actor, ComplaintService service, CancellationToken ct)
-            => WithETag(request.HttpContext.Response, await service.DecideAsync(actor, complaintId, IfMatch.GetRequiredVersion(request), body, ct)));
+                => WithETag(request.HttpContext.Response, await service.DecideAsync(actor, complaintId, IfMatch.GetRequiredVersion(request), body, ct)))
+            .Produces<ComplaintResponse>();
         complaints.MapPost("/{complaintId:guid}/resolve", async (Guid complaintId, HttpRequest request, ICurrentActor actor, ComplaintService service, CancellationToken ct)
-            => WithETag(request.HttpContext.Response, await service.ResolveAsync(actor, complaintId, IfMatch.GetRequiredVersion(request), ct)));
+                => WithETag(request.HttpContext.Response, await service.ResolveAsync(actor, complaintId, IfMatch.GetRequiredVersion(request), ct)))
+            .Produces<ComplaintResponse>();
     }
 
     private static async Task<IResult> PlaceOrderAsync(CheckoutRequest request, HttpRequest http, ICurrentActor actor, CheckoutService service, CancellationToken ct)
@@ -184,6 +231,14 @@ internal static class OrderingEndpoints
     {
         SetETag(response, complaint.Version);
         return TypedResults.Ok(complaint);
+    }
+
+    /// <summary>A private complaint photo: never cached by shared caches, never sniffed.</summary>
+    private static Microsoft.AspNetCore.Http.HttpResults.FileStreamHttpResult PhotoResult(HttpResponse response, ComplaintPhotoFile photo)
+    {
+        response.Headers.CacheControl = "private, max-age=300";
+        response.Headers.XContentTypeOptions = "nosniff";
+        return TypedResults.Stream(photo.Content, photo.ContentType);
     }
 
     private static void SetETag(HttpResponse response, string version)
