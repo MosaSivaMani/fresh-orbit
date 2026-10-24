@@ -33,6 +33,7 @@ internal static class IdentityEndpoints
                 => TypedResults.Accepted((string?)null, await service.RequestAsync(request, ct)))
             .WithValidation<OtpRequestRequest>()
             .RequireRateLimiting(RateLimitPolicies.OtpRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable)
             .AllowAnonymous();
 
         group.MapPost("/otp/verify", async (OtpVerifyRequest request, IOtpService service, CancellationToken ct)

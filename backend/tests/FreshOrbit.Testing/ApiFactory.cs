@@ -52,6 +52,8 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
         builder.UseSetting($"ConnectionStrings:{FreshOrbitDbContextOptions.ConnectionStringName}", database.ConnectionString);
         builder.UseSetting("Jwt:SigningKey", SigningKey);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
+        // Required outside Development and Testing (E2E-3); set here so tests that start the Api as Production start.
+        builder.UseSetting("DataProtection:KeysPath", Path.Combine(Path.GetTempPath(), "freshorbit-api-tests", "dataprotection-keys"));
         foreach (var rule in RateLimitRules)
         {
             builder.UseSetting($"RateLimiting:{rule}:PermitLimit", "100000");

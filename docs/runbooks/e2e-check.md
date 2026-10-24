@@ -38,7 +38,7 @@ Each pass starts from an empty database volume.
 
 | Pass | Hosts run as | Proves |
 |---|---|---|
-| `production` | `APP_ENVIRONMENT=Production`, `Notifications__Sms__Provider=DLT` with throwaway DLT settings, `FileStorage__RootPath=/media` | The start-up validators accept a complete Production configuration. The guards hold: `GET /api/v1/dev/sms` returns 404, an OTP request is refused with 500 while the DLT sender is a stub, and an api container started with `Provider=DEVELOPMENT` refuses to start (`OptionsValidationException: Notifications:Sms:Provider…`). `smoke.sh` runs with `SMOKE_STOP_BEFORE_OTP=true`: staff setup, city activation, slot generation, serviceability, product list and media |
+| `production` | `APP_ENVIRONMENT=Production`, `Notifications__Sms__Provider=DLT` with throwaway DLT settings, `FileStorage__RootPath=/media` | The start-up validators accept a complete Production configuration. The guards hold: `GET /api/v1/dev/sms` returns 404, an OTP request through the real DLT adapter to the unreachable `SMS_DLT_BASE_URL` (`https://dlt.example.invalid`) answers 503 `SMS_PROVIDER_UNAVAILABLE` (E2E-1; never 500), and an api container started with `Provider=DEVELOPMENT` refuses to start with exit 1 (`Start-up refused … Notifications:Sms:Provider must be DLT …`). An `.env.e2e` generated before E2E-1 lacks the DLT gateway and template ids; the script stops and asks you to delete it. `smoke.sh` runs with `SMOKE_STOP_BEFORE_OTP=true`: staff setup, city activation, slot generation, serviceability, product list and media |
 | `testing` | `APP_ENVIRONMENT=Testing` plus `docker-compose.e2e-testing.yml` (`Provider=DEVELOPMENT`) | The full `smoke.sh`: OTP codes come from `GET /api/v1/dev/sms`, then a COD order is placed, packed, dispatched and delivered, and the invoice, payment, stock and notifications are checked |
 
 Smoke needs the testing pass because OTP codes can only be read in Development or Testing
@@ -50,8 +50,8 @@ Smoke needs the testing pass because OTP codes can only be read in Development o
 |---|---|
 | `env` | Env file present, no placeholders left, `docker compose config` valid |
 | `build` | `docker compose build` of migrations, api, worker, web and admin |
-| `migrate` | Postgres has 0 tables. **Run 1** (`--create-admin`) exits 0. `platform.__ef_migrations_history` holds `20261023185953_InitialCreate`. All 16 module schemas exist. The six reference loaders logged their files, and the reference tables are non-empty. The first admin is created. **Run 2** (no options) exits 0 and every count is identical: loaders report `0 inserted … N unchanged`. A **second `--create-admin`** is refused with exit 3 |
-| `up` | `compose up -d`. postgres, api, web, admin and caddy are `healthy`, the worker is `running` with 0 restarts after a 20-second soak, and the migrations container (its third run) exited 0 |
+| `migrate` | Postgres has 0 tables. **Run 1** (`--create-admin`) exits 0 and logs **no Error or Fatal line** (E2E-5). `platform.__ef_migrations_history` holds `20261023185953_InitialCreate`. All 16 module schemas exist. The six reference loaders logged their files, and the reference tables are non-empty. The first admin is created. **Run 2** (no options) exits 0, logs no Error, and every count is identical: loaders report `0 inserted … N unchanged`. A **second `--create-admin`** is refused with exit 3 (its Error line is expected) |
+| `up` | `compose up -d`. postgres, api, web, admin and caddy are `healthy`, the worker is `running` with 0 restarts after a 20-second soak, and the migrations container (its third run) exited 0. **Data Protection (E2E-3):** the api's `/keys` (volume `dataprotection-keys`) holds a `key-*.xml`, and the api did not log "may not be persisted outside of the container". The api container is then recreated, as a deploy does: it becomes healthy again with the same key files and no new key |
 | `caddy` | Through Caddy over TLS: api `/health` 200 with HSTS; `/api/v1/admin/auth/me` 401; private `/media/...` 404. Web `/` 200 with its CSP; the web `/api/v1` proxy reaches the API. Admin `/` 200 with the strict CSP (D40) and `noindex`; SPA fallback; admin-origin `/api` reaches the API. `www` returns 301; HTTP returns 308 to HTTPS. Then the guards for the current pass |
 | `smoke` | `infra/scripts/smoke.sh` against `https://api.localhost` |
 | `down` | `compose down -v --remove-orphans`. It also runs automatically when a step fails, unless `KEEP=true` |
@@ -60,11 +60,35 @@ Logs go to `$TMPDIR/fo-e2e/`: `migrations-run{1,2,3}.log`, `smoke-<pass>.log` an
 
 ## 5. Running `deploy.sh` against the e2e stack
 
-`lib.sh` reads `FO_PROJECT` (default `freshorbit`) and `FO_COMPOSE_OVERRIDE`. With those set, `deploy.sh` can drive
-the same stack: `FO_PROJECT=fo-e2e FO_ENV_FILE=infra/compose/.env.e2e FO_COMPOSE_OVERRIDE=infra/compose/docker-compose.e2e.yml
-SKIP_PULL=true SKIP_IMAGE_PRUNE=true infra/scripts/deploy.sh local`. This works only on Linux: `deploy.sh` needs
-`flock` and bash 4 or later (`mapfile`), and macOS has neither. Running it in a Linux container on the Mac would
-need an image the project does not use yet, so it was not done there.
+`lib.sh` reads `FO_PROJECT` (default `freshorbit`) and `FO_COMPOSE_OVERRIDE`. With those set, `deploy.sh` drives the
+same stack. Since E2E-7 it also runs on macOS bash 3.2 without `flock`: it falls back to a `mkdir` lock, and it
+checks the shell first. Build the images first (`infra/scripts/e2e-check.sh env build`). Then:
+
+```bash
+export FO_PROJECT=fo-e2e FO_ENV_FILE=infra/compose/.env.e2e FO_COMPOSE_OVERRIDE=infra/compose/docker-compose.e2e.yml \
+  FO_STATE_DIR="$TMPDIR/fo-e2e/deploy-state" SKIP_PULL=true SKIP_IMAGE_PRUNE=true
+infra/scripts/deploy.sh local                  # first deploy: no backup, then current-tag=local
+infra/scripts/deploy.sh --rollback             # back to previous-tag
+E2E_MODE=production infra/scripts/e2e-check.sh down   # remove the stack
+```
+
+Keep `FO_STATE_DIR` outside the checkout. For the pre-deploy backup, add `BACKUP_DIR=<writable folder>` to
+`.env.e2e` (the default is `/var/backups/freshorbit`), or set `SKIP_PRE_DEPLOY_BACKUP=true`. The best-effort
+"did not answer through Caddy" warning at the end is expected here, because Caddy listens on 18443 and not on 443.
+
+**Proven on the Mac, 2026-10-24** (bash 3.2.57, no `flock`, project `fo-e2e`, the `freshorbit` stack untouched):
+
+| Run | Result |
+|---|---|
+| `deploy.sh local` on an empty project | Postgres, migrations and `up` ran, every service was healthy, `Deployed local.` and exit 0 |
+| `deploy.sh local2` (the same images tagged `local2`) | The pre-deploy backup ran (`db.dump`, `media.tar.gz`, `SHA256SUMS`). Then `current-tag=local2`, `previous-tag=local`, exit 0. The api's Data Protection key from the first deploy was still the only key in `/keys` |
+| `deploy.lock.d` held by a running PID (1) | `Another deploy is running (PID 1).`, exit 1, and the lock was left alone |
+| `--rollback` with a stale lock (PID 999999) | `Removing a stale deploy lock`, then the rollback to `local` with no registry pull, exit 0. The lock was removed at exit |
+| `HEALTH_TIMEOUT=5 deploy.sh local2` | Timed out and started `local` again. Exit 1; `current-tag` stayed `local` |
+| `deploy.sh local` | Recovered, exit 0 |
+
+The Linux path (`flock`) is unchanged and has still not been run on a real server: do that on the first staging
+deploy.
 
 ## 6. Troubleshooting
 

@@ -8,6 +8,9 @@ public static class NotificationsErrors
     public const string PreferenceRequired = "PREFERENCE_REQUIRED";
     public const string NoRecipientAddress = "NO_RECIPIENT_ADDRESS";
 
+    /// <summary>503: the SMS provider is unreachable or refused the message (E2E-1).</summary>
+    public const string SmsProviderUnavailable = "SMS_PROVIDER_UNAVAILABLE";
+
     /// <summary>NOT-R6: attempts before a message is FAILED.</summary>
     public const int MaxAttempts = 5;
 }

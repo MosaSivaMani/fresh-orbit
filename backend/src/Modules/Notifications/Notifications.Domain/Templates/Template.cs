@@ -110,6 +110,46 @@ public static partial class TemplateText
         return PlaceholderPattern().Replace(text, m => data.TryGetValue(m.Groups[1].Value, out var value) ? value : string.Empty);
     }
 
+    /// <summary>
+    /// The value of each placeholder occurrence of <paramref name="text"/>, in order of appearance: the order of the
+    /// <c>{#var#}</c> slots of the DLT-approved text (E2E-1). Missing values are empty text, as in <see cref="Render"/>.
+    /// </summary>
+    public static IReadOnlyList<string> OrderedValues(string text, IReadOnlyDictionary<string, string> data)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(data);
+        return [.. Placeholders(text).Select(p => data.TryGetValue(p, out var value) ? value : string.Empty)];
+    }
+
+    /// <summary>
+    /// Recovers the placeholder values of <paramref name="rendered"/>, a text rendered from <paramref name="text"/>, in
+    /// order of appearance. Null when <paramref name="rendered"/> does not match the template (it was edited since).
+    /// With two adjacent placeholders the split is the shortest match for the first one.
+    /// </summary>
+    public static IReadOnlyList<string>? ExtractValues(string text, string rendered)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(rendered);
+        var pattern = new StringBuilder("^");
+        var last = 0;
+        foreach (Match match in PlaceholderPattern().Matches(text))
+        {
+            pattern.Append(Regex.Escape(text[last..match.Index])).Append("(.*?)");
+            last = match.Index + match.Length;
+        }
+
+        pattern.Append(Regex.Escape(text[last..])).Append('$');
+        var result = Regex.Match(rendered, pattern.ToString(), RegexOptions.Singleline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+        return result.Success ? [.. result.Groups.Cast<Group>().Skip(1).Select(g => g.Value)] : null;
+    }
+
+    /// <summary>The text in DLT form: each placeholder becomes <c>{#var#}</c>, the form registered on a DLT portal.</summary>
+    public static string ToDltText(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return PlaceholderPattern().Replace(text, "{#var#}");
+    }
+
     /// <summary>Sample data for a test send: each variable renders as <c>[name]</c>.</summary>
     public static IReadOnlyDictionary<string, string> SampleData(IEnumerable<string> variables)
     {

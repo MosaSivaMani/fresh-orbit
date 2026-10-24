@@ -358,6 +358,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | Code | HTTP | Meaning |
 |---|---|---|
 | TEMPLATE_PLACEHOLDER_UNKNOWN | 422 | Template uses an unknown `{{placeholder}}` |
+| SMS_PROVIDER_UNAVAILABLE | 503 | The SMS could not be sent (provider unreachable, key refused or message rejected); retry later (E2E-1) |
 | NUMBER_SERIES_IN_USE | 409 | Series period already issued numbers; prefix/next value locked |
 | GSTIN_INVALID | 422 | GSTIN format/checksum invalid |
 | PREFERENCE_REQUIRED | 422 | `ORDER_UPDATES` SMS cannot be disabled |
@@ -420,7 +421,9 @@ Auth column: `public`, `customer`, `customer|guest` (JWT or `X-Cart-Token`), or 
 ```json
 { "challengeId": "0192b5a0-7c1e-7d3a-9f10-2c4e5a6b7c8d", "expiresAt": "2026-10-23T05:35:00Z", "resendAfterSeconds": 30, "codeLength": 6 }
 ```
-Always 202 for a well-formed phone (no account enumeration).
+Always 202 for a well-formed phone (no account enumeration). When the SMS cannot be sent (provider down, key
+refused, message rejected by DLT scrubbing): 503 `SMS_PROVIDER_UNAVAILABLE`; the challenge exists, so the resend
+wait (429 `OTP_RESEND_TOO_SOON`) applies to a retry.
 
 **POST /api/v1/auth/otp/verify** → 200
 ```json

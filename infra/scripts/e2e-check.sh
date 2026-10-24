@@ -8,8 +8,9 @@
 #
 # Two passes, each on a fresh database (E2E_MODE=production|testing|both, default both):
 #   production  APP_ENVIRONMENT=Production with the DLT SMS settings, exactly as on a server: proves the start-up
-#               guards accept a complete configuration, the Production guards hold (no /dev/sms; OTP send refused
-#               while DLT is a stub), and runs smoke.sh up to the OTP sign-in (SMOKE_STOP_BEFORE_OTP=true).
+#               guards accept a complete configuration, the Production guards hold (no /dev/sms; the OTP send through
+#               the real DLT adapter to an unreachable .invalid gateway answers 503 SMS_PROVIDER_UNAVAILABLE, never
+#               500), and runs smoke.sh up to the OTP sign-in (SMOKE_STOP_BEFORE_OTP=true).
 #   testing     APP_ENVIRONMENT=Testing plus docker-compose.e2e-testing.yml (DEVELOPMENT SMS sender, /dev/sms): the
 #               full smoke.sh (sign-in, order, fulfilment, invoice, payment, stock, notifications).
 #
@@ -65,6 +66,9 @@ psql_at() {
 step_env() {
   if [[ -f $ENV_FILE ]]; then
     log "Using existing $ENV_FILE."
+    # E2E-1 added the DLT gateway and template ids; an env file generated before that cannot pass compose config.
+    grep -qE '^SMS_DLT_GATEWAY=' "$ENV_FILE" \
+      || die "$ENV_FILE predates the DLT SMS settings; delete it so it is generated again from .env.e2e.example."
   else
     log "Generating $ENV_FILE from .env.e2e.example (random secrets)."
     local line key
@@ -122,6 +126,15 @@ print_loaded() {
     | sed -E 's/^"@m":"Reference data \\"([^"\\]+)\\": ([^"]+)"$/      \1: \2/' || true
 }
 
+# E2E-5: no_error_lines LOGFILE NAME fails when the log has an Error or Fatal entry (Serilog compact JSON).
+no_error_lines() {
+  if grep -qE '"@l":"(Error|Fatal)"' "$1"; then
+    grep -E '"@l":"(Error|Fatal)"' "$1" | head -n 5 >&2
+    die "$2 logged an Error (log: $1)."
+  fi
+  ok "$2 logged no Error"
+}
+
 run_migrations() { # run_migrations LOGFILE [args...] → exit code of the one-shot container
   local logfile=$1 code=0
   shift
@@ -148,6 +161,8 @@ step_migrate() {
   fi
   ((code == 0)) || { tail -n 60 "$WORK_DIR/migrations-run1.log" >&2; die "Migrations run 1 exited $code (log: $WORK_DIR/migrations-run1.log)."; }
   ok "migrations run 1 exited 0"
+  # E2E-5: a fresh database migrates without a single Error line (compact JSON writes "@l" only when not Information).
+  no_error_lines "$WORK_DIR/migrations-run1.log" "migrations run 1"
 
   local history
   history=$(psql_at "SELECT migration_id || ' (EF ' || product_version || ')' FROM $HISTORY_TABLE ORDER BY 1;")
@@ -184,6 +199,7 @@ step_migrate() {
   code=0
   run_migrations "$WORK_DIR/migrations-run2.log" || code=$?
   ((code == 0)) || { tail -n 60 "$WORK_DIR/migrations-run2.log" >&2; die "Migrations run 2 exited $code."; }
+  no_error_lines "$WORK_DIR/migrations-run2.log" "migrations run 2"
   print_loaded "$WORK_DIR/migrations-run2.log"
   local counts2
   counts2=$(reference_counts)
@@ -252,6 +268,33 @@ step_up() {
   done
   printf '      %s\n' "$detail"
   ok "postgres, api, web, admin, caddy healthy; worker running without restarts; migrations exited 0"
+  check_data_protection_keys
+}
+
+# E2E-3: the api keeps its Data Protection key ring on the dataprotection-keys volume (DataProtection__KeysPath=/keys),
+# so a new api container (every deploy) reads the same keys instead of making new ones and logs no "keys may not be
+# persisted" warning.
+data_protection_keys() { compose exec -T api sh -c 'ls -1 /keys 2>/dev/null | grep -E "^key-.+\.xml$" | sort' || true; }
+
+check_data_protection_keys() {
+  local before after i health=starting
+  before=$(data_protection_keys)
+  [[ -n $before ]] || die "api: no Data Protection key in /keys."
+  if compose logs api 2>&1 | grep -q 'may not be persisted outside of the container'; then
+    die "api: Data Protection still stores keys inside the container."
+  fi
+  log "Recreating the api container (as a deploy does); the key ring must survive."
+  compose up -d --no-deps --force-recreate api >/dev/null 2>&1
+  for ((i = 0; i < 60; i++)); do
+    health=$(docker inspect -f '{{.State.Health.Status}}' "$(compose ps -q api)" 2>/dev/null || echo starting)
+    [[ $health == healthy ]] && break
+    sleep 2
+  done
+  [[ $health == healthy ]] || die "api is $health after being recreated."
+  after=$(data_protection_keys)
+  [[ $before == "$after" ]] || die "api: the Data Protection keys changed after a restart ($before → $after)."
+  printf '      keys: %s\n' "$(printf '%s' "$after" | paste -sd, -)"
+  ok "api: Data Protection keys persisted on the dataprotection-keys volume and kept across a new container"
 }
 
 # curl through Caddy exactly as a visitor would (https://<host>/..., standard ports), trusting Caddy's local CA. The
@@ -331,8 +374,11 @@ step_guards() {
   got=$(ecurl -s -o "$WORK_DIR/last-body" -w '%{http_code}' -m 20 -X POST "https://api.$domain/api/v1/auth/otp/request" \
     -H 'Content-Type: application/json' -H "Idempotency-Key: e2e-$(openssl rand -hex 8)" \
     --data '{"phone":"+919800000001","purpose":"LOGIN"}' || true)
-  [[ $got == 5?? ]] || die "production: OTP request with the DLT stub answered $got; expected a 5xx refusal."
-  ok "production: OTP send refused while the DLT sender is a stub ($got)"
+  # E2E-1: the gateway (SMS_DLT_BASE_URL) is a .invalid host, so the send fails and must be a coded 503, not a 500.
+  [[ $got == 503 ]] || die "production: OTP request with an unreachable DLT gateway answered $got; expected 503."
+  [[ $(jq -r '.code' "$WORK_DIR/last-body" 2>/dev/null) == SMS_PROVIDER_UNAVAILABLE ]] \
+    || die "production: OTP request answered 503 without code SMS_PROVIDER_UNAVAILABLE; see $WORK_DIR/last-body."
+  ok "production: OTP send to an unreachable DLT gateway refused with 503 SMS_PROVIDER_UNAVAILABLE"
 
   # The api must refuse to START in Production with the DEVELOPMENT SMS sender (a throwaway extra container).
   name="$PROJECT-guard-$(openssl rand -hex 4)"
@@ -347,7 +393,7 @@ step_guards() {
   docker logs "$name" >"$WORK_DIR/guard-api.log" 2>&1 || true
   docker rm -f "$name" >/dev/null 2>&1 || true
   [[ $state == exited && $code != 0 ]] || die "production: api with Sms Provider=DEVELOPMENT is $state (exit $code); it must refuse to start."
-  grep -q 'OptionsValidationException: Notifications:Sms:Provider' "$WORK_DIR/guard-api.log" \
+  grep -q 'Notifications:Sms:Provider must be DLT' "$WORK_DIR/guard-api.log" \
     || die "production: the api stopped (exit $code) but not on the SMS provider check; see $WORK_DIR/guard-api.log."
   ok "production: api refuses to start with Notifications__Sms__Provider=DEVELOPMENT (exit $code)"
 }

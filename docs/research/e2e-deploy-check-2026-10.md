@@ -16,7 +16,7 @@ end? The answer is yes. It was proven on the Mac's Docker with the production co
 | Idempotent | Run 2 exits 0. Every count is identical, and the loaders log `0 inserted … unchanged/skipped`. A second `--create-admin` is refused with exit 3. A third run, by `compose up`, exits 0 |
 | Health | postgres, api, web, admin and caddy are `healthy`. The worker is `running` with 0 restarts after a 20 s soak |
 | Through Caddy (TLS, local CA) | 14 checks pass: api, web, admin, `www` and HTTP redirects, CSP/HSTS/noindex headers, SPA fallback, `/media` privacy, and the web and admin same-origin API routes |
-| Production guards | `/api/v1/dev/sms` returns 404. An OTP request returns 500 (the DLT stub refuses to send). An api started with `Sms:Provider=DEVELOPMENT` refuses to start (`OptionsValidationException`) |
+| Production guards | `/api/v1/dev/sms` returns 404. An OTP request returns 500 (the DLT stub refuses to send; since E2E-1 the real adapter answers 503 `SMS_PROVIDER_UNAVAILABLE` against the unreachable gateway). An api started with `Sms:Provider=DEVELOPMENT` refuses to start (`OptionsValidationException`) |
 | Smoke, production pass | `smoke.sh` with `SMOKE_STOP_BEFORE_OTP=true`: **28 passed, 0 failed** |
 | Smoke, testing pass | Full `smoke.sh`: **52 passed, 0 failed** |
 | Teardown | `down -v` leaves no `fo-e2e` containers or volumes. The dev `freshorbit` stack was not touched |
@@ -44,10 +44,13 @@ Nothing in the Migrations host needed a change.
 
 | # | Where | Finding |
 |---|---|---|
-| E2E-1 | Notifications (DLT sender) | Known: in Production, OTP requests return 500 until a DLT provider client is written. The store cannot sign customers in on a Production deploy before that |
+| E2E-1 | Notifications (DLT sender) | **Done on `backend/deploy-gaps-sms`:** DLT sender + Fast2SMS adapter (`research/sms-provider-2026-10.md`); a failed send is 503 `SMS_PROVIDER_UNAVAILABLE`. Customers can sign in once the owner finishes the DLT registration (`runbooks/security-configuration.md` §2.1) |
 | E2E-2 | Api host | When a start-up validator refuses the configuration, the container exits with **139**, after an `Unhandled exception` (`OptionsValidationException`). Catching it in `Program.cs`, logging it and returning exit code 1 would make crash loops easier to read. The refusal itself is correct |
 | E2E-3 | Api host (Hosting) | Warning at start-up: Data Protection keys are stored in `/home/app/.aspnet/DataProtection-Keys` inside the container, unencrypted, and are lost on every deploy. If anything uses Data Protection (antiforgery, cookies), persist the keys (database or volume). If nothing uses it, leave it, but confirm |
 | E2E-4 | Identity | EF warning on `POST /admin/auth/login`: one query loads several collection navigations with no `QuerySplittingBehavior`. Consider `AsSplitQuery()` |
 | E2E-5 | Migrations / EF | On an empty database EF logs one **Error**-level `Failed executing DbCommand`, because it reads `platform.__ef_migrations_history` before creating it. This is harmless, and the run exits 0. Grafana's "Backend errors" alert watches only api and worker, so it does not fire. Leave it, or filter that one event in the Migrations host's logging |
 | E2E-6 | web | `next build` logs `Footer: cities unavailable` while pre-rendering, because there is no API at build time. At runtime the footer cities are cached for 1 h (`publicHttp(3600)`), so a city activated just now is not listed straight away. This is by design, but worth knowing for demos |
 | E2E-7 | infra / tooling | `deploy.sh` itself was not run on the Mac: it needs `flock` and bash 4 or later, and macOS has neither. A Linux helper container would need an image the project does not use (owner rule: no new images). Run `deploy.sh` against `fo-e2e` on a Linux machine or a staging server (`e2e-check.md` §5). `shellcheck` is not installed on the Mac either. One early run used the `koalaman/shellcheck` image (clean apart from two pre-existing SC2015 notes in `smoke.sh`); the image was removed after the owner rule arrived |
+
+Follow-up (2026-10-24, branch `backend/deploy-gaps-ops`): E2E-3, E2E-5, E2E-6 and E2E-7 are fixed. Analysis and proofs are in
+`deploy-gaps-ops-2026-10.md`. E2E-1 is handled separately.

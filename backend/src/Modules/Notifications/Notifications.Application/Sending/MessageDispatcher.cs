@@ -50,8 +50,9 @@ public sealed class MessageDispatcher(
             switch (message.Channel)
             {
                 case Channel.Sms when !string.IsNullOrEmpty(user?.Phone):
-                    var dlt = (await repository.GetTemplatesAsync(message.TemplateCode, cancellationToken)).FirstOrDefault(t => t.Channel == Channel.Sms)?.DltTemplateId;
-                    message.MarkSent(await sms.SendAsync(new SmsMessage(user.Phone, message.Body, dlt), cancellationToken), clock.UtcNow);
+                    var template = (await repository.GetTemplatesAsync(message.TemplateCode, cancellationToken)).FirstOrDefault(t => t.Channel == Channel.Sms);
+                    var variables = template is null ? null : TemplateText.ExtractValues(template.Body, message.Body);
+                    message.MarkSent(await sms.SendAsync(new SmsMessage(user.Phone, message.TemplateCode, message.Body, variables ?? []), cancellationToken), clock.UtcNow);
                     break;
                 case Channel.Email when !string.IsNullOrEmpty(user?.Email):
                     message.MarkSent(await email.SendAsync(new EmailMessage(user.Email, message.Subject ?? string.Empty, message.Body), cancellationToken), clock.UtcNow);
@@ -78,6 +79,15 @@ public sealed class MessageDispatcher(
                     break;
             }
         }
+        catch (SmsDeliveryException failure) when (failure.IsRetryable)
+        {
+            message.RecordFailure(failure.FailureCode, clock.UtcNow);
+        }
+        catch (SmsDeliveryException failure)
+        {
+            // E2E-1: a missing DLT template id or a provider refusal does not fix itself by retrying.
+            message.Fail(failure.FailureCode);
+        }
         catch (Exception exception) when (exception is not OperationCanceledException and not DomainException)
         {
             message.RecordFailure(exception.GetType().Name + ": " + exception.Message, clock.UtcNow);
@@ -101,6 +111,7 @@ public sealed class OtpSender(INotificationsRepository repository, NotificationC
                 ["expiresInMinutes"] = message.ExpiresInMinutes.ToString(System.Globalization.CultureInfo.InvariantCulture),
             },
             cancellationToken);
-        await sms.SendAsync(new SmsMessage(message.Phone, TemplateText.Render(template.Body, values), template.DltTemplateId), cancellationToken);
+        // E2E-1: a provider failure surfaces as SmsDeliveryException (503 SMS_PROVIDER_UNAVAILABLE), never as a 500.
+        await sms.SendAsync(new SmsMessage(message.Phone, code, TemplateText.Render(template.Body, values), TemplateText.OrderedValues(template.Body, values)), cancellationToken);
     }
 }

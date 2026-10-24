@@ -10,9 +10,10 @@ import "./globals.css";
 
 const siteUrl = getSiteUrl();
 
-// Static pages (about, support, policies, account shells) are regenerated at most hourly so the footer's city list,
-// read from the API, catches up even when the build ran without the API.
-export const revalidate = 3600;
+// Static pages (about, support, policies, account shells) are regenerated at most every 5 minutes, so the footer's
+// city list, read from the API, catches up with a newly activated city (E2E-6) and with a build that ran without the
+// API. Next.js needs a literal here: keep it equal to FOOTER_CITIES_REVALIDATE_SECONDS (site-footer.tsx).
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),

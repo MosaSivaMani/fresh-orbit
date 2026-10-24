@@ -79,7 +79,7 @@ backend/
 
 | Concern | Choice |
 |---|---|
-| Customer auth | Phone + OTP (SMS through `ISmsSender`; dev sender logs the code), JWT access token (15 min) + rotating refresh token |
+| Customer auth | Phone + OTP (SMS through `ISmsSender`: the DLT sender with the Fast2SMS adapter in Production, E2E-1; the dev sender keeps the code in an in-memory outbox), JWT access token (15 min) + rotating refresh token |
 | Staff auth | Email + password (ASP.NET Core `PasswordHasher`), same JWT; permissions in claims; optional location scope |
 | Authorization | Policies per permission code (`orders.pack`); endpoints declare `.RequirePermission("...")` |
 | Validation | FluentValidation, field-keyed 422 |
