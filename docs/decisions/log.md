@@ -91,3 +91,9 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D85 | 2026-10-24 | 32 illustration slots | The slot list is `REQUIRED_SLOTS` in `packages/illustrations/src/manifest.ts`: 32 slots (the earlier handoff said 33) |
 | D86 | 2026-10-24 | Anil wears glasses | The support agent Anil has round thin glasses, as in the owner-approved character sheet (`design/illustrations.md` cast table) |
 | D87 | 2026-10-24 | Mobile illustration path | `sync-mobile` copies finals into `apps/mobile/assets/illustrations/` and writes Dart slot code; the mobile app's illustration widget is `apps/mobile/lib/illustrations/` (U4), so the generated file's path must match it before `sync-mobile` replaces the hand-copied JPEGs |
+| D88 | 2026-10-24 | Reserved: app look "Bold blocks" | Reserved for the owner's choice of the app look (version B mockup: one strong colour per screen, ringed circle avatars, Bricolage Grotesque + DM Sans, food-app tab bar with floating cart bar). Not decided yet |
+| D89 | 2026-10-24 | Reserved | Reserved with D88 for the look's follow-up (fonts and tokens) |
+| D90 | 2026-10-24 | Admin permission requirements may be `anyOf` (Track C) | A route or menu requirement may be `{ anyOf: [...] }`; Tax rules has its own menu entry needing `pricing.manage` or `tax.manage`, so FINANCE with only `tax.manage` reaches it; scheduling needs `tax.manage` |
+| D91 | 2026-10-24 | Admin login 429 countdown (Track C) | A 429 on staff login counts down from `retryAfterSeconds` (falling back to `Retry-After`) and disables submit until it ends |
+| D92 | 2026-10-24 | Admin styled through tokens only (Track C, U3) | `apps/admin` has no font family, colour or font file of its own; characters appear only in the state cards (`components/states.tsx`) at `sm` |
+| D93 | 2026-10-24 | Admin errors inside the shell (Track C) | A failing screen shows the error card inside the menu shell (route error boundary), never a blank page |
