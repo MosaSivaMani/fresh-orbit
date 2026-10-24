@@ -5,6 +5,20 @@ Docker Compose + Caddy stack as production. Allow about 2 hours (plus any waitin
 
 Related: `deploy.md` (releases), `backup-restore.md`, `move-to-hostinger.md`. Files: `infra/`.
 
+## 0. Without the development laptop (owner's rule, 2026-10-24)
+
+The dev Mac is a company laptop: nothing in this runbook runs on it. Instead:
+
+- **Oracle Cloud Shell** (the `>_` button in the Oracle console, a free Linux terminal in the browser) replaces "from your
+  laptop": create SSH keys there (`ssh-keygen -t ed25519`), `ssh ubuntu@<ip>` from there, and paste
+  `infra/scripts/server-setup.sh` into the server with `nano` (copy it from GitHub in the browser).
+- **The CI deploy key** (§7.3) is also made in Cloud Shell: `ssh-keygen -t ed25519 -f freshorbit-ci -C ci`; paste the
+  private key into GitHub (Settings → Environments → staging → secrets) in the browser.
+- **Infra files** need no copying: the Deploy workflow uploads `infra/compose`, `infra/caddy`, `infra/scripts` and
+  `infra/monitoring` on every deploy. Only `.env.prod` is created on the server by hand (§7.1).
+- **Deploying** is the Deploy workflow: GitHub → Actions → Deploy → Run workflow (or a `v*` tag created on GitHub →
+  Releases).
+
 ## 1. Account
 
 1. Sign up at https://signup.cloud.oracle.com with the business e-mail. A card is needed for identity checks; Always
