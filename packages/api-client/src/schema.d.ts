@@ -1506,7 +1506,7 @@ export interface paths {
                 query?: {
                     Page?: number;
                     PageSize?: number;
-                    status?: unknown[];
+                    status?: string[];
                 };
                 header?: never;
                 path?: never;
@@ -9374,6 +9374,7 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
             imageUrl?: null | string;
+            linkSlug?: null | string;
         };
         BatchResponse: {
             /** Format: uuid */
@@ -10365,6 +10366,7 @@ export interface components {
             endsAt: null | string;
             /** Format: int32 */
             sortOrder: number;
+            linkSlug?: null | string;
         };
         HomeResponse: {
             banners: components["schemas"]["HomeBanner"][];
