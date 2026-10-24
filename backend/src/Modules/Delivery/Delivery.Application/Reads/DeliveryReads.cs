@@ -66,7 +66,8 @@ public sealed record ShipmentResponse(
 /// <summary>Customer slot: <c>status</c> is the displayed status (AVAILABLE, FULL, CUTOFF_PASSED, CLOSED).</summary>
 public sealed record CustomerSlotResponse(Guid Id, DateOnly SlotDate, DateTimeOffset StartAt, DateTimeOffset EndAt, DateTimeOffset CutoffAt, SlotDisplayStatus Status);
 
-public sealed record CustomerSlotsResponse(Guid FulfillmentLocationId, IReadOnlyList<CustomerSlotResponse> Items);
+/// <param name="TimeZone">IANA time zone of the location's city (W10): <c>slotDate</c> and display times are in it.</param>
+public sealed record CustomerSlotsResponse(Guid FulfillmentLocationId, IReadOnlyList<CustomerSlotResponse> Items, string TimeZone);
 
 public sealed record Page<T>(IReadOnlyList<T> Items, int TotalCount);
 

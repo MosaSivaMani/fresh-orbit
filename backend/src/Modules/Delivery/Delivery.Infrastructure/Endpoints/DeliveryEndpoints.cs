@@ -33,7 +33,8 @@ internal static class DeliveryEndpoints
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous()
-            .Produces<CustomerSlotsResponse>();
+            .Produces<CustomerSlotsResponse>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         var admin = endpoints.MapGroup("/admin/delivery").RequirePermission(Permission);
 
@@ -86,7 +87,7 @@ internal static class DeliveryEndpoints
         IReadOnlyList<CustomerSlotResponse> items = from < dates[0] || to > dates[^1]
             ? []
             : await reads.ListCustomerSlotsAsync(locationId, from, to, cancellationToken);
-        return TypedResults.Ok(new CustomerSlotsResponse(locationId, items));
+        return TypedResults.Ok(new CustomerSlotsResponse(locationId, items, served.TimeZone));
     }
 
     // ---- slot templates ---------------------------------------------------------------------------------------
