@@ -194,7 +194,7 @@ public sealed class DemoEnvironmentTests(SampleDatabase database)
     }
 
     /// <summary>The real Api in the Demo environment on the given (claimed) database, background jobs on.</summary>
-    private sealed class DemoApiFactory(SampleDatabase database, string connectionString) : ApiFactory(database)
+    private sealed class DemoApiFactory(SampleDatabase fixture, string connectionString) : ApiFactory(fixture)
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
