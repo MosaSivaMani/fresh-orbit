@@ -255,7 +255,7 @@ export function FoodCard({
           pictureTones[pictureTone],
         )}
       >
-        <span aria-hidden="true" className="contents">
+        <span aria-hidden="true" className="absolute inset-0 grid place-items-center">
           {picture}
         </span>
         {offer && (

@@ -12,7 +12,9 @@ export interface SessionState {
 }
 
 let accessToken: string | null = null;
-let state: SessionState = { status: "unknown", user: null };
+// One frozen object: useSyncExternalStore needs the same snapshot on every call or it loops.
+const serverState: SessionState = Object.freeze({ status: "unknown", user: null });
+let state: SessionState = serverState;
 const listeners = new Set<() => void>();
 let inflight: Promise<boolean> | null = null;
 
@@ -23,7 +25,7 @@ function setState(next: SessionState) {
 
 export const sessionStore = {
   getState: (): SessionState => state,
-  getServerState: (): SessionState => ({ status: "unknown", user: null }),
+  getServerState: (): SessionState => serverState,
   subscribe(listener: () => void): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);
