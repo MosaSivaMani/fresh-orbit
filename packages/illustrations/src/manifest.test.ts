@@ -168,6 +168,16 @@ describe("manifest.json", () => {
     expect(designSize("4:3")).toEqual({ width: 1024, height: 768 });
   });
 
+  it("adds the home hero (3:2) and the two home card pictures as transparent slots", () => {
+    const home = (slot: string) => manifest.slots.find((s) => s.slot === slot)!;
+    expect(home("HOME_HERO_CATCH")).toMatchObject({ aspect: "3:2", character: "FISHMONGER" });
+    expect(home("HOME_CARD_RIDER")).toMatchObject({ aspect: "1:1", character: "RIDER" });
+    expect(home("HOME_CARD_CLEANED").character).toBeUndefined();
+    for (const slot of ["HOME_HERO_CATCH", "HOME_CARD_CLEANED", "HOME_CARD_RIDER"])
+      expect(home(slot).background).toBe("TRANSPARENT");
+    expect(designSize("3:2")).toEqual({ width: 1024, height: 683 });
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);

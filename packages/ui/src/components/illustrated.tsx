@@ -92,6 +92,7 @@ const aspectClass: Record<IllustrationEntry["aspect"], string> = {
   "1:1": "aspect-square",
   "4:3": "aspect-[4/3]",
   "2:1": "aspect-[2/1]",
+  "3:2": "aspect-[3/2]",
 };
 
 const sceneRadius: Record<IllustrationSize, string> = {

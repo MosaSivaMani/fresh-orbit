@@ -407,6 +407,20 @@ export const COMPOSITIONS: Record<string, Composition> = {
     tint: "mango",
     parts: [m("doorway", 300, 120), m("scooterFlat", 140, 130), m("coldBoxShut", 210, 140)],
   },
+  // Home (D176): the hero picture and the two small cards' pictures.
+  HOME_HERO_CATCH: {
+    tint: "sand",
+    parts: [
+      f("FISHMONGER", 140, 300, 0.85),
+      m("basketFull", 270, 200, 0.9),
+      f("POMFRET", 285, 110, 0.4),
+    ],
+  },
+  HOME_CARD_CLEANED: { tint: "coral", parts: [m("cutsBoard", 200, 200, 1.3)] },
+  HOME_CARD_RIDER: {
+    tint: "teal",
+    parts: [m("speed", 90, 200), m("scooter", 230, 210, 1.15), f("RIDER", 220, 214, 0.62)],
+  },
 };
 
 const shade = (hex: string, amount: number): string => {

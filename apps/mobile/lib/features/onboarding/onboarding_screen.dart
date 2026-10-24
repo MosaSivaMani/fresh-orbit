@@ -19,12 +19,11 @@ import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/heading.dart';
 import '../../widgets/motion.dart';
 import 'onboarding_art.dart';
 
 // Preview colours that stay the same in light and dark (like the stickers and the avatar rings).
-const _brushYellow = Color(0xFFF5D04A);
+const _brushYellow = FreshHighlightColors.brush;
 const _coral = Color(0xFFF07A5A);
 const _teal = Color(0xFF0B7D70);
 const _snowBlue = Color(0xFF3FA7C9);
@@ -481,21 +480,18 @@ class _BigHeading extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Text(first, style: style),
-              Positioned(right: -40, top: -18, child: Spark(color: spark, scale: 1.1)),
+              Positioned(right: -40, top: -18, child: Sparks(color: spark, scale: 1.1)),
             ],
           ),
           const SizedBox(height: 2),
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Transform.rotate(
-                angle: -1.5 * math.pi / 180,
-                child: BrushSwipe(
-                  color: _brushYellow,
-                  child: Text(second, style: style.copyWith(color: BlockInk.ink)),
-                ),
+              BrushHighlight(
+                degrees: -1.5,
+                child: Text(second, style: style.copyWith(color: BlockInk.ink)),
               ),
-              Positioned(right: -38, top: 12, child: Spark(color: spark, degrees: 40, scale: 0.9)),
+              Positioned(right: -38, top: 12, child: Sparks(color: spark, degrees: 40, scale: 0.9)),
             ],
           ),
         ],
@@ -518,19 +514,16 @@ class _Tagline extends StatelessWidget {
     child: FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.topLeft,
-      child: Transform.rotate(
-        angle: -6 * math.pi / 180,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text, style: scriptStyle(color, size / 1.12).copyWith(height: 1.12)),
-            const SizedBox(height: 2),
-            ExcludeSemantics(
-              child: CustomPaint(size: const Size(92, 12), painter: SwooshPainter(color)),
-            ),
-          ],
-        ),
+      child: ScriptLine(
+        text: text,
+        fontFamily: AppFonts.script,
+        fontFamilyFallback: FreshFonts.sansFallback,
+        color: color,
+        fontSize: size,
+        height: 1.12,
+        degrees: -6,
+        rotationAlignment: Alignment.center,
+        swooshGap: 2,
       ),
     ),
   );
@@ -597,9 +590,9 @@ class _Sheet extends StatelessWidget {
                             tile: page.tiles[i],
                             scale: k,
                             spark: switch (i) {
-                              0 => const Spark(color: _coral, degrees: -20, scale: 0.8),
+                              0 => const Sparks(color: _coral, degrees: -20, scale: 0.8),
                               1 => const Snowflake(color: _snowBlue),
-                              _ => Spark(color: page.rightSpark, degrees: 30, scale: 0.8),
+                              _ => Sparks(color: page.rightSpark, degrees: 30, scale: 0.8),
                             },
                             sparkOnLeft: i == 0,
                           ),
@@ -639,7 +632,7 @@ class _Sheet extends StatelessWidget {
         Positioned(
           top: -rise + 80 * k,
           left: math.max(0.0, avatarLeft - 42 * k),
-          child: const Spark(color: _brushYellow, degrees: 200, scale: 0.85),
+          child: const Sparks(color: _brushYellow, degrees: 200, scale: 0.85),
         ),
       ],
     );
@@ -868,19 +861,20 @@ class _FoodBanner extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.topRight,
-                  child: Transform.rotate(
-                    angle: -8 * math.pi / 180,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(page.bannerLine, style: scriptStyle(c.ink, 22 / 1.12).copyWith(height: 1.08)),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 24),
-                          child: CustomPaint(size: Size(110, 8), painter: SwooshPainter(_coral, width: 2.4)),
-                        ),
-                      ],
-                    ),
+                  child: ScriptLine(
+                    text: page.bannerLine,
+                    fontFamily: AppFonts.script,
+                    fontFamilyFallback: FreshFonts.sansFallback,
+                    color: c.ink,
+                    fontSize: 22,
+                    height: 1.08,
+                    degrees: -8,
+                    rotationAlignment: Alignment.center,
+                    swooshColor: _coral,
+                    swooshSize: const Size(110, 8),
+                    swooshWidth: 2.4,
+                    swooshIndent: 24,
+                    swooshGap: 0,
                   ),
                 ),
               ),

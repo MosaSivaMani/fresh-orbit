@@ -58,7 +58,12 @@ class Illustration extends StatefulWidget {
     this.focus = Alignment.center,
     this.height,
     this.fallback,
+    this.fit,
   });
+
+  /// How a bundled picture fills the box; null means cover for a JPEG scene and contain otherwise. A set fit
+  /// also places the picture by [focus] and leaves out the rounded frame (the home hero's cropped picture).
+  final BoxFit? fit;
 
   final IllustrationSlot slot;
 
@@ -111,12 +116,12 @@ class _IllustrationState extends State<Illustration> {
           key: ValueKey('illustration-image-${widget.slot.code}'),
           width: widget.size,
           height: height,
-          fit: scene ? BoxFit.cover : BoxFit.contain,
-          alignment: scene ? widget.focus : Alignment.center,
+          fit: widget.fit ?? (scene ? BoxFit.cover : BoxFit.contain),
+          alignment: scene || widget.fit != null ? widget.focus : Alignment.center,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) => placeholder,
         );
-        if (!scene || widget.inCircle) return picture;
+        if (!scene || widget.inCircle || widget.fit != null) return picture;
         return ClipRRect(borderRadius: BorderRadius.circular(widget.size * 0.12), child: picture);
       },
     );
@@ -223,4 +228,8 @@ class IllustrationPlaceholder extends StatelessWidget {
   IllustrationSlot.onboardingTileColdBox ||
   IllustrationSlot.onboardingTileCashUpi ||
   IllustrationSlot.onboardingBannerDelivery => (CastMember.chanduva, CastBackdrop.teal, Icons.ac_unit_rounded, false),
+  // Home pictures: the home passes onboarding stand-ins as fallbacks; this is only the last drawn stand-in.
+  IllustrationSlot.homeHeroCatch => (CastMember.padma, CastBackdrop.teal, Icons.set_meal_rounded, false),
+  IllustrationSlot.homeCardCleaned => (CastMember.chanduva, CastBackdrop.coral, Icons.restaurant_rounded, false),
+  IllustrationSlot.homeCardRider => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
 };
