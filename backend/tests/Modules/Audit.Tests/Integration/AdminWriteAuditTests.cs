@@ -43,11 +43,13 @@ public sealed class AdminWriteAuditTests(E1Database database) : E1ApiTestBase(da
         var staff = await ReadJsonAsync(created);
         var userId = staff.GetProperty("userId").GetGuid();
 
-        // StaffService records STAFF_CREATED itself (IAuditApi); the generic recorder adds nothing to that save.
-        var explicitEntry = (await EntriesAsync(manager, managerId, action: null)).Should().ContainSingle().Subject;
-        explicitEntry.GetProperty("action").GetString().Should().Be("STAFF_CREATED");
-        explicitEntry.GetProperty("entityType").GetString().Should().Be("STAFF_MEMBER");
-        explicitEntry.GetProperty("entityId").GetString().Should().Be(staff.GetProperty("id").GetString());
+        // StaffService records STAFF_CREATED for the staff member itself (IAuditApi); the generic recorder adds the
+        // other changed entities of that save (the user) under the same action, and never the staff member again.
+        var createdEntries = await EntriesAsync(manager, managerId, "STAFF_CREATED");
+        createdEntries.Should().ContainSingle(e => e.GetProperty("entityType").GetString() == "STAFF_MEMBER")
+            .Which.GetProperty("entityId").GetString().Should().Be(staff.GetProperty("id").GetString());
+        createdEntries.Should().ContainSingle(e => e.GetProperty("entityType").GetString() == "USER")
+            .Which.GetProperty("after").GetProperty("passwordHash").GetString().Should().Be(Redacted);
 
         // The new staff member signs in (exempt) and changes their password: audited by the generic recorder.
         using var anonymous = Factory.CreateClient();
@@ -69,6 +71,42 @@ public sealed class AdminWriteAuditTests(E1Database database) : E1ApiTestBase(da
         user.GetProperty("after").GetProperty("passwordHash").GetString().Should().Be(Redacted);
         entries.Should().Contain(e => e.GetProperty("entityType").GetString() == "REFRESH_TOKEN", "the revoked sessions are part of the same save");
         string.Concat(entries.Select(e => e.GetRawText())).Should().NotContain("AQAAAA", "no password hash (PBKDF2 v3 prefix) may reach the audit trail");
+    }
+
+    [Fact]
+    public async Task Explicit_record_covers_only_its_entity_and_the_rest_of_the_save_gets_generic_entries()
+    {
+        var managerId = Guid.CreateVersion7();
+        using var manager = Factory.CreateStaffClient(["staff.manage", "audit.view"], userId: managerId);
+        var created = await manager.PostAsJsonAsync("/api/v1/admin/staff", new
+        {
+            email = $"reset.{Guid.NewGuid():N}@freshorbit.test",
+            fullName = "Reset Packer",
+            roleIds = new[] { await RoleIdAsync(manager, "PACKER") },
+            allLocations = true,
+            temporaryPassword = "Reset-Temp-Pass-81",
+        }, Ct);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var staff = await ReadJsonAsync(created);
+        var staffId = staff.GetProperty("id").GetString();
+        var userId = staff.GetProperty("userId").GetString();
+
+        using var reset = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/admin/staff/{staffId}/reset-password")
+        {
+            Content = JsonContent.Create(new { temporaryPassword = "Reset-New-Pass-82x" }),
+        };
+        reset.Headers.IfMatch.Add(new EntityTagHeaderValue($"\"{staff.GetProperty("version").GetString()}\""));
+        (await manager.SendAsync(reset, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // One save: StaffService's explicit STAFF_MEMBER record, plus the USER password change from the interceptor.
+        var entries = await EntriesAsync(manager, managerId, "STAFF_PASSWORD_RESET");
+        entries.Where(e => e.GetProperty("entityType").GetString() == "STAFF_MEMBER" && e.GetProperty("entityId").GetString() == staffId)
+            .Should().ContainSingle("the explicit record covers the staff member, so it is not recorded twice");
+        var user = entries.Should().ContainSingle(e => e.GetProperty("entityType").GetString() == "USER").Subject;
+        user.GetProperty("entityId").GetString().Should().Be(userId);
+        user.GetProperty("before").GetProperty("passwordHash").GetString().Should().Be(Redacted);
+        user.GetProperty("after").GetProperty("passwordHash").GetString().Should().Be(Redacted);
+        string.Concat(entries.Select(e => e.GetRawText())).Should().NotContain("AQAAAA");
     }
 
     [Fact]

@@ -12,14 +12,14 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace FreshOrbit.Audit.Infrastructure.Recording;
 
 /// <summary>One changed entity as it will be written to <c>audit.entries</c>.</summary>
-internal sealed record AuditChange(string Action, string EntityType, string EntityId, string? Before, string? After);
+public sealed record AuditChange(string Action, string EntityType, string EntityId, string? Before, string? After);
 
 /// <summary>
 /// Reads the pending changes of a context (in memory, no database call) and turns each added, modified or deleted
 /// entity into an <see cref="AuditChange"/>: before/after hold only the changed properties for an update, every
 /// property for a create or delete, with sensitive values redacted (<see cref="AuditRedaction"/>).
 /// </summary>
-internal static class AuditChangeSet
+public static class AuditChangeSet
 {
     private static readonly HashSet<string> SkippedSchemas = new(StringComparer.Ordinal)
     {
@@ -34,14 +34,7 @@ internal static class AuditChangeSet
 
     public static List<AuditChange> Read(DbContext context, string? action)
     {
-        // A save that already carries an explicit entry (IAuditApi.Record) is recorded by its command: the command
-        // owns the action names and snapshots for everything it saves, so nothing is recorded twice.
-        if (context.ChangeTracker.Entries<AuditEntry>().Any(e => e.State == EntityState.Added))
-        {
-            return [];
-        }
-
-        var changes = new List<AuditChange>();
+        var candidates = new List<(EntityEntry Entry, string EntityType, string EntityId)>();
         foreach (var entry in context.ChangeTracker.Entries())
         {
             if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
@@ -50,7 +43,18 @@ internal static class AuditChangeSet
                 continue;
             }
 
-            var entityId = EntityId(entry);
+            candidates.Add((entry, EntityType(entry.Metadata), EntityId(entry)));
+        }
+
+        var covered = CoveredByExplicitRecords(context, candidates);
+        var changes = new List<AuditChange>();
+        foreach (var (entry, entityType, entityId) in candidates)
+        {
+            if (covered.Contains(entry))
+            {
+                continue;
+            }
+
             var change = entry.State switch
             {
                 EntityState.Added => Create(entry, action, "CREATED", entityId, before: null, after: Snapshot(entry, entry.Properties, current: true)),
@@ -64,6 +68,37 @@ internal static class AuditChangeSet
         }
 
         return changes;
+    }
+
+    /// <summary>
+    /// AUD-R9: the changed entities that an explicit <c>IAuditApi.Record</c> in this save already describes. An explicit
+    /// record (type T, id I) matches the entities whose UPPER_SNAKE class name C equals T or is its suffix
+    /// (<c>NOTIFICATION_TEMPLATE</c> matches class <c>Template</c>). Among those, the one whose primary key is I is
+    /// covered. When none has that key (the record uses a natural key or a singleton id, e.g. <c>default</c>,
+    /// <c>code/period</c>), every changed entity of that class in the save is covered.
+    /// </summary>
+    private static HashSet<EntityEntry> CoveredByExplicitRecords(DbContext context, IReadOnlyList<(EntityEntry Entry, string EntityType, string EntityId)> candidates)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(candidates);
+        var covered = new HashSet<EntityEntry>(ReferenceEqualityComparer.Instance);
+        foreach (var record in context.ChangeTracker.Entries<AuditEntry>().Where(e => e.State == EntityState.Added).Select(e => e.Entity))
+        {
+            var sameType = candidates.Where(c => TypeMatches(record.EntityType, c.EntityType)).ToList();
+            var byKey = sameType.Where(c => string.Equals(c.EntityId, record.EntityId, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var match in byKey.Count > 0 ? byKey : sameType)
+            {
+                covered.Add(match.Entry);
+            }
+        }
+
+        return covered;
+    }
+
+    private static bool TypeMatches(string recordType, string entityType)
+    {
+        var normalized = recordType.ToUpperInvariant();
+        return normalized == entityType || normalized.EndsWith("_" + entityType, StringComparison.Ordinal);
     }
 
     /// <summary>UPPER_SNAKE of the CLR type name, e.g. <c>StaffMember</c> → <c>STAFF_MEMBER</c> (AUD-R1).</summary>
