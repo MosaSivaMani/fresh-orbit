@@ -199,3 +199,7 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D194 | 2026-10-24 | Owner pictures in the app | The owner's generated pictures are bundled in the app for home and onboarding while the illustrations manifest stays PLACEHOLDER until the optimize/WebP step. |
 | D195 | 2026-10-24 | FreshFitWidth, never FittedBox | Screens fit by layout; a row that must fit uses `FreshFitWidth` from `fresh_theme`. FittedBox is not used for page content (it shrank pages and left side gaps, D183). |
 | D196 | 2026-10-24 | Onboarding proportions | Onboarding: picture block 45% of height clamped 300–400 dp, circle 212 dp placed at 62% of the block, banner 96–150 dp high. |
+| D197 | 2026-10-24 | Admin variant picker | The admin variant picker loads one page of 100 active variants and searches it in the browser (PR #17). |
+| D198 | 2026-10-24 | Preparation method for staff | Staff without catalog.manage pick from all preparation methods; the server refuses one the variant does not offer (PR #17). |
+| D199 | 2026-10-24 | Dashboard sales today | Dashboard "Sales today" shows orderValuePaise; delivered revenue is the sub-line (PR #17). |
+| D200 | 2026-10-24 | City lookup is staff-readable | The City policy button and city pickers no longer need locations.manage; the cities lookup is readable by any staff (PR #17). |
