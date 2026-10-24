@@ -23,6 +23,19 @@ public sealed class PricingVersionRequiredException()
 
 public static class PricingRules
 {
+    /// <summary>D35: schedules tax rules (global GST rates); ADMIN and FINANCE only.</summary>
+    public const string TaxManagePermission = "tax.manage";
+
+    /// <summary>D35, defence in depth behind the endpoint policy: staff need <see cref="TaxManagePermission"/>.</summary>
+    public static void EnsureCanManageTax(ICurrentActor actor)
+    {
+        ArgumentNullException.ThrowIfNull(actor);
+        if (actor.ActorType != ActorType.System && !actor.HasPermission(TaxManagePermission))
+        {
+            throw new ForbiddenException(ForbiddenException.DefaultCode, "You need the tax.manage permission to change tax rules.");
+        }
+    }
+
     public static void EnsureLocationAccess(ICurrentActor actor, Guid fulfillmentLocationId)
     {
         ArgumentNullException.ThrowIfNull(actor);

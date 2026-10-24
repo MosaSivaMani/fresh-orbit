@@ -4,6 +4,7 @@ using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.Notifications.Application.Handlers;
 using FluentValidation;
 using FreshOrbit.Identity.Public;
+using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.Notifications.Application.Inbox;
 using FreshOrbit.Notifications.Application.Queueing;
 using FreshOrbit.Notifications.Application.Sending;
@@ -66,6 +67,7 @@ public sealed class NotificationsModule : IModule
         services.AddEventHandler<RefundApproved, NotifyRefundApproved>();
         services.AddEventHandler<RefundSucceeded, NotifyRefundSucceeded>();
         services.AddEventHandler<CustomerDeleted, DropDeviceTokensOnCustomerDeleted>();
+        services.AddEventHandler<StaffAccountLocked, NotifyStaffAccountLocked>();
         services.AddScoped<IValidator<InboxRequest>, InboxRequestValidator>();
         services.AddScoped<IValidator<RegisterDeviceTokenRequest>, RegisterDeviceTokenRequestValidator>();
         services.AddScoped<IValidator<ReplacePreferencesRequest>, ReplacePreferencesRequestValidator>();

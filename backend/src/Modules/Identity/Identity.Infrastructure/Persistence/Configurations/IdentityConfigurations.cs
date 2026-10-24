@@ -36,6 +36,20 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
     }
 }
 
+/// <summary>IDN-R20: append-only; read by (email hash, client IP, newest first) for the per email + IP limit.</summary>
+internal sealed class StaffLoginFailureConfiguration : IEntityTypeConfiguration<StaffLoginFailure>
+{
+    public void Configure(EntityTypeBuilder<StaffLoginFailure> builder)
+    {
+        builder.ToTable("staff_login_failures");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.Property(x => x.EmailHash).HasMaxLength(64).IsFixedLength().IsRequired();
+        builder.Property(x => x.ClientIp).HasMaxLength(45).IsRequired();
+        builder.HasIndex(x => new { x.EmailHash, x.ClientIp, x.FailedAt }).IsDescending(false, false, true);
+    }
+}
+
 internal sealed class OtpChallengeConfiguration : IEntityTypeConfiguration<OtpChallenge>
 {
     public void Configure(EntityTypeBuilder<OtpChallenge> builder)

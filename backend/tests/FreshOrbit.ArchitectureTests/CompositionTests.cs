@@ -64,6 +64,7 @@ public sealed class CompositionTests
         { "Payments", "PaymentFailed", "Notifications" },
         { "Payments", "RefundSucceeded", "Notifications" },
         { "Customers", "CustomerDeleted", "Notifications" },
+        { "Identity", "StaffAccountLocked", "Notifications" },
     };
 
     [Theory]

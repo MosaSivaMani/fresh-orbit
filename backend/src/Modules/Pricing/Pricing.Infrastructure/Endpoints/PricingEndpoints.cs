@@ -21,6 +21,8 @@ internal static class PricingEndpoints
 {
     public const string ManagePermission = "pricing.manage";
 
+    public const string TaxManagePermission = PricingRules.TaxManagePermission;
+
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/admin/pricing").AddEndpointFilter<PricingProblemFilter>().WithTags("Admin pricing");
@@ -60,12 +62,13 @@ internal static class PricingEndpoints
                 Respond(http.Response, await service.SetChargeAsync(locationId, variantId, code, Precondition(http.Request), request, ct), r => r.Version))
             .RequirePermission(ManagePermission);
 
+        // D35: tax rules are global, so only tax.manage (ADMIN, FINANCE) may schedule them; either permission may read.
         group.MapGet("/tax-rules", async (PricingService service, CancellationToken ct) => TypedResults.Ok(await service.ListTaxRulesAsync(ct)))
-            .RequirePermission(ManagePermission);
+            .RequireAuthorization(policy => policy.RequireAuthenticatedUser().RequireClaim(FreshOrbitClaimTypes.Permission, ManagePermission, TaxManagePermission));
 
         group.MapPost("/tax-rules", async (ScheduleTaxRuleRequest request, PricingService service, HttpResponse response, CancellationToken ct) =>
                 Respond(response, await service.ScheduleTaxRuleAsync(request, ct), r => r.Version))
-            .RequirePermission(ManagePermission);
+            .RequirePermission(TaxManagePermission);
 
         group.MapPost("/prices/bulk", async (bool? dryRun, DateTimeOffset? validFrom, bool? replaceFuture, HttpRequest request, BulkPriceService service, CancellationToken ct) =>
             {

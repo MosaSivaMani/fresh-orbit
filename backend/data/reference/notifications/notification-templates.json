@@ -747,6 +747,19 @@
       "subject": "Cold-chain alert: {{locationName}} {{storageUnit}}",
       "body": "{{storageUnit}} at {{locationName}} recorded {{temperatureText}} at {{recordedAtText}}, outside the allowed range. Check the stock now.",
       "dltTemplateId": null
+    },
+    {
+      "code": "STAFF_ACCOUNT_LOCKED",
+      "channel": "EMAIL",
+      "category": null,
+      "variables": [
+        "staffEmail",
+        "lockedUntilText",
+        "lockoutCountText"
+      ],
+      "subject": "Staff account locked: {{staffEmail}}",
+      "body": "The staff account {{staffEmail}} was locked after too many wrong passwords. It unlocks by itself at {{lockedUntilText}}.\n\nThis is lock {{lockoutCountText}} in a row; each further lock lasts twice as long, up to 24 hours.\n\nIf the staff member did not cause this, someone may be guessing the password. To unlock now, reset the password under Staff in the admin dashboard.",
+      "dltTemplateId": null
     }
   ]
 }

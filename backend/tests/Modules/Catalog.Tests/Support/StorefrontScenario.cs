@@ -138,7 +138,7 @@ public abstract class StorefrontTestBase(StorefrontDatabase database) : IAsyncLi
     protected static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     /// <summary>Staff with catalog, pricing and locations permissions on all locations.</summary>
-    protected HttpClient Admin => _admin ??= Factory.CreateStaffClient(["catalog.manage", "pricing.manage", "locations.manage", "cities.activate"], allLocations: true);
+    protected HttpClient Admin => _admin ??= Factory.CreateStaffClient(["catalog.manage", "pricing.manage", "tax.manage", "locations.manage", "cities.activate"], allLocations: true);
 
     public async ValueTask InitializeAsync()
     {
