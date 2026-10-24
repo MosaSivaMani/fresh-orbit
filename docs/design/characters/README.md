@@ -11,3 +11,11 @@
 | Chanduva, pomfret | Round silver pomfret, big glossy eyes, rosy cheeks, open happy smile, fins used as hands |
 
 When generating more images, say "Use these exact characters" in the same chat as the sheet, or attach this image.
+
+## Generated images received
+Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque background) or `.png` (transparent). The illustrations package picks them up from here.
+
+| Slot | File | Received |
+|---|---|---|
+| ONBOARDING_FRESH | `generated/onboarding_fresh.jpg` | 2026-10-24 |
+| ONBOARDING_CLEANED | `generated/onboarding_cleaned.jpg` | 2026-10-24 |

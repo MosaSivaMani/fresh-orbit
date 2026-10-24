@@ -20,7 +20,7 @@ Last updated: 2026-10-24, after I1 integrated `fix/security-high` and the sample
 
 ## 3. Next, now that Phase 3 is merged
 1. Merge `integration/sec-sample` (§2) to `main`; `dotnet test` 926 tests expected.
-2. The initial migration now exists; check that a deploy runs migrations and the reference loader end to end.
+2. ~~Check that a deploy runs migrations and the reference loader end to end.~~ Done on branch `infra/e2e-check-work`: `infra/scripts/e2e-check.sh` (`runbooks/e2e-check.md`), smoke 28/28 (Production) and 52/52 (Testing); open items E2E-1 to E2E-7 in `research/e2e-deploy-check-2026-10.md` §3.
 3. Write the sample-data loaders (`product/sample-data.md`), then run the stack with sample data.
 4. Regenerate `@fresh/api-client` and `fresh_api` from the full OpenAPI. Replace the TEMPORARY types in web (`apps/web/src/api/types`), admin (16 files, `design/admin.md`) and mobile.
 5. Close the API gaps listed in `design/web.md` §6 (W1–W10), `design/admin.md` §5 (G1–G12) and `design/mobile.md` §8.
@@ -81,3 +81,12 @@ Slots:
 - Test hygiene: integration tests share one database per test assembly; list assertions must filter (e.g. `q=orderNumber`), never assume page 1 (fixed in `OrderLifecycleTests` at merge).
 - Old agent worktrees under `.claude/worktrees/` (Phase 2/3/5 branches, all merged) can be removed with `git worktree remove` once nobody needs them.
 - No agents of `fresh-orbit-3a` are running; nothing is in flight.
+
+## 9. Open items from the end-to-end deploy check (`runbooks/e2e-check.md`)
+- E2E-1 Notifications: DLT SMS sender is a stub, so OTP sign-in returns 500 in Production until a provider is chosen and wired.
+- E2E-2 Api: a failed options validation exits 139 (unhandled); catch it and exit 1.
+- E2E-3 Data Protection keys are not persisted; persist them or confirm unused.
+- E2E-4 Identity: staff login query needs `AsSplitQuery` (EF warning).
+- E2E-5 EF logs one harmless Error on an empty database.
+- E2E-6 web: footer city list is cached 1 hour, so a newly activated city appears late.
+- E2E-7 `deploy.sh` itself is not yet run (needs Linux: flock, bash 4); run it on the staging server.

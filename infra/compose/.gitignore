@@ -1,3 +1,6 @@
 # The repository root ignores .env.*; keep the documented example tracked. Real secrets stay ignored.
 !.env.prod.example
 rclone.conf
+# Local end-to-end check (infra/scripts/e2e-check.sh): the template is tracked, the generated file is not.
+!.env.e2e.example
+.env.e2e

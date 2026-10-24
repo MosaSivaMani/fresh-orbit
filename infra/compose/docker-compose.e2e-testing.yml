@@ -1,0 +1,15 @@
+# Second override for the local end-to-end check, "testing" pass only (docs/runbooks/e2e-check.md):
+#   -f docker-compose.prod.yml -f docker-compose.e2e.yml -f docker-compose.e2e-testing.yml, with APP_ENVIRONMENT=Testing
+# The hosts run in the Testing environment with the DEVELOPMENT SMS sender, so OTP codes can be read from
+# GET /api/v1/dev/sms and smoke.sh can sign a customer in and place an order. That route and that sender are refused
+# outside Development and Testing (docs/runbooks/security-configuration.md §2); the Production pass of the check runs
+# without this file and proves the Production start-up guards accept the configuration. Never use this on a server.
+
+services:
+  api:
+    environment:
+      Notifications__Sms__Provider: DEVELOPMENT
+
+  worker:
+    environment:
+      Notifications__Sms__Provider: DEVELOPMENT

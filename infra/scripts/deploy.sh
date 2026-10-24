@@ -90,13 +90,20 @@ smoke_check() {
   fi
 }
 
+# Removes this registry's older fresh-orbit images only (never another registry's or a local build's), then dangling
+# layers. SKIP_IMAGE_PRUNE=true leaves every image alone (a shared Docker host, e.g. the local e2e check).
 prune_images() {
-  local keep_current=$1 keep_previous=${2:-} ref
+  local keep_current=$1 keep_previous=${2:-} registry ref
+  [[ ${SKIP_IMAGE_PRUNE:-false} == true ]] && return 0
+  registry=$(env_value IMAGE_REGISTRY ghcr.io/mosasivamani)
   while read -r ref; do
+    [[ $ref == "$registry"/fresh-orbit-api:* || $ref == "$registry"/fresh-orbit-worker:* \
+      || $ref == "$registry"/fresh-orbit-migrations:* || $ref == "$registry"/fresh-orbit-web:* \
+      || $ref == "$registry"/fresh-orbit-admin:* ]] || continue
     [[ $ref == *":$keep_current" ]] && continue
     [[ -n $keep_previous && $ref == *":$keep_previous" ]] && continue
     docker image rm "$ref" >/dev/null 2>&1 || true
-  done < <(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E '/fresh-orbit-(api|worker|migrations|web|admin):' || true)
+  done < <(docker image ls --format '{{.Repository}}:{{.Tag}}')
   docker image prune -f >/dev/null || true
 }
 

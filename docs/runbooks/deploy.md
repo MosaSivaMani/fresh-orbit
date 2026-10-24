@@ -8,6 +8,18 @@ worker, migrations (one-shot), web, admin, PostgreSQL 17, and optionally Grafana
 Server setup: `oracle-setup.md`. Backups: `backup-restore.md`. Security settings (SMS DLT credentials,
 forwarded-headers subnet): `security-configuration.md`.
 
+**Before a release, run the local end-to-end check** (`e2e-check.md`): `infra/scripts/e2e-check.sh` builds the five
+images, runs this compose file on a fresh database (project `fo-e2e`, Caddy on 127.0.0.1:18443 with its local CA),
+proves migrations + reference data + idempotency, health behind Caddy, the Production guards, and `smoke.sh`, then
+removes everything. Last result (2026-10-24): all green; findings in `docs/research/e2e-deploy-check-2026-10.md`.
+
+Notes from that check that matter on a server:
+- In Production, OTP sign-in returns 500 until the DLT provider client is written (`security-configuration.md` §2);
+  `smoke.sh` against a Production server therefore needs `SMOKE_STOP_BEFORE_OTP=true`.
+- `smoke.sh` follows the absolute image URLs the API returns behind Caddy (`FileStorage__PublicBaseUrl`).
+- `deploy.sh` now prunes only `${IMAGE_REGISTRY}/fresh-orbit-*` images (`SKIP_IMAGE_PRUNE=true` to skip pruning);
+  `FO_PROJECT` / `FO_COMPOSE_OVERRIDE` exist only for the e2e check, leave them unset on servers.
+
 ## 1. One-time GitHub setup (repository owner)
 
 1. Settings → Environments → create **`staging`** (and later **`production`**). For a manual approval before each
@@ -123,7 +135,8 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 | Workflow fails at "Configure SSH" | Environment secrets set? `DEPLOY_KNOWN_HOSTS` matches the server key? |
 | `deploy.sh`: `Missing .../.env.prod` | Create it from `.env.prod.example` (`oracle-setup.md` §7) |
 | compose: `required variable X is missing a value` | Fill X in `.env.prod`; every required key is marked in the example |
-| Migrations failed | `logs.sh migrations --no-follow`; fix and release again; old release is still running |
+| Migrations failed | `logs.sh migrations --no-follow`; fix and release again; old release is still running. One `Failed executing DbCommand` Error on a brand-new database (EF reads its history table before creating it) is expected; the run still exits 0 |
+| api/worker exit right after start (exit code 139) | A start-up validator refused the configuration: `logs.sh api --no-follow -n 50` shows `OptionsValidationException` naming the key (`security-configuration.md`) |
 | api `unhealthy` | `logs.sh api --no-follow -n 300`; `/health` checks the database connection |
 | Caddy cannot get certificates | DNS A records point at the server? Ports 80/443 open in the Oracle security list and UFW? Cloudflare grey cloud for the first issuance |
 | 502 from Caddy | `logs.sh --status`: is the upstream (api/web/admin) running? |
