@@ -151,7 +151,10 @@
               "yieldBp": 5000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 14,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -214,7 +217,10 @@
               "yieldBp": 6800,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 3,
+          "piecesMax": 5,
+          "serves": 4
         },
         {
           "sku": "POMFRET-LARGE-PC",
@@ -244,7 +250,10 @@
               "yieldBp": 10000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 2
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -303,7 +312,10 @@
               "yieldBp": 6800,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 12,
+          "piecesMax": 16,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -360,7 +372,10 @@
               "yieldBp": 6500,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 12,
+          "piecesMax": 16,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -412,7 +427,10 @@
               "yieldBp": 5000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -473,7 +491,10 @@
               "yieldBp": 6800,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 6,
+          "piecesMax": 10,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -532,7 +553,10 @@
               "yieldBp": 6500,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 15,
+          "piecesMax": 25,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -591,7 +615,10 @@
               "yieldBp": 4500,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 14,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -652,7 +679,10 @@
               "yieldBp": 4000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 14,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -720,7 +750,10 @@
               "yieldBp": 5500,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 20,
+          "piecesMax": 30,
+          "serves": 4
         },
         {
           "sku": "PRAWN-TIGER-J-KG",
@@ -750,7 +783,10 @@
               "yieldBp": 6000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 15,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -804,7 +840,10 @@
               "yieldBp": 5200,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 40,
+          "piecesMax": 60,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -863,7 +902,10 @@
               "yieldBp": 3800,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 15,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -921,7 +963,10 @@
               "yieldBp": 7000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 2,
+          "piecesMax": 3,
+          "serves": 2
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -973,7 +1018,10 @@
               "yieldBp": 6500,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 6,
+          "piecesMax": 10,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1030,7 +1078,10 @@
               "yieldBp": 6000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1075,7 +1126,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1124,7 +1178,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1176,7 +1233,10 @@
               "yieldBp": 10000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 1
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1221,7 +1281,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 2,
+          "piecesMax": 3,
+          "serves": 2
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1262,7 +1325,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 1,
+          "piecesMax": 2,
+          "serves": 1
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1316,7 +1382,10 @@
               "yieldBp": 6000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 80,
+          "piecesMax": 120,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1370,7 +1439,10 @@
               "yieldBp": 7000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 8,
+          "piecesMax": 12,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1421,7 +1493,10 @@
               "yieldBp": 7000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 10,
+          "piecesMax": 14,
+          "serves": 4
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1475,7 +1550,10 @@
               "yieldBp": 4000,
               "isDefault": false
             }
-          ]
+          ],
+          "piecesMin": 8,
+          "piecesMax": 12,
+          "serves": 3
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1522,7 +1600,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": 5,
+          "piecesMax": 7,
+          "serves": 2
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
@@ -1567,7 +1648,10 @@
               "yieldBp": 10000,
               "isDefault": true
             }
-          ]
+          ],
+          "piecesMin": null,
+          "piecesMax": null,
+          "serves": 2
         }
       ],
       "sampleNote": "[SAMPLE] Copy, local names and yields are drafts for the owner to verify (docs/content/product-copy-guidelines.md)."
