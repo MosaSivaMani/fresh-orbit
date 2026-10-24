@@ -11,117 +11,169 @@ abstract final class AppFonts {
   static const String display = 'Baloo2';
 }
 
-/// Colours the illustrated UI adds on top of [FreshColors]. Registered as a [ThemeExtension].
+/// Colours the illustrated UI adds on top of [FreshColors] (the published style concept, D53). Registered as a
+/// [ThemeExtension].
 @immutable
 class IllustratedColors extends ThemeExtension<IllustratedColors> {
   const IllustratedColors({
     required this.sand,
     required this.sandDeep,
     required this.paper,
-    required this.coral,
-    required this.onCoral,
+    required this.line,
     required this.ink,
+    required this.muted,
     required this.tealText,
+    required this.tealDeep,
+    required this.onTeal,
     required this.tealDecor,
     required this.tealSoft,
+    required this.coral,
+    required this.onCoral,
+    required this.coralText,
+    required this.coralSoft,
+    required this.mango,
+    required this.onMango,
+    required this.ice,
     required this.softShadow,
   });
 
   /// Scaffold background.
   final Color sand;
 
-  /// Illustration circles, chips, skeletons.
+  /// Stronger sand: illustration circles, chips, skeletons.
   final Color sandDeep;
 
   /// Cards, receipt and polaroid paper.
   final Color paper;
 
-  /// Sticker labels (decoration; the text on it uses [onCoral]).
-  final Color coral;
-  final Color onCoral;
+  /// Hairlines and dashed rules.
+  final Color line;
 
-  /// Thick outlines and offset shadows of stickers and polaroids.
+  /// Text, thick outlines and the offset shadows of stickers and polaroids.
   final Color ink;
+  final Color muted;
 
-  /// Brand teal for text-bearing elements (`#0B7D70` in light, D32).
+  /// Brand teal for anything you tap and for text (`#0B7D70` in light, D32).
   final Color tealText;
+  final Color tealDeep;
+  final Color onTeal;
 
   /// Brand teal for decoration only (`#0E9384`); never behind or as text.
   final Color tealDecor;
 
-  /// Pale teal for circles behind illustrations.
+  /// Pale teal: circles behind illustrations, the receipt total band.
   final Color tealSoft;
+
+  /// Sticker coral (decoration; text on it uses [onCoral]); [coralText] for coral words on sand or paper.
+  final Color coral;
+  final Color onCoral;
+  final Color coralText;
+  final Color coralSoft;
+
+  /// Mango stickers.
+  final Color mango;
+  final Color onMango;
+
+  /// Ice blue: the rider's cold box, cold-chain moments.
+  final Color ice;
 
   /// Soft card shadow.
   final Color softShadow;
 
   static const light = IllustratedColors(
-    sand: Color(0xFFFBF4EA),
-    sandDeep: Color(0xFFF2E3CC),
+    sand: Color(0xFFFBF4E8),
+    sandDeep: Color(0xFFF3E4CC),
     paper: Color(0xFFFFFDF8),
-    coral: Color(0xFFF7836B),
-    onCoral: Color(0xFF2B140D),
-    ink: Color(0xFF1D2B2E),
+    line: Color(0xFFE6D7BE),
+    ink: Color(0xFF14302F),
+    muted: Color(0xFF5B6F6B),
     tealText: Color(0xFF0B7D70),
+    tealDeep: Color(0xFF075F55),
+    onTeal: Color(0xFFFFFDF8),
     tealDecor: Color(0xFF0E9384),
-    tealSoft: Color(0xFFD9F0EB),
-    softShadow: Color(0x1F5C4426),
+    tealSoft: Color(0xFFD8EEEA),
+    coral: Color(0xFFF07A5A),
+    onCoral: Color(0xFF1D0F0A),
+    coralText: Color(0xFFB4432A),
+    coralSoft: Color(0xFFFCE3DA),
+    mango: Color(0xFFF5B544),
+    onMango: Color(0xFF231707),
+    ice: Color(0xFFDCEFF5),
+    softShadow: Color(0x1F3C280A),
   );
 
-  /// Deliberate dark mode: a warm night sand instead of the generated blue-teal dark, so the illustrations
-  /// keep their warmth; outlines turn light so stickers stay visible.
+  /// Deliberate dark mode: a deep sea-green night instead of a grey, ink turns light so stickers and polaroid
+  /// outlines stay visible, and the brand teal brightens to keep its contrast.
   static const dark = IllustratedColors(
-    sand: Color(0xFF17130F),
-    sandDeep: Color(0xFF2E261E),
-    paper: Color(0xFF221D18),
-    coral: Color(0xFFFF9C85),
-    onCoral: Color(0xFF2B140D),
-    ink: Color(0xFFEFE3D1),
-    tealText: Color(0xFF6FD6C7),
-    tealDecor: Color(0xFF3CC2B1),
-    tealSoft: Color(0xFF173A35),
-    softShadow: Color(0x66000000),
+    sand: Color(0xFF14201F),
+    sandDeep: Color(0xFF1C2C2A),
+    paper: Color(0xFF1A2826),
+    line: Color(0xFF2C3E3B),
+    ink: Color(0xFFF4EBDD),
+    muted: Color(0xFFA9B8B3),
+    tealText: Color(0xFF3FC0AE),
+    tealDeep: Color(0xFF2A9C8C),
+    onTeal: Color(0xFF0C1B1A),
+    tealDecor: Color(0xFF3FC0AE),
+    tealSoft: Color(0xFF16413C),
+    coral: Color(0xFFF28B6E),
+    onCoral: Color(0xFF1D0F0A),
+    coralText: Color(0xFFF7A68E),
+    coralSoft: Color(0xFF3D2620),
+    mango: Color(0xFFE9AE45),
+    onMango: Color(0xFF231707),
+    ice: Color(0xFF1D3940),
+    softShadow: Color(0x59000000),
   );
 
   @override
-  IllustratedColors copyWith({
-    Color? sand,
-    Color? sandDeep,
-    Color? paper,
-    Color? coral,
-    Color? onCoral,
-    Color? ink,
-    Color? tealText,
-    Color? tealDecor,
-    Color? tealSoft,
-    Color? softShadow,
-  }) => IllustratedColors(
-    sand: sand ?? this.sand,
-    sandDeep: sandDeep ?? this.sandDeep,
-    paper: paper ?? this.paper,
-    coral: coral ?? this.coral,
-    onCoral: onCoral ?? this.onCoral,
-    ink: ink ?? this.ink,
-    tealText: tealText ?? this.tealText,
-    tealDecor: tealDecor ?? this.tealDecor,
-    tealSoft: tealSoft ?? this.tealSoft,
-    softShadow: softShadow ?? this.softShadow,
-  );
+  IllustratedColors copyWith({Color? sand, Color? paper, Color? ink, Color? tealText, Color? coral}) =>
+      IllustratedColors(
+        sand: sand ?? this.sand,
+        sandDeep: sandDeep,
+        paper: paper ?? this.paper,
+        line: line,
+        ink: ink ?? this.ink,
+        muted: muted,
+        tealText: tealText ?? this.tealText,
+        tealDeep: tealDeep,
+        onTeal: onTeal,
+        tealDecor: tealDecor,
+        tealSoft: tealSoft,
+        coral: coral ?? this.coral,
+        onCoral: onCoral,
+        coralText: coralText,
+        coralSoft: coralSoft,
+        mango: mango,
+        onMango: onMango,
+        ice: ice,
+        softShadow: softShadow,
+      );
 
   @override
   IllustratedColors lerp(covariant ThemeExtension<IllustratedColors>? other, double t) {
     if (other is! IllustratedColors) return this;
+    Color l(Color a, Color b) => Color.lerp(a, b, t)!;
     return IllustratedColors(
-      sand: Color.lerp(sand, other.sand, t)!,
-      sandDeep: Color.lerp(sandDeep, other.sandDeep, t)!,
-      paper: Color.lerp(paper, other.paper, t)!,
-      coral: Color.lerp(coral, other.coral, t)!,
-      onCoral: Color.lerp(onCoral, other.onCoral, t)!,
-      ink: Color.lerp(ink, other.ink, t)!,
-      tealText: Color.lerp(tealText, other.tealText, t)!,
-      tealDecor: Color.lerp(tealDecor, other.tealDecor, t)!,
-      tealSoft: Color.lerp(tealSoft, other.tealSoft, t)!,
-      softShadow: Color.lerp(softShadow, other.softShadow, t)!,
+      sand: l(sand, other.sand),
+      sandDeep: l(sandDeep, other.sandDeep),
+      paper: l(paper, other.paper),
+      line: l(line, other.line),
+      ink: l(ink, other.ink),
+      muted: l(muted, other.muted),
+      tealText: l(tealText, other.tealText),
+      tealDeep: l(tealDeep, other.tealDeep),
+      onTeal: l(onTeal, other.onTeal),
+      tealDecor: l(tealDecor, other.tealDecor),
+      tealSoft: l(tealSoft, other.tealSoft),
+      coral: l(coral, other.coral),
+      onCoral: l(onCoral, other.onCoral),
+      coralText: l(coralText, other.coralText),
+      coralSoft: l(coralSoft, other.coralSoft),
+      mango: l(mango, other.mango),
+      onMango: l(onMango, other.onMango),
+      ice: l(ice, other.ice),
+      softShadow: l(softShadow, other.softShadow),
     );
   }
 }
@@ -132,7 +184,7 @@ IllustratedColors illustratedColors(BuildContext context) =>
 /// Corner radii of the illustrated UI.
 abstract final class AppRadius {
   static const double field = 16;
-  static const double card = 22;
+  static const double card = 24;
   static const double hero = 28;
   static const double sheet = 28;
 }
@@ -151,19 +203,21 @@ abstract final class AppTheme {
       surface: ill.paper,
       surfaceRaised: ill.paper,
       muted: ill.sandDeep,
-      text: dark ? const Color(0xFFF6EEE3) : const Color(0xFF1D2B2E),
-      textMuted: dark ? const Color(0xFFCBBBA6) : const Color(0xFF5D5A52),
-      border: dark ? const Color(0xFF3B3229) : const Color(0xFFE8D9C3),
-      borderStrong: dark ? const Color(0xFF8C7C69) : const Color(0xFF8A7B66),
-      primary: dark ? const Color(0xFF3CC2B1) : ill.tealText,
-      primaryHover: dark ? const Color(0xFF5CCFC0) : const Color(0xFF096A5F),
-      onPrimary: dark ? const Color(0xFF052320) : Colors.white,
-      accent: dark ? const Color(0xFF3CC2B1) : ill.tealText,
+      text: ill.ink,
+      textMuted: ill.muted,
+      border: ill.line,
+      borderStrong: dark ? const Color(0xFF5C7570) : const Color(0xFF8A7B66),
+      primary: ill.tealText,
+      primaryHover: ill.tealDeep,
+      onPrimary: ill.onTeal,
+      accent: ill.tealText,
       accentSubtle: ill.tealSoft,
-      accentText: ill.tealText,
-      ring: ill.tealDecor,
-      highlight: ill.coral,
-      onHighlight: ill.onCoral,
+      accentText: dark ? ill.tealText : ill.tealDeep,
+      ring: ill.coral,
+      highlight: ill.mango,
+      onHighlight: ill.onMango,
+      highlightSubtle: ill.coralSoft,
+      highlightText: ill.coralText,
     );
     final scheme = base.colorScheme.copyWith(
       primary: fresh.primary,

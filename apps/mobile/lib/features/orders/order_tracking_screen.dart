@@ -106,7 +106,6 @@ class _TrackingBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final t = tracking;
     final status = t?.status ?? order.status;
-    final amounts = order.finalAmounts ?? order.estimate;
     return ListView(
       padding: const EdgeInsets.all(FreshSpacing.s4),
       children: [
@@ -158,39 +157,7 @@ class _TrackingBody extends ConsumerWidget {
         else
           const LoadingSemantics(child: SkeletonBox(height: 80)),
         const SizedBox(height: FreshSpacing.s5),
-        Semantics(header: true, child: Text('Items', style: theme.textTheme.titleMedium)),
-        for (final item in order.items) _ItemTile(item: item),
-        const SizedBox(height: FreshSpacing.s4),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(header: true, child: Text('Payment', style: theme.textTheme.titleMedium)),
-                const SizedBox(height: FreshSpacing.s2),
-                Text(paymentMethodLabel(order.paymentMethod)),
-                if (order.payment != null) Text('Status: ${humanizeCode(order.payment!.status)}'),
-                const Divider(height: FreshSpacing.s5),
-                Text(
-                  order.finalAmounts == null
-                      ? 'Estimated total ${formatRupees(amounts.totalPaise)}'
-                      : 'Final total ${formatRupees(amounts.totalPaise)}',
-                  style: theme.textTheme.titleSmall,
-                ),
-                if (order.finalAmounts == null)
-                  Text(
-                    'The final total is set when your order is weighed and packed.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                if (order.amountDuePaise > 0) Text('To pay on delivery: ${formatRupees(order.amountDuePaise)}'),
-                if (order.amountPaidPaise > 0) Text('Paid: ${formatRupees(order.amountPaidPaise)}'),
-                if (order.amountRefundedPaise > 0) Text('Refunded: ${formatRupees(order.amountRefundedPaise)}'),
-                if (order.couponCode != null) Text('Coupon: ${order.couponCode}'),
-              ],
-            ),
-          ),
-        ),
+        _OrderReceipt(order: order),
         const SizedBox(height: FreshSpacing.s4),
         _Actions(order: order),
         if (order.status == 'DELIVERED') _Complaints(orderId: order.id),
@@ -220,10 +187,14 @@ class _StatusHero extends StatelessWidget {
     final theme = Theme.of(context);
     final ill = illustratedColors(context);
     final slot = slotForOrderStatus(status);
-    final image = Illustration(key: ValueKey(slot), slot: slot, size: 120, excludeFromSemantics: true);
+    final image = Illustration(key: ValueKey(slot), slot: slot, size: 84, excludeFromSemantics: true);
     return Container(
-      padding: const EdgeInsets.all(FreshSpacing.s4),
-      decoration: BoxDecoration(color: ill.tealSoft, borderRadius: BorderRadius.circular(AppRadius.hero)),
+      padding: const EdgeInsets.all(FreshSpacing.s3),
+      decoration: BoxDecoration(
+        color: ill.paper,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        boxShadow: [BoxShadow(color: ill.softShadow, blurRadius: 24, offset: const Offset(0, 8))],
+      ),
       child: Row(
         children: [
           if (motionAllowed(context)) AnimatedSwitcher(duration: FreshDurations.slow, child: image) else image,
@@ -234,9 +205,8 @@ class _StatusHero extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Sticker(label: orderStatusLabel(status), tone: StickerTone.coral),
-                  const SizedBox(height: FreshSpacing.s2),
-                  Text(_line(status), style: theme.textTheme.titleMedium),
+                  Text(orderStatusLabel(status), style: theme.textTheme.titleLarge),
+                  Text(_line(status), style: theme.textTheme.bodyMedium?.copyWith(color: ill.muted)),
                 ],
               ),
             ),
@@ -348,31 +318,59 @@ class _Timeline extends StatelessWidget {
   }
 }
 
-class _ItemTile extends StatelessWidget {
-  const _ItemTile({required this.item});
+/// The order as a paper receipt: each item with its ordered, weighed and charged quantities, the fees, payment
+/// and the total. Every amount is the server's, only formatted (rule 4).
+class _OrderReceipt extends StatelessWidget {
+  const _OrderReceipt({required this.order});
 
-  final OrderItem item;
+  final OrderDetail order;
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = <String>[
-      [item.variantName, item.preparationName].whereType<String>().join(' · '),
-      'Ordered ${formatQuantity(item.orderedQuantity)}',
-      if (item.packedQuantity != null) 'Weighed ${formatQuantity(item.packedQuantity!)}',
-      if (item.chargedQuantity != null) 'Charged for ${formatQuantity(item.chargedQuantity!)}',
-      if (item.status != 'ACTIVE') humanizeCode(item.status),
-    ].where((s) => s.isNotEmpty).join('\n');
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(item.productName),
-      subtitle: Text(subtitle),
-      isThreeLine: true,
-      trailing: Text(
-        formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise),
-        semanticsLabel: item.finalTotalPaise == null
-            ? 'Estimated ${formatRupees(item.estimatedTotalPaise)}'
-            : 'Final ${formatRupees(item.finalTotalPaise!)}',
+    final finalAmounts = order.finalAmounts;
+    final amounts = finalAmounts ?? order.estimate;
+    final totalLabel = finalAmounts == null ? 'Estimated total' : 'Final total';
+    final rows = <ReceiptRow>[
+      for (final item in order.items)
+        ReceiptRow(
+          [item.productName, item.preparationName].whereType<String>().join(', '),
+          formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise),
+          detail: [
+            'Ordered ${formatQuantity(item.orderedQuantity)}',
+            if (item.packedQuantity != null) 'weighed ${formatQuantity(item.packedQuantity!)}',
+            if (item.chargedQuantity != null) 'charged for ${formatQuantity(item.chargedQuantity!)}',
+            if (item.status != 'ACTIVE') humanizeCode(item.status),
+          ].join(', '),
+          semanticsLabel:
+              '${item.productName}, ${item.finalTotalPaise == null ? 'estimated' : 'final'} '
+              '${formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise)}',
+        ),
+      ReceiptRow('Delivery', formatRupees(amounts.deliveryFeePaise)),
+      if (amounts.discountPaise > 0)
+        ReceiptRow(
+          order.couponCode == null ? 'Discount' : 'Discount (${order.couponCode})',
+          formatRupees(-amounts.discountPaise),
+        ),
+      ReceiptRow(
+        'Payment',
+        paymentMethodLabel(order.paymentMethod),
+        detail: order.payment == null ? null : humanizeCode(order.payment!.status),
       ),
+      if (order.amountDuePaise > 0) ReceiptRow(totalLabel, formatRupees(amounts.totalPaise)),
+      if (order.amountPaidPaise > 0) ReceiptRow('Paid', formatRupees(order.amountPaidPaise)),
+      if (order.amountRefundedPaise > 0) ReceiptRow('Refunded', formatRupees(order.amountRefundedPaise)),
+    ];
+    return ReceiptCard(
+      title: 'Fresh Orbit',
+      subtitle: 'Order ${order.orderNumber} · placed ${formatDateTime(order.placedAt)}',
+      rows: rows,
+      total: order.amountDuePaise > 0
+          ? ReceiptRow('To pay at the door', formatRupees(order.amountDuePaise))
+          : ReceiptRow(totalLabel, formatRupees(amounts.totalPaise)),
+      note: finalAmounts == null
+          ? 'The final total is set when your order is weighed and packed, never above the maximum shown at '
+                'checkout.'
+          : null,
     );
   }
 }

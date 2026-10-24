@@ -1,13 +1,12 @@
-// Illustration(slot:, size:) shows `assets/illustrations/<slot_lower_snake>.webp` when the app bundles it, and
-// otherwise our own placeholder: a soft sand circle with one simple shape per slot, drawn in code. The images
-// contain no text, so the widget never needs translating.
-
-import 'dart:math' as math;
+// Illustration(slot:, size:) shows `assets/illustrations/<slot_lower_snake>.png` (or `.webp`) when the app
+// bundles it, and otherwise our own placeholder: one of the cast drawn in code on a soft clay circle, with a
+// small prop badge for the slot. The images contain no text, so the widget never needs translating.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
+import 'cast_painter.dart';
 import 'illustration_slot.dart';
 
 export 'illustration_slot.dart';
@@ -22,10 +21,18 @@ abstract final class IllustrationAssets {
     _loading = AssetManifest.loadFromAssetBundle(bundle).then(
       (manifest) => available.value = manifest
           .listAssets()
-          .where((a) => a.startsWith('assets/illustrations/') && a.endsWith('.webp'))
+          .where((a) => a.startsWith('assets/illustrations/') && (a.endsWith('.png') || a.endsWith('.webp')))
           .toSet(),
       onError: (Object _) => available.value = const <String>{},
     );
+  }
+
+  /// The first bundled file for [slot] (PNG before WebP), or null when none is bundled.
+  static String? pathFor(IllustrationSlot slot, Set<String> assets) {
+    for (final path in slot.assetPaths) {
+      if (assets.contains(path)) return path;
+    }
+    return null;
   }
 
   /// Tests: pretend the bundle holds exactly [assets] (null forgets the answer and reads the manifest again).
@@ -73,9 +80,10 @@ class _IllustrationState extends State<Illustration> {
     final image = ValueListenableBuilder<Set<String>?>(
       valueListenable: IllustrationAssets.available,
       builder: (context, assets, _) {
-        if (assets == null || !assets.contains(widget.slot.assetPath)) return placeholder;
+        final path = assets == null ? null : IllustrationAssets.pathFor(widget.slot, assets);
+        if (path == null) return placeholder;
         return Image.asset(
-          widget.slot.assetPath,
+          path,
           key: ValueKey('illustration-image-${widget.slot.code}'),
           width: widget.size,
           height: widget.size,
@@ -95,7 +103,7 @@ class _IllustrationState extends State<Illustration> {
   }
 }
 
-/// Our own stand-in until the final image ships: sand circle, two bubbles, a wave and one shape for the slot.
+/// Our own stand-in until the final image ships: the slot's cast member on a clay circle, plus a prop badge.
 class IllustrationPlaceholder extends StatelessWidget {
   const IllustrationPlaceholder({super.key, required this.slot, required this.size});
 
@@ -105,138 +113,74 @@ class IllustrationPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
+    final (member, backdrop, prop, sidekick) = castFor(slot);
+    final badge = size * 0.3;
     return SizedBox.square(
       key: ValueKey('illustration-placeholder-${slot.code}'),
       dimension: size,
-      child: CustomPaint(
-        painter: _PlaceholderPainter(colors: c, fish: _fishSlots.contains(slot)),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: size * 0.04),
-            child: Icon(_iconFor(slot), size: size * 0.38, color: c.tealText),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CastPainter(member: member, colors: c, backdrop: backdrop, sidekick: sidekick),
+            ),
           ),
-        ),
+          if (prop != null && size >= 64)
+            Positioned(
+              right: size * 0.04,
+              bottom: size * 0.06,
+              child: Container(
+                width: badge,
+                height: badge,
+                decoration: BoxDecoration(
+                  color: c.paper,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: c.ink, width: badge * 0.06),
+                  boxShadow: [BoxShadow(color: c.ink, offset: Offset(badge * 0.06, badge * 0.06))],
+                ),
+                alignment: Alignment.center,
+                child: Icon(prop, size: badge * 0.58, color: c.tealText),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
-/// Slots whose placeholder also gets the small pomfret sidekick.
-const _fishSlots = {
-  IllustrationSlot.onboardingFresh,
-  IllustrationSlot.emptyCart,
-  IllustrationSlot.emptyWishlist,
-  IllustrationSlot.emptyNotifications,
-  IllustrationSlot.noSearchResults,
-  IllustrationSlot.errorGeneric,
-  IllustrationSlot.notFound,
-  IllustrationSlot.homeHero,
-  IllustrationSlot.featureHonestWeight,
+/// Who stands in each slot, on which tint, with which prop, and whether Chanduva joins them.
+(CastMember, CastBackdrop, IconData?, bool) castFor(IllustrationSlot slot) => switch (slot) {
+  IllustrationSlot.onboardingFresh => (CastMember.padma, CastBackdrop.teal, Icons.set_meal_rounded, true),
+  IllustrationSlot.onboardingCleaned => (CastMember.padma, CastBackdrop.sand, Icons.content_cut_rounded, false),
+  IllustrationSlot.onboardingDelivery => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
+  IllustrationSlot.locationPick => (CastMember.ammamma, CastBackdrop.teal, Icons.location_on_rounded, false),
+  IllustrationSlot.notServiceable => (CastMember.ravi, CastBackdrop.coral, Icons.wrong_location_rounded, false),
+  IllustrationSlot.emptyCart => (CastMember.chanduva, CastBackdrop.sand, Icons.shopping_basket_rounded, false),
+  IllustrationSlot.emptyWishlist => (CastMember.chanduva, CastBackdrop.coral, Icons.favorite_rounded, false),
+  IllustrationSlot.emptyOrders => (CastMember.ammamma, CastBackdrop.sand, Icons.receipt_long_rounded, false),
+  IllustrationSlot.emptyNotifications => (
+    CastMember.chanduva,
+    CastBackdrop.teal,
+    Icons.notifications_none_rounded,
+    false,
+  ),
+  IllustrationSlot.emptyAddresses => (CastMember.ammamma, CastBackdrop.sand, Icons.home_rounded, false),
+  IllustrationSlot.noSearchResults => (CastMember.chanduva, CastBackdrop.ice, Icons.search_rounded, false),
+  IllustrationSlot.outOfStock => (CastMember.padma, CastBackdrop.coral, Icons.inventory_2_rounded, false),
+  IllustrationSlot.loginOtp => (CastMember.ammamma, CastBackdrop.teal, Icons.sms_rounded, false),
+  IllustrationSlot.orderPlaced => (CastMember.padma, CastBackdrop.teal, Icons.check_rounded, true),
+  IllustrationSlot.orderPacking => (CastMember.padma, CastBackdrop.ice, Icons.inventory_rounded, false),
+  IllustrationSlot.orderOnTheWay => (CastMember.ravi, CastBackdrop.teal, Icons.delivery_dining_rounded, false),
+  IllustrationSlot.orderDelivered => (CastMember.ammamma, CastBackdrop.teal, Icons.where_to_vote_rounded, false),
+  IllustrationSlot.orderCancelled => (CastMember.ravi, CastBackdrop.coral, Icons.close_rounded, false),
+  IllustrationSlot.complaintReceived => (CastMember.anil, CastBackdrop.teal, Icons.assignment_turned_in_rounded, false),
+  IllustrationSlot.helpSupport => (CastMember.anil, CastBackdrop.sand, null, false),
+  IllustrationSlot.errorGeneric => (CastMember.chanduva, CastBackdrop.coral, Icons.priority_high_rounded, false),
+  IllustrationSlot.offline => (CastMember.ravi, CastBackdrop.ice, Icons.wifi_off_rounded, false),
+  IllustrationSlot.notFound => (CastMember.chanduva, CastBackdrop.sand, Icons.explore_off_rounded, false),
+  IllustrationSlot.homeHero => (CastMember.padma, CastBackdrop.teal, null, true),
+  IllustrationSlot.featureHonestWeight => (CastMember.chanduva, CastBackdrop.sand, Icons.scale_rounded, false),
+  IllustrationSlot.featureCleanedYourWay => (CastMember.padma, CastBackdrop.coral, Icons.restaurant_rounded, false),
+  IllustrationSlot.featureColdChain => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
+  IllustrationSlot.featureSameDay => (CastMember.ravi, CastBackdrop.teal, Icons.schedule_rounded, false),
 };
-
-IconData _iconFor(IllustrationSlot slot) => switch (slot) {
-  IllustrationSlot.onboardingFresh => Icons.set_meal_rounded,
-  IllustrationSlot.onboardingCleaned => Icons.content_cut_rounded,
-  IllustrationSlot.onboardingDelivery => Icons.delivery_dining_rounded,
-  IllustrationSlot.locationPick => Icons.location_on_rounded,
-  IllustrationSlot.notServiceable => Icons.wrong_location_rounded,
-  IllustrationSlot.emptyCart => Icons.shopping_basket_rounded,
-  IllustrationSlot.emptyWishlist => Icons.favorite_rounded,
-  IllustrationSlot.emptyOrders => Icons.receipt_long_rounded,
-  IllustrationSlot.emptyNotifications => Icons.notifications_none_rounded,
-  IllustrationSlot.emptyAddresses => Icons.home_rounded,
-  IllustrationSlot.noSearchResults => Icons.search_off_rounded,
-  IllustrationSlot.outOfStock => Icons.inventory_2_rounded,
-  IllustrationSlot.loginOtp => Icons.sms_rounded,
-  IllustrationSlot.orderPlaced => Icons.check_circle_rounded,
-  IllustrationSlot.orderPacking => Icons.inventory_rounded,
-  IllustrationSlot.orderOnTheWay => Icons.delivery_dining_rounded,
-  IllustrationSlot.orderDelivered => Icons.where_to_vote_rounded,
-  IllustrationSlot.orderCancelled => Icons.cancel_rounded,
-  IllustrationSlot.complaintReceived => Icons.assignment_turned_in_rounded,
-  IllustrationSlot.helpSupport => Icons.support_agent_rounded,
-  IllustrationSlot.errorGeneric => Icons.error_outline_rounded,
-  IllustrationSlot.offline => Icons.wifi_off_rounded,
-  IllustrationSlot.notFound => Icons.explore_off_rounded,
-  IllustrationSlot.homeHero => Icons.set_meal_rounded,
-  IllustrationSlot.featureHonestWeight => Icons.scale_rounded,
-  IllustrationSlot.featureCleanedYourWay => Icons.restaurant_rounded,
-  IllustrationSlot.featureColdChain => Icons.ac_unit_rounded,
-  IllustrationSlot.featureSameDay => Icons.schedule_rounded,
-};
-
-class _PlaceholderPainter extends CustomPainter {
-  _PlaceholderPainter({required this.colors, required this.fish});
-
-  final IllustratedColors colors;
-  final bool fish;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = size.shortestSide;
-    final center = Offset(size.width / 2, size.height / 2);
-    final r = s * 0.44;
-
-    // Soft sand circle with a lighter top-left, like a clay ball lit from above.
-    final circle = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.35, -0.45),
-        radius: 1.05,
-        colors: [colors.paper, colors.sandDeep],
-      ).createShader(Rect.fromCircle(center: center, radius: r));
-    canvas.drawCircle(center + Offset(0, s * 0.025), r, Paint()..color = colors.softShadow);
-    canvas.drawCircle(center, r, circle);
-
-    // A small wave across the lower part of the circle.
-    final wave = Path()..moveTo(center.dx - r * 0.7, center.dy + r * 0.55);
-    for (var i = 0; i < 4; i++) {
-      final x = center.dx - r * 0.7 + i * r * 0.35;
-      wave.quadraticBezierTo(x + r * 0.0875, center.dy + r * 0.45, x + r * 0.175, center.dy + r * 0.55);
-      wave.quadraticBezierTo(x + r * 0.2625, center.dy + r * 0.65, x + r * 0.35, center.dy + r * 0.55);
-    }
-    canvas.drawPath(
-      wave,
-      Paint()
-        ..color = colors.tealDecor.withValues(alpha: 0.35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1.5, s * 0.018)
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Bubbles: coral and teal.
-    canvas.drawCircle(center + Offset(r * 0.78, -r * 0.72), s * 0.045, Paint()..color = colors.coral);
-    canvas.drawCircle(center + Offset(-r * 0.88, -r * 0.35), s * 0.028, Paint()..color = colors.tealDecor);
-    canvas.drawCircle(center + Offset(r * 0.95, -r * 0.35), s * 0.02, Paint()..color = colors.tealDecor);
-
-    if (fish) _paintPomfret(canvas, center + Offset(r * 0.62, r * 0.62), s * 0.16);
-  }
-
-  /// The pomfret sidekick: a rounded diamond body, a tail and an eye.
-  void _paintPomfret(Canvas canvas, Offset c, double w) {
-    final body = Path()
-      ..moveTo(c.dx - w * 0.5, c.dy)
-      ..quadraticBezierTo(c.dx - w * 0.1, c.dy - w * 0.55, c.dx + w * 0.35, c.dy)
-      ..quadraticBezierTo(c.dx - w * 0.1, c.dy + w * 0.55, c.dx - w * 0.5, c.dy)
-      ..close();
-    final tail = Path()
-      ..moveTo(c.dx + w * 0.3, c.dy)
-      ..lineTo(c.dx + w * 0.6, c.dy - w * 0.25)
-      ..lineTo(c.dx + w * 0.6, c.dy + w * 0.25)
-      ..close();
-    final fill = Paint()..color = colors.coral;
-    final outline = Paint()
-      ..color = colors.ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1, w * 0.07)
-      ..strokeJoin = StrokeJoin.round;
-    canvas
-      ..drawPath(tail, fill)
-      ..drawPath(tail, outline)
-      ..drawPath(body, fill)
-      ..drawPath(body, outline)
-      ..drawCircle(Offset(c.dx - w * 0.25, c.dy - w * 0.05), w * 0.06, Paint()..color = colors.ink);
-  }
-
-  @override
-  bool shouldRepaint(_PlaceholderPainter old) => old.colors != colors || old.fish != fish;
-}

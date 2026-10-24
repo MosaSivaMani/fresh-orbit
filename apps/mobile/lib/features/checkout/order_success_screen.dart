@@ -61,7 +61,7 @@ class OrderSuccessScreen extends ConsumerWidget {
                     formatRupees(order.estimate.totalPaise),
                     semanticsLabel: 'Estimated total ${formatRupees(order.estimate.totalPaise)}',
                   ),
-                  footnote: 'The final total is set when your order is weighed and packed.',
+                  note: 'The final total is set when your order is weighed and packed.',
                 ),
                 const SizedBox(height: FreshSpacing.s3),
                 const InfoBanner(

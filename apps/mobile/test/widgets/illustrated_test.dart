@@ -28,8 +28,8 @@ void main() {
   group('IllustrationSlot', () {
     test('asset path is the lower-snake slot code under assets/illustrations', () {
       expect(IllustrationSlot.onboardingFresh.code, 'ONBOARDING_FRESH');
-      expect(IllustrationSlot.onboardingFresh.assetPath, 'assets/illustrations/onboarding_fresh.webp');
-      expect(IllustrationSlot.featureCleanedYourWay.assetPath, 'assets/illustrations/feature_cleaned_your_way.webp');
+      expect(IllustrationSlot.onboardingFresh.assetPath, 'assets/illustrations/onboarding_fresh.png');
+      expect(IllustrationSlot.featureCleanedYourWay.assetPath, 'assets/illustrations/feature_cleaned_your_way.png');
       for (final slot in IllustrationSlot.values) {
         expect(slot.code, matches(RegExp(r'^[A-Z]+(_[A-Z]+)*$')), reason: slot.name);
         expect(slot.code.startsWith('ADMIN_'), isFalse, reason: 'admin slots are not used in mobile');
@@ -60,12 +60,38 @@ void main() {
       expect(tester.getSize(find.byType(Illustration)), const Size(120, 120));
     });
 
-    testWidgets('loads the slot image when the bundle has it', (tester) async {
+    testWidgets('loads the slot PNG when the bundle has it', (tester) async {
+      IllustrationAssets.debugSetAvailable(const {
+        'assets/illustrations/empty_cart.png',
+        'assets/illustrations/empty_cart.webp',
+      });
+      await _pump(tester, const Illustration(slot: IllustrationSlot.emptyCart));
+
+      final image = tester.widget<Image>(find.byKey(const ValueKey('illustration-image-EMPTY_CART')));
+      expect((image.image as AssetImage).assetName, 'assets/illustrations/empty_cart.png');
+    });
+
+    testWidgets('reads a WebP when no PNG is bundled', (tester) async {
       IllustrationAssets.debugSetAvailable(const {'assets/illustrations/empty_cart.webp'});
       await _pump(tester, const Illustration(slot: IllustrationSlot.emptyCart));
 
       final image = tester.widget<Image>(find.byKey(const ValueKey('illustration-image-EMPTY_CART')));
       expect((image.image as AssetImage).assetName, 'assets/illustrations/empty_cart.webp');
+    });
+
+    testWidgets('every slot draws a cast placeholder in light and dark', (tester) async {
+      IllustrationAssets.debugSetAvailable(const {});
+      for (final theme in [AppTheme.light(), AppTheme.dark()]) {
+        await _pump(
+          tester,
+          Wrap(children: [for (final slot in IllustrationSlot.values) Illustration(slot: slot, size: 96)]),
+          theme: theme,
+        );
+        for (final slot in IllustrationSlot.values) {
+          expect(find.byKey(ValueKey('illustration-placeholder-${slot.code}')), findsOneWidget);
+        }
+        expect(tester.takeException(), isNull);
+      }
     });
 
     testWidgets('a missing file listed in the bundle still ends on the placeholder', (tester) async {
@@ -140,7 +166,7 @@ void main() {
           title: 'Order FO-260001',
           rows: [ReceiptRow('Delivery', '23 Oct, 2:00 PM – 4:00 PM'), ReceiptRow('Payment', 'Cash on delivery')],
           total: ReceiptRow('Estimated total', '₹708.50'),
-          footnote: 'The final total is set when your order is weighed and packed.',
+          note: 'The final total is set when your order is weighed and packed.',
         ),
       );
 

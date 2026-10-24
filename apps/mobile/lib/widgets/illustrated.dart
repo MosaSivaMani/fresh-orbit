@@ -11,7 +11,7 @@ import '../theme/app_theme.dart';
 import 'motion.dart';
 import 'states.dart';
 
-enum StickerTone { coral, teal, sand }
+enum StickerTone { coral, mango, teal, paper, sand }
 
 /// A pill label with a thick outline and a hard offset shadow, slightly tilted, like a sticker on paper.
 class Sticker extends StatelessWidget {
@@ -27,21 +27,22 @@ class Sticker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ill = illustratedColors(context);
-    final scheme = Theme.of(context).colorScheme;
     final (bg, fg) = switch (tone) {
       StickerTone.coral => (ill.coral, ill.onCoral),
-      StickerTone.teal => (scheme.primary, scheme.onPrimary),
-      StickerTone.sand => (ill.sandDeep, scheme.onSurface),
+      StickerTone.mango => (ill.mango, ill.onMango),
+      StickerTone.teal => (ill.tealText, ill.onTeal),
+      StickerTone.paper => (ill.paper, ill.ink),
+      StickerTone.sand => (ill.sandDeep, ill.ink),
     };
     return Transform.rotate(
       angle: tilt * 2 * math.pi,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s3, vertical: FreshSpacing.s1),
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(FreshRadius.full),
-          border: Border.all(color: ill.ink, width: 2),
-          boxShadow: [BoxShadow(color: ill.ink, offset: const Offset(2, 2.5))],
+          border: Border.all(color: ill.ink, width: 2.5),
+          boxShadow: [BoxShadow(color: ill.ink, offset: const Offset(3, 3))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -53,7 +54,13 @@ class Sticker extends StatelessWidget {
             Flexible(
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(color: fg, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontFamily: AppFonts.display,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  height: 1.25,
+                  color: fg,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -235,25 +242,40 @@ class HelpHero extends StatelessWidget {
 /// One line on a receipt. [value] is already formatted from a server value; the receipt never computes it.
 @immutable
 class ReceiptRow {
-  const ReceiptRow(this.label, this.value, {this.semanticsLabel});
+  const ReceiptRow(this.label, this.value, {this.detail, this.semanticsLabel});
 
   final String label;
   final String value;
 
-  /// Read instead of "label value" (for example "Estimated total ₹708.50").
+  /// A small second line under the label (for example "Packed 1.01 kg net").
+  final String? detail;
+
+  /// Read instead of "label: value" (for example "Estimated total ₹708.50").
   final String? semanticsLabel;
 }
 
-/// A paper receipt with a torn bottom edge. Shows exactly the rows it is given.
+/// A paper receipt with a scalloped torn bottom edge: title, optional subtitle, rows, a teal total band and an
+/// optional coral weight note. Shows exactly what it is given.
 class ReceiptCard extends StatelessWidget {
-  const ReceiptCard({super.key, required this.title, required this.rows, this.total, this.footnote, this.header});
+  const ReceiptCard({
+    super.key,
+    required this.title,
+    required this.rows,
+    this.subtitle,
+    this.total,
+    this.note,
+    this.header,
+  });
 
   final String title;
+  final String? subtitle;
   final List<ReceiptRow> rows;
 
-  /// The emphasised last line, below a dashed rule.
+  /// The emphasised last line, on a teal band.
   final ReceiptRow? total;
-  final String? footnote;
+
+  /// The weight note on a coral band (for example "The final total is set when your order is weighed").
+  final String? note;
 
   /// Shown above the title (for example an illustration).
   final Widget? header;
@@ -262,9 +284,10 @@ class ReceiptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ill = illustratedColors(context);
-    final muted = freshColors(context).textMuted;
-    Widget row(ReceiptRow r, {bool strong = false}) => Semantics(
-      label: r.semanticsLabel ?? '${r.label}: ${r.value}',
+    final totalColor = theme.brightness == Brightness.dark ? ill.tealText : ill.tealDeep;
+
+    Widget row(ReceiptRow r) => Semantics(
+      label: r.semanticsLabel ?? '${[r.label, ?r.detail].join(', ')}: ${r.value}',
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s1),
@@ -272,18 +295,20 @@ class ReceiptCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Text(
-                r.label,
-                style: strong ? theme.textTheme.titleMedium : theme.textTheme.bodyMedium?.copyWith(color: muted),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r.label, style: theme.textTheme.bodyMedium),
+                  if (r.detail != null) Text(r.detail!, style: theme.textTheme.bodySmall?.copyWith(color: ill.muted)),
+                ],
               ),
             ),
             const SizedBox(width: FreshSpacing.s3),
             Flexible(
-              flex: 2,
               child: Text(
                 r.value,
                 textAlign: TextAlign.end,
-                style: strong ? theme.textTheme.titleMedium : theme.textTheme.titleSmall,
+                style: theme.textTheme.titleSmall?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
               ),
             ),
           ],
@@ -291,8 +316,9 @@ class ReceiptCard extends StatelessWidget {
       ),
     );
 
+    final t = total;
     return PhysicalShape(
-      clipper: const _TornEdgeClipper(),
+      clipper: const _ScallopEdgeClipper(),
       color: ill.paper,
       elevation: 4,
       shadowColor: ill.softShadow,
@@ -307,19 +333,53 @@ class ReceiptCard extends StatelessWidget {
               header: true,
               child: Text(title, style: theme.textTheme.titleLarge, textAlign: TextAlign.center),
             ),
+            if (subtitle != null)
+              Text(
+                subtitle!,
+                style: theme.textTheme.bodySmall?.copyWith(color: ill.muted),
+                textAlign: TextAlign.center,
+              ),
             const SizedBox(height: FreshSpacing.s3),
             const _DashedRule(),
             const SizedBox(height: FreshSpacing.s2),
             for (final r in rows) row(r),
-            if (total != null) ...[
+            if (t != null) ...[
               const SizedBox(height: FreshSpacing.s2),
               const _DashedRule(),
-              const SizedBox(height: FreshSpacing.s2),
-              row(total!, strong: true),
+              const SizedBox(height: FreshSpacing.s3),
+              Semantics(
+                label: t.semanticsLabel ?? '${t.label}: ${t.value}',
+                excludeSemantics: true,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s3, vertical: FreshSpacing.s2),
+                  decoration: BoxDecoration(color: ill.tealSoft, borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(t.label, style: theme.textTheme.titleMedium?.copyWith(color: totalColor)),
+                      ),
+                      Text(
+                        t.value,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: totalColor,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
-            if (footnote != null) ...[
+            if (note != null) ...[
               const SizedBox(height: FreshSpacing.s2),
-              Text(footnote!, style: theme.textTheme.bodySmall?.copyWith(color: muted)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s3, vertical: FreshSpacing.s2),
+                decoration: BoxDecoration(color: ill.coralSoft, borderRadius: BorderRadius.circular(12)),
+                child: Text(
+                  note!,
+                  style: theme.textTheme.bodySmall?.copyWith(color: ill.coralText, fontWeight: FontWeight.w600),
+                ),
+              ),
             ],
           ],
         ),
@@ -336,7 +396,7 @@ class _DashedRule extends StatelessWidget {
     child: SizedBox(
       height: 2,
       width: double.infinity,
-      child: CustomPaint(painter: _DashPainter(freshColors(context).borderStrong)),
+      child: CustomPaint(painter: _DashPainter(illustratedColors(context).line)),
     ),
   );
 }
@@ -350,7 +410,7 @@ class _DashPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 1.5
+      ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
     for (var x = 0.0; x < size.width; x += 9) {
       canvas.drawLine(Offset(x, size.height / 2), Offset(math.min(x + 4, size.width), size.height / 2), paint);
@@ -361,33 +421,33 @@ class _DashPainter extends CustomPainter {
   bool shouldRepaint(_DashPainter old) => old.color != color;
 }
 
-/// Rounded top corners, a zig-zag torn bottom edge.
-class _TornEdgeClipper extends CustomClipper<Path> {
-  const _TornEdgeClipper();
+/// Rounded top corners and a scalloped bottom edge, as if torn along a perforation.
+class _ScallopEdgeClipper extends CustomClipper<Path> {
+  const _ScallopEdgeClipper();
 
-  static const _tooth = 14.0;
-  static const _depth = 8.0;
+  static const _width = 18.0;
+  static const _depth = 7.0;
 
   @override
   Path getClip(Size size) {
-    const r = 20.0;
+    const r = 24.0;
+    final bottom = size.height;
     final path = Path()
       ..moveTo(0, r)
       ..quadraticBezierTo(0, 0, r, 0)
       ..lineTo(size.width - r, 0)
       ..quadraticBezierTo(size.width, 0, size.width, r)
-      ..lineTo(size.width, size.height - _depth);
-    final teeth = math.max(1, (size.width / _tooth).round());
-    final step = size.width / teeth;
-    for (var i = teeth; i > 0; i--) {
+      ..lineTo(size.width, bottom);
+    final count = math.max(1, (size.width / _width).round());
+    final step = size.width / count;
+    for (var i = count; i > 0; i--) {
       final x = i * step;
-      path
-        ..lineTo(x - step / 2, size.height)
-        ..lineTo(x - step, size.height - _depth);
+      // A round bite out of the paper between two points of the edge.
+      path.quadraticBezierTo(x - step / 2, bottom - 2 * _depth, x - step, bottom);
     }
     return path..close();
   }
 
   @override
-  bool shouldReclip(_TornEdgeClipper oldClipper) => false;
+  bool shouldReclip(_ScallopEdgeClipper oldClipper) => false;
 }

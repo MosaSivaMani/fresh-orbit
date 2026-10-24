@@ -1,6 +1,7 @@
 // Illustration slots (D53). Each slot names one place in the app that shows a character illustration. The
 // slot codes match `packages/illustrations/manifest.json`; its `sync-mobile` script copies the final images to
-// `assets/illustrations/<slot_lower_snake>.webp`. Images contain no text: every label is real UI text.
+// `assets/illustrations/<slot_lower_snake>.png` (`.webp` is also read). Images contain no text: every label is
+// real UI text.
 // ADMIN_* slots exist in the manifest but are not used by the mobile app.
 
 enum IllustrationSlot {
@@ -41,8 +42,14 @@ enum IllustrationSlot {
   /// Default alt text, read by screen readers when the illustration is not excluded from semantics.
   final String semanticLabel;
 
-  /// `assets/illustrations/onboarding_fresh.webp` for ONBOARDING_FRESH.
-  String get assetPath => 'assets/illustrations/${code.toLowerCase()}.webp';
+  /// `onboarding_fresh` for ONBOARDING_FRESH.
+  String get fileStem => code.toLowerCase();
+
+  /// `assets/illustrations/onboarding_fresh.png`: the final images are PNGs.
+  String get assetPath => 'assets/illustrations/$fileStem.png';
+
+  /// Files the app looks for, in order: PNG, then WebP.
+  List<String> get assetPaths => [assetPath, 'assets/illustrations/$fileStem.webp'];
 }
 
 /// The tracking illustration for an order status code. Unknown codes get the placed illustration.
