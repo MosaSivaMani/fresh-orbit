@@ -12,6 +12,10 @@
 
 When generating more images, say "Use these exact characters" in the same chat as the sheet, or attach this image.
 
+## Single character pictures
+
+`padma.jpg` (Padma) and `ravi.jpg` (Ravi) are cut from `character-sheet.jpg`. Attach the right one to ChatGPT or Gemini with any prompt that says "as in the attached character picture", so the face, headscarf or helmet and clothes stay the same.
+
 ## Generated images received
 Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque background) or `.png` (transparent). The illustrations package picks them up from here.
 
