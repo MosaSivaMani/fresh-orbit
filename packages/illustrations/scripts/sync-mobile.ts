@@ -45,7 +45,7 @@ ${manifest.slots.map((s) => `  ${camel(s.slot)}('${s.slot}'),`).join("\n")};
   final String code;
 }
 
-/// One slot's image: the final WebP when [isFinal], else our placeholder SVG.
+/// One slot's image: the final JPEG, PNG or WebP when [isFinal], else our placeholder SVG.
 class IllustrationAsset {
   const IllustrationAsset({
     required this.asset,
@@ -53,10 +53,11 @@ class IllustrationAsset {
     required this.alt,
     required this.aspectRatio,
     required this.transparent,
+    required this.scene,
     required this.isFinal,
   });
 
-  /// Asset path to show (WebP when FINAL, otherwise the SVG placeholder).
+  /// Asset path to show (the final image when FINAL, otherwise the SVG placeholder).
   final String asset;
 
   /// Placeholder SVG asset path (always present).
@@ -65,11 +66,14 @@ class IllustrationAsset {
   /// One plain sentence for screen readers (Semantics label).
   final String alt;
 
-  /// Width divided by height (1.0 or 4/3).
+  /// Width divided by height of the slot (1.0 or 4/3).
   final double aspectRatio;
 
   /// True when the image has no background of its own.
   final bool transparent;
+
+  /// True when the image is a full scene: show it with BoxFit.cover in a rounded frame.
+  final bool scene;
 
   final bool isFinal;
 }
@@ -85,6 +89,7 @@ ${manifest.slots
     alt: ${dartString(s.alt)},
     aspectRatio: ${s.aspect === "1:1" ? "1.0" : "4 / 3"},
     transparent: ${s.background === "TRANSPARENT"},
+    scene: ${s.background === "SCENE"},
     isFinal: ${final},
   ),`;
   })

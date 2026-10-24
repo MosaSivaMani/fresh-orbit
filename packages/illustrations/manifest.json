@@ -1,10 +1,11 @@
 {
-  "$description": "Fresh Orbit illustration slots (D53). Every image the apps show fills one slot. Edit scene, alt, characters or style here, then run `pnpm --filter @fresh/illustrations prompts` to rebuild the prompts and `pnpm --filter @fresh/illustrations validate`. To use a final image: save assets/<slot_in_lower_snake_case>.png, set file to it and status to FINAL, then run `optimize`. See README.md.",
+  "$description": "Fresh Orbit illustration slots (D53). Every image the apps show fills one slot. Edit scene, alt, characters or style here, then run `pnpm --filter @fresh/illustrations prompts` to rebuild the prompts and `pnpm --filter @fresh/illustrations validate`. To use final images: put them in docs/design/characters/generated/<slot_in_lower_snake_case>.jpg (or .png when transparent) and run `pnpm --filter @fresh/illustrations run import`. See README.md.",
   "stylePrompt": "Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India.",
   "promptSuffix": "No text, no letters, no numbers, no logos, no watermark. High resolution.",
   "backgrounds": {
     "SAND": "Background: the warm sand-coloured backdrop with a soft floor shadow and no busy scenery",
-    "TRANSPARENT": "Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly"
+    "TRANSPARENT": "Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly",
+    "SCENE": "Background: a full, softly lit scene that fits the moment (the harbour at sunrise, the fish market, a home kitchen or a city street), slightly out of focus behind the characters, with no signs or writing anywhere"
   },
   "aspects": {
     "1:1": "Square 1:1 image, subject centred, full body or three-quarter view",
@@ -40,30 +41,38 @@
   "slots": [
     {
       "slot": "ONBOARDING_FRESH",
-      "file": "assets/onboarding_fresh.svg",
+      "file": "assets/onboarding_fresh.jpg",
       "placeholder": "assets/onboarding_fresh.svg",
-      "alt": "A smiling fishmonger holds up a basket of fresh fish on ice.",
+      "alt": "A smiling fishmonger holds up a large fresh fish at the harbour at sunrise.",
       "character": "FISHMONGER",
       "supporting": [
         "POMFRET"
       ],
       "scene": "The fishmonger stands at a simple seaside market stall in early morning light and proudly holds up a woven basket of glistening whole fish on crushed ice, while the pomfret peeks over the rim of the basket",
       "aspect": "4:3",
-      "background": "SAND",
-      "status": "PLACEHOLDER",
-      "prompt": "The fishmonger stands at a simple seaside market stall in early morning light and proudly holds up a woven basket of glistening whole fish on crushed ice, while the pomfret peeks over the rim of the basket. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Chanduva, the pomfret sidekick: A round silver pomfret fish with big glossy eyes, rosy cheeks and an open happy smile, using its fins as hands; a friendly character, never food; same look as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: the warm sand-coloured backdrop with a soft floor shadow and no busy scenery. Landscape 4:3 image, subject slightly off centre with room on one side. No text, no letters, no numbers, no logos, no watermark. High resolution."
+      "background": "SCENE",
+      "status": "FINAL",
+      "prompt": "The fishmonger stands at a simple seaside market stall in early morning light and proudly holds up a woven basket of glistening whole fish on crushed ice, while the pomfret peeks over the rim of the basket. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Chanduva, the pomfret sidekick: A round silver pomfret fish with big glossy eyes, rosy cheeks and an open happy smile, using its fins as hands; a friendly character, never food; same look as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: a full, softly lit scene that fits the moment (the harbour at sunrise, the fish market, a home kitchen or a city street), slightly out of focus behind the characters, with no signs or writing anywhere. Landscape 4:3 image, subject slightly off centre with room on one side. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1448,
+      "height": 1086,
+      "source": "docs/design/characters/generated/onboarding_fresh.jpg",
+      "sourceBytes": 505484
     },
     {
       "slot": "ONBOARDING_CLEANED",
-      "file": "assets/onboarding_cleaned.svg",
+      "file": "assets/onboarding_cleaned.jpg",
       "placeholder": "assets/onboarding_cleaned.svg",
-      "alt": "A fishmonger in gloves cleans and cuts fish at a spotless counter.",
+      "alt": "A smiling fishmonger in blue gloves cuts a whole fish into clean steaks.",
       "character": "FISHMONGER",
       "scene": "The fishmonger wears teal food-safe gloves and neatly cuts a cleaned fish into even curry pieces on a spotless stainless steel counter, a bowl of finished pieces beside her",
       "aspect": "4:3",
-      "background": "SAND",
-      "status": "PLACEHOLDER",
-      "prompt": "The fishmonger wears teal food-safe gloves and neatly cuts a cleaned fish into even curry pieces on a spotless stainless steel counter, a bowl of finished pieces beside her. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: the warm sand-coloured backdrop with a soft floor shadow and no busy scenery. Landscape 4:3 image, subject slightly off centre with room on one side. No text, no letters, no numbers, no logos, no watermark. High resolution."
+      "background": "SCENE",
+      "status": "FINAL",
+      "prompt": "The fishmonger wears teal food-safe gloves and neatly cuts a cleaned fish into even curry pieces on a spotless stainless steel counter, a bowl of finished pieces beside her. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: a full, softly lit scene that fits the moment (the harbour at sunrise, the fish market, a home kitchen or a city street), slightly out of focus behind the characters, with no signs or writing anywhere. Landscape 4:3 image, subject slightly off centre with room on one side. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1448,
+      "height": 1086,
+      "source": "docs/design/characters/generated/onboarding_cleaned.jpg",
+      "sourceBytes": 397674
     },
     {
       "slot": "ONBOARDING_DELIVERY",

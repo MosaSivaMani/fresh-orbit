@@ -26,6 +26,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.ts",
+    "import": "node scripts/import.ts",
     "placeholders": "node scripts/placeholders.ts",
     "prompts": "node scripts/prompts.ts",
     "optimize": "node scripts/optimize.ts",

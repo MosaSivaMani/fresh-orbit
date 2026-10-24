@@ -402,13 +402,13 @@ export function renderPlaceholder(slot: string, aspect: Aspect, background: Back
   const tint = TINT[comp.tint];
 
   const shape =
-    background === "SAND"
+    background !== "TRANSPARENT"
       ? `<rect width="400" height="${h}"/>`
       : aspect === "1:1"
         ? `<circle cx="200" cy="${cy}" r="172"/>`
         : `<ellipse cx="200" cy="${cy}" rx="196" ry="146"/>`;
   const backdrop =
-    background === "SAND"
+    background !== "TRANSPARENT"
       ? `<rect width="400" height="${h}" fill="${TINT.sand}"/><circle cx="200" cy="${cy}" r="${h * 0.42}" fill="${comp.tint === "sand" ? "#FBF4E8" : tint}"/>`
       : shape.replace("/>", ` fill="${tint}"/>`);
 

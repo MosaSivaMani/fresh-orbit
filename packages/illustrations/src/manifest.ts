@@ -2,7 +2,8 @@
 import { readImageSize } from "./image-size.ts";
 
 export type Aspect = "1:1" | "4:3";
-export type Background = "TRANSPARENT" | "SAND";
+/** SAND: the sand backdrop. TRANSPARENT: cut-out subject. SCENE: a full picture with its own scenery. */
+export type Background = "TRANSPARENT" | "SAND" | "SCENE";
 export type Status = "PLACEHOLDER" | "FINAL";
 
 export interface CharacterSheet {
@@ -16,7 +17,7 @@ export interface CharacterSheet {
 
 export interface SlotEntry {
   slot: string;
-  /** The image the apps show: the placeholder SVG until the owner adds a final WebP. */
+  /** The image the apps show: the placeholder SVG until the owner adds a final JPEG, PNG or WebP. */
   file: string;
   /** Our own placeholder, always kept (used whenever status is not FINAL). */
   placeholder: string;
@@ -31,6 +32,12 @@ export interface SlotEntry {
   aspect: Aspect;
   background: Background;
   status: Status;
+  /** Pixel size of the FINAL file (set by the import and optimize scripts; checked against the file). */
+  width?: number;
+  height?: number;
+  /** Where the import script copied the final from (repo-relative), and its byte size then. */
+  source?: string;
+  sourceBytes?: number;
   /** Built by `pnpm --filter @fresh/illustrations prompts`; do not edit by hand. */
   prompt: string;
 }
@@ -82,12 +89,18 @@ export const REQUIRED_SLOTS = [
 ] as const;
 
 export const LIMITS = {
-  finalMaxBytes: 400 * 1024,
+  finalMaxBytes: 600 * 1024,
   finalMinLongestSide: 1024,
   placeholderMaxBytes: 6 * 1024,
   /** Allowed difference between the image's ratio and its declared aspect. */
   aspectTolerance: 0.02,
 } as const;
+
+/** File types accepted as FINAL, with the format their header must show. */
+export const FINAL_FORMATS = { jpg: "JPEG", png: "PNG", webp: "WEBP" } as const;
+export type FinalExtension = keyof typeof FINAL_FORMATS;
+export const finalExtension = (path: string): FinalExtension | null =>
+  (/\.(jpg|png|webp)$/.exec(path)?.[1] as FinalExtension | undefined) ?? null;
 
 /** File name stem for a slot: the slot code in lower snake case, e.g. EMPTY_CART -> empty_cart. */
 export const fileStem = (slot: string): string => slot.toLowerCase();
@@ -127,7 +140,7 @@ const SLOT_PATTERN = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$/;
 export interface FileFacts {
   /** File size in bytes, or null when the file does not exist. */
   size(path: string): number | null;
-  /** The first bytes of the file (64 is enough for every header we read). */
+  /** The file bytes the header readers need (the whole file is fine; JPEG may need more than 64). */
   head(path: string): Uint8Array;
 }
 
@@ -181,8 +194,8 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
       if (!manifest.characters[key]) add(slot, `supporting character "${key}" is unknown.`);
     if (!entry.scene?.trim()) add(slot, "scene is missing.");
     if (!(entry.aspect in ASPECT_RATIO)) add(slot, "aspect must be 1:1 or 4:3.");
-    if (entry.background !== "TRANSPARENT" && entry.background !== "SAND")
-      add(slot, "background must be TRANSPARENT or SAND.");
+    if (!(entry.background in (manifest.backgrounds ?? {})))
+      add(slot, "background must be SAND, TRANSPARENT or SCENE.");
     if (entry.status !== "PLACEHOLDER" && entry.status !== "FINAL")
       add(slot, "status must be PLACEHOLDER or FINAL.");
 
@@ -207,8 +220,8 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
     }
 
     if (entry.status === "FINAL" && entry.file) {
-      const ext = /\.(png|webp)$/.exec(entry.file)?.[1];
-      if (!ext) add(slot, "a FINAL file must be a .png or .webp image.");
+      const ext = finalExtension(entry.file);
+      if (!ext) add(slot, "a FINAL file must be a .jpg, .png or .webp image.");
       else if (entry.file !== `assets/${fileStem(slot)}.${ext}`)
         add(slot, `a FINAL file must be named assets/${fileStem(slot)}.${ext}.`);
       const size = files.size(entry.file);
@@ -216,12 +229,19 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
         if (size > LIMITS.finalMaxBytes)
           add(
             slot,
-            `file is ${Math.round(size / 1024)} KB; keep it at or under 400 KB (run the optimize script).`,
+            `file is ${Math.round(size / 1024)} KB; keep it at or under ${LIMITS.finalMaxBytes / 1024} KB (run the optimize script).`,
           );
         const dims = readImageSize(files.head(entry.file));
-        if (!dims || (ext && dims.format !== ext.toUpperCase()))
-          add(slot, "file is not a readable PNG or WebP image matching its extension.");
+        if (!dims || (ext && dims.format !== FINAL_FORMATS[ext]))
+          add(slot, "file is not a readable JPEG, PNG or WebP image matching its extension.");
         else {
+          if (entry.width !== dims.width || entry.height !== dims.height)
+            add(
+              slot,
+              `width and height must be the file size ${dims.width}x${dims.height}; run the import script.`,
+            );
+          if (entry.background === "TRANSPARENT" && !dims.alpha)
+            add(slot, "background is TRANSPARENT but the file has no transparency.");
           const longest = Math.max(dims.width, dims.height);
           if (longest < LIMITS.finalMinLongestSide)
             add(
@@ -273,6 +293,10 @@ export const baseName = (path: string): string => path.slice(path.lastIndexOf("/
 
 export function toRuntime(entry: SlotEntry): RuntimeEntry {
   const final = entry.status === "FINAL";
+  const size =
+    final && entry.width && entry.height
+      ? { width: entry.width, height: entry.height }
+      : designSize(entry.aspect);
   return {
     slot: entry.slot,
     src: baseName(final ? entry.file : entry.placeholder),
@@ -280,6 +304,6 @@ export function toRuntime(entry: SlotEntry): RuntimeEntry {
     aspect: entry.aspect,
     background: entry.background,
     status: entry.status,
-    ...designSize(entry.aspect),
+    ...size,
   };
 }

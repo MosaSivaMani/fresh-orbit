@@ -1,13 +1,5 @@
 // File access shared by the package scripts.
-import {
-  closeSync,
-  existsSync,
-  openSync,
-  readFileSync,
-  readSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type FileFacts, type Manifest } from "../src/manifest.ts";
@@ -31,13 +23,7 @@ export const diskFacts: FileFacts = {
     return existsSync(full) ? statSync(full).size : null;
   },
   head(path) {
-    const buffer = new Uint8Array(64);
-    const fd = openSync(join(packageRoot, path), "r");
-    try {
-      const read = readSync(fd, buffer, 0, buffer.length, 0);
-      return buffer.subarray(0, read);
-    } finally {
-      closeSync(fd);
-    }
+    // Whole file: JPEG frame headers can sit after large metadata, and finals are at most 600 KB.
+    return readFileSync(join(packageRoot, path));
   },
 };

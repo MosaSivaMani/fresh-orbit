@@ -1,16 +1,17 @@
-// Converts final PNG images (from ChatGPT or Gemini) into WebP the apps can ship:
-//   - crops to the slot's aspect (1:1 or 4:3), keeping the most interesting part of the picture;
+// Fixes FINAL JPEG or PNG images that break a rule (over 600 KB, or not the slot's 1:1 or 4:3 shape):
+//   - crops to the slot's aspect, keeping the most interesting part of the picture;
 //   - scales the longest side down to 1536 px (never up);
-//   - encodes WebP (transparency kept), lowering quality until the file is at most 400 KB;
-//   - points the slot's `file` at the WebP and moves the PNG to originals/ (not committed).
+//   - encodes WebP (transparency kept), lowering quality until the file is at most 600 KB;
+//   - points the slot's `file` at the WebP, records its width and height, and moves the original to
+//     originals/ (not committed). Images that already follow the rules are left as they are.
 //   pnpm --filter @fresh/illustrations optimize
 //
 // Uses sharp (Apache-2.0) from its prebuilt npm binary; nothing is installed on the system. Without sharp
-// the script stops and the PNG stays as it is (validate accepts PNG up to 400 KB).
+// the script stops and the files stay as they are.
 import { mkdirSync, renameSync, statSync } from "node:fs";
 import type SharpModule from "sharp";
 import { join } from "node:path";
-import { LIMITS, fileStem } from "../src/manifest.ts";
+import { LIMITS, fileStem, finalExtension } from "../src/manifest.ts";
 import { packageRoot, readManifest, writeManifest } from "./lib.ts";
 
 type Sharp = typeof SharpModule;
@@ -18,7 +19,7 @@ let sharp: Sharp;
 try {
   sharp = (await import("sharp")).default;
 } catch {
-  console.warn("illustrations: sharp is not available, so PNG files are kept as they are.");
+  console.warn("illustrations: sharp is not available, so the images are kept as they are.");
   process.exit(0);
 }
 
@@ -30,12 +31,16 @@ const originals = join(packageRoot, "originals");
 let converted = 0;
 
 for (const entry of manifest.slots) {
-  if (!entry.file.endsWith(".png")) continue;
+  const ext = finalExtension(entry.file);
+  if (entry.status !== "FINAL" || (ext !== "png" && ext !== "jpg")) continue;
   const input = join(packageRoot, entry.file);
   const meta = await sharp(input).metadata();
   if (!meta.width || !meta.height) throw new Error(`${entry.slot}: cannot read ${entry.file}.`);
 
   const ratio = entry.aspect === "1:1" ? 1 : 4 / 3;
+  const shapeOk = Math.abs(meta.width / meta.height - ratio) / ratio <= LIMITS.aspectTolerance;
+  if (shapeOk && statSync(input).size <= LIMITS.finalMaxBytes) continue;
+
   // Largest crop with the slot's ratio, then at most MAX_SIDE on the long side.
   let width = Math.min(meta.width, Math.round(meta.height * ratio));
   let height = Math.round(width / ratio);
@@ -55,8 +60,8 @@ for (const entry of manifest.slots) {
   }
 
   mkdirSync(originals, { recursive: true });
-  renameSync(input, join(originals, `${fileStem(entry.slot)}.png`));
-  entry.file = output;
+  renameSync(input, join(originals, `${fileStem(entry.slot)}.${ext}`));
+  Object.assign(entry, { file: output, width, height });
   converted += 1;
   console.log(
     `illustrations: ${entry.slot} -> ${output} (${width}x${height}, ${Math.round(bytes / 1024)} KB)`,
@@ -65,5 +70,5 @@ for (const entry of manifest.slots) {
 
 writeManifest(manifest);
 console.log(
-  `illustrations: ${converted} PNG file(s) converted. Run validate next; originals are in originals/.`,
+  `illustrations: ${converted} image(s) converted to WebP. Run validate next; originals are in originals/.`,
 );

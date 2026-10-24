@@ -33,19 +33,20 @@ export type IllustrationSlot =
 ${slots.map((s) => `  | "${s}"`).join("\n")};
 
 export type IllustrationAspect = "1:1" | "4:3";
-export type IllustrationBackground = "TRANSPARENT" | "SAND";
+/** SAND: sand backdrop. TRANSPARENT: cut-out subject. SCENE: full picture with its own scenery (show it cropped with cover). */
+export type IllustrationBackground = "TRANSPARENT" | "SAND" | "SCENE";
 export type IllustrationStatus = "PLACEHOLDER" | "FINAL";
 
 export interface IllustrationEntry {
   slot: IllustrationSlot;
-  /** File name relative to the folder the assets are served from (the WebP when FINAL, else the SVG). */
+  /** File name relative to the folder the assets are served from (the final JPEG, PNG or WebP when FINAL, else the SVG). */
   src: string;
   /** One plain sentence for screen readers. */
   alt: string;
   aspect: IllustrationAspect;
   background: IllustrationBackground;
   status: IllustrationStatus;
-  /** Intrinsic design size in pixels (1024 wide). */
+  /** Intrinsic size in pixels: the final file's size when FINAL, else the design size (1024 wide). */
   width: number;
   height: number;
 }
