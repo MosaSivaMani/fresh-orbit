@@ -91,6 +91,32 @@ describe("CheckoutView", () => {
     expect(placeCalls[1]!.key).not.toBe(placeCalls[0]!.key);
   });
 
+  it("prices the slot chosen in the cart and pays by the chosen on-delivery method", async () => {
+    const previews: Record<string, unknown>[] = [];
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cartWithSeer)),
+      http.get(`${API}/me/addresses`, () => HttpResponse.json([homeAddress])),
+      http.get(`${API}/delivery-slots`, () => HttpResponse.json(slots)),
+      http.post(`${API}/checkout/preview`, async ({ request }) => {
+        previews.push((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json(preview(66950));
+      }),
+    );
+    renderWithProviders(<CheckoutView initialSlotId="slot1" />, { session: signedIn });
+
+    const bar = await screen.findByRole("region", { name: "Order total" });
+    expect(await within(bar).findByRole("button", { name: "Place order · ₹669.50" })).toBeEnabled();
+    expect(previews[0]).toMatchObject({ deliverySlotId: "slot1", paymentMethod: "COD" });
+    // ONLINE is offered by the server but not enabled for this order.
+    expect(screen.getByRole("radio", { name: "Pay online" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("radio", { name: "UPI on delivery" }));
+    await waitFor(() =>
+      expect(previews.at(-1)).toMatchObject({ paymentMethod: "UPI_ON_DELIVERY" }),
+    );
+    expect(screen.getByRole("radio", { name: "UPI on delivery" })).toBeChecked();
+  });
+
   it("reuses the same Idempotency-Key when retrying after a network failure", async () => {
     const keys: (string | null)[] = [];
     server.use(

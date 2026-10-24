@@ -94,6 +94,63 @@ describe("OrderDetailView", () => {
     expect(screen.getByText("To pay on delivery: ₹669.50")).toBeInTheDocument();
   });
 
+  it("shows tracking steps up to the server's status and the server's bill", async () => {
+    server.use(
+      http.get(`${API}/orders/o1`, () =>
+        HttpResponse.json(
+          order({
+            status: "PACKED",
+            final: { ...amounts, discountPaise: 5000, totalPaise: 61950 },
+          }),
+        ),
+      ),
+      http.get(`${API}/orders/o1/tracking`, () =>
+        HttpResponse.json(
+          tracking({
+            status: "PACKED",
+            timeline: [
+              { status: "CONFIRMED", at: "2026-10-23T05:41:12Z" },
+              { status: "PACKED", at: "2026-10-23T07:00:00Z" },
+            ],
+          }),
+        ),
+      ),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const steps = await screen.findByRole("list", { name: "Order progress" });
+    const items = within(steps).getAllByRole("listitem");
+    expect(items).toHaveLength(5);
+    expect(items[2]).toHaveAttribute("aria-current", "step");
+    expect(items[2]).toHaveTextContent("Packed");
+    expect(items[3]).toHaveAttribute("data-state", "upcoming");
+
+    const bill = screen.getByRole("region", { name: "Bill" });
+    expect(within(bill).getByText("− ₹50")).toBeInTheDocument();
+    // The final total is the server's value, shown as "Total".
+    expect(within(bill).getByText("Total")).toBeInTheDocument();
+    expect(within(bill).getByText("₹619.50")).toBeInTheDocument();
+  });
+
+  it("shows the not-found character state for an unknown order", async () => {
+    server.use(
+      http.get(`${API}/orders/o1`, () =>
+        HttpResponse.json(
+          { status: 404, code: "ORDER_NOT_FOUND", traceId: "t-404" },
+          { status: 404 },
+        ),
+      ),
+      http.get(`${API}/orders/o1/tracking`, () =>
+        HttpResponse.json({ status: 404, code: "ORDER_NOT_FOUND" }, { status: 404 }),
+      ),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByRole("heading", { name: "Order not found" })).toBeInTheDocument();
+    expect(within(alert).queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
+  });
+
   it("cancels with the chosen reason and an Idempotency-Key when the server allows it", async () => {
     let cancel: { key: string | null; body: unknown } | null = null;
     server.use(

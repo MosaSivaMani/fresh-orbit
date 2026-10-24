@@ -1,19 +1,9 @@
 "use client";
 
 import { formatDateTime } from "@fresh/core";
-import {
-  Button,
-  Card,
-  CardContent,
-  EmptyState,
-  ErrorState,
-  Pagination,
-  Skeleton,
-  Switch,
-  toast,
-} from "@fresh/ui";
+import { Button, Pagination, Skeleton, StepCard, Switch, toast } from "@fresh/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { browserHttp } from "@/api/browser";
 import {
@@ -28,8 +18,9 @@ import {
   type PreferenceChannel,
   type PreferenceItem,
 } from "@/api/types/account";
+import { EmptyPage, LoadError } from "@/components/states";
 import { cx } from "@/lib/cx";
-import { asApiError, describeError } from "@/lib/errors";
+import { describeError } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 const CATEGORY_TEXT: Record<PreferenceCategory, { title: string; description: string }> = {
@@ -49,7 +40,8 @@ function isLocked(p: PreferenceItem) {
   return p.category === "ORDER_UPDATES" && p.channel === "SMS";
 }
 
-function Preferences() {
+/** Contact preferences per category and channel (shown in Settings). */
+export function Preferences() {
   const queryClient = useQueryClient();
   const prefs = useQuery({
     queryKey: queryKeys.preferences,
@@ -64,9 +56,10 @@ function Preferences() {
   if (prefs.isPending) return <Skeleton className="h-40" />;
   if (prefs.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your preferences"
-        description={describeError(prefs.error)}
+        error={prefs.error}
+        headingLevel={3}
         onRetry={() => void prefs.refetch()}
       />
     );
@@ -132,16 +125,23 @@ function Inbox() {
   if (inbox.isPending) return <Skeleton className="h-40" />;
   if (inbox.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load your messages"
-        description={describeError(inbox.error)}
-        traceId={asApiError(inbox.error)?.traceId}
+        error={inbox.error}
+        headingLevel={3}
         onRetry={() => void inbox.refetch()}
       />
     );
   }
   if (inbox.data.items.length === 0) {
-    return <EmptyState icon={<Bell aria-hidden="true" />} title="No messages yet" />;
+    return (
+      <EmptyPage
+        slot="EMPTY_NOTIFICATIONS"
+        headingLevel={3}
+        title="No messages yet"
+        description="Order updates and offers you choose to get will show up here."
+      />
+    );
   }
 
   return (
@@ -203,22 +203,24 @@ function Inbox() {
   );
 }
 
+/** The message inbox (D95). How we contact you lives in Settings. */
 export function NotificationsView() {
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-text text-2xl font-bold">Notifications</h1>
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          <h2 className="text-text text-lg font-semibold">Messages</h2>
-          <Inbox />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="flex flex-col gap-4">
-          <h2 className="text-text text-lg font-semibold">How we contact you</h2>
-          <Preferences />
-        </CardContent>
-      </Card>
+    <div className="flex max-w-3xl flex-col gap-5">
+      <h1 className="font-display text-text text-3xl font-extrabold">Notifications</h1>
+      <StepCard
+        title="Messages"
+        action={
+          <Link
+            href="/account/settings"
+            className="text-accent-text text-sm font-bold underline-offset-4 hover:underline"
+          >
+            Contact preferences
+          </Link>
+        }
+      >
+        <Inbox />
+      </StepCard>
     </div>
   );
 }

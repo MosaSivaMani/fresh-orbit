@@ -1,3 +1,4 @@
+import { PageBand, Script } from "@fresh/ui";
 import type { Metadata } from "next";
 import { type ReactNode } from "react";
 import { AccountNav } from "@/components/account/account-nav";
@@ -9,14 +10,27 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-/** Account pages are per customer and client-rendered behind the in-memory session. */
+/**
+ * Account pages (D95): the coral band, the section chips and the page. Per customer and client-rendered behind the
+ * in-memory session. Each page's own title is its h1 (the band's heading is an h2).
+ */
 export default function AccountLayout({ children }: { children: ReactNode }) {
   return (
-    <Container className="grid gap-8 py-8 md:grid-cols-[14rem_1fr]">
-      <AccountNav />
-      <div className="min-w-0">
-        <RequireAuth>{children}</RequireAuth>
-      </div>
-    </Container>
+    <>
+      <PageBand
+        headingLevel={2}
+        title={
+          <>
+            Your <Script>account</Script>
+          </>
+        }
+      />
+      <Container className="flex flex-col gap-6 py-6 sm:py-8">
+        <AccountNav />
+        <div className="min-w-0">
+          <RequireAuth>{children}</RequireAuth>
+        </div>
+      </Container>
+    </>
   );
 }

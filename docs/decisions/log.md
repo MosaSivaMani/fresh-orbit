@@ -123,3 +123,9 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D117 | 2026-10-24 | Website hero text ink on coral | Ink headline on coral with the handwritten words on a paper brush, because white on coral is about 2.6:1 (fails contrast) |
 | D118 | 2026-10-24 | Web font loading and Heading API | Canvas, block and script tokens; `Heading` with script line and brush; fonts via `@fontsource` (Baloo 2, Inter, Dancing Script) instead of next/font |
 | D119 | 2026-10-24 | Brand logo received | Owner's logo stored as `docs/design/brand/logo-master.png` (never edited); full logo only where there is room (hero, footer, splash, sign-in, email); a simple mark for header, favicon and app icon is still to come from the owner (prompt in `design/brand/README.md`). Name stays "Fresh Orbit" in code until the owner confirms the logo's "Orbitt" spelling |
+| D120 | 2026-10-24 | Cart slot carried to checkout | The cart's chosen slot goes to checkout as `?slot=`; the server's preview decides whether it still holds, so `/checkout` is server-rendered |
+| D121 | 2026-10-24 | Cart stepper bounds until W4 closes | Each cart line reads its product for minimum, maximum and step (one read per line, cached 60 s); the stepper stays disabled until they arrive |
+| D122 | 2026-10-24 | Website account Settings page | `/account/settings` holds contact preferences, sign out and delete account; Profile is details only, Notifications is the inbox only |
+| D123 | 2026-10-24 | Website order tracking steps | Five usual steps (Confirmed → Delivered) lit up to the server's status; a cancelled, returned or failed order shows its recorded timeline |
+| D124 | 2026-10-24 | Website load-error characters | OFFLINE character for network or 503 failures, ERROR_GENERIC otherwise, always with the trace id |
+| D125 | 2026-10-24 | Sticky Place order bar | Sits at the bottom of the page grid at every width, not in a side column |

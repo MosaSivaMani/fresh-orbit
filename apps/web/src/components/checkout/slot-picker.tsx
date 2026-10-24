@@ -1,15 +1,13 @@
 "use client";
 
 import { formatDayShort, formatTime } from "@fresh/core";
-import { EmptyState, ErrorState, Skeleton } from "@fresh/ui";
+import { FilterChip, OptionTile, Skeleton } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarX } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { getDeliverySlots } from "@/api/endpoints/catalog";
 import { type DeliverySlot, type SlotStatus } from "@/api/types/locations";
-import { cx } from "@/lib/cx";
-import { asApiError, describeError } from "@/lib/errors";
+import { EmptyPage, LoadError } from "@/components/states";
 import { queryKeys } from "@/lib/query-keys";
 
 const STATUS_TEXT: Record<SlotStatus, string> = {
@@ -19,7 +17,11 @@ const STATUS_TEXT: Record<SlotStatus, string> = {
   CLOSED: "Not delivering",
 };
 
-/** Delivery slots for the address's pincode, grouped by the server's `slotDate`; only AVAILABLE slots can be chosen. */
+/**
+ * Delivery slots for a pincode as food-app slot buttons (D88/D95): day chips, then one button per slot, the chosen
+ * one filled with ink. Grouped by the server's `slotDate`; only AVAILABLE slots can be chosen. Used by the cart and
+ * by checkout.
+ */
 export function SlotPicker({
   pincode,
   value,
@@ -29,6 +31,7 @@ export function SlotPicker({
   value: string | null;
   onChange: (slotId: string) => void;
 }) {
+  const name = useId();
   const slots = useQuery({
     queryKey: queryKeys.slots(pincode),
     queryFn: () => getDeliverySlots(browserHttp(), pincode),
@@ -36,13 +39,13 @@ export function SlotPicker({
   });
   const [day, setDay] = useState<string | null>(null);
 
-  if (slots.isPending) return <Skeleton className="h-28 rounded-xl" />;
+  if (slots.isPending) return <Skeleton className="h-28 rounded-2xl" />;
   if (slots.isError) {
     return (
-      <ErrorState
+      <LoadError
         title="We could not load delivery slots"
-        description={describeError(slots.error)}
-        traceId={asApiError(slots.error)?.traceId}
+        error={slots.error}
+        headingLevel={3}
         onRetry={() => void slots.refetch()}
       />
     );
@@ -55,8 +58,9 @@ export function SlotPicker({
   const days = [...byDay.keys()];
   if (days.length === 0) {
     return (
-      <EmptyState
-        icon={<CalendarX aria-hidden="true" />}
+      <EmptyPage
+        slot="ORDER_PACKING"
+        headingLevel={3}
         title="No delivery slots right now"
         description="Please check again later."
       />
@@ -72,56 +76,33 @@ export function SlotPicker({
   return (
     <div className="flex flex-col gap-3">
       <div role="group" aria-label="Delivery day" className="flex gap-2 overflow-x-auto pb-1">
-        {days.map((d) => {
-          const first = byDay.get(d)![0]!;
-          const selected = d === selectedDay;
-          return (
-            <button
-              key={d}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => setDay(d)}
-              className={cx(
-                "shrink-0 rounded-lg border px-4 py-2 text-sm font-medium",
-                selected
-                  ? "border-accent bg-accent-subtle text-accent-text"
-                  : "border-border text-text hover:bg-muted",
-              )}
-            >
-              {formatDayShort(first.startAt)}
-            </button>
-          );
-        })}
+        {days.map((d) => (
+          <FilterChip key={d} pressed={d === selectedDay} onClick={() => setDay(d)}>
+            {formatDayShort(byDay.get(d)![0]!.startAt)}
+          </FilterChip>
+        ))}
       </div>
       <div
         role="radiogroup"
         aria-label="Delivery time"
-        className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3"
       >
         {daySlots.map((slot) => {
           const available = slot.status === "AVAILABLE";
-          const selected = slot.id === value;
           return (
-            <button
+            <OptionTile
               key={slot.id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
+              look="ink"
+              name={name}
+              value={slot.id}
+              checked={slot.id === value}
               disabled={!available}
-              onClick={() => onChange(slot.id)}
-              className={cx(
-                "flex flex-col items-start rounded-lg border px-4 py-3 text-left text-sm",
-                selected ? "border-accent bg-accent-subtle" : "border-border",
-                available ? "hover:bg-muted" : "cursor-not-allowed opacity-60",
-              )}
-            >
-              <span className="text-text font-semibold">
-                {formatTime(slot.startAt)} – {formatTime(slot.endAt)}
-              </span>
-              <span className="text-text-muted text-xs">
-                {available ? `Order by ${formatTime(slot.cutoffAt)}` : STATUS_TEXT[slot.status]}
-              </span>
-            </button>
+              onChange={() => onChange(slot.id)}
+              label={`${formatTime(slot.startAt)} – ${formatTime(slot.endAt)}`}
+              description={
+                available ? `Order by ${formatTime(slot.cutoffAt)}` : STATUS_TEXT[slot.status]
+              }
+            />
           );
         })}
       </div>
