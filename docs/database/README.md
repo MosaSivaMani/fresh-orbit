@@ -11,7 +11,7 @@ One PostgreSQL 17 database `freshorbit`, one schema per module plus `platform` a
 | Money | `bigint` paise, `_paise` |
 | Weight / count | `integer`; `_grams` for weight, plain `quantity` in the variant's `stock_unit` (GRAM or PIECE) |
 | Rates | `integer` basis points, `_bp` (500 = 5%) |
-| Time | `timestamptz` UTC; dates `date`; times of day `time` |
+| Time | `timestamptz` UTC (whole microseconds: `IClock` and client start times are cut to microseconds with `StoredPrecision.TruncateToMicroseconds`, so a value read back equals the one written); dates `date`; times of day `time` |
 | Codes | `varchar(40)` UPPER_SNAKE, with `CHECK` constraint |
 | System columns | `created_at`, `created_by`, `modified_at`, `modified_by` on every table (set by DbContext) |
 | Row version | Postgres `xmin` as EF concurrency token on aggregate roots |

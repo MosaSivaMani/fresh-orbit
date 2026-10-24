@@ -52,6 +52,19 @@ public sealed class PeriodScheduleTests
     }
 
     [Fact]
+    public void A_start_is_cut_to_the_microseconds_the_database_stores()
+    {
+        var stored = Now.AddHours(2).AddTicks(1234560);
+        var sent = stored.AddTicks(7);
+
+        var start = PeriodSchedule.ResolveStart(sent, Now, "validFrom", []);
+
+        start.Should().Be(stored);
+        var scheduled = Set([Current()], 124900, start).Added!;
+        Set([scheduled], 124900, PeriodSchedule.ResolveStart(sent, Now, "validFrom", [])).Unchanged.Should().BeTrue("a repeated request with the same start is unchanged");
+    }
+
+    [Fact]
     public void A_future_period_after_the_start_needs_replace_future()
     {
         var current = Current();

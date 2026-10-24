@@ -151,7 +151,16 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         throw new DirectoryNotFoundException($"backend/data/{kind} was not found above the test output directory.");
     }
 
-    /// <summary>Services wired like the Migrations host (system actor, every module, file storage in a temp folder).</summary>
+    /// <summary>
+    /// The load time: 00:00 UTC of today, i.e. 05:30 in the sample city (UTC+05:30). DEL-R9 skips a slot whose cut-off
+    /// has passed, so with the real clock today has no slot after 15:00 local (the last slot's cut-off) and only six
+    /// dates get slots. At 05:30 the 11:00 slot (cut-off 09:00) is still open, so all seven horizon dates have slots.
+    /// It is at most a day before the real time, well inside the 30 h best-before of the sample batches, so the
+    /// storefront (real clock) still sees them in stock.
+    /// </summary>
+    private static DateTimeOffset LoadTime() => new(DateTimeOffset.UtcNow.UtcDateTime.Date, TimeSpan.Zero);
+
+    /// <summary>Services wired like the Migrations host (system actor, a fixed clock, every module, file storage in a temp folder).</summary>
     private ServiceProvider BuildServices()
     {
         var configuration = new ConfigurationBuilder()
@@ -166,6 +175,7 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         services.AddLogging();
         services.AddSingleton<IHostEnvironment>(new HostingEnvironment { EnvironmentName = Environments.Development, ApplicationName = "FreshOrbit.Migrations", ContentRootPath = _mediaRoot, ContentRootFileProvider = new NullFileProvider() });
         services.AddSingleton<ICurrentActor>(SystemActor.Instance);
+        services.AddSingleton<IClock>(new TestClock(LoadTime()));
         services.AddFreshOrbitPersistence();
         services.AddFreshOrbitModules(configuration, Modules.All);
 
