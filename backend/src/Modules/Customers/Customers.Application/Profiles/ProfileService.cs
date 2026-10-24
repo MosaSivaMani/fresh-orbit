@@ -95,6 +95,11 @@ public sealed class ProfileService(
             repository.Remove(item);
         }
 
+        foreach (var alert in await repository.GetStockAlertsAsync(customer.Id, cancellationToken))
+        {
+            repository.Remove(alert);
+        }
+
         await identity.AnonymiseUserAsync(customer.UserId, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

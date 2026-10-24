@@ -3,6 +3,8 @@ using FreshOrbit.Customers.Application.Addresses;
 using FreshOrbit.Customers.Application.Admin;
 using FreshOrbit.Customers.Application.Profiles;
 using FreshOrbit.Customers.Application.Wishlist;
+using FreshOrbit.Customers.Application.StockAlerts;
+using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
 using FreshOrbit.SharedKernel.Web.Validation;
@@ -86,6 +88,32 @@ internal static class CustomersEndpoints
             await service.RemoveAsync(productId, ct);
             return TypedResults.NoContent();
         });
+
+        // CUS-R9 back-in-stock alerts; the public per-IP limit (docs/api §1.9) until the customer limiter exists (SEC-3).
+        me.MapGet("/stock-alerts", async (IStockAlertService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)))
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces<IReadOnlyList<StockAlertResponse>>();
+
+        me.MapPost("/stock-alerts", async (CreateStockAlertRequest request, IStockAlertService service, CancellationToken ct) =>
+            {
+                var (alert, created) = await service.AddAsync(request, ct);
+                return created
+                    ? Results.Created($"/api/v1/me/stock-alerts/{alert.Id}", alert)
+                    : Results.Ok(alert);
+            })
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces<StockAlertResponse>(StatusCodes.Status201Created)
+            .Produces<StockAlertResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        me.MapDelete("/stock-alerts/{alertId:guid}", async (Guid alertId, IStockAlertService service, CancellationToken ct) =>
+            {
+                await service.RemoveAsync(alertId, ct);
+                return TypedResults.NoContent();
+            })
+            .RequireRateLimiting(RateLimitPolicies.Public)
+            .Produces(StatusCodes.Status204NoContent);
 
         var admin = endpoints.MapGroup("/admin/customers").WithTags("Customers");
 

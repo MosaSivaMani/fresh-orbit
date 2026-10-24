@@ -8,7 +8,7 @@ public static class ModuleCatalog
     public static readonly IReadOnlyDictionary<string, string[]> Uses = new Dictionary<string, string[]>
     {
         ["Identity"] = ["Audit"],
-        ["Customers"] = ["Identity", "Catalog", "Audit", "Locations"],
+        ["Customers"] = ["Identity", "Catalog", "Audit", "Locations", "Inventory"],
         ["Locations"] = [],
         ["Catalog"] = [],
         ["Pricing"] = ["Catalog", "Locations"],
