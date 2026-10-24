@@ -1,0 +1,62 @@
+# Checks the Codespaces dev container (.devcontainer/) the way the owner uses it (runbooks/owner-testing.md):
+# build the container, run post-create, then infra/scripts/codespace-up.sh, and call the website, admin and API,
+# including a customer OTP sign-in through the website and a staff sign-in through the admin.
+name: Dev container
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .devcontainer/**
+      - infra/scripts/codespace-up.sh
+      - .github/workflows/devcontainer.yml
+
+concurrency:
+  group: devcontainer-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  codespace:
+    name: Build dev container and start the stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: devcontainers/ci@v0.3
+        env:
+          # A fixed password for this check only; the owner's Codespace generates its own.
+          FRESHORBIT_SAMPLE_STAFF_PASSWORD: ci-sample-staff-password-01
+        with:
+          imageName: fresh-orbit-devcontainer-check
+          push: never
+          env: FRESHORBIT_SAMPLE_STAFF_PASSWORD
+          runCmd: |
+            set -eu
+            dotnet --version && node --version && pnpm --version
+            bash infra/scripts/codespace-up.sh
+            # Second run must keep what is running.
+            bash infra/scripts/codespace-up.sh
+            curl -fsS http://localhost:5080/health
+            curl -fsS "http://localhost:5080/api/v1/products?pincode=530017" | head -c 300; echo
+            curl -fsS -o /dev/null http://localhost:3000/
+            curl -fsS -o /dev/null http://localhost:5173/
+            phone="+919999900301"
+            challenge=$(curl -fsS -X POST http://localhost:3000/api/v1/auth/otp/request \
+              -H 'content-type: application/json' -d "{\"phone\":\"$phone\",\"purpose\":\"LOGIN\"}" |
+              sed -n 's/.*"challengeId":"\([^"]*\)".*/\1/p')
+            test -n "$challenge"
+            code=$(curl -fsS "http://localhost:5080/api/v1/dev/sms?phone=%2B919999900301" |
+              sed -n 's/^[^{]*{[^}]*"text":"\([^"]*\)".*/\1/p' | grep -o '[0-9]\{4,8\}' | head -n 1)
+            test -n "$code"
+            curl -fsS -o /dev/null -X POST http://localhost:3000/bff/auth/verify \
+              -H 'content-type: application/json' -H 'x-fresh-client: web' -H 'origin: http://localhost:3000' \
+              -d "{\"challengeId\":\"$challenge\",\"phone\":\"$phone\",\"code\":\"$code\"}"
+            echo "Customer OTP sign-in through the website: OK"
+            curl -fsS -o /dev/null -X POST http://localhost:5173/api/v1/admin/auth/login \
+              -H 'content-type: application/json' \
+              -d '{"email":"sample.admin@freshorbit.example","password":"ci-sample-staff-password-01"}'
+            echo "Staff sign-in through the admin proxy: OK"
+            bash infra/scripts/codespace-up.sh --stop
