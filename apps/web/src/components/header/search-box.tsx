@@ -80,6 +80,7 @@ export function SearchBox({ className }: { className?: string }) {
           aria-controls={listId}
           aria-activedescendant={expanded && active >= 0 ? `${listId}-${active}` : undefined}
           placeholder="Search seer fish, vanjaram, prawns…"
+          className="bg-canvas border-border rounded-[14px] border-[1.5px] shadow-none"
           value={value}
           autoComplete="off"
           enterKeyHint="search"

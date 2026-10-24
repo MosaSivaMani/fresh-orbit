@@ -1,4 +1,6 @@
-/** Wordmark: an orbit ring around a dot, then the name. Decorative SVG; the link around it carries the name. */
+import { Script } from "@fresh/ui";
+
+/** Wordmark: an orbit ring around a dot, then "Fresh Orbit" with "Orbit" handwritten (D89). Decorative SVG; the link around it carries the name. */
 export function Logo({ inverse = false }: { inverse?: boolean }) {
   return (
     <span className="flex items-center gap-2">
@@ -17,9 +19,12 @@ export function Logo({ inverse = false }: { inverse?: boolean }) {
         <circle cx="16" cy="16" r="4" className={inverse ? "fill-primary" : "fill-on-primary"} />
       </svg>
       <span
-        className={`font-display text-lg font-bold tracking-tight ${inverse ? "text-on-primary" : "text-primary"}`}
+        className={`font-display text-[1.375rem] leading-none font-extrabold ${inverse ? "text-on-primary" : "text-text"}`}
       >
-        Fresh Orbit
+        Fresh{" "}
+        <Script tone={inverse ? "inherit" : "accent"} className="text-[1.1em]">
+          Orbit
+        </Script>
       </span>
     </span>
   );
