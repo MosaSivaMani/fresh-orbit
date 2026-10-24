@@ -23,6 +23,39 @@ describe("checkSameOrigin", () => {
     expect(result).toBeNull();
   });
 
+  it("behind a proxy, allows the public origin named by the forwarded host", () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    const result = checkSameOrigin(
+      new Request("http://0.0.0.0:10000/bff/auth/verify", {
+        method: "POST",
+        headers: {
+          "x-fresh-client": "web",
+          "x-forwarded-host": "fresh-orbit-demo-web.onrender.com",
+          "x-forwarded-proto": "https",
+          origin: "https://fresh-orbit-demo-web.onrender.com",
+          "sec-fetch-site": "same-origin",
+        },
+      }),
+    );
+    expect(result).toBeNull();
+  });
+
+  it("behind a proxy, still refuses an origin that is not the forwarded host", () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    const result = checkSameOrigin(
+      new Request("http://0.0.0.0:10000/bff/auth/verify", {
+        method: "POST",
+        headers: {
+          "x-fresh-client": "web",
+          "x-forwarded-host": "fresh-orbit-demo-web.onrender.com",
+          "x-forwarded-proto": "https",
+          origin: "https://evil.example",
+        },
+      }),
+    );
+    expect(result?.status).toBe(403);
+  });
+
   it("refuses a call without the client header", () => {
     expect(checkSameOrigin(bffRequest({}))?.status).toBe(403);
   });

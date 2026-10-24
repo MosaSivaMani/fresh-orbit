@@ -43,6 +43,20 @@ function isConfiguredDevelopmentOrigin(origin: string): boolean {
   return !isProduction && origin === getSiteUrl();
 }
 
+/**
+ * The public origin the browser used. Behind a proxy (Caddy, Render) the standalone server builds `request.url` from
+ * its own bind address (`http://0.0.0.0:10000`), so the proxy's Host / X-Forwarded-* headers name the real one. A
+ * browser cannot forge Host for another site, so an Origin that matches it is still same-origin.
+ */
+function forwardedOrigin(request: Request): string | null {
+  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host"))?.split(",")[0]?.trim();
+  if (!host) return null;
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+    new URL(request.url).protocol.replace(":", "");
+  return `${proto}://${host}`;
+}
+
 /** Refuses cross-site and scripted-from-elsewhere calls. */
 export function checkSameOrigin(request: Request): Response | null {
   if (request.headers.get(CLIENT_HEADER) !== "web") {
@@ -52,6 +66,7 @@ export function checkSameOrigin(request: Request): Response | null {
   if (
     origin !== null &&
     origin !== new URL(request.url).origin &&
+    origin !== forwardedOrigin(request) &&
     !isConfiguredDevelopmentOrigin(origin)
   ) {
     return problemResponse(403, "FORBIDDEN", "This request is not allowed.");
