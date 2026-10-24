@@ -28,7 +28,7 @@ export async function generateMetadata(props: PageProps<"/shop/[category]">): Pr
   if (!detail) return { title: "Category not found" };
   return {
     title: detail.name,
-    description: detail.description ?? `Shop ${detail.name.toLowerCase()} at Fresh Orbit.`,
+    description: detail.description ?? `Shop ${detail.name.toLowerCase()} at Fresh Orbitt.`,
     alternates: { canonical: `/shop/${detail.slug}` },
   };
 }

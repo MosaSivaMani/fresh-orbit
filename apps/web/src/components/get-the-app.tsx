@@ -15,7 +15,7 @@ export function GetTheApp() {
       }
       description="Order, follow your delivery and reorder from your phone."
       stores={getAppStoreLinks()}
-      fallback="The Fresh Orbit app is coming soon to Android and iPhone."
+      fallback="The Fresh Orbitt app is coming soon to Android and iPhone."
       slot="ONBOARDING_DELIVERY"
       slotFocus="45% 25%"
     />

@@ -42,7 +42,7 @@ class FreshOrbitApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(apiBaseUrlProvider).isEmpty) {
       return MaterialApp(
-        title: 'Fresh Orbit',
+        title: 'Fresh Orbitt',
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         home: const Scaffold(
@@ -57,7 +57,7 @@ class FreshOrbitApp extends ConsumerWidget {
       );
     }
     return MaterialApp.router(
-      title: 'Fresh Orbit',
+      title: 'Fresh Orbitt',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

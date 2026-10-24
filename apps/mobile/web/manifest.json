@@ -1,11 +1,11 @@
 {
-    "name": "Fresh Orbit",
-    "short_name": "Fresh Orbit",
+    "name": "Fresh Orbitt",
+    "short_name": "Fresh Orbitt",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FBF4E8",
     "theme_color": "#FBF4E8",
-    "description": "Fresh Orbit customer app, web preview.",
+    "description": "Fresh Orbitt customer app, web preview.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

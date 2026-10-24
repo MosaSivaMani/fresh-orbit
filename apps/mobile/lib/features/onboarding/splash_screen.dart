@@ -42,7 +42,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       backgroundColor: BlockTone.teal.background(c),
       body: Center(
         child: Semantics(
-          label: 'Fresh Orbit, loading',
+          label: 'Fresh Orbitt, loading',
           child: ExcludeSemantics(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -58,7 +58,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   child: Image.asset('assets/brand/logo.png', fit: BoxFit.contain),
                 ),
                 const SizedBox(height: FreshSpacing.s5),
-                Text('Fresh Orbit', style: AppText.blockTitle(BlockTone.teal.foreground(c))),
+                Text('Fresh Orbitt', style: AppText.blockTitle(BlockTone.teal.foreground(c))),
               ],
             ),
           ),

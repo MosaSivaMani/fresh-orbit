@@ -56,12 +56,20 @@ class Illustration extends StatefulWidget {
     this.excludeFromSemantics = false,
     this.inCircle = false,
     this.focus = Alignment.center,
+    this.height,
+    this.fallback,
   });
 
   final IllustrationSlot slot;
 
-  /// Width and height in logical pixels (illustrations are square).
+  /// Width in logical pixels; also the height unless [height] is set (most illustrations are square).
   final double size;
+
+  /// Height for a non-square slot (the 2:1 onboarding banners); null means square.
+  final double? height;
+
+  /// Shown instead of the drawn cast placeholder while the slot's file is not bundled (or fails to load).
+  final Widget? fallback;
 
   /// Overrides the slot's default alt text.
   final String? semanticLabel;
@@ -89,7 +97,8 @@ class _IllustrationState extends State<Illustration> {
 
   @override
   Widget build(BuildContext context) {
-    final placeholder = IllustrationPlaceholder(slot: widget.slot, size: widget.size);
+    final height = widget.height ?? widget.size;
+    final placeholder = widget.fallback ?? IllustrationPlaceholder(slot: widget.slot, size: widget.size);
     final image = ValueListenableBuilder<Set<String>?>(
       valueListenable: IllustrationAssets.available,
       builder: (context, assets, _) {
@@ -101,7 +110,7 @@ class _IllustrationState extends State<Illustration> {
           path,
           key: ValueKey('illustration-image-${widget.slot.code}'),
           width: widget.size,
-          height: widget.size,
+          height: height,
           fit: scene ? BoxFit.cover : BoxFit.contain,
           alignment: scene ? widget.focus : Alignment.center,
           excludeFromSemantics: true,
@@ -111,7 +120,7 @@ class _IllustrationState extends State<Illustration> {
         return ClipRRect(borderRadius: BorderRadius.circular(widget.size * 0.12), child: picture);
       },
     );
-    final box = SizedBox.square(dimension: widget.size, child: image);
+    final box = SizedBox(width: widget.size, height: height, child: image);
     if (widget.excludeFromSemantics) return ExcludeSemantics(child: box);
     return Semantics(
       image: true,
@@ -201,4 +210,17 @@ class IllustrationPlaceholder extends StatelessWidget {
   IllustrationSlot.featureCleanedYourWay => (CastMember.padma, CastBackdrop.coral, Icons.restaurant_rounded, false),
   IllustrationSlot.featureColdChain => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
   IllustrationSlot.featureSameDay => (CastMember.ravi, CastBackdrop.teal, Icons.schedule_rounded, false),
+  // Object-only onboarding pictures: the onboarding passes its own fallback; this is only the generic stand-in.
+  IllustrationSlot.onboardingTileMorningCatch ||
+  IllustrationSlot.onboardingTileKeptChilled ||
+  IllustrationSlot.onboardingTileDeliveredFresh ||
+  IllustrationSlot.onboardingBannerFresh => (CastMember.chanduva, CastBackdrop.ice, Icons.set_meal_rounded, false),
+  IllustrationSlot.onboardingTileYourCut ||
+  IllustrationSlot.onboardingTileCleanedByHand ||
+  IllustrationSlot.onboardingTileNetWeight ||
+  IllustrationSlot.onboardingBannerCleaned => (CastMember.chanduva, CastBackdrop.sand, Icons.restaurant_rounded, false),
+  IllustrationSlot.onboardingTilePickSlot ||
+  IllustrationSlot.onboardingTileColdBox ||
+  IllustrationSlot.onboardingTileCashUpi ||
+  IllustrationSlot.onboardingBannerDelivery => (CastMember.chanduva, CastBackdrop.teal, Icons.ac_unit_rounded, false),
 };

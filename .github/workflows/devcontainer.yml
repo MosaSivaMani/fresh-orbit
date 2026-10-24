@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The container image plus the Postgres and Mailpit images inside it fill the runner's disk; drop the
       # preinstalled SDKs this job does not use (the container brings its own).
       - name: Free disk space

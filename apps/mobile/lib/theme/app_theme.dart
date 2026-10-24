@@ -17,9 +17,9 @@ abstract final class AppFonts {
   /// Everything people read, labels and buttons.
   static const String body = 'Inter';
 
-  /// The handwritten heading line (Dancing Script 700). Its TTF is not bundled yet: until the owner adds it to
-  /// `assets/fonts/` and the `fonts:` block of pubspec.yaml, Flutter does not know the family and draws the
-  /// default face (docs/design/mobile.md §14).
+  /// The handwritten lines (Dancing Script 700): bundled as the variable font
+  /// `assets/fonts/DancingScript-Variable.ttf`; [scriptStyle] sets the 700 weight on its `wght` axis
+  /// (docs/design/mobile.md §15).
   static const String script = 'DancingScript';
 }
 

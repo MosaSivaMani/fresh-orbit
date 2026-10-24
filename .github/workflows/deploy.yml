@@ -118,7 +118,7 @@ jobs:
       matrix:
         image: [api, worker, migrations, web, admin]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: docker/setup-qemu-action@v3
 
@@ -170,7 +170,7 @@ jobs:
       DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/freshorbit' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Configure SSH
         env:

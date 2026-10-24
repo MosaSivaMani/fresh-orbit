@@ -4,7 +4,7 @@
 //
 // A fill written as `fill="@#RRGGBB"` is a clay fill: the renderer swaps it for a radial gradient from a
 // lighter to a darker shade of that colour, defined once per picture.
-import { type Aspect, type Background, designSize } from "./manifest.ts";
+import { ASPECT_RATIO, type Aspect, type Background, designSize } from "./manifest.ts";
 
 const C = {
   ink: "#14302F",
@@ -175,6 +175,25 @@ const MOTIFS = {
   door: `<path d="M-50 90V-40a50 50 0 0 1 100 0V90Z" fill="@${C.teal}"/><circle cx="30" cy="30" r="5" fill="${C.mango}"/>`,
   pot: `<path d="M-40-10h80q0 50-40 50t-40-50Z" fill="@${C.steel}"/><rect x="-46" y="-16" width="92" height="12" rx="6" fill="@${C.silverDeep}"/>`,
   zz: `<g fill="${C.teal}" opacity=".5"><circle r="5"/><circle cx="12" cy="-14" r="7"/></g>`,
+  // Onboarding tiles and banners: single objects, flat fills, no character.
+  fish: `<path d="M-70 0C-40-34 30-34 60 0C30 34-40 34-70 0Z" fill="#B9C7CC"/><path d="M56 0L92-28V28Z" fill="#8A99A0"/><circle cx="-46" cy="-6" r="6" fill="#14302F"/>`,
+  iceCubes: `<g fill="#BFE3EE"><rect x="-56" y="-6" width="52" height="52" rx="10"/><rect x="4" y="-6" width="52" height="52" rx="10"/><rect x="-26" y="-60" width="52" height="52" rx="10"/></g><path d="M-44 6h16M16 6h16M-14-48h16" stroke="#fff" stroke-width="6"/>`,
+  van: `<rect x="-80" y="-44" width="110" height="70" rx="10" fill="#FFFDF8"/><path d="M30-30h28l24 26v30H30Z" fill="#0B7D70"/><g fill="#14302F"><circle cx="-48" cy="30" r="15"/><circle cx="52" cy="30" r="15"/></g><path d="M-120-20h28M-128 0h34" stroke="#F07A5A" stroke-width="6"/>`,
+  cutsBoard: `<rect x="-90" y="10" width="180" height="40" rx="14" fill="#D9A86C"/><ellipse cx="-44" cy="-4" rx="30" ry="18" fill="#F07A5A"/><g fill="#D8603F"><rect x="2" y="-20" width="24" height="24" rx="6"/><rect x="32" y="-14" width="24" height="24" rx="6"/></g><path d="M-30 32C0 18 50 18 76 30C50 40 0 42-30 32Z" fill="#B9C7CC"/>`,
+  bowl: `<path d="M-70 20h140a70 50 0 0 1-140 0Z" fill="#BFE3EE"/>`,
+  glove: `<circle r="22" fill="#BFE3F5"/>`,
+  kitchenScale: `<rect x="-70" y="-10" width="140" height="70" rx="16" fill="#FFFDF8"/><rect x="-36" y="10" width="72" height="26" rx="6" fill="#0B7D70"/><rect x="-80" y="-26" width="160" height="16" rx="8" fill="#9AA8AD"/><g fill="#F07A5A"><rect x="-50" y="-50" width="30" height="26" rx="8"/><rect x="-10" y="-54" width="30" height="30" rx="8"/><rect x="28" y="-48" width="26" height="24" rx="8"/></g>`,
+  slotPick: `<rect x="-20" y="-60" width="100" height="110" rx="12" fill="#FFFDF8"/><rect x="-20" y="-60" width="100" height="24" rx="12" fill="#0B7D70"/><circle cx="40" cy="10" r="16" fill="none" stroke="#0B7D70" stroke-width="5"/><circle cx="-50" cy="10" r="40" fill="#F07A5A"/><circle cx="-50" cy="10" r="30" fill="#FFFDF8"/><path d="M-50 10V-8M-50 10h14" stroke="#14302F" stroke-width="5"/>`,
+  coldBoxIce: `<rect x="-70" y="-20" width="140" height="80" rx="14" fill="#0B7D70"/><rect x="-64" y="-46" width="128" height="22" rx="10" fill="#075F55" transform="rotate(-14 -64 -24)"/><g fill="#fff"><circle cx="-34" cy="-22" r="12"/><circle cx="-6" cy="-26" r="14"/><circle cx="26" cy="-22" r="12"/></g><path d="M40-30q20-30 40-20" stroke="#F07A5A" stroke-width="10" fill="none"/>`,
+  cashUpi: `<g transform="rotate(-10)"><rect x="-90" y="-20" width="90" height="50" rx="6" fill="#9CCB9E"/><circle cx="-45" cy="5" r="12" fill="#7FB282"/></g><rect x="20" y="-60" width="64" height="116" rx="12" fill="#14302F"/><rect x="27" y="-48" width="50" height="88" rx="6" fill="#0B7D70"/><path d="M38-4l10 10 18-20" stroke="#fff" stroke-width="7" fill="none"/>`,
+  iceBed: `<path d="M-200 30q50-20 100 0t100 0 100 0 100 0v70h-400Z" fill="#fff" opacity=".8"/>`,
+  prawn: `<path d="M0 0a30 30 0 1 1 30 30" stroke="#F07A5A" stroke-width="14" fill="none"/>`,
+  crab: `<ellipse rx="34" ry="22" fill="#D8603F"/><path d="M-30-10l-20-20M30-10l20-20" stroke="#D8603F" stroke-width="8"/>`,
+  lemon: `<circle r="16" fill="#F5B544"/>`,
+  knife: `<path d="M0 0h90l-14 14H0Z" fill="#9AA8AD"/><rect x="-50" y="0" width="52" height="14" rx="6" fill="#14302F"/>`,
+  scooterFlat: `<path d="M-70 20C-70-6-36-16 0-16h34l20-40h16l-8 76Z" fill="#F07A5A"/><g fill="#14302F"><circle cx="-46" cy="30" r="18"/><circle cx="50" cy="30" r="18"/></g>`,
+  doorway: `<rect x="-40" y="-80" width="80" height="140" rx="6" fill="#0B7D70"/><rect x="-56" y="56" width="112" height="14" rx="4" fill="#D9A86C"/><circle cx="24" cy="-6" r="5" fill="#F5B544"/>`,
+  coldBoxShut: `<rect x="-44" y="-30" width="88" height="60" rx="12" fill="#0B7D70"/><rect x="-48" y="-42" width="96" height="16" rx="8" fill="#075F55"/>`,
 } as const;
 
 type Motif = keyof typeof MOTIFS;
@@ -358,6 +377,36 @@ export const COMPOSITIONS: Record<string, Composition> = {
       f("SUPPORT_AGENT", 135, 360, 0.95, [1]),
     ],
   },
+  ONBOARDING_TILE_MORNING_CATCH: { tint: "ice", parts: [m("fish", 196, 200, 1.4)] },
+  ONBOARDING_TILE_KEPT_CHILLED: { tint: "ice", parts: [m("iceCubes", 200, 210, 1.5)] },
+  ONBOARDING_TILE_DELIVERED_FRESH: { tint: "coral", parts: [m("van", 210, 210, 1.3)] },
+  ONBOARDING_TILE_YOUR_CUT: { tint: "coral", parts: [m("cutsBoard", 200, 200, 1.3)] },
+  ONBOARDING_TILE_CLEANED_BY_HAND: {
+    tint: "teal",
+    parts: [m("bowl", 200, 250), m("fish", 200, 170, 0.9), m("glove", 290, 170)],
+  },
+  ONBOARDING_TILE_NET_WEIGHT: { tint: "sand", parts: [m("kitchenScale", 200, 220, 1.3)] },
+  ONBOARDING_TILE_PICK_SLOT: { tint: "mango", parts: [m("slotPick", 200, 200, 1.3)] },
+  ONBOARDING_TILE_COLD_BOX: { tint: "ice", parts: [m("coldBoxIce", 200, 220, 1.3)] },
+  ONBOARDING_TILE_CASH_UPI: { tint: "teal", parts: [m("cashUpi", 200, 210, 1.3)] },
+  ONBOARDING_BANNER_FRESH: {
+    tint: "ice",
+    parts: [
+      m("iceBed", 200, 130),
+      m("fish", 190, 110, 1.2),
+      m("prawn", 90, 100),
+      m("crab", 300, 130),
+      m("lemon", 130, 140),
+    ],
+  },
+  ONBOARDING_BANNER_CLEANED: {
+    tint: "sand",
+    parts: [m("cutsBoard", 180, 100, 1.2), m("knife", 270, 150)],
+  },
+  ONBOARDING_BANNER_DELIVERY: {
+    tint: "mango",
+    parts: [m("doorway", 300, 120), m("scooterFlat", 140, 130), m("coldBoxShut", 210, 140)],
+  },
 };
 
 const shade = (hex: string, amount: number): string => {
@@ -397,7 +446,7 @@ export function renderPlaceholder(slot: string, aspect: Aspect, background: Back
       `No placeholder composition for slot ${slot}; add one to src/placeholder-art.ts.`,
     );
   const { width, height } = designSize(aspect);
-  const h = aspect === "1:1" ? 400 : 300;
+  const h = Math.round(400 / ASPECT_RATIO[aspect]);
   const cy = h / 2;
   const tint = TINT[comp.tint];
 
@@ -406,7 +455,7 @@ export function renderPlaceholder(slot: string, aspect: Aspect, background: Back
       ? `<rect width="400" height="${h}"/>`
       : aspect === "1:1"
         ? `<circle cx="200" cy="${cy}" r="172"/>`
-        : `<ellipse cx="200" cy="${cy}" rx="196" ry="146"/>`;
+        : `<ellipse cx="200" cy="${cy}" rx="196" ry="${cy - 4}"/>`;
   const backdrop =
     background !== "TRANSPARENT"
       ? `<rect width="400" height="${h}" fill="${TINT.sand}"/><circle cx="200" cy="${cy}" r="${h * 0.42}" fill="${comp.tint === "sand" ? "#FBF4E8" : tint}"/>`

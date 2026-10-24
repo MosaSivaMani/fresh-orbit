@@ -22,8 +22,8 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/swift /opt/hostedtoolcache/CodeQL
           docker image prune -af
           df -h /
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: backend/global.json
       - name: Validate sample data
@@ -46,7 +46,7 @@ jobs:
         run: dotnet test backend/FreshOrbit.slnx --no-build -c Release --logger "trx" --results-directory TestResults
       - name: Vulnerable packages
         run: dotnet list backend/FreshOrbit.slnx package --vulnerable --include-transitive 2>&1 | tee vuln.txt && ! grep -q -E "has the following vulnerable packages" vuln.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -88,8 +88,8 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U freshorbit" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: backend/global.json
       - uses: pnpm/action-setup@v4
@@ -112,7 +112,7 @@ jobs:
       - run: pnpm generate:api
       - name: Show whether the committed client is current
         run: git diff --stat -- packages/api-client
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: api-client
           path: |
@@ -127,7 +127,7 @@ jobs:
       run:
         working-directory: apps/mobile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.47.7

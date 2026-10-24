@@ -24,12 +24,13 @@ class HeadingLine {
   final bool brush;
 }
 
-/// Script style: Dancing Script 700. Until its TTF is bundled the family is unknown to Flutter, which then draws
-/// the default face; the tilt and size still mark the word.
+/// Script style: Dancing Script 700. The bundled file is the variable font, so the weight is set on its `wght`
+/// axis as well as in [TextStyle.fontWeight].
 TextStyle scriptStyle(Color color, double size) => TextStyle(
   fontFamily: AppFonts.script,
   fontFamilyFallback: FreshFonts.sansFallback,
   fontWeight: FontWeight.w700,
+  fontVariations: const [FontVariation('wght', 700)],
   fontSize: size * 1.12,
   height: 1.05,
   color: color,

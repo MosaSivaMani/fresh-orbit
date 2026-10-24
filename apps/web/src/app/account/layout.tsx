@@ -6,7 +6,7 @@ import { RequireAuth } from "@/components/auth/require-auth";
 import { Container } from "@/components/section";
 
 export const metadata: Metadata = {
-  title: { template: "%s · Account · Fresh Orbit", default: "Account" },
+  title: { template: "%s · Account · Fresh Orbitt", default: "Account" },
   robots: { index: false },
 };
 
