@@ -172,7 +172,7 @@ export interface StickerProps
   extends ComponentProps<"span">, VariantProps<typeof stickerVariants> {}
 
 /**
- * A pill label in Baloo 2 with an ink outline and an ink offset shadow, slightly rotated. Real text; never
+ * A pill label in the display face (Bricolage Grotesque) with an ink outline and an ink offset shadow, slightly rotated. Real text; never
  * put it inside an image.
  */
 export function Sticker({ className, tone, size, tilt, ...props }: StickerProps) {
