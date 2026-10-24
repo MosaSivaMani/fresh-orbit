@@ -657,7 +657,7 @@ class _Sheet extends StatelessWidget {
     final top = EntranceMotion(rise: 24, child: _SheetTop(page: page, m: m));
     final Widget body = fixed
         ? CustomMultiChildLayout(
-            delegate: const _SheetLayout(),
+            delegate: _SheetLayout(),
             children: [
               // Scaled down (never narrowed) only if even the text and tiles do not fit.
               LayoutId(id: _SheetPart.top, child: FreshFitWidth(child: top)),
@@ -700,7 +700,7 @@ enum _SheetPart { top, banner }
 /// The text and tiles at their natural height, then the banner in the room that is left (96–150, or none), with
 /// the spare room split above and below it.
 class _SheetLayout extends MultiChildLayoutDelegate {
-  const _SheetLayout();
+  _SheetLayout();
 
   static const double _gap = 12;
   static const double _bottom = 12;
