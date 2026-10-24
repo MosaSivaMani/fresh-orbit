@@ -107,6 +107,8 @@ export interface ColourBlockScreenProps extends Omit<ComponentProps<"section">, 
   titleBrush?: "line1" | "line2";
   /** The small dash doodle at the title's corner. Default true. */
   doodle?: boolean;
+  /** Rounded corners and a shadow, for showing the screen as a card (playground). Default false: full bleed. */
+  framed?: boolean;
   slot: IllustrationSlot;
   avatarSize?: "sm" | "md";
   avatarFocus?: string;
@@ -135,6 +137,7 @@ export function ColourBlockScreen({
   titleScript,
   titleBrush,
   doodle = true,
+  framed = false,
   slot,
   avatarSize = "md",
   avatarFocus,
@@ -148,65 +151,76 @@ export function ColourBlockScreen({
   ...props
 }: ColourBlockScreenProps) {
   const titleId = useId();
-  const overlap = avatarSize === "md" ? "-mb-[86px]" : "-mb-16";
-  const sheetPad = avatarSize === "md" ? "pt-[104px]" : "pt-20";
+  const md = avatarSize === "md";
   return (
     <section
       aria-labelledby={titleId}
       data-tone={tone}
       className={cn(
-        "shadow-soft-md flex flex-col overflow-hidden rounded-[34px]",
+        "flex flex-col overflow-hidden",
+        framed && "shadow-soft-md rounded-[34px]",
         blockTones[tone],
         className,
       )}
       {...props}
     >
-      <div className="grid gap-1 px-5 pt-6 text-center sm:px-8 sm:pt-8">
-        {eyebrow && (
-          <p className="text-xs font-bold tracking-[0.1em] uppercase opacity-80">{eyebrow}</p>
-        )}
-        {createElement(
-          heading(headingLevel),
-          {
-            id: titleId,
-            className: cn(
-              "font-display justify-self-center text-[2.25rem] leading-[0.98] font-extrabold tracking-[-0.01em] text-balance sm:text-5xl",
-              doodle && "fo-doodle px-[0.9em]",
-            ),
-          },
-          headingLines({
-            line1: title,
-            line2: title2,
-            script: titleScript,
-            brush: titleBrush,
-            brushTone: tone === "mango" ? "paper" : "mango",
-          }),
-        )}
-      </div>
-      <div className={cn("relative z-[1] mx-auto mt-4", overlap)}>
-        <AvatarCircle
-          slot={slot}
-          size={avatarSize}
-          focus={avatarFocus}
-          decorative={illustrationDecorative}
-          priority={priority}
-        />
-        {stickers.map((s, i) => (
-          <Sticker
-            key={`${s.side}-${i}`}
-            tone={s.tone ?? "mango"}
-            size="sm"
-            tilt={s.side === "left" ? "left" : "right"}
-            className={cn("absolute top-6", s.side === "left" ? "-left-14" : "-right-14")}
-          >
-            {s.label}
-          </Sticker>
-        ))}
+      {/* Phones: title, then the avatar centred over the sheet. From md: a band with the title on the left and the
+          avatar on the right, breaking over the sheet (web mockup). */}
+      <div className="flex flex-col items-center px-5 pt-6 sm:px-8 sm:pt-8 md:grid md:grid-cols-[1fr_auto] md:items-end md:gap-6 md:px-14 md:pt-8">
+        <div className="grid gap-1 text-center md:pb-[70px] md:text-left">
+          {eyebrow && (
+            <p className="text-xs font-bold tracking-[0.1em] uppercase opacity-80">{eyebrow}</p>
+          )}
+          {createElement(
+            heading(headingLevel),
+            {
+              id: titleId,
+              className: cn(
+                "font-display justify-self-center text-[2.25rem] leading-[0.98] font-extrabold tracking-[-0.01em] text-balance sm:text-5xl md:justify-self-start lg:text-[3.625rem]",
+                doodle && "fo-doodle px-[0.9em] md:pl-0",
+              ),
+            },
+            headingLines({
+              line1: title,
+              line2: title2,
+              script: titleScript,
+              brush: titleBrush,
+              brushTone: tone === "mango" ? "paper" : "mango",
+            }),
+          )}
+        </div>
+        <div
+          className={cn(
+            "relative z-[1] mt-4 md:mt-0",
+            md ? "-mb-[86px] md:-mb-[110px]" : "-mb-16 md:-mb-[90px]",
+          )}
+        >
+          <AvatarCircle
+            slot={slot}
+            size={avatarSize}
+            focus={avatarFocus}
+            decorative={illustrationDecorative}
+            priority={priority}
+            className={md ? "md:size-[250px]" : "md:size-[200px]"}
+          />
+          {stickers.map((s, i) => (
+            <Sticker
+              key={`${s.side}-${i}`}
+              tone={s.tone ?? "mango"}
+              size="sm"
+              tilt={s.side === "left" ? "left" : "right"}
+              className={cn("absolute top-6 z-[2]", s.side === "left" ? "-left-14" : "-right-14")}
+            >
+              {s.label}
+            </Sticker>
+          ))}
+        </div>
       </div>
       <div
         className={cn(
           "bg-surface-paper text-text grid flex-1 content-start justify-items-center gap-3 rounded-t-[34px] px-5 pb-6 text-center sm:px-8 sm:pb-8",
-          sheetPad,
+          "md:justify-items-start md:rounded-t-[40px] md:px-14 md:pt-[60px] md:text-left",
+          md ? "pt-[104px]" : "pt-20",
         )}
       >
         {sheetTitle &&
@@ -214,7 +228,7 @@ export function ColourBlockScreen({
             heading(Math.min(headingLevel + 1, 4) as HeadingLevel),
             {
               className:
-                "font-display text-2xl leading-none font-extrabold tracking-[-0.01em] text-balance",
+                "font-display text-2xl leading-none font-extrabold tracking-[-0.01em] text-balance md:text-3xl",
             },
             sheetTitle,
           )}
@@ -390,7 +404,7 @@ export function CategoryBubble({
 
 // ---------- FilterChip ----------
 export interface FilterChipProps extends ComponentProps<"button"> {
-  /** Pressed chips are filled with ink. */
+  /** Toggle state; pressed chips are filled with ink. Leave undefined for a plain chip button (e.g. "More filters"). */
   pressed?: boolean;
   asChild?: boolean;
   icon?: ReactNode;
@@ -398,7 +412,7 @@ export interface FilterChipProps extends ComponentProps<"button"> {
 
 /** A small toggle chip for filters and sort ("Cleaned free", "Under ₹500"). */
 export function FilterChip({
-  pressed = false,
+  pressed,
   asChild = false,
   icon,
   className,
@@ -649,7 +663,7 @@ export function FloatingCartBar({
       role="region"
       aria-label="Cart summary"
       className={cn(
-        "bg-accent text-on-accent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom,0px))] z-[1100] mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl py-2.5 pr-3 pl-4 shadow-[0_10px_24px_rgb(11_125_112_/_0.35)] md:bottom-6",
+        "bg-accent text-on-accent fixed inset-x-3 bottom-[calc(76px+env(safe-area-inset-bottom,0px))] z-[1100] mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl py-2.5 pr-3 pl-4 shadow-[0_10px_24px_rgb(11_125_112_/_0.35)] md:right-7 md:bottom-5 md:left-auto md:mx-0 md:w-[min(420px,calc(100%-56px))]",
         "motion-safe:animate-fo-slide-in-bottom",
         className,
       )}
@@ -697,6 +711,11 @@ export interface TabBarProps extends Omit<ComponentProps<"nav">, "children"> {
   }) => ReactNode;
   /** Accessible name of the navigation. Default "Main". */
   label?: string;
+  /**
+   * `bottom` (default): fixed to the bottom on phones, hidden from md up. `top`: the same bar moved into the
+   * website's top header from md up (underline under the active tab), hidden on phones.
+   */
+  placement?: "bottom" | "top";
 }
 
 /**
@@ -708,23 +727,29 @@ export function TabBar({
   current,
   renderLink,
   label = "Main",
+  placement = "bottom",
   className,
   ...props
 }: TabBarProps) {
+  const top = placement === "top";
   return (
     <nav
       aria-label={label}
+      data-placement={placement}
       className={cn(
-        "border-border bg-surface-paper fixed inset-x-0 bottom-0 z-[1100] grid border-t px-1 pt-1.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] shadow-[0_-6px_18px_rgb(40_30_10_/_0.06)] md:hidden",
+        top
+          ? "hidden items-center gap-1.5 md:flex"
+          : "border-border bg-surface-paper fixed inset-x-0 bottom-0 z-[1100] grid border-t px-1 pt-1.5 pb-[calc(10px+env(safe-area-inset-bottom,0px))] shadow-[0_-6px_18px_rgb(40_30_10_/_0.06)] md:hidden",
         className,
       )}
-      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      style={top ? undefined : { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
       {...props}
     >
       {items.map((item) => {
         const active = item.href === current;
         const className = cn(
           "relative isolate grid justify-items-center gap-0.5 rounded-lg pt-1 text-[0.6875rem] [&_svg]:size-[22px]",
+          top && "min-w-16 py-1",
           active
             ? "text-accent-text font-extrabold [&_svg]:stroke-[2.4]"
             : "text-text-muted font-semibold",
@@ -736,11 +761,17 @@ export function TabBar({
               <>
                 <span
                   aria-hidden="true"
-                  className="bg-accent absolute inset-x-[28%] -top-[7px] h-[3.5px] rounded-b"
+                  className={cn(
+                    "bg-accent absolute inset-x-[28%] h-[3.5px]",
+                    top ? "-bottom-[9px] rounded-t" : "-top-[7px] rounded-b",
+                  )}
                 />
                 <span
                   aria-hidden="true"
-                  className="bg-teal-soft absolute top-0 -z-10 h-7 w-11 rounded-full"
+                  className={cn(
+                    "bg-teal-soft absolute -z-10 h-7 w-11 rounded-full",
+                    top ? "top-0.5" : "top-0",
+                  )}
                 />
               </>
             )}

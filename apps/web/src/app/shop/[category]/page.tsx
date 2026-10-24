@@ -1,14 +1,17 @@
 import { isApiError } from "@fresh/core";
+import { FilterChip, Heading, Script } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { getCategory } from "@/api/endpoints/catalog";
+import { getCategories, getCategory } from "@/api/endpoints/catalog";
 import { publicHttp, requestApi } from "@/api/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { PageSearch } from "@/components/header/page-search";
 import { Container } from "@/components/section";
 import { ProductListing } from "@/components/shop/product-listing";
 import { parseShopFilters } from "@/lib/shop-params";
+import { settle } from "@/lib/settle";
 
 const loadCategory = cache(async (slug: string) => {
   try {
@@ -33,11 +36,15 @@ export async function generateMetadata(props: PageProps<"/shop/[category]">): Pr
 export default async function CategoryPage(props: PageProps<"/shop/[category]">) {
   const { category } = await props.params;
   const searchParams = await props.searchParams;
-  const [detail, api] = await Promise.all([loadCategory(category), requestApi()]);
+  const [detail, api, roots] = await Promise.all([
+    loadCategory(category),
+    requestApi(),
+    settle(getCategories(publicHttp(300))),
+  ]);
   if (!detail) notFound();
   const filters = parseShopFilters(searchParams, detail.slug);
   return (
-    <Container className="flex flex-col gap-6 py-8">
+    <Container className="flex flex-col gap-5 py-6 sm:py-8">
       <Breadcrumbs
         items={[
           { href: "/", label: "Home" },
@@ -49,19 +56,19 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
         ]}
       />
       <div className="flex flex-col gap-2">
-        <h1 className="text-text text-3xl font-bold sm:text-4xl">{detail.name}</h1>
+        <Heading level={1} size="page" className="text-text">
+          {detail.name} <Script tone="accent">today</Script>
+        </Heading>
         {detail.description && <p className="text-text-muted max-w-2xl">{detail.description}</p>}
       </div>
+      <PageSearch />
       {detail.children.length > 0 && (
         <ul className="flex flex-wrap gap-2" aria-label="Sub-categories">
           {detail.children.map((child) => (
             <li key={child.id}>
-              <Link
-                href={`/shop/${child.slug}`}
-                className="border-border bg-surface text-text hover:bg-muted inline-flex rounded-full border px-4 py-1.5 text-sm font-medium"
-              >
-                {child.name}
-              </Link>
+              <FilterChip asChild>
+                <Link href={`/shop/${child.slug}`}>{child.name}</Link>
+              </FilterChip>
             </li>
           ))}
         </ul>
@@ -71,6 +78,8 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
         filters={filters}
         searchParams={searchParams}
         basePath={`/shop/${detail.slug}`}
+        navCategories={roots.ok ? roots.value : []}
+        currentCategory={detail.parent?.slug ?? detail.slug}
       />
     </Container>
   );

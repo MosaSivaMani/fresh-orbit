@@ -27,7 +27,13 @@ export function Section({
   children: ReactNode;
   id?: string;
 }) {
-  const headingId = `${id ?? `${title} ${script ?? ""}`.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")}-heading`;
+  const headingId = `${
+    id ??
+    `${title} ${script ?? ""}`
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+  }-heading`;
   return (
     <section aria-labelledby={headingId} id={id} className="flex scroll-mt-24 flex-col gap-5">
       <div className="flex items-end justify-between gap-4">

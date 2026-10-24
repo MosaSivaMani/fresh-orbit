@@ -258,6 +258,13 @@ describe("TabBar", () => {
     await expectNoAxeViolations();
   });
 
+  it("moves to the top header with placement top", () => {
+    render(<TabBar items={items} current="/" placement="top" label="Website" />);
+    const nav = screen.getByRole("navigation", { name: "Website", hidden: true });
+    expect(nav).toHaveAttribute("data-placement", "top");
+    expect(nav).not.toHaveClass("fixed");
+  });
+
   it("hides a zero badge", () => {
     render(<TabBar items={items.map((i) => ({ ...i, badge: 0 }))} />);
     expect(screen.getByRole("link", { name: "Cart" })).toBeInTheDocument();

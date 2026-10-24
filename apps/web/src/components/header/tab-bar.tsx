@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "@/auth/use-session";
 import { useCart } from "@/cart/use-cart";
 
-/** Pages with their own sticky action bar (add to cart, place order) hide the tab bar on phones. */
+/** Pages with their own sticky action bar (add to cart, place order) hide the phone tab bar. */
 const HIDDEN_ON = ["/products/", "/checkout", "/login"];
 
 /** Which tab a path belongs to; the longest matching prefix wins (Orders lives under /account). */
@@ -18,7 +18,7 @@ export function currentTab(pathname: string, hrefs: readonly string[]): string |
     .sort((a, b) => b.length - a.length)[0];
 }
 
-/** Navigation items shared by the phone tab bar and the desktop header (D88). */
+/** The five items of the app's tab bar; the cart count is the number of lines the server returned. */
 export function useNavItems(): TabBarItem[] {
   const { status } = useSession();
   const cart = useCart();
@@ -36,13 +36,14 @@ export function useNavItems(): TabBarItem[] {
   ];
 }
 
-/** The phone tab bar: Home, Shop, Cart, Orders, Account. From md up the header shows the same items. */
-export function AppTabBar() {
+function NavBar({ placement }: { placement: "bottom" | "top" }) {
   const pathname = usePathname();
   const items = useNavItems();
-  if (HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
+  if (placement === "bottom" && HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
   return (
     <TabBar
+      placement={placement}
+      label={placement === "top" ? "Main" : "Tabs"}
       items={items}
       current={currentTab(
         pathname,
@@ -55,4 +56,14 @@ export function AppTabBar() {
       )}
     />
   );
+}
+
+/** The phone tab bar: Home, Shop, Cart, Orders, Account (D88). Hidden from md up. */
+export function AppTabBar() {
+  return <NavBar placement="bottom" />;
+}
+
+/** The same tab bar moved into the website's top header from md up (web mockup). */
+export function AppTopTabs() {
+  return <NavBar placement="top" />;
 }

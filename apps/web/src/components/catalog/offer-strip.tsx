@@ -29,7 +29,9 @@ export function OfferStrip({ banners }: { banners: HomeBanner[] }) {
               <Sticker tone="coral" size="sm" className="w-fit">
                 Offer
               </Sticker>
-              <p className="text-text font-display text-xl leading-tight font-extrabold">{banner.title}</p>
+              <p className="text-text font-display text-xl leading-tight font-extrabold">
+                {banner.title}
+              </p>
               {banner.subtitle && <p className="text-text-muted text-sm">{banner.subtitle}</p>}
               {banner.linkType === "COUPON" && banner.linkTarget && (
                 <p className="text-text text-sm">

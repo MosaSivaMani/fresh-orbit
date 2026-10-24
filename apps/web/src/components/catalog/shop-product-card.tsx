@@ -114,7 +114,9 @@ export function ShopProductCard({
       min={variant?.minOrder.value}
       max={variant?.availability?.maxOrderableNow?.value ?? variant?.maxOrder.value}
       step={variant?.orderStep.value}
-      formatQuantity={line ? (v) => formatQuantity({ value: v, unit: line.quantity.unit }) : undefined}
+      formatQuantity={
+        line ? (v) => formatQuantity({ value: v, unit: line.quantity.unit }) : undefined
+      }
       onQuantityChange={onQuantityChange}
       pending={change.isPending || remove.isPending}
     />
