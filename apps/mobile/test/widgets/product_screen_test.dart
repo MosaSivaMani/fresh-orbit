@@ -31,8 +31,11 @@ void main() {
 
     expect(find.text('₹1,299/kg'), findsOneWidget);
     expect(find.text('₹1,499'), findsOneWidget); // compare-at, struck through
-    expect(find.text('Steaks (1 cm) · +₹40/kg'), findsOneWidget);
-    expect(find.text('Whole, uncleaned · free'), findsOneWidget);
+    // Cut tiles: the name and the server's charge for it.
+    expect(find.text('Steaks (1 cm)'), findsOneWidget);
+    expect(find.text('+₹40/kg'), findsOneWidget);
+    expect(find.text('Whole, uncleaned'), findsOneWidget);
+    expect(find.text('Free'), findsOneWidget);
     expect(find.textContaining('About 70% of the whole weight'), findsOneWidget);
     expect(find.textContaining('You pay for net weight after cleaning'), findsOneWidget);
     expect(find.text('500 g'), findsOneWidget); // starts at the server minOrder
@@ -65,7 +68,8 @@ void main() {
   testWidgets('changing preparation asks the server again for that preparation', (tester) async {
     await pump(tester);
 
-    final fillet = find.text('Boneless fillet · +₹80/kg');
+    expect(find.text('+₹80/kg'), findsOneWidget);
+    final fillet = find.text('Boneless fillet');
     await tester.ensureVisible(fillet);
     await tester.tap(fillet);
     await tester.pumpAndSettle();

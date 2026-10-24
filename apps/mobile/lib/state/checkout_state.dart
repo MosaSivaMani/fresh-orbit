@@ -96,6 +96,17 @@ class CheckoutState {
   );
 }
 
+/// The delivery slot the customer tapped in the cart (D88). Checkout starts with it when the chosen address
+/// offers the same slot; the server checks it again in the preview. Cleared when an order is placed.
+final preferredSlotProvider = NotifierProvider<PreferredSlotController, String?>(PreferredSlotController.new);
+
+class PreferredSlotController extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void choose(String? slotId) => state = slotId;
+}
+
 final checkoutProvider = NotifierProvider.autoDispose<CheckoutController, CheckoutState>(CheckoutController.new);
 
 class CheckoutController extends Notifier<CheckoutState> {
@@ -209,6 +220,7 @@ class CheckoutController extends Notifier<CheckoutState> {
       state = state.copyWith(placing: false, placedOrder: order);
       ref.invalidate(cartProvider);
       ref.invalidate(ordersProvider);
+      ref.read(preferredSlotProvider.notifier).choose(null);
       return order;
     } on ApiError catch (e) {
       if (!ref.mounted) return null;

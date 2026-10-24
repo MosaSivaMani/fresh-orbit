@@ -110,3 +110,8 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D104 | 2026-10-24 | EF history table created before migrating | The Migrations host creates EF's history table with EF's idempotent script before `MigrateAsync`; Error-level EF events are never filtered |
 | D105 | 2026-10-24 | Website city and category cache 300 s | Public city and category lists revalidate after 300 s; on-demand revalidation only if the owner wants instant changes |
 | D106 | 2026-10-24 | deploy.sh on macOS | Supports bash 3.2 with a `mkdir` lock fallback; servers keep `flock`; refuses `sh` and older bash |
+| D107 | 2026-10-24 | Mobile dark mode: ink text on teal | In dark mode, text on teal is dark ink `#0C1B1A`; paper on `#2FA595` is 2.98:1, below WCAG AA |
+| D108 | 2026-10-24 | Mobile cart then checkout | Cart's sticky bar is Checkout with the server's estimated total; checkout has the Place order bar; a slot picked in the cart is pre-selected when the address offers it |
+| D109 | 2026-10-24 | ADD on a product card uses server defaults | First priced orderable size, default orderable cut, minimum quantity; if none fits, open the product page; snack bar offers "Change cut" |
+| D110 | 2026-10-24 | Language choice stored only (for now) | EN / తెలుగు / हिं is saved; the app stays English until translations exist and says so |
+| D111 | 2026-10-24 | Settings reachable signed out | Notification switches and log out show only when signed in |

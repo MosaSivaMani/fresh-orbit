@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/features/checkout/checkout_screen.dart';
+import 'package:fresh_orbit_app/widgets/bold.dart';
 
 import '../support/fakes.dart';
 import '../support/fixtures.dart';
@@ -31,6 +32,9 @@ void main() {
     };
   });
 
+  Finder placeOrderAmount(String amount) =>
+      find.descendant(of: find.byKey(const Key('placeOrder')), matching: find.text(amount));
+
   Future<void> openAndChoose(WidgetTester tester) async {
     await pumpScreen(tester, deps, const CheckoutScreen());
     await tester.pumpAndSettle(); // default address is selected automatically
@@ -43,13 +47,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Full'), findsOneWidget);
-    final full = tester.widget<RadioListTile<String>>(find.widgetWithText(RadioListTile<String>, '6:00 pm – 8:00 pm'));
-    expect(full.enabled, isFalse);
+    final full = tester.widget<SlotButton>(find.widgetWithText(SlotButton, '6:00 pm – 8:00 pm'));
+    expect(full.onTap, isNull);
   });
 
   testWidgets('PRICE_CHANGED: dialog shows old and new server totals; accepting places the order', (tester) async {
     await openAndChoose(tester);
-    expect(find.text('Place order · ₹708.50'), findsOneWidget);
+    expect(placeOrderAmount('₹708.50'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('placeOrder')));
     await tester.pumpAndSettle();
@@ -76,7 +80,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Prices have changed'), findsNothing);
-    expect(find.text('Place order · ₹720'), findsOneWidget);
+    expect(placeOrderAmount('₹720'), findsOneWidget);
     expect(deps.orders.placed, hasLength(1));
   });
 

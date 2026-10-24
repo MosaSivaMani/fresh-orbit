@@ -1,5 +1,5 @@
 // Account tab: profile (If-Match), addresses, wishlist, in-app notifications, notification preferences,
-// appearance, help, sign out and account deletion.
+// help and account deletion. Theme, language and log out live in Settings (settings_screen.dart).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,136 +12,279 @@ import '../../app.dart';
 import '../../core/format.dart';
 import '../../demo/demo_app.dart';
 import '../../demo/demo_backend.dart';
-import '../../illustrations/illustration.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
+import 'settings_screen.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = illustratedColors(context);
     final signedIn = ref.watch(sessionProvider.select((s) => s.signedIn));
     final profile = signedIn ? ref.watch(profileProvider).value : null;
     final unread = signedIn ? ref.watch(inboxProvider).value?.unreadCount ?? 0 : 0;
+    final language = ref.watch(languageProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
-      body: ListView(
-        children: [
-          if (demoMode) const DemoPanel(),
-          if (!signedIn)
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 20),
+          children: [
+            if (demoMode) const DemoPanel(),
             Padding(
-              padding: const EdgeInsets.all(FreshSpacing.s4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(18, 6, 8, 4),
+              child: Row(
                 children: [
-                  const Center(
-                    child: Illustration(slot: IllustrationSlot.loginOtp, size: 140, excludeFromSemantics: true),
+                  const Expanded(
+                    child: ScriptTitle(text: 'My', script: 'account', size: 22),
                   ),
-                  const SizedBox(height: FreshSpacing.s3),
-                  Text(
-                    'Sign in to see your orders, addresses and wishlist.',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: FreshSpacing.s3),
-                  FilledButton(
-                    onPressed: () =>
-                        context.push(Uri(path: '/login', queryParameters: {'from': '/account'}).toString()),
-                    child: const Text('Sign in'),
+                  RoundIconButton(
+                    icon: Icons.settings_outlined,
+                    tooltip: 'Settings',
+                    onPressed: () => context.go('/account/settings'),
                   ),
                 ],
               ),
-            )
-          else ...[
-            ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-              title: Text(profile?.fullName ?? 'Your profile'),
-              subtitle: profile?.phone == null ? null : Text(formatPhone(profile!.phone!)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/account/profile'),
             ),
-            const Divider(),
-            const _Link(icon: Icons.location_on_outlined, label: 'Addresses', path: '/account/addresses'),
-            const _Link(icon: Icons.favorite_outline, label: 'Wishlist', path: '/wishlist', push: true),
-            _Link(
-              icon: Icons.notifications_outlined,
-              label: 'Notifications',
-              path: '/account/notifications',
-              badge: unread > 0 ? '$unread' : null,
+            _ProfileCard(signedIn: signedIn, profile: profile),
+            if (signedIn)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                child: Row(
+                  children: [
+                    _QuickTile(
+                      icon: Icons.receipt_long_outlined,
+                      label: 'Orders',
+                      tint: c.tealSoft,
+                      onTap: () => context.go('/orders'),
+                    ),
+                    const SizedBox(width: 8),
+                    _QuickTile(
+                      icon: Icons.favorite_border_rounded,
+                      label: 'Saved',
+                      tint: c.coralSoft,
+                      onTap: () => context.push('/wishlist'),
+                    ),
+                    const SizedBox(width: 8),
+                    _QuickTile(
+                      icon: Icons.location_on_outlined,
+                      label: 'Addresses',
+                      tint: c.iceSoft,
+                      onTap: () => context.go('/account/addresses'),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
+            MenuCard(
+              children: [
+                if (signedIn)
+                  MenuRow(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'Notifications',
+                    subtitle: 'Order updates, offers',
+                    trailing: unread > 0
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Badge(label: Text('$unread', semanticsLabel: '$unread unread')),
+                              Icon(Icons.chevron_right_rounded, size: 18, color: c.muted),
+                            ],
+                          )
+                        : null,
+                    onTap: () => context.go('/account/notifications'),
+                  ),
+                MenuRow(
+                  icon: Icons.language_rounded,
+                  title: 'Language',
+                  subtitle: languageLongNames[language] ?? language,
+                  onTap: () => context.go('/account/settings'),
+                ),
+                MenuRow(
+                  icon: Icons.help_outline_rounded,
+                  title: 'Help and support',
+                  subtitle: 'Questions about an order',
+                  onTap: () => context.go('/account/help'),
+                ),
+                MenuRow(icon: Icons.settings_outlined, title: 'Settings', onTap: () => context.go('/account/settings')),
+              ],
             ),
-            const _Link(icon: Icons.tune, label: 'Notification preferences', path: '/account/preferences'),
           ],
-          const _Link(icon: Icons.help_outline, label: 'Help and support', path: '/account/help'),
-          const Divider(),
-          const _ThemePicker(),
-          if (signedIn) ...[
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Sign out'),
-              onTap: () async {
-                await ref.read(sessionProvider.notifier).signOut();
-                if (context.mounted) showInfoSnack(context, 'You are signed out.');
-              },
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _Link extends StatelessWidget {
-  const _Link({required this.icon, required this.label, required this.path, this.badge, this.push = false});
+/// The mango profile block: initial, name, phone and Edit; signed out it invites to sign in.
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({required this.signedIn, required this.profile});
 
-  final IconData icon;
-  final String label;
-  final String path;
-  final String? badge;
-  final bool push;
+  final bool signedIn;
+  final Profile? profile;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (badge != null) Badge(label: Text(badge!, semanticsLabel: '$badge unread')),
-          const Icon(Icons.chevron_right),
-        ],
-      ),
-      onTap: () => push ? context.push(path) : context.go(path),
+    final c = illustratedColors(context);
+    final name = profile?.fullName;
+    final initial = name == null || name.trim().isEmpty ? null : name.trim()[0].toUpperCase();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: c.mango, borderRadius: BorderRadius.circular(AppRadius.hero)),
+      child: signedIn
+          ? Row(
+              children: [
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: BlockInk.paper,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: BlockInk.ink, width: 3),
+                  ),
+                  alignment: Alignment.center,
+                  child: initial == null
+                      ? const Icon(Icons.person_outline_rounded, color: BlockInk.ink, size: 28)
+                      : ExcludeSemantics(child: Text(initial, style: AppText.display(BlockInk.ink, 26))),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name ?? 'Your profile', style: AppText.display(BlockInk.ink, 21)),
+                      if (profile?.phone != null)
+                        Text(
+                          formatPhone(profile!.phone!),
+                          style: const TextStyle(
+                            fontFamily: AppFonts.body,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: BlockInk.ink,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Semantics(
+                  button: true,
+                  label: 'Edit profile',
+                  excludeSemantics: true,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(999),
+                    onTap: () => context.go('/account/profile'),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 32),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: BlockInk.paper,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: BlockInk.ink, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontFamily: AppFonts.body,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: BlockInk.ink,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                const AvatarCircle(slot: IllustrationSlot.loginOtp, size: 76),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Sign in to see your orders', style: AppText.display(BlockInk.ink, 18)),
+                      const SizedBox(height: 6),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: BlockInk.ink,
+                          foregroundColor: BlockInk.paper,
+                          minimumSize: const Size(48, 44),
+                        ),
+                        onPressed: () =>
+                            context.push(Uri(path: '/login', queryParameters: {'from': '/account'}).toString()),
+                        child: const Text('Sign in'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
 
-class _ThemePicker extends ConsumerWidget {
-  const _ThemePicker();
+class _QuickTile extends StatelessWidget {
+  const _QuickTile({required this.icon, required this.label, required this.tint, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final Color tint;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4, vertical: FreshSpacing.s2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Appearance', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: FreshSpacing.s2),
-          SegmentedButton<ThemeMode>(
-            segments: const [
-              ButtonSegment(value: ThemeMode.system, label: Text('System')),
-              ButtonSegment(value: ThemeMode.light, label: Text('Light')),
-              ButtonSegment(value: ThemeMode.dark, label: Text('Dark')),
-            ],
-            selected: {mode},
-            onSelectionChanged: (s) => ref.read(themeModeProvider.notifier).set(s.first),
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    return Expanded(
+      child: Semantics(
+        button: true,
+        label: label,
+        excludeSemantics: true,
+        child: Container(
+          decoration: BoxDecoration(
+            color: c.paper,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: cardShadow(context),
           ),
-        ],
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(11)),
+                      child: Icon(icon, size: 18, color: c.ink),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontFamily: AppFonts.body,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: c.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -297,26 +440,30 @@ class NotificationsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final inbox = ref.watch(inboxProvider);
+    final empty = inbox.value?.items.isEmpty ?? false;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          if ((inbox.value?.unreadCount ?? 0) > 0)
-            TextButton(
-              onPressed: () => ref.read(inboxProvider.notifier).markAllRead().catchError((Object e) {
-                if (context.mounted) showErrorSnack(context, e);
-              }),
-              child: const Text('Mark all read'),
+      backgroundColor: empty ? BlockTone.ice.background(illustratedColors(context)) : null,
+      appBar: empty
+          ? null
+          : AppBar(
+              title: const ScriptTitle(text: 'Your', script: 'alerts'),
+              actions: [
+                if ((inbox.value?.unreadCount ?? 0) > 0)
+                  TextButton(
+                    onPressed: () => ref.read(inboxProvider.notifier).markAllRead().catchError((Object e) {
+                      if (context.mounted) showErrorSnack(context, e);
+                    }),
+                    child: const Text('Mark all read'),
+                  ),
+              ],
             ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(inboxProvider.future),
         child: AsyncValueView<InboxPage>(
           value: inbox,
           onRetry: () => ref.invalidate(inboxProvider),
           data: (page) => page.items.isEmpty
-              ? const EmptyState(slot: IllustrationSlot.emptyNotifications, title: 'No notifications yet')
+              ? _NoNotifications(onBack: context.canPop() ? () => context.pop() : null)
               : ListView.separated(
                   itemCount: page.items.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
@@ -376,4 +523,24 @@ class PreferencesScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// No notifications: the ice block with Chanduva resting.
+class _NoNotifications extends StatelessWidget {
+  const _NoNotifications({this.onBack});
+
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) => ColorBlockScreen(
+    tone: BlockTone.ice,
+    eyebrow: 'Notifications',
+    heading: const [HeadingLine('All', script: true), HeadingLine('quiet', brush: true)],
+    slot: IllustrationSlot.emptyNotifications,
+    onBack: onBack,
+    children: const [
+      SheetTitle('Nothing new', header: true),
+      SheetNote('We’ll tell you when your order is packed, on the way and delivered.'),
+    ],
+  );
 }

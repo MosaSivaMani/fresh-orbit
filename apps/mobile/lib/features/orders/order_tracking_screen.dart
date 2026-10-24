@@ -1,4 +1,5 @@
-// Order tracking (docs/api §4.8): status header, delivery code while OUT_FOR_DELIVERY, timeline, items with
+// Order tracking (docs/api §4.8, D88): a teal block with the status and its picture in the ringed circle, a
+// paper sheet with the slot, four progress bars, delivery code while OUT_FOR_DELIVERY, timeline, items with
 // weighed and charged quantities, payment summary, and actions exactly as the server's `allowedActions` allow.
 // Refreshes every 30 seconds while the order is moving, and on pull-to-refresh.
 
@@ -15,10 +16,11 @@ import '../../api/api_error.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../core/launch.dart';
-import '../../illustrations/illustration.dart';
+import '../../illustrations/illustration_slot.dart';
 import '../../state/core_providers.dart';
 import '../../state/orders_state.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/illustrated.dart';
 import '../../widgets/motion.dart';
@@ -77,8 +79,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   Widget build(BuildContext context) {
     final detail = ref.watch(orderDetailProvider(widget.orderId));
     final tracking = ref.watch(orderTrackingProvider(widget.orderId));
+    final c = illustratedColors(context);
+    final loaded = detail.value != null;
     return Scaffold(
-      appBar: AppBar(title: Text(detail.value?.orderNumber ?? 'Order')),
+      backgroundColor: loaded ? BlockTone.teal.background(c) : null,
+      appBar: loaded ? null : AppBar(title: const Text('Order')),
       body: RefreshIndicator(
         onRefresh: () async {
           _refresh();
@@ -104,74 +109,109 @@ class _TrackingBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final c = illustratedColors(context);
     final t = tracking;
     final status = t?.status ?? order.status;
-    return ListView(
-      padding: const EdgeInsets.all(FreshSpacing.s4),
-      children: [
-        _StatusHero(status: status),
-        const SizedBox(height: FreshSpacing.s4),
-        Row(
-          children: [
-            Expanded(
-              child: Semantics(header: true, child: Text(order.orderNumber, style: theme.textTheme.headlineSmall)),
+    final slot = t?.slot ?? order.slot;
+    final sheet = <Widget>[
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Placed ${formatDateTime(order.placedAt)}',
+              style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
             ),
-            OrderStatusBadge(status: status),
-          ],
-        ),
-        Text('Placed ${formatDateTime(order.placedAt)}', style: theme.textTheme.bodyMedium),
-        if ((t?.slot ?? order.slot) != null)
-          Text(
-            'Delivery ${formatSlotWindow((t?.slot ?? order.slot)!.startAt, (t?.slot ?? order.slot)!.endAt)}',
-            style: theme.textTheme.bodyMedium,
           ),
-        if (t?.deliveryCode != null) ...[
-          const SizedBox(height: FreshSpacing.s4),
-          _DeliveryCodeCard(code: t!.deliveryCode!),
+          OrderStatusBadge(status: status),
         ],
-        if (t?.shipment?.riderName != null) ...[
-          const SizedBox(height: FreshSpacing.s3),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.delivery_dining_outlined),
-            title: Text('${t!.shipment!.riderName} is delivering your order'),
-            trailing: t.shipment!.riderPhone == null
-                ? null
-                : IconButton(
-                    tooltip: 'Call ${t.shipment!.riderName}',
-                    icon: const Icon(Icons.call_outlined),
-                    onPressed: () => openExternal(context, telUri(t.shipment!.riderPhone!)),
-                  ),
-          ),
-        ],
-        const SizedBox(height: FreshSpacing.s5),
-        Semantics(header: true, child: Text('Status', style: theme.textTheme.titleMedium)),
+      ),
+      if (slot != null) ...[
         const SizedBox(height: FreshSpacing.s2),
-        if (t != null)
-          _Timeline(entries: t.timeline)
-        else if (trackingError != null)
-          const InfoBanner(
-            tone: BannerTone.warning,
-            text: 'Live status is not available right now. Pull down to refresh.',
-          )
-        else
-          const LoadingSemantics(child: SkeletonBox(height: 80)),
-        const SizedBox(height: FreshSpacing.s5),
-        _OrderReceipt(order: order),
+        Text('ARRIVING', style: AppText.eyebrow(c.muted, size: 10.5)),
+        Text(formatSlotWindow(slot.startAt, slot.endAt), style: AppText.display(c.ink, 19)),
+      ],
+      if (_progress(status) case final reached?) ...[
+        const SizedBox(height: FreshSpacing.s3),
+        ProgressSteps(labels: const ['Placed', 'Packed', 'On the way', 'Delivered'], reached: reached),
+      ],
+      if (t?.deliveryCode != null) ...[
         const SizedBox(height: FreshSpacing.s4),
-        _Actions(order: order),
-        if (order.status == 'DELIVERED') _Complaints(orderId: order.id),
+        _DeliveryCodeCard(code: t!.deliveryCode!),
+      ],
+      if (t?.shipment?.riderName != null) ...[
+        const SizedBox(height: FreshSpacing.s3),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.delivery_dining_outlined),
+          title: Text('${t!.shipment!.riderName} is delivering your order'),
+          trailing: t.shipment!.riderPhone == null
+              ? null
+              : IconButton(
+                  tooltip: 'Call ${t.shipment!.riderName}',
+                  icon: const Icon(Icons.call_outlined),
+                  onPressed: () => openExternal(context, telUri(t.shipment!.riderPhone!)),
+                ),
+        ),
+      ],
+      const SizedBox(height: FreshSpacing.s5),
+      Semantics(header: true, child: Text('Status', style: theme.textTheme.titleMedium)),
+      const SizedBox(height: FreshSpacing.s2),
+      if (t != null)
+        _Timeline(entries: t.timeline)
+      else if (trackingError != null)
+        const InfoBanner(
+          tone: BannerTone.warning,
+          text: 'Live status is not available right now. Pull down to refresh.',
+        )
+      else
+        const LoadingSemantics(child: SkeletonBox(height: 80)),
+      const SizedBox(height: FreshSpacing.s5),
+      _OrderReceipt(order: order),
+      const SizedBox(height: FreshSpacing.s4),
+      _Actions(order: order),
+      if (order.status == 'DELIVERED') _Complaints(orderId: order.id),
+    ];
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _StatusHero(
+          status: status,
+          orderNumber: order.orderNumber,
+          deliveryCode: t?.deliveryCode,
+          onBack: context.canPop() ? () => context.pop() : () => context.go('/orders'),
+        ),
+        Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.sizeOf(context).height * 0.5),
+          decoration: BoxDecoration(
+            color: c.paper,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+          ),
+          padding: EdgeInsets.fromLTRB(18, 20, 18, 24 + MediaQuery.paddingOf(context).bottom),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: sheet),
+        ),
       ],
     );
   }
+
+  /// How many of the four bars are done; null for closed or failed orders (the badge says so).
+  static int? _progress(String status) => switch (status) {
+    'PENDING_PAYMENT' || 'CONFIRMED' => 1,
+    'PREPARING' || 'PACKED' => 2,
+    'OUT_FOR_DELIVERY' => 3,
+    'DELIVERED' => 4,
+    _ => null,
+  };
 }
 
 /// The illustration follows the server's status (placed → packing → on the way → delivered, or cancelled). The
 /// status text sits next to it, so the picture is decorative for screen readers.
 class _StatusHero extends StatelessWidget {
-  const _StatusHero({required this.status});
+  const _StatusHero({required this.status, required this.orderNumber, required this.onBack, this.deliveryCode});
 
   final String status;
+  final String orderNumber;
+  final String? deliveryCode;
+  final VoidCallback onBack;
 
   static String _line(String status) => switch (status) {
     'PREPARING' || 'PACKED' => 'We are cleaning and packing your order.',
@@ -184,34 +224,49 @@ class _StatusHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final ill = illustratedColors(context);
+    final c = illustratedColors(context);
+    final fg = BlockTone.teal.foreground(c);
     final slot = slotForOrderStatus(status);
-    final image = Illustration(key: ValueKey(slot), slot: slot, size: 84, excludeFromSemantics: true);
-    return Container(
-      padding: const EdgeInsets.all(FreshSpacing.s3),
-      decoration: BoxDecoration(
-        color: ill.paper,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: [BoxShadow(color: ill.softShadow, blurRadius: 24, offset: const Offset(0, 8))],
-      ),
-      child: Row(
-        children: [
-          if (motionAllowed(context)) AnimatedSwitcher(duration: FreshDurations.slow, child: image) else image,
-          const SizedBox(width: FreshSpacing.s3),
-          Expanded(
-            child: Semantics(
+    final image = AvatarCircle(key: ValueKey(slot), slot: slot, size: 150);
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RoundIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: onBack),
+            const SizedBox(height: 8),
+            Text('ORDER $orderNumber', style: AppText.eyebrow(fg.withValues(alpha: 0.85))),
+            const SizedBox(height: 4),
+            Semantics(
               liveRegion: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              header: true,
+              child: Text(orderStatusLabel(status), style: AppText.display(fg, 32, height: 1.0)),
+            ),
+            Text(
+              _line(status),
+              style: TextStyle(fontFamily: AppFonts.body, fontSize: 14, color: fg),
+            ),
+            const SizedBox(height: 14),
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Text(orderStatusLabel(status), style: theme.textTheme.titleLarge),
-                  Text(_line(status), style: theme.textTheme.bodyMedium?.copyWith(color: ill.muted)),
+                  if (motionAllowed(context)) AnimatedSwitcher(duration: FreshDurations.slow, child: image) else image,
+                  if (deliveryCode != null)
+                    Positioned(
+                      right: -18,
+                      top: 18,
+                      child: ExcludeSemantics(
+                        child: Sticker(label: 'Code $deliveryCode', tone: StickerTone.mango, tilt: 0.017),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -224,9 +279,9 @@ class _DeliveryCodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = freshColors(context);
+    final c = illustratedColors(context);
     return Card(
-      color: c.accentSubtle,
+      color: c.mangoSoft,
       child: Padding(
         padding: const EdgeInsets.all(FreshSpacing.s4),
         child: Row(
@@ -238,16 +293,17 @@ class _DeliveryCodeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Delivery code', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: c.accentText)),
+                    Text('Delivery code', style: AppText.eyebrow(c.ink, size: 11)),
                     Text(
                       code,
                       key: const Key('deliveryCode'),
                       style: TextStyle(
-                        fontFamily: FreshFonts.mono,
+                        fontFamily: AppFonts.display,
                         fontSize: FreshTypeScale.xl4.size,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         letterSpacing: 8,
-                        color: c.accentText,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                        color: c.ink,
                       ),
                     ),
                     Text('Share it only when you receive your order.', style: Theme.of(context).textTheme.bodySmall),
@@ -644,7 +700,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
 Future<void> showComplaintReceived(BuildContext context) => showDialog<void>(
   context: context,
   builder: (context) => AlertDialog(
-    icon: const Illustration(slot: IllustrationSlot.complaintReceived, size: 140, excludeFromSemantics: true),
+    icon: const AvatarCircle(slot: IllustrationSlot.complaintReceived, size: 132),
     title: const Text('We have your report', textAlign: TextAlign.center),
     content: const Text(
       'Thank you for telling us. Our team will look into it and get back to you.',

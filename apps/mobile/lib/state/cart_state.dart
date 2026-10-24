@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_error.dart';
 import '../api/models/cart.dart';
+import '../api/models/catalog.dart';
 import '../api/models/common.dart';
 import '../api/repositories.dart';
 import 'core_providers.dart';
@@ -60,6 +61,54 @@ class CartController extends AsyncNotifier<Cart> {
   Future<Cart> changeLocation(String pincode, {bool force = false}) =>
       _write((r) => r.setLocation(pincode, force: force));
 
+  /// The − / + of a cart line's stepper. The cart line carries no order limits, so the product's server
+  /// limits (min / max / step / maxOrderableNow) for that variant and preparation are read first; the new
+  /// quantity is only a proposal the server validates. Going below the minimum removes the line.
+  Future<Cart> stepLine(CartLine line, {required bool up}) async {
+    final detail = await ref
+        .read(catalogRepositoryProvider)
+        .product(line.productSlug, preparation: line.preparation?.code);
+    final variant = detail.variants.where((v) => v.id == line.variantId).firstOrNull;
+    if (variant == null) {
+      throw const ApiError(
+        status: 0,
+        code: 'VARIANT_NOT_SOLD',
+        detail: 'This item is no longer sold. Remove it from the cart.',
+      );
+    }
+    final step = variant.orderStep.value;
+    final next = line.quantity.value + (up ? step : -step);
+    if (!up && next < variant.minOrder.value) return remove(line.id);
+    final max = (variant.availability?.maxOrderableNow ?? variant.maxOrder).value;
+    if (up && next > max) {
+      throw const ApiError(
+        status: 0,
+        code: 'QUANTITY_ABOVE_MAX',
+        detail: 'You already have the most you can order of this item.',
+      );
+    }
+    return changeQuantity(line.id, line.quantity.withValue(next));
+  }
+
+  /// The ADD button on a product card: adds the product's first orderable size with its default preparation
+  /// and the server's minimum quantity. Returns the choice made, or null when nothing can be added from the
+  /// card (the caller then opens the product page). The server prices the line.
+  Future<QuickAddChoice?> quickAdd(String slug) async {
+    final detail = await ref.read(catalogRepositoryProvider).product(slug);
+    final variant = detail.variants
+        .where((v) => v.unitPricePaise != null && (v.availability?.canAdd ?? true))
+        .firstOrNull;
+    if (variant == null) return null;
+    final orderable = variant.preparations.where((p) => p.chargePaise != null).toList();
+    final preparation = variant.preparations.isEmpty
+        ? null
+        : (orderable.where((p) => p.isDefault).firstOrNull ?? orderable.firstOrNull);
+    if (variant.preparations.isNotEmpty && preparation == null) return null;
+    final choice = QuickAddChoice(variant: variant, preparation: preparation, quantity: variant.minOrder);
+    await add(AddCartItem(variantId: variant.id, preparationCode: preparation?.code, quantity: variant.minOrder));
+    return choice;
+  }
+
   /// A cart returned by another endpoint (reorder).
   void replace(Cart cart) => state = AsyncData(cart);
 
@@ -67,4 +116,13 @@ class CartController extends AsyncNotifier<Cart> {
     ref.invalidateSelf();
     await future;
   }
+}
+
+/// What [CartController.quickAdd] put in the cart.
+class QuickAddChoice {
+  const QuickAddChoice({required this.variant, required this.preparation, required this.quantity});
+
+  final Variant variant;
+  final Preparation? preparation;
+  final Quantity quantity;
 }

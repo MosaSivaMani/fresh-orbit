@@ -1,3 +1,5 @@
+// Saved fish (D88): the coral block when nothing is saved; otherwise the grid of product cards with ADD.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -5,8 +7,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/account.dart';
 import '../../state/account_state.dart';
-import '../../widgets/commerce.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
+import 'product_grid.dart';
 
 class WishlistScreen extends ConsumerWidget {
   const WishlistScreen({super.key});
@@ -14,8 +19,30 @@ class WishlistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wishlist = ref.watch(wishlistProvider);
+    if (wishlist.value?.isEmpty ?? false) {
+      return Scaffold(
+        backgroundColor: BlockTone.coral.background(illustratedColors(context)),
+        body: ColorBlockScreen(
+          tone: BlockTone.coral,
+          eyebrow: 'Saved',
+          heading: const [HeadingLine('Nothing', script: true), HeadingLine('saved yet', brush: true)],
+          slot: IllustrationSlot.emptyWishlist,
+          onBack: context.canPop() ? () => context.pop() : null,
+          children: [
+            const SheetTitle('Tap the ♥ on any fish', header: true),
+            const SheetNote('It waits here for next time.'),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(onPressed: () => context.go('/shop'), child: const Text('Browse fish')),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
-      appBar: AppBar(title: const Text('Wishlist')),
+      appBar: AppBar(
+        title: const ScriptTitle(text: 'Saved', script: 'fish'),
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(wishlistProvider.future),
         child: AsyncValueView<List<WishlistEntry>>(
@@ -42,8 +69,7 @@ class WishlistScreen extends ConsumerWidget {
                       gridDelegate: productGridDelegate,
                       itemCount: withProduct.length,
                       itemBuilder: (context, i) {
-                        final p = withProduct[i].product!;
-                        return ProductCard(product: p, onTap: () => context.push('/product/${p.slug}'));
+                        return ShopProductCard(product: withProduct[i].product!, index: i);
                       },
                     ),
                   ),
