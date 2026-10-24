@@ -72,7 +72,7 @@ Slots:
 - A check of the fish names, yields and pincode groupings in the sample data.
 
 ## 7. Notes
-- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**. The next free number is **D54**.
+- Decision numbers: D42–D52 are Phase 3 (from session `fresh-orbit-3a`); the illustrated UI decision was renumbered from a clashing D42 to **D53**. D54 is the OpenAPI and front-end API types decision (F1). The next free number is **D55**.
 - Open with the owner: the wording of CLAUDE.md rule 2 for D30 (a Domain project may reference its own Public project).
 
 ## 8. Open items from Phase 3 integration (session `fresh-orbit-3a`)

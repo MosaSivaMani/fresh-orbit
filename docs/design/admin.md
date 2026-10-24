@@ -27,7 +27,7 @@ Staff web app: React 19 + Vite, React Router 7 data router (lazy routes), TanSta
 | Tokens in `sessionStorage` | Staff sessions end with the tab; nothing survives a shared-PC browser restart. No cookies, so no CSRF surface |
 | One app-wide conflict prompt | Same 412 handling on every screen |
 | Lazy route per screen | Initial bundle holds only the shell, login and shared UI |
-| Types hand-written in `src/api/types/*.ts` | Phase 3 has not produced the OpenAPI document; each file is marked TEMPORARY |
+| Types are aliases over `@fresh/api-client` in `src/api/types/*.ts` | Generated from the backend OpenAPI document (D54); see §4 |
 
 ## 3. Screen inventory
 
@@ -39,8 +39,8 @@ listed in §5; **left** = not built.
 | 1 | Login | `/login` | — | done | `POST /admin/auth/login` |
 | 1 | Shell, location switcher, user menu | (layout) | signed in | done | `GET /admin/auth/me`, `POST /admin/auth/logout`, `GET /admin/fulfillment-locations` (names, with `locations.manage`) |
 | 1 | Dashboard | `/` | — (tiles need `reports.view`) | done | `GET /admin/reports/dashboard` (60 s refresh), `GET /admin/reports/daily-sales` (today's totals) |
-| 2 | Orders list | `/orders` | `orders.view` | done | `GET /admin/orders` (status[], slotDate, slotId, paymentMethod, q, fulfillmentLocationId, sort `-placedAt`); bulk `POST /admin/orders/{id}/start-preparing` |
-| 2 | Order detail | `/orders/:orderId` | `orders.view` | done | `GET /admin/orders/{id}`; `start-preparing` (`orders.pack`), `cancel` (`orders.cancel`), `goodwill` (`refunds.request`), substitutions `POST …/items/{itemId}/substitutions`, `POST …/substitutions/{id}/record-response` (`orders.pack`); payments panel (below) |
+| 2 | Orders list | `/orders` | `orders.view` | done | `GET /admin/orders` (one status, slotDate, slotId, paymentMethod, q, fulfillmentLocationId, sort `-placedAt`); bulk `POST /admin/orders/{id}/start-preparing` |
+| 2 | Order detail | `/orders/:orderId` | `orders.view` | done | `GET /admin/orders/{id}`; `start-preparing` (`orders.pack`), `cancel` (`orders.cancel`), `goodwill` (`refunds.request`), substitutions `POST …/items/{itemId}/substitutions`, `POST …/substitutions/{id}/record-response` (`orders.pack`; proposing needs the preparation method list, which needs `catalog.manage` — G3); payments panel (below) |
 | 2 | Weigh and pack (whole order) | tab on order detail | `orders.pack` | done | `POST /admin/orders/{id}/pack` (If-Match); result shows packed, charged, capped, final total, amount due, refund due from the server |
 | 2 | Pick list | `/orders/pick-list?slotId&fulfillmentLocationId` | `orders.pack` | done | `GET /admin/orders/pick-list` |
 | 2 | Complaints list / detail | `/complaints`, `/complaints/:id` | `complaints.manage` | done | `GET /admin/complaints`, `GET /admin/complaints/{id}`, `POST …/decide`, `POST …/resolve` |
@@ -80,37 +80,61 @@ listed in §5; **left** = not built.
 
 Left: home banners (row above). Everything else in the brief is built.
 
-## 4. Temporary type files
+## 4. API types (generated)
 
-Every file below starts with `// TEMPORARY: replace with @fresh/api-client types after Phase 3`. After Phase 3,
-generate `@fresh/api-client` from the backend OpenAPI document and replace the imports; the hooks in
-`src/api/*.ts` keep their names.
+The 16 files in `apps/admin/src/api/types/` (`common`, `auth`, `locations`, `reports`, `catalog`, `orders`,
+`inventory`, `pricing`, `promotions`, `delivery`, `customers`, `staff`, `settings`, `notifications`, `audit`,
+`payments`) are now thin aliases over `@fresh/api-client` (`Schema<"Name">`), no longer TEMPORARY (D54). The hooks
+in `src/api/*.ts` kept their names. `common.ts` has `Coded<T, {…}>` (narrows string code fields to unions) and
+`RequestBody<T>` (nullable request fields optional). One shape is still hand-written: the bulk price upload body
+(`pricing.ts`), because the endpoint reads it by hand and the spec has no request schema.
 
-`apps/admin/src/api/types/`: `common.ts`, `auth.ts`, `locations.ts`, `reports.ts`, `catalog.ts`, `orders.ts`,
-`inventory.ts`, `pricing.ts`, `promotions.ts`, `delivery.ts`, `customers.ts`, `staff.ts`, `settings.ts`,
-`notifications.ts`, `audit.ts`, `payments.ts`.
+Regenerate after a backend change: run the API, `pnpm --filter @fresh/api-client fetch-spec`, `pnpm generate:api`,
+then `pnpm typecheck`.
 
-Shapes that are the admin's reading of the spec (module not on `main`, or field list not in `docs/api`) and must be
-checked first: `orders.ts` (admin order list row, detail extras `history`/`adjustments`/`grossReservedQuantity`/
-`batches`, pick list, substitution request bodies, complaint detail), `promotions.ts` (coupon fields and
-redemptions), customer order history.
+Differences from the old temporary types that changed screens:
+
+- Order detail is nested: `GET /admin/orders/{id}` returns `{ order, …staff extras }`; `flattenAdminOrder` in
+  `types/orders.ts` flattens it. Version from `order.version` (or the ETag).
+- Order list row: `recipientName`, `phone`, `deliverySlotId`, `slotStartAt`/`slotEndAt`; no `version`, so bulk
+  start-preparing reads each order's detail first (G13). One `status` filter, not a list (G14).
+- History rows use `to`/`at`/`reasonCode` (no actor name); adjustments use `at`; gross reserved quantity comes
+  from `lines`; item batches are gone (G17).
+- Pick list rows are `lines` with `grossQuantity` + `stockUnit`; no SKU, slot times or order count (G18).
+- Cancel takes `note`; substitution proposal takes `preparationMethodId` (mapped from the picker's code);
+  recording an answer sends `{ answer: "ACCEPTED" | "REJECTED" }`; complaint decision takes `note`.
+- Complaint detail = complaint summary: no product name or refund limit (G15), no decided-by; shows decision note.
+- Customer detail has no order counts (G6). Coupon `description` and `validTo` are nullable; `isListed` is
+  required in the request and the editor keeps the current value (no control yet); redemptions show order id
+  only (G16).
+- Payment issue kinds add `REFUND_METHOD_REQUIRED` and `WEBHOOK_ERROR`. Audit `before`/`after` are untyped.
 
 ## 5. API gaps found (for Phase 3)
 
-| # | Gap | Effect now | Proposed fix |
-|---|---|---|---|
-| G1 | Location names need `locations.manage` | Other staff see `Location 1a2b3c` | Staff-readable `GET /admin/me/locations` (id, code, name) |
-| G2 | Cities list needs `locations.manage` | City pickers (reports, order policies, coupons) hidden for others | Read-only cities lookup |
-| G3 | No staff-readable variant search | Packers (substitutions) and inventory staff without `catalog.manage` type variant ids; inventory rows show shortened ids | `GET /admin/catalog/variants?q=` and variant name/SKU on stock items, batches, reservations, movements |
-| G4 | Dashboard has no sales figures; low stock has no unit | Dashboard reads today's `daily-sales` report; low stock shown as a number | Add sales tiles and unit to the dashboard response |
-| G5 | Ordering admin shapes not on `main` | Proposed shapes in `types/orders.ts` | Confirm in OpenAPI |
-| G6 | No `GET /admin/customers/{id}/orders`; no city filter on customers | Orders tab shows "not available yet" | Add the endpoint and `cityId` filter |
-| G7 | Rider list needs `delivery.manage` | Cash settlement form takes a typed rider id for `cash.settle`-only staff | Rider lookup readable with `cash.settle` |
-| G8 | `docs/api` lists If-Match on image upload and refund create, the backend does not require it | Admin follows the backend | Align the doc or the backend |
-| G9 | Tax rule scheduling has no If-Match | Two staff can schedule at once | Add a version to the tax-rule collection or accept |
-| G10 | Shipments list has no date filter; most lists have no `sort` | Slot date only narrows the slot picker; tables show server order | Add `slotDate` and `sort` where useful |
-| G11 | `CITY_RETIREMENT_BLOCKED` blocking item shape undocumented | Shown as text | Document the shape |
-| G12 | Payments have no created date | List shows captured/collected time | Add `createdAt` |
+Re-checked against the generated OpenAPI document on 2026-10-24 (D54).
+
+| # | Gap | Status | Effect now | Backend change that closes it |
+|---|---|---|---|---|
+| G1 | Location names need `locations.manage` | STILL OPEN | Other staff see `Location 1a2b3c` | Staff-readable `GET /admin/me/locations` (id, code, name) |
+| G2 | Cities list needs `locations.manage` | STILL OPEN | City pickers (reports, order policies, coupons) hidden for others | Read-only cities lookup |
+| G3 | No staff-readable variant search | STILL OPEN | Staff without `catalog.manage` type variant ids; inventory rows show shortened ids; substitution proposals cannot load preparation methods | `GET /admin/catalog/variants?q=`, staff-readable preparation methods, variant name/SKU on stock items, batches, reservations, movements |
+| G4 | Dashboard has no sales figures; low stock has no unit | STILL OPEN | Dashboard reads today's `daily-sales` report | Sales tiles and unit in `DashboardResponse` |
+| G5 | Ordering admin shapes not on `main` | CLOSED | Real shapes in the spec; screens follow them (§4) | — |
+| G6 | No `GET /admin/customers/{id}/orders`; no city filter; no order counts | STILL OPEN | Orders tab shows "not available yet" | Add the endpoint, `cityId` filter, order counts on the detail |
+| G7 | Rider list needs `delivery.manage` | STILL OPEN | Cash settlement takes a typed rider id for `cash.settle`-only staff | Rider lookup readable with `cash.settle` |
+| G8 | `docs/api` lists If-Match on image upload and refund create, the backend does not require it | STILL OPEN | Admin follows the backend | Align `docs/api` (doc change) |
+| G9 | Tax rule scheduling has no If-Match | STILL OPEN | `POST /admin/pricing/tax-rules` returns a version but takes none | Version on the tax-rule collection, or accept |
+| G10 | Shipments list has no date filter; most lists have no `sort` | STILL OPEN | Shipments filter by location, slot, rider, status only | `slotDate` and `sort` where useful |
+| G11 | `CITY_RETIREMENT_BLOCKED` blocking item shape undocumented | STILL OPEN | Shown as text | Typed Problem extension in the spec |
+| G12 | Payments have no created date | STILL OPEN | `PaymentResponse` has no `createdAt` | Add `createdAt` |
+| G13 | Admin order list row has no `version` | NEW, OPEN | Bulk start-preparing GETs each order first | `version` on `AdminOrderSummary` |
+| G14 | Admin orders filter takes one status | NEW, OPEN | One status at a time | Accept a status list |
+| G15 | Complaint has no product name or max refund | NEW, OPEN | "One item" / "Whole order"; server checks the refund amount | Product/variant name and refundable limit on the complaint |
+| G16 | Redemptions have no order number | NEW, OPEN | Order id only | `orderNumber` on `CouponRedemption` |
+| G17 | Order item batches not in admin order detail | NEW, OPEN | Batch column removed | Batch allocations per line |
+| G18 | Pick list has no slot times, order count or SKU | NEW, OPEN | Columns show what is there | Add them to the pick list response |
+
+Front end, not backend: coupon `isListed` has no editor control yet.
 
 ## 6. Tests
 
