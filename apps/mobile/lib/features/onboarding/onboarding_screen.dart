@@ -1,3 +1,6 @@
+// Onboarding (D88): three colour-block pages (coral, teal, mango), each with its character in the ringed circle,
+// a sticker on the circle's edge and a paper sheet with the story, page dots and the next button.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -5,36 +8,64 @@ import 'package:go_router/go_router.dart';
 
 import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
 import '../../widgets/motion.dart';
-import '../../widgets/states.dart';
 
 class _Page {
-  const _Page(this.slot, this.sticker, this.title, this.body);
+  const _Page({
+    required this.tone,
+    required this.slot,
+    required this.big,
+    required this.sticker,
+    required this.stickerTone,
+    required this.stickerOnLeft,
+    required this.title,
+    required this.body,
+  });
+
+  final BlockTone tone;
   final IllustrationSlot slot;
+  final List<HeadingLine> big;
   final String sticker;
+  final StickerTone stickerTone;
+  final bool stickerOnLeft;
   final String title;
   final String body;
 }
 
 const _pages = [
   _Page(
-    IllustrationSlot.onboardingFresh,
-    'Morning catch',
-    'Fresh catch, delivered chilled',
-    'Fish, prawns, crabs and shellfish from the morning catch, kept cold from our store to your door.',
+    tone: BlockTone.coral,
+    slot: IllustrationSlot.onboardingFresh,
+    big: [HeadingLine('Straight off', script: true), HeadingLine('the boats', brush: true)],
+    sticker: 'Morning catch',
+    stickerTone: StickerTone.mango,
+    stickerOnLeft: true,
+    title: 'Hours old, not days',
+    body: 'Fish, prawns and crabs from the morning catch, kept cold from our store to your door.',
   ),
   _Page(
-    IllustrationSlot.onboardingCleaned,
-    'Your cut',
-    'Cleaned the way you cook',
-    'Choose whole, steaks, fillets or cleaned. You pay for the net weight after cleaning, never for the waste.',
+    tone: BlockTone.teal,
+    slot: IllustrationSlot.onboardingCleaned,
+    big: [HeadingLine('Cleaned'), HeadingLine('your way', script: true)],
+    sticker: 'Your cut',
+    stickerTone: StickerTone.coral,
+    stickerOnLeft: false,
+    title: 'Steaks, curry cut, fillet',
+    body: 'Pick the cut. We weigh it after cleaning, so you pay for what you cook, never for the waste.',
   ),
   _Page(
-    IllustrationSlot.onboardingDelivery,
-    'Kept cold',
-    'Pick a slot, pay on delivery',
-    'Choose a delivery slot that suits you and pay by cash or UPI when your order arrives.',
+    tone: BlockTone.mango,
+    slot: IllustrationSlot.onboardingDelivery,
+    big: [HeadingLine('At your'), HeadingLine('door', script: true, brush: true)],
+    sticker: 'Kept cold',
+    stickerTone: StickerTone.teal,
+    stickerOnLeft: true,
+    title: 'Pick a delivery slot',
+    body: 'Your order comes in a cold box. Pay by cash or UPI when it arrives.',
   ),
 ];
 
@@ -60,90 +91,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (mounted) context.go('/location');
   }
 
+  Future<void> _next() async {
+    if (_index == _pages.length - 1) {
+      await _finish();
+    } else if (motionAllowed(context)) {
+      await _controller.nextPage(duration: FreshDurations.slow, curve: Curves.easeOutCubic);
+    } else {
+      _controller.jumpToPage(_index + 1);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final last = _index == _pages.length - 1;
+    final c = illustratedColors(context);
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(onPressed: _finish, child: const Text('Skip')),
+      backgroundColor: _pages[_index].tone.background(c),
+      body: PageView.builder(
+        controller: _controller,
+        itemCount: _pages.length,
+        onPageChanged: (i) => setState(() => _index = i),
+        itemBuilder: (context, i) {
+          final page = _pages[i];
+          final last = i == _pages.length - 1;
+          final fg = page.tone.foreground(c);
+          return ColorBlockScreen(
+            tone: page.tone,
+            eyebrow: 'Step ${i + 1} of ${_pages.length}',
+            heading: page.big,
+            slot: page.slot,
+            trailing: TextButton(
+              style: TextButton.styleFrom(foregroundColor: fg),
+              onPressed: _finish,
+              child: const Text('Skip'),
             ),
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _pages.length,
-                onPageChanged: (i) => setState(() => _index = i),
-                itemBuilder: (context, i) {
-                  final page = _pages[i];
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(FreshSpacing.s6),
-                    child: Column(
-                      children: [
-                        PolaroidCard(
-                          tilt: i.isEven ? -0.012 : 0.012,
-                          stickers: [Sticker(label: page.sticker, tone: i == 1 ? StickerTone.teal : StickerTone.coral)],
-                          picture: Padding(
-                            padding: const EdgeInsets.all(FreshSpacing.s4),
-                            child: Illustration(slot: page.slot, size: 220),
-                          ),
-                        ),
-                        const SizedBox(height: FreshSpacing.s8),
-                        Semantics(
-                          header: true,
-                          child: Text(page.title, style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
-                        ),
-                        const SizedBox(height: FreshSpacing.s3),
-                        Text(
-                          page.body,
-                          style: theme.textTheme.bodyLarge?.copyWith(color: freshColors(context).textMuted),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+            sticker: StickerSpot(
+              left: page.stickerOnLeft ? 28 : null,
+              right: page.stickerOnLeft ? null : 26,
+              top: 44,
+              child: Sticker(label: page.sticker, tone: page.stickerTone, tilt: page.stickerOnLeft ? -0.022 : 0.02),
             ),
-            Semantics(
-              label: 'Page ${_index + 1} of ${_pages.length}',
-              child: ExcludeSemantics(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < _pages.length; i++)
-                      Container(
-                        margin: const EdgeInsets.all(FreshSpacing.s1),
-                        width: i == _index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: i == _index ? theme.colorScheme.primary : freshColors(context).borderStrong,
-                          borderRadius: BorderRadius.circular(FreshRadius.full),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(FreshSpacing.s4),
-              child: SizedBox(
+            children: [
+              SheetTitle(page.title),
+              SheetNote(page.body),
+              PageDots(count: _pages.length, index: i),
+              SizedBox(
                 width: double.infinity,
-                child: FilledButton(
-                  onPressed: last
-                      ? _finish
-                      : () => motionAllowed(context)
-                            ? _controller.nextPage(duration: FreshDurations.slow, curve: Curves.easeOutCubic)
-                            : _controller.jumpToPage(_index + 1),
-                  child: Text(last ? 'Get started' : 'Next'),
-                ),
+                child: FilledButton(onPressed: _next, child: Text(last ? 'Get started →' : 'Next →')),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }

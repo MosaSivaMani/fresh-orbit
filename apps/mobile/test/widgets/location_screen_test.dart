@@ -10,9 +10,10 @@ void main() {
   testWidgets('rejects a malformed pincode without calling the server', (tester) async {
     final deps = TestDeps();
     await pumpScreen(tester, deps, const LocationScreen());
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('pincodeField')), '1234');
-    await tester.tap(find.text('Check'));
+    await tester.tap(find.byKey(const Key('checkPincode')));
     await tester.pump();
 
     expect(find.text('Enter a 6-digit pincode.'), findsOneWidget);
@@ -23,9 +24,10 @@ void main() {
     final deps = TestDeps();
     deps.location.onServiceability = (_) async => serviceable();
     await pumpScreen(tester, deps, const LocationScreen());
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('pincodeField')), '600041');
-    await tester.tap(find.text('Check'));
+    await tester.tap(find.byKey(const Key('checkPincode')));
     await tester.pumpAndSettle();
 
     expect(find.text('We deliver to 600041.'), findsOneWidget);
@@ -45,18 +47,19 @@ void main() {
     final deps = TestDeps();
     deps.location.onServiceability = (p) async => notServiceable(p);
     await pumpScreen(tester, deps, const LocationScreen());
-
-    await tester.enterText(find.byKey(const Key('pincodeField')), '600123');
-    await tester.tap(find.text('Check'));
     await tester.pumpAndSettle();
 
-    expect(find.text('We don\'t deliver to 600123 yet'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('pincodeField')), '600123');
+    await tester.tap(find.byKey(const Key('checkPincode')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('We don’t deliver to 600123 yet'), findsOneWidget);
     expect(find.byKey(const Key('confirmPincode')), findsNothing);
     expect(deps.prefs.pincode, isNull);
 
     await tester.tap(find.text('Try another pincode'));
     await tester.pump();
-    expect(find.text('We don\'t deliver to 600123 yet'), findsNothing);
+    expect(find.text('We don’t deliver to 600123 yet'), findsNothing);
   });
 
   testWidgets('a failed check shows the error with its reference and a retry', (tester) async {
@@ -68,9 +71,10 @@ void main() {
       return serviceable();
     };
     await pumpScreen(tester, deps, const LocationScreen());
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byKey(const Key('pincodeField')), '600041');
-    await tester.tap(find.text('Check'));
+    await tester.tap(find.byKey(const Key('checkPincode')));
     await tester.pumpAndSettle();
 
     expect(find.text('Reference: trace-1'), findsOneWidget);

@@ -8,12 +8,14 @@ import 'package:fresh_theme/fresh_theme.dart';
 
 import '../illustrations/illustration.dart';
 import '../theme/app_theme.dart';
+import 'bold.dart';
 import 'motion.dart';
 import 'states.dart';
 
 enum StickerTone { coral, mango, teal, paper, sand }
 
-/// A pill label with a thick outline and a hard offset shadow, slightly tilted, like a sticker on paper.
+/// A sticker on an avatar's edge or a card (the mockup's `.badge`): a pill with a 2 px ink outline, a hard
+/// 2 px offset shadow and a slight tilt. Its colours are the same in light and dark, as in the mockup.
 class Sticker extends StatelessWidget {
   const Sticker({super.key, required this.label, this.tone = StickerTone.coral, this.tilt = -0.012, this.icon});
 
@@ -28,39 +30,34 @@ class Sticker extends StatelessWidget {
   Widget build(BuildContext context) {
     final ill = illustratedColors(context);
     final (bg, fg) = switch (tone) {
-      StickerTone.coral => (ill.coral, ill.onCoral),
-      StickerTone.mango => (ill.mango, ill.onMango),
-      StickerTone.teal => (ill.tealText, ill.onTeal),
-      StickerTone.paper => (ill.paper, ill.ink),
+      StickerTone.coral => (const Color(0xFFF07A5A), BlockInk.ink),
+      StickerTone.mango => (const Color(0xFFF5B544), BlockInk.ink),
+      StickerTone.teal => (const Color(0xFF0B7D70), BlockInk.paper),
+      StickerTone.paper => (BlockInk.paper, BlockInk.ink),
       StickerTone.sand => (ill.sandDeep, ill.ink),
     };
+    final outline = tone == StickerTone.sand ? ill.ink : BlockInk.ink;
     return Transform.rotate(
       angle: tilt * 2 * math.pi,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 5),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(FreshRadius.full),
-          border: Border.all(color: ill.ink, width: 2.5),
-          boxShadow: [BoxShadow(color: ill.ink, offset: const Offset(3, 3))],
+          border: Border.all(color: outline, width: 2),
+          boxShadow: [BoxShadow(color: outline, offset: const Offset(2, 2))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              ExcludeSemantics(child: Icon(icon, size: 16, color: fg)),
+              ExcludeSemantics(child: Icon(icon, size: 14, color: fg)),
               const SizedBox(width: FreshSpacing.s1),
             ],
             Flexible(
               child: Text(
                 label,
-                style: TextStyle(
-                  fontFamily: AppFonts.display,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                  height: 1.25,
-                  color: fg,
-                ),
+                style: AppText.display(fg, 12.5, weight: FontWeight.w700, height: 1.1),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -195,7 +192,7 @@ class FeatureCard extends StatelessWidget {
   }
 }
 
-/// "How can we help you today?" next to the support agent on a coloured circle.
+/// "How can we help you today?" next to the support agent in the ringed circle (D88).
 class HelpHero extends StatelessWidget {
   const HelpHero({super.key, this.title = 'How can we help you today?', this.message});
 
@@ -224,15 +221,7 @@ class HelpHero extends StatelessWidget {
             ),
           ),
           const SizedBox(width: FreshSpacing.s3),
-          EntranceMotion(
-            child: Container(
-              width: 132,
-              height: 132,
-              decoration: BoxDecoration(color: ill.coral, shape: BoxShape.circle),
-              alignment: Alignment.center,
-              child: const Illustration(slot: IllustrationSlot.helpSupport, size: 124),
-            ),
-          ),
+          const EntranceMotion(child: AvatarCircle(slot: IllustrationSlot.helpSupport, size: 124)),
         ],
       ),
     );

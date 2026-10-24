@@ -8,7 +8,7 @@ import '../api/models/catalog.dart';
 import '../api/models/common.dart';
 import '../core/format.dart';
 import '../theme/app_theme.dart';
-import 'illustrated.dart';
+import 'bold.dart';
 import 'states.dart';
 
 /// Paise in, ₹ out: price, optional struck-through compare-at price ("Original price"), optional unit.
@@ -236,6 +236,7 @@ class ProductPhoto extends StatelessWidget {
     this.semanticLabel,
     this.aspectRatio = 1,
     this.radius = AppRadius.field,
+    this.transparent = false,
   });
 
   final String? url;
@@ -243,12 +244,16 @@ class ProductPhoto extends StatelessWidget {
   final double aspectRatio;
   final double radius;
 
+  /// No placeholder fill: the caller's tint shows behind the fish icon.
+  final bool transparent;
+
   @override
   Widget build(BuildContext context) {
+    final ill = illustratedColors(context);
     final placeholder = Container(
-      color: freshColors(context).muted,
+      color: transparent ? null : ill.tealSoft,
       alignment: Alignment.center,
-      child: Icon(Icons.set_meal_outlined, color: freshColors(context).textMuted, size: 40),
+      child: Icon(Icons.set_meal_rounded, color: ill.tealDeep.withValues(alpha: 0.75), size: 44),
     );
     return AspectRatio(
       aspectRatio: aspectRatio,
@@ -269,12 +274,58 @@ class ProductPhoto extends StatelessWidget {
   }
 }
 
-/// Product card for grids: image, name, local names, server price per unit, availability.
+/// What the picture-edge button of a [ProductCard] shows.
+sealed class CardCartControl {
+  const CardCartControl();
+}
+
+/// "ADD": adds the product (null [onAdd] shows it disabled).
+class CardAdd extends CardCartControl {
+  const CardAdd(this.onAdd);
+
+  final VoidCallback? onAdd;
+}
+
+/// "− 500 g +" for the one cart line of this product; [label] is the server's quantity, formatted.
+class CardStepper extends CardCartControl {
+  const CardStepper({required this.label, required this.onDecrease, required this.onIncrease});
+
+  final String label;
+  final VoidCallback onDecrease;
+  final VoidCallback onIncrease;
+}
+
+/// "2 IN CART": the product has more than one line (different cuts); tapping opens the cart.
+class CardInCart extends CardCartControl {
+  const CardInCart({required this.lines, required this.onOpen});
+
+  final int lines;
+  final VoidCallback onOpen;
+}
+
+/// Shop product card (D88): a tinted picture with an availability chip, an ADD button on the picture's bottom
+/// edge that turns into a − n + stepper once the product is in the cart, then the name, local names and the
+/// server's price per unit with the struck compare-at price. It shows server values only; it never works out a
+/// discount (rule 4).
 class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product, required this.onTap});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    this.control,
+    this.pending = false,
+    this.tint,
+  });
 
   final ProductSummary product;
   final VoidCallback onTap;
+
+  /// Null hides the picture-edge button.
+  final CardCartControl? control;
+  final bool pending;
+
+  /// Picture background; defaults to teal-soft.
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
@@ -283,97 +334,91 @@ class ProductCard extends StatelessWidget {
     final price = product.fromPrice;
     final availability = product.availability;
     final soldOut = availability != null && !availability.canAdd;
-    final stickerLabel = switch (availability?.status) {
+    final chipLabel = switch (availability?.status) {
       null || 'IN_STOCK' => null,
       'LOW_STOCK' => 'Low stock',
       'OUT_OF_STOCK' => 'Sold out',
       'NOT_SOLD_HERE' => 'Not sold here',
       final s => humanizeCode(s),
     };
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(FreshSpacing.s2),
+    const edge = 17.0;
+    return Container(
+      decoration: BoxDecoration(
+        color: ill.paper,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: cardShadow(context),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Stack(
-                clipBehavior: Clip.none,
                 children: [
-                  Opacity(
-                    opacity: soldOut ? 0.55 : 1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: ill.sandDeep,
-                        borderRadius: BorderRadius.circular(AppRadius.field),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: edge),
+                    child: Opacity(
+                      opacity: soldOut ? 0.55 : 1,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                        child: ColoredBox(
+                          color: tint ?? ill.tealSoft,
+                          child: ProductPhoto(url: product.imageUrl, aspectRatio: 1.4, radius: 0, transparent: true),
+                        ),
                       ),
-                      child: ProductPhoto(url: product.imageUrl, aspectRatio: 1.1),
                     ),
                   ),
-                  if (stickerLabel != null)
+                  if (chipLabel != null)
                     Positioned(
                       top: FreshSpacing.s2,
                       left: FreshSpacing.s2,
-                      child: Sticker(label: stickerLabel, tone: soldOut ? StickerTone.sand : StickerTone.coral),
+                      child: _FreshChip(label: chipLabel),
+                    ),
+                  if (control != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: _CardControl(control: control!, pending: pending, name: product.name),
+                      ),
                     ),
                 ],
               ),
-              const SizedBox(height: FreshSpacing.s2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s1),
-                child: Text(
-                  product.name,
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (product.localNames.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s1),
-                  child: Text(
-                    product.localNames.join(' · '),
-                    style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(FreshSpacing.s1, 0, 0, 0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: price != null
-                          ? PriceTag(
-                              paise: price.unitPricePaise,
-                              compareAtPaise: price.compareAtPaise,
-                              perUnit: price.perUnit,
-                              style: theme.textTheme.titleMedium,
-                            )
-                          : product.locationRequired
-                          ? Text('Set pincode to see prices', style: theme.textTheme.bodySmall)
-                          : const SizedBox.shrink(),
-                    ),
-                    ExcludeSemantics(
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: soldOut ? ill.sandDeep : theme.colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 20,
-                          color: soldOut ? freshColors(context).textMuted : theme.colorScheme.onPrimary,
-                        ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: AppText.display(ill.ink, 14),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                      if (product.localNames.isNotEmpty)
+                        Text(
+                          product.localNames.join(' · '),
+                          style: theme.textTheme.bodySmall?.copyWith(color: ill.muted, fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      const Spacer(),
+                      if (price != null)
+                        PriceTag(
+                          paise: price.unitPricePaise,
+                          compareAtPaise: price.compareAtPaise,
+                          perUnit: price.perUnit,
+                          style: AppText.price(ill.ink),
+                        )
+                      else if (product.locationRequired)
+                        Text('Set pincode to see prices', style: theme.textTheme.bodySmall),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -381,6 +426,97 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _FreshChip extends StatelessWidget {
+  const _FreshChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(color: BlockInk.paper, borderRadius: BorderRadius.circular(999)),
+    child: Text(
+      label,
+      style: const TextStyle(fontFamily: AppFonts.body, fontSize: 10, fontWeight: FontWeight.w700, color: BlockInk.ink),
+    ),
+  );
+}
+
+class _CardControl extends StatelessWidget {
+  const _CardControl({required this.control, required this.pending, required this.name});
+
+  final CardCartControl control;
+  final bool pending;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final ill = illustratedColors(context);
+    Widget pill(String text, String semantics, VoidCallback? onTap) => Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: semantics,
+      excludeSemantics: true,
+      child: Material(
+        color: ill.paper,
+        elevation: 3,
+        shadowColor: ill.softShadow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(color: onTap == null ? ill.line : ill.tealText, width: 1.5),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: pending ? null : onTap,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 88, minHeight: 34),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: pending
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: ill.tealText, semanticsLabel: 'Adding'),
+                  )
+                : Text(
+                    text,
+                    style: TextStyle(
+                      fontFamily: AppFonts.body,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: onTap == null ? ill.muted : ill.tealDeep,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+    return switch (control) {
+      CardAdd(:final onAdd) => pill('ADD', 'Add $name to cart', onAdd),
+      CardInCart(:final lines, :final onOpen) => pill(
+        '$lines IN CART',
+        '$lines lines of $name in cart, open cart',
+        onOpen,
+      ),
+      CardStepper(:final label, :final onDecrease, :final onIncrease) => Material(
+        color: Colors.transparent,
+        elevation: 3,
+        shadowColor: ill.softShadow,
+        borderRadius: BorderRadius.circular(10),
+        child: CompactStepper(
+          label: label,
+          itemName: name,
+          filled: true,
+          pending: pending,
+          onDecrease: onDecrease,
+          onIncrease: onIncrease,
+        ),
+      ),
+    };
   }
 }
 

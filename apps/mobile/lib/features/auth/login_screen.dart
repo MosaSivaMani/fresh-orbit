@@ -16,8 +16,10 @@ import '../../illustrations/illustration.dart';
 import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
 import '../../state/session.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/motion.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -137,88 +139,170 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = illustratedColors(context);
     final challenge = _challenge;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
-      body: SafeArea(
-        child: AutofillGroup(
-          child: ListView(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
+      backgroundColor: BlockTone.mango.background(c),
+      body: AutofillGroup(
+        child: ColorBlockScreen(
+          tone: BlockTone.mango,
+          eyebrow: 'Sign in',
+          heading: challenge == null
+              ? const [HeadingLine('Your mobile', script: true), HeadingLine('number', brush: true)]
+              : const [HeadingLine('Enter your', script: true), HeadingLine('code', brush: true)],
+          slot: IllustrationSlot.loginOtp,
+          avatarSize: AvatarSize.small,
+          onBack: context.canPop() ? () => context.pop() : null,
+          sheetCrossAxis: CrossAxisAlignment.stretch,
+          children: [
+            SheetNote(
+              challenge == null
+                  ? 'We will send a one-time code by SMS. Your cart stays with you.'
+                  : '${challenge.codeLength} digits sent to ${formatPhone(_e164!)}',
+            ),
+            if (challenge == null) ...[
+              TextField(
+                key: const Key('phoneField'),
+                controller: _phone,
+                keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumberNational],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                decoration: InputDecoration(labelText: 'Mobile number', prefixText: '+91 ', errorText: _phoneError),
+                onSubmitted: (_) => _requestOtp(),
+              ),
+              PrimaryButton(label: 'Send code', loading: _busy, onPressed: _requestOtp),
+            ] else ...[
+              OtpBoxes(
+                fieldKey: const Key('otpField'),
+                controller: _code,
+                length: challenge.codeLength,
+                errorText: _codeError,
+                onSubmitted: _verify,
+              ),
+              PrimaryButton(label: 'Verify', loading: _busy, onPressed: _verify),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: _busy ? null : () => setState(() => _challenge = null),
+                    child: const Text('Change number'),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _busy || _resendIn > 0 ? null : _requestOtp,
+                    child: Text(_resendIn > 0 ? 'Resend in $_resendIn s' : 'Resend code'),
+                  ),
+                ],
+              ),
+            ],
+            Text(
+              'By continuing you agree to our terms and privacy policy.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: c.muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The one-time code as a row of boxes (the mockup's `.otp`). A real, invisible text field sits on top, so the
+/// keyboard, SMS autofill, paste and screen readers all work; the boxes only draw its text.
+class OtpBoxes extends StatelessWidget {
+  const OtpBoxes({
+    super.key,
+    required this.controller,
+    required this.length,
+    required this.onSubmitted,
+    this.fieldKey,
+    this.errorText,
+  });
+
+  final TextEditingController controller;
+  final int length;
+  final VoidCallback onSubmitted;
+  final Key? fieldKey;
+  final String? errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    final danger = Theme.of(context).extension<FreshColors>()!.dangerText;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 52,
+          child: Stack(
             children: [
-              const Center(
-                child: EntranceMotion(
-                  child: Illustration(slot: IllustrationSlot.loginOtp, size: 168, excludeFromSemantics: true),
-                ),
-              ),
-              const SizedBox(height: FreshSpacing.s3),
-              Semantics(
-                header: true,
-                child: Text(
-                  challenge == null ? 'Sign in with your mobile number' : 'Enter the code',
-                  style: theme.textTheme.headlineMedium,
-                ),
-              ),
-              const SizedBox(height: FreshSpacing.s2),
-              Text(
-                challenge == null
-                    ? 'We will send a one-time code by SMS. Your cart stays with you.'
-                    : 'We sent a ${challenge.codeLength}-digit code to ${formatPhone(_e164!)}.',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: FreshSpacing.s5),
-              if (challenge == null) ...[
-                TextField(
-                  key: const Key('phoneField'),
-                  controller: _phone,
-                  keyboardType: TextInputType.phone,
-                  autofillHints: const [AutofillHints.telephoneNumberNational],
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                  decoration: InputDecoration(labelText: 'Mobile number', prefixText: '+91 ', errorText: _phoneError),
-                  onSubmitted: (_) => _requestOtp(),
-                ),
-                const SizedBox(height: FreshSpacing.s4),
-                PrimaryButton(label: 'Send code', loading: _busy, onPressed: _requestOtp),
-              ] else ...[
-                TextField(
-                  key: const Key('otpField'),
-                  controller: _code,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  autofillHints: const [AutofillHints.oneTimeCode],
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(challenge.codeLength),
-                  ],
-                  decoration: InputDecoration(labelText: 'One-time code', errorText: _codeError),
-                  onSubmitted: (_) => _verify(),
-                ),
-                const SizedBox(height: FreshSpacing.s4),
-                PrimaryButton(label: 'Verify and continue', loading: _busy, onPressed: _verify),
-                const SizedBox(height: FreshSpacing.s2),
-                Row(
-                  children: [
-                    TextButton(
-                      onPressed: _busy ? null : () => setState(() => _challenge = null),
-                      child: const Text('Change number'),
+              ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) {
+                  final text = controller.text;
+                  return ExcludeSemantics(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (var i = 0; i < length; i++)
+                          Container(
+                            width: 40,
+                            height: 50,
+                            margin: const EdgeInsets.symmetric(horizontal: 3.5),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: c.sand,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: errorText != null ? danger : (i == text.length ? c.ink : c.line),
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(i < text.length ? text[i] : '', style: AppText.price(c.ink, size: 20)),
+                          ),
+                      ],
                     ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _busy || _resendIn > 0 ? null : _requestOtp,
-                      child: Text(_resendIn > 0 ? 'Resend in $_resendIn s' : 'Resend code'),
+                  );
+                },
+              ),
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0,
+                  alwaysIncludeSemantics: true,
+                  child: TextField(
+                    key: fieldKey,
+                    controller: controller,
+                    autofocus: true,
+                    showCursor: false,
+                    keyboardType: TextInputType.number,
+                    autofillHints: const [AutofillHints.oneTimeCode],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(length)],
+                    decoration: const InputDecoration(
+                      labelText: 'One-time code',
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
                     ),
-                  ],
+                    onSubmitted: (_) => onSubmitted(),
+                  ),
                 ),
-              ],
-              const SizedBox(height: FreshSpacing.s5),
-              Text(
-                'By continuing you agree to our terms and privacy policy.',
-                style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).textMuted),
               ),
             ],
           ),
         ),
-      ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                errorText!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: danger),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

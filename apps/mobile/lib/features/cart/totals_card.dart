@@ -1,14 +1,16 @@
-// Server totals (docs/api §5.2), rendered as they are. Used by Cart and Checkout.
+// Server totals (docs/api §5.2), rendered as they are: the "Bill details" box (D88). Used by Cart and Checkout.
 
 import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 import '../../api/models/cart.dart';
 import '../../core/format.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/states.dart';
 
 class TotalsCard extends StatelessWidget {
-  const TotalsCard({super.key, required this.totals, this.title = 'Bill summary'});
+  const TotalsCard({super.key, required this.totals, this.title = 'Bill details'});
 
   final CartTotals totals;
   final String title;
@@ -16,6 +18,8 @@ class TotalsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = illustratedColors(context);
+    final total = AppText.price(c.ink, size: 17);
     Widget row(String label, String value, {TextStyle? style, Key? key}) => Padding(
       padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s1),
       child: MergeSemantics(
@@ -27,13 +31,13 @@ class TotalsCard extends StatelessWidget {
         ),
       ),
     );
-    return Card(
+    return SectionBox(
       child: Padding(
-        padding: const EdgeInsets.all(FreshSpacing.s4),
+        padding: const EdgeInsets.all(FreshSpacing.s1),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Semantics(header: true, child: Text(title, style: theme.textTheme.titleMedium)),
+            Semantics(header: true, child: SectionTitle(title)),
             const SizedBox(height: FreshSpacing.s2),
             row('Items', formatRupees(totals.itemsPaise)),
             if (totals.preparationPaise != 0) row('Cleaning and cutting', formatRupees(totals.preparationPaise)),
@@ -42,23 +46,23 @@ class TotalsCard extends StatelessWidget {
               'Delivery fee',
               totals.deliveryFeeWaived || totals.deliveryFeePaise == 0 ? 'Free' : formatRupees(totals.deliveryFeePaise),
             ),
-            const Divider(height: FreshSpacing.s5),
+            Divider(height: FreshSpacing.s5, color: c.line),
             row(
               'Estimated total',
               formatRupees(totals.estimatedTotalPaise),
-              style: theme.textTheme.titleMedium,
+              style: total,
               key: const Key('estimatedTotal'),
             ),
             row('You pay at most', formatRupees(totals.maxTotalPaise), key: const Key('maxTotal')),
             if (totals.taxPaise != 0)
               Text(
                 'Prices include ${formatRupees(totals.taxPaise)} GST.',
-                style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).textMuted),
+                style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
               ),
             const SizedBox(height: FreshSpacing.s1),
             Text(
               'The final amount depends on the weighed net weight and is never more than the maximum.',
-              style: theme.textTheme.bodySmall?.copyWith(color: freshColors(context).textMuted),
+              style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
             ),
           ],
         ),

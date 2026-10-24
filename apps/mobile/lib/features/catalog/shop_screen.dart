@@ -1,4 +1,5 @@
-// Shop: category chips, filters (source, in stock) in a bottom sheet, sort, and the paged grid. Filters are
+// Shop (D88): round category bubbles, filter pills (sort, in stock, source; also in a bottom sheet) and the
+// two-column grid of product cards with ADD buttons. Filters are
 // query parameters for the server; nothing is filtered or sorted on the device.
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../state/catalog_state.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
+import '../../widgets/heading.dart';
 import 'home_screen.dart';
 import 'product_grid.dart';
 
@@ -55,83 +59,158 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     if (result != null) setState(() => _query = result);
   }
 
+  Future<void> _openSort() async {
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: RadioGroup<String>(
+          groupValue: _query.sort,
+          onChanged: (v) => Navigator.pop(context, v),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [for (final e in _sorts.entries) RadioListTile<String>(value: e.key, title: Text(e.value))],
+          ),
+        ),
+      ),
+    );
+    if (chosen != null) setState(() => _query = _query.copyWith(sort: chosen));
+  }
+
+  void _toggleSource(String code) => setState(
+    () =>
+        _query = _query.sourceType == code ? _query.copyWith(clearSourceType: true) : _query.copyWith(sourceType: code),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final c = illustratedColors(context);
     final categories = ref.watch(categoriesProvider).value ?? const <Category>[];
+    final tints = softTints(c);
+    final header = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Semantics(
+            button: true,
+            label: 'Search fish, prawns, crabs',
+            excludeSemantics: true,
+            child: Material(
+              color: c.paper,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: c.line, width: 1.5),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => context.push('/search'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 18, color: c.muted),
+                      const SizedBox(width: 8),
+                      Text('Search “seer fish”, “prawns”…', style: TextStyle(color: c.muted, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 88,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+            children: [
+              CategoryBubble(
+                label: 'All',
+                icon: Icons.apps_rounded,
+                tint: tints[0],
+                selected: _query.category == null,
+                onTap: () => setState(() => _query = _query.copyWith(clearCategory: true)),
+              ),
+              for (var i = 0; i < categories.length; i++)
+                CategoryBubble(
+                  label: categories[i].name,
+                  imageUrl: categories[i].imageUrl,
+                  tint: tints[(i + 1) % tints.length],
+                  selected: _query.category == categories[i].slug,
+                  onTap: () => setState(() => _query = _query.copyWith(category: categories[i].slug)),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 46,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 2),
+            children: [
+              FilterPill(
+                key: const Key('sortPill'),
+                icon: Icons.sort_rounded,
+                label: _query.sort == 'relevance' ? 'Sort' : _sorts[_query.sort] ?? 'Sort',
+                onTap: _openSort,
+              ),
+              const SizedBox(width: 6),
+              FilterPill(
+                label: 'In stock',
+                selected: _query.inStock == true,
+                onTap: () => setState(
+                  () => _query = _query.inStock == true
+                      ? _query.copyWith(clearInStock: true)
+                      : _query.copyWith(inStock: true),
+                ),
+              ),
+              for (final e in _sources.entries) ...[
+                const SizedBox(width: 6),
+                FilterPill(label: e.value, selected: _query.sourceType == e.key, onTap: () => _toggleSource(e.key)),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
     return Scaffold(
-      appBar: AppBar(
-        title: const PincodeChip(),
-        actions: [
-          IconButton(tooltip: 'Search', icon: const Icon(Icons.search), onPressed: () => context.push('/search')),
-        ],
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: FreshSpacing.s2),
-                  child: ChoiceChip(
-                    label: const Text('All'),
-                    selected: _query.category == null,
-                    onSelected: (_) => setState(() => _query = _query.copyWith(clearCategory: true)),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 4, 6, 6),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: ScriptTitle(text: 'Shop', script: 'fresh'),
                   ),
-                ),
-                for (final c in categories)
-                  Padding(
-                    padding: const EdgeInsets.only(right: FreshSpacing.s2),
-                    child: ChoiceChip(
-                      label: Text(c.name),
-                      selected: _query.category == c.slug,
-                      onSelected: (_) => setState(() => _query = _query.copyWith(category: c.slug)),
-                    ),
+                  const PincodeChip(),
+                  RoundIconButton(
+                    icon: Icons.tune_rounded,
+                    tooltip: _activeFilters == 0 ? 'Filters' : 'Filters, $_activeFilters on',
+                    onPressed: _openFilters,
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-            child: Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _openFilters,
-                  icon: const Icon(Icons.tune),
-                  label: Text(_activeFilters == 0 ? 'Filters' : 'Filters ($_activeFilters)'),
-                ),
-                const Spacer(),
-                Flexible(
-                  flex: 3,
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: _query.sort,
-                      alignment: AlignmentDirectional.centerEnd,
-                      items: [for (final e in _sorts.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-                      onChanged: (v) => setState(() => _query = _query.copyWith(sort: v)),
-                    ),
-                  ),
-                ),
-              ],
+            Expanded(
+              child: ProductGrid(
+                query: _query,
+                header: header,
+                empty: _activeFilters > 0 || _query.category != null
+                    ? Center(
+                        child: TextButton(
+                          onPressed: () => setState(() => _query = ProductQuery(sort: _query.sort)),
+                          child: const Text('No matches. Clear filters'),
+                        ),
+                      )
+                    : null,
+              ),
             ),
-          ),
-          Expanded(
-            child: ProductGrid(
-              query: _query,
-              empty: _activeFilters > 0 || _query.category != null
-                  ? Center(
-                      child: TextButton(
-                        onPressed: () => setState(() => _query = ProductQuery(sort: _query.sort)),
-                        child: const Text('No matches. Clear filters'),
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

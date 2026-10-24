@@ -1,4 +1,4 @@
-// Non-secret device preferences: chosen pincode, onboarding seen, theme. Secrets live in TokenStore.
+// Non-secret device preferences: chosen pincode, onboarding seen, theme, language. Secrets live in TokenStore.
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +12,10 @@ abstract class AppPrefs {
   /// 'system', 'light' or 'dark'.
   String get themeMode;
   Future<void> setThemeMode(String mode);
+
+  /// 'en', 'te' or 'hi'. Only English copy exists so far; the choice is kept for when translations land.
+  String get language;
+  Future<void> setLanguage(String code);
 }
 
 class SharedAppPrefs implements AppPrefs {
@@ -38,10 +42,16 @@ class SharedAppPrefs implements AppPrefs {
 
   @override
   Future<void> setThemeMode(String mode) => _prefs.setString('fo.themeMode', mode);
+
+  @override
+  String get language => _prefs.getString('fo.language') ?? 'en';
+
+  @override
+  Future<void> setLanguage(String code) => _prefs.setString('fo.language', code);
 }
 
 class MemoryAppPrefs implements AppPrefs {
-  MemoryAppPrefs({this.pincode, this.onboardingDone = false, this.themeMode = 'system'});
+  MemoryAppPrefs({this.pincode, this.onboardingDone = false, this.themeMode = 'system', this.language = 'en'});
 
   @override
   String? pincode;
@@ -60,4 +70,10 @@ class MemoryAppPrefs implements AppPrefs {
 
   @override
   Future<void> setThemeMode(String mode) async => themeMode = mode;
+
+  @override
+  String language;
+
+  @override
+  Future<void> setLanguage(String code) async => language = code;
 }

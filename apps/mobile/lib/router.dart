@@ -1,14 +1,16 @@
 // Navigation map (docs/design/mobile.md): bottom navigation Home · Shop · Cart · Orders · Account as a
 // StatefulShellRoute (each tab keeps its stack); full-screen routes for search, product, login, checkout and
-// order success. Checkout and account pages that need a customer redirect to login and come back.
+// order success. Settings (theme, language) work signed out. Checkout and account pages that need a customer redirect to login and come back.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/format.dart';
 import 'features/account/account_screens.dart';
 import 'features/account/address_screens.dart';
 import 'features/account/help_screen.dart';
+import 'features/account/settings_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/cart/cart_screen.dart';
 import 'features/catalog/home_screen.dart';
@@ -25,13 +27,14 @@ import 'features/orders/order_tracking_screen.dart';
 import 'features/orders/orders_screen.dart';
 import 'state/cart_state.dart';
 import 'state/session.dart';
+import 'widgets/bold.dart';
 import 'widgets/states.dart';
 
 /// Paths that need a signed-in customer.
 bool _needsLogin(String path) =>
     path.startsWith('/checkout') ||
     path.startsWith('/orders/') ||
-    path.startsWith('/account/') && !path.startsWith('/account/help') ||
+    path.startsWith('/account/') && !path.startsWith('/account/help') && !path.startsWith('/account/settings') ||
     path.startsWith('/wishlist');
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -128,6 +131,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(path: 'notifications', builder: (_, _) => const NotificationsScreen()),
                   GoRoute(path: 'preferences', builder: (_, _) => const PreferencesScreen()),
                   GoRoute(path: 'help', builder: (_, _) => const HelpScreen()),
+                  GoRoute(path: 'settings', builder: (_, _) => const SettingsScreen()),
                 ],
               ),
             ],
@@ -138,6 +142,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// The five tabs (D88): the food-app tab bar, and on Home and Shop the floating View cart bar while the cart
+/// has lines. The bar's amount is the server cart's subtotal, only formatted.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
@@ -145,42 +151,30 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartCount = ref.watch(cartLineCountProvider) ?? 0;
+    final cart = ref.watch(cartProvider).value;
+    final cartCount = cart?.lineCount ?? 0;
+    final showCartBar = shell.currentIndex <= 1 && cart != null && !cart.isEmpty && cart.totals != null;
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
-        destinations: [
-          const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          const NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: 'Shop',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: cartCount > 0,
-              label: Text('$cartCount'),
-              child: const Icon(Icons.shopping_basket_outlined),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showCartBar)
+            ViewCartBar(
+              count: cartCount,
+              amount: formatRupees(cart.totals!.subtotalPaise),
+              onTap: () => shell.goBranch(2),
             ),
-            selectedIcon: Badge(
-              isLabelVisible: cartCount > 0,
-              label: Text('$cartCount'),
-              child: const Icon(Icons.shopping_basket),
-            ),
-            label: 'Cart',
-            tooltip: cartCount > 0 ? 'Cart, $cartCount items' : 'Cart',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Orders',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Account',
+          FoodTabBar(
+            currentIndex: shell.currentIndex,
+            onSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+            tabs: [
+              const FoodTab('Home', Icons.home_outlined),
+              const FoodTab('Shop', Icons.grid_view_rounded),
+              FoodTab('Cart', Icons.shopping_cart_outlined, badge: cartCount),
+              const FoodTab('Orders', Icons.receipt_long_outlined),
+              const FoodTab('Account', Icons.person_outline_rounded),
+            ],
           ),
         ],
       ),

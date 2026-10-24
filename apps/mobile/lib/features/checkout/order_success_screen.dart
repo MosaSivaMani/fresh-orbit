@@ -1,3 +1,6 @@
+// Order placed (D88): a teal block with the ORDER_PLACED character in the ringed circle and the server's order
+// as a paper receipt.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -5,9 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
-import '../../illustrations/illustration.dart';
 import '../../state/orders_state.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
 import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
@@ -19,33 +24,37 @@ class OrderSuccessScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final c = illustratedColors(context);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) context.go('/home');
       },
       child: Scaffold(
+        backgroundColor: BlockTone.teal.background(c),
         body: SafeArea(
           child: AsyncValueView<OrderDetail>(
             value: ref.watch(orderDetailProvider(orderId)),
             onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
             data: (order) => ListView(
-              padding: const EdgeInsets.all(FreshSpacing.s6),
+              padding: const EdgeInsets.fromLTRB(FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s6),
               children: [
                 const Center(
-                  child: EntranceMotion(
-                    child: Illustration(slot: IllustrationSlot.orderPlaced, size: 180, excludeFromSemantics: true),
+                  child: EntranceMotion(child: AvatarCircle(slot: IllustrationSlot.orderPlaced, size: 180)),
+                ),
+                const SizedBox(height: FreshSpacing.s4),
+                Semantics(
+                  liveRegion: true,
+                  child: Heading(
+                    lines: const [HeadingLine('Order'), HeadingLine('placed', script: true, brush: true)],
+                    color: BlockTone.teal.foreground(c),
                   ),
                 ),
-                const SizedBox(height: FreshSpacing.s3),
-                Semantics(
-                  header: true,
-                  liveRegion: true,
-                  child: Text('Order placed', style: theme.textTheme.headlineMedium, textAlign: TextAlign.center),
+                const SizedBox(height: FreshSpacing.s2),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OrderStatusBadge(status: order.status),
                 ),
-                const SizedBox(height: FreshSpacing.s1),
-                Center(child: OrderStatusBadge(status: order.status)),
                 const SizedBox(height: FreshSpacing.s5),
                 // Every value is the server's order, only formatted (rule 4).
                 ReceiptCard(
@@ -70,9 +79,16 @@ class OrderSuccessScreen extends ConsumerWidget {
                       'Share it with the delivery partner when you receive your order.',
                 ),
                 const SizedBox(height: FreshSpacing.s5),
-                PrimaryButton(label: 'Track order', onPressed: () => context.go('/orders/${order.id}')),
+                FilledButton(onPressed: () => context.go('/orders/${order.id}'), child: const Text('Track order')),
                 const SizedBox(height: FreshSpacing.s2),
-                OutlinedButton(onPressed: () => context.go('/home'), child: const Text('Continue shopping')),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: BlockTone.teal.foreground(c),
+                    side: BorderSide(color: BlockTone.teal.foreground(c), width: 1.5),
+                  ),
+                  onPressed: () => context.go('/home'),
+                  child: const Text('Continue shopping'),
+                ),
               ],
             ),
           ),

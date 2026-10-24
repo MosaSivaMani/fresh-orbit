@@ -1,4 +1,5 @@
-// Checkout: address → slot → payment → review (server preview with blockers) → place order.
+// Checkout (D88): address → slot → payment → review (server preview with blockers) → place order, each step in
+// a paper box, slots as buttons, and the sticky pay bar with the server's expected total.
 // The place-order button sends one Idempotency-Key per tap-and-retries; PRICE_CHANGED opens a dialog with the
 // server's old and new totals. See state/checkout_state.dart for the rules.
 
@@ -14,7 +15,10 @@ import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/checkout_state.dart';
 import '../../state/location_state.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
 import '../cart/totals_card.dart';
 
@@ -84,101 +88,121 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final preview = state.preview;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+        title: const ScriptTitle(text: 'Check', script: 'out'),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(FreshSpacing.s4),
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
         children: [
-          const _StepTitle(number: 1, title: 'Delivery address'),
-          AsyncValueView<List<Address>>(
-            value: addresses,
-            onRetry: () => ref.invalidate(addressesProvider),
-            loading: const LoadingSemantics(child: SkeletonBox(height: 72)),
-            data: (list) {
-              _autoSelectDefault(list);
-              return Column(
-                children: [
-                  RadioGroup<String>(
-                    groupValue: state.addressId,
-                    onChanged: (id) {
-                      final a = list.firstWhere((x) => x.id == id);
-                      _checkout.selectAddress(a.id, pincode: a.pincode);
-                    },
-                    child: Column(
-                      children: [
-                        for (final a in list)
-                          RadioListTile<String>(
-                            contentPadding: EdgeInsets.zero,
-                            value: a.id,
-                            title: Text('${humanizeCode(a.label)} · ${a.recipientName}'),
-                            subtitle: Text(a.oneLine),
-                          ),
-                      ],
+          _Step(
+            number: 1,
+            title: 'Delivery address',
+            child: AsyncValueView<List<Address>>(
+              value: addresses,
+              onRetry: () => ref.invalidate(addressesProvider),
+              loading: const LoadingSemantics(child: SkeletonBox(height: 72)),
+              data: (list) {
+                _autoSelectDefault(list);
+                return Column(
+                  children: [
+                    RadioGroup<String>(
+                      groupValue: state.addressId,
+                      onChanged: (id) {
+                        final a = list.firstWhere((x) => x.id == id);
+                        _checkout.selectAddress(a.id, pincode: a.pincode);
+                      },
+                      child: Column(
+                        children: [
+                          for (final a in list)
+                            RadioListTile<String>(
+                              contentPadding: EdgeInsets.zero,
+                              value: a.id,
+                              title: Text('${humanizeCode(a.label)} · ${a.recipientName}'),
+                              subtitle: Text(a.oneLine),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: _addAddress,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add a new address'),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _addAddress,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add a new address'),
+                      ),
                     ),
+                  ],
+                );
+              },
+            ),
+          ),
+          _Step(
+            number: 2,
+            title: 'Delivery slot',
+            child: state.addressPincode == null
+                ? Text('Choose an address to see delivery slots.', style: theme.textTheme.bodyMedium)
+                : _SlotPicker(
+                    pincode: state.addressPincode!,
+                    selected: state.slotId,
+                    preferred: ref.watch(preferredSlotProvider),
+                    onSelected: _checkout.selectSlot,
                   ),
-                ],
-              );
-            },
           ),
-          const SizedBox(height: FreshSpacing.s4),
-          const _StepTitle(number: 2, title: 'Delivery slot'),
-          if (state.addressPincode == null)
-            Text('Choose an address to see delivery slots.', style: theme.textTheme.bodyMedium)
-          else
-            _SlotPicker(pincode: state.addressPincode!, selected: state.slotId, onSelected: _checkout.selectSlot),
-          const SizedBox(height: FreshSpacing.s4),
-          const _StepTitle(number: 3, title: 'Payment'),
-          _PaymentPicker(
-            options: preview?.value?.paymentMethods,
-            selected: state.paymentMethod,
-            onSelected: _checkout.selectPayment,
+          _Step(
+            number: 3,
+            title: 'Payment',
+            child: _PaymentPicker(
+              options: preview?.value?.paymentMethods,
+              selected: state.paymentMethod,
+              onSelected: _checkout.selectPayment,
+            ),
           ),
-          const SizedBox(height: FreshSpacing.s4),
-          const _StepTitle(number: 4, title: 'If an item is short'),
-          RadioGroup<String>(
-            groupValue: state.substitutionPreference,
-            onChanged: (v) => _checkout.setSubstitutionPreference(v!),
-            child: const Column(
+          _Step(
+            number: 4,
+            title: 'If an item is short',
+            child: Column(
               children: [
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  value: 'CALL_ME',
-                  title: Text('Call me before replacing it'),
+                RadioGroup<String>(
+                  groupValue: state.substitutionPreference,
+                  onChanged: (v) => _checkout.setSubstitutionPreference(v!),
+                  child: const Column(
+                    children: [
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        value: 'CALL_ME',
+                        title: Text('Call me before replacing it'),
+                      ),
+                      RadioListTile<String>(
+                        contentPadding: EdgeInsets.zero,
+                        value: 'AUTO_SIMILAR',
+                        title: Text('Replace with a similar item'),
+                        subtitle: Text('Only when it costs the same or less.'),
+                      ),
+                    ],
+                  ),
                 ),
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  value: 'AUTO_SIMILAR',
-                  title: Text('Replace with a similar item'),
-                  subtitle: Text('Only when it costs the same or less.'),
+                TextField(
+                  maxLength: 500,
+                  minLines: 1,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Note for the delivery partner (optional)'),
+                  onChanged: _checkout.setNotes,
                 ),
               ],
             ),
           ),
-          TextField(
-            maxLength: 500,
-            minLines: 1,
-            maxLines: 3,
-            decoration: const InputDecoration(labelText: 'Note for the delivery partner (optional)'),
-            onChanged: _checkout.setNotes,
+          _Step(
+            number: 5,
+            title: 'Review',
+            child: preview == null
+                ? Text('Choose an address and a slot to see your bill.', style: theme.textTheme.bodyMedium)
+                : AsyncValueView<CheckoutPreview>(
+                    value: preview,
+                    onRetry: _checkout.refreshPreview,
+                    loading: const LoadingSemantics(label: 'Pricing your order', child: SkeletonBox(height: 220)),
+                    data: (p) => _Review(preview: p),
+                  ),
           ),
-          const SizedBox(height: FreshSpacing.s4),
-          const _StepTitle(number: 5, title: 'Review'),
-          if (preview == null)
-            Text('Choose an address and a slot to see your bill.', style: theme.textTheme.bodyMedium)
-          else
-            AsyncValueView<CheckoutPreview>(
-              value: preview,
-              onRetry: _checkout.refreshPreview,
-              loading: const LoadingSemantics(label: 'Pricing your order', child: SkeletonBox(height: 220)),
-              data: (p) => _Review(preview: p),
-            ),
           if (state.placeError != null) ...[
             const SizedBox(height: FreshSpacing.s3),
             InfoBanner(
@@ -192,41 +216,74 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ],
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(FreshSpacing.s4),
-          child: PrimaryButton(
-            key: const Key('placeOrder'),
-            label: preview?.value == null
-                ? 'Place order'
-                : 'Place order · ${formatRupees(preview!.value!.expectedTotalPaise)}',
-            loading: state.placing,
-            onPressed: state.canPlace ? _place : null,
-          ),
+      bottomNavigationBar: StickyActionBar(
+        leading: _PayMethod(method: state.paymentMethod),
+        action: TealActionButton(
+          key: const Key('placeOrder'),
+          label: 'Place order',
+          amount: preview?.value == null ? null : formatRupees(preview!.value!.expectedTotalPaise),
+          semanticLabel: preview?.value == null
+              ? null
+              : 'Place order, ${formatRupees(preview!.value!.expectedTotalPaise)}',
+          loading: state.placing,
+          onPressed: state.canPlace ? _place : null,
         ),
       ),
     );
   }
 }
 
-class _StepTitle extends StatelessWidget {
-  const _StepTitle({required this.number, required this.title});
+/// One checkout step in a paper box with a numbered title.
+class _Step extends StatelessWidget {
+  const _Step({required this.number, required this.title, required this.child});
 
   final int number;
   final String title;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
-    child: Semantics(header: true, child: Text('$number. $title', style: Theme.of(context).textTheme.titleMedium)),
+    padding: const EdgeInsets.only(bottom: 10),
+    child: SectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [SectionTitle('$number. $title'), const SizedBox(height: 6), child],
+      ),
+    ),
   );
 }
 
+/// The left part of the pay bar: the chosen way to pay.
+class _PayMethod extends StatelessWidget {
+  const _PayMethod({required this.method});
+
+  final String method;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('PAYING BY', style: AppText.eyebrow(c.muted, size: 10)),
+        Text(
+          paymentMethodLabel(method),
+          style: TextStyle(fontFamily: AppFonts.body, fontSize: 13, fontWeight: FontWeight.w800, color: c.ink),
+        ),
+      ],
+    );
+  }
+}
+
 class _SlotPicker extends ConsumerStatefulWidget {
-  const _SlotPicker({required this.pincode, required this.selected, required this.onSelected});
+  const _SlotPicker({required this.pincode, required this.selected, required this.onSelected, this.preferred});
 
   final String pincode;
   final String? selected;
+
+  /// The slot tapped in the cart; chosen here once when this address offers it and it is open.
+  final String? preferred;
   final ValueChanged<String> onSelected;
 
   @override
@@ -235,6 +292,17 @@ class _SlotPicker extends ConsumerStatefulWidget {
 
 class _SlotPickerState extends ConsumerState<_SlotPicker> {
   String? _day;
+  bool _preferredTried = false;
+
+  void _choosePreferred(DeliverySlots slots) {
+    if (_preferredTried || widget.selected != null || widget.preferred == null) return;
+    _preferredTried = true;
+    final slot = slots.items.where((s) => s.id == widget.preferred && s.isBookable).firstOrNull;
+    if (slot == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onSelected(slot.id);
+    });
+  }
 
   static String _statusText(String status) => switch (status) {
     'FULL' => 'Full',
@@ -257,6 +325,7 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
             text: 'No delivery slots are open for this address right now.',
           );
         }
+        _choosePreferred(slots);
         final days = <String>[];
         for (final s in slots.items) {
           if (!days.contains(s.slotDate)) days.add(s.slotDate);
@@ -278,21 +347,20 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
                   ),
               ],
             ),
-            RadioGroup<String>(
-              groupValue: widget.selected,
-              onChanged: (id) => widget.onSelected(id!),
-              child: Column(
-                children: [
-                  for (final s in daySlots)
-                    RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      value: s.id,
-                      enabled: s.isBookable,
-                      title: Text(formatTimeRange(s.startAt, s.endAt)),
-                      subtitle: s.isBookable ? Text('Order by ${formatTime(s.cutoffAt)}') : Text(_statusText(s.status)),
-                    ),
-                ],
-              ),
+            const SizedBox(height: FreshSpacing.s2),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final s in daySlots)
+                  SlotButton(
+                    key: ValueKey('slot-${s.id}'),
+                    title: formatTimeRange(s.startAt, s.endAt),
+                    subtitle: s.isBookable ? 'Order by ${formatTime(s.cutoffAt)}' : _statusText(s.status),
+                    selected: s.id == widget.selected,
+                    onTap: s.isBookable ? () => widget.onSelected(s.id) : null,
+                  ),
+              ],
             ),
           ],
         );

@@ -25,9 +25,11 @@ void main() {
     expect(tester.widget<Text>(find.byKey(const Key('estimatedTotal'))).data, '₹708.50');
     expect(tester.widget<Text>(find.byKey(const Key('maxTotal'))).data, '₹775.45');
     expect(find.text('₹39'), findsOneWidget); // delivery fee from the server
-    expect(find.text('Checkout · ₹708.50'), findsOneWidget);
+    final checkout = find.byKey(const Key('checkoutButton'));
+    expect(find.descendant(of: checkout, matching: find.text('Checkout')), findsOneWidget);
+    expect(find.descendant(of: checkout, matching: find.text('₹708.50')), findsOneWidget);
 
-    await tester.tap(find.text('Checkout · ₹708.50'));
+    await tester.tap(checkout);
     await tester.pumpAndSettle();
     expect(find.text('route:/checkout'), findsOneWidget);
   });
@@ -62,7 +64,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deps.cart.calls, contains('remove:line1'));
-    expect(find.text('Your cart is empty'), findsOneWidget);
+    expect(find.text('Nothing in here yet'), findsOneWidget);
+    expect(find.byKey(const Key('checkoutButton')), findsNothing);
   });
 
   testWidgets('coupon: applied by the server, refusal shown at the field', (tester) async {
