@@ -73,6 +73,9 @@ public sealed class PreparedReport
 /// </summary>
 public sealed class ReportReader(FreshOrbitDbContext db, ICurrentActor actor, IClock clock)
 {
+    /// <summary>Orders placed or delivered more than this many days ago cannot be "today" in any time zone.</summary>
+    private const int SalesWindowDays = 2;
+
     public const int CsvMaxRows = 100_000;
     private const string DefaultTimeZone = "Asia/Kolkata";
 
@@ -302,6 +305,7 @@ public sealed class ReportReader(FreshOrbitDbContext db, ICurrentActor actor, IC
         {
             prepared.Bind(c);
             c.Parameters.AddWithValue("today", today);
+            c.Parameters.AddWithValue("since", clock.UtcNow.AddDays(-SalesWindowDays));
         }
 
         await db.Database.OpenConnectionAsync(cancellationToken);
@@ -338,15 +342,52 @@ public sealed class ReportReader(FreshOrbitDbContext db, ICurrentActor actor, IC
                 cancellationToken);
             var lowStock = await ListAsync(
                 $"""
-                SELECT si.id, si.fulfillment_location_id, si.variant_id, v.sku, v.name, (si.on_hand - si.reserved)::bigint, si.low_stock_threshold::bigint
+                SELECT si.id, si.fulfillment_location_id, si.variant_id, v.sku, v.name, (si.on_hand - si.reserved)::bigint, si.low_stock_threshold::bigint,
+                       v.stock_unit, p.name
                 FROM inventory.stock_items si
                 LEFT JOIN catalog.product_variants v ON v.id = si.variant_id
+                LEFT JOIN catalog.products p ON p.id = v.product_id
                 WHERE si.on_hand - si.reserved <= si.low_stock_threshold AND {Scope("si.fulfillment_location_id")}
                 ORDER BY si.on_hand - si.reserved, si.id
                 LIMIT 50
                 """,
                 Bind,
-                r => new DashboardLowStock(r.GetGuid(0), r.GetGuid(1), r.GetGuid(2), r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4), r.GetInt64(5), r.GetInt64(6)),
+                r => new DashboardLowStock(
+                    r.GetGuid(0),
+                    r.GetGuid(1),
+                    r.GetGuid(2),
+                    r.IsDBNull(3) ? null : r.GetString(3),
+                    r.IsDBNull(4) ? null : r.GetString(4),
+                    r.GetInt64(5),
+                    r.GetInt64(6),
+                    r.IsDBNull(7) ? null : r.GetString(7),
+                    r.IsDBNull(8) ? null : r.GetString(8)),
+                cancellationToken);
+
+            // G4 sales tiles: the business date is the location's local date, as in daily_sales (REP-R1, REP-R2).
+            var sales = await ListAsync(
+                $"""
+                WITH o AS (
+                    SELECT o.status,
+                           coalesce(o.final_total_paise, o.total_paise) AS value_paise,
+                           o.placed_at IS NOT NULL AND (o.placed_at AT TIME ZONE c.time_zone)::date = @today AS placed_today,
+                           o.status = 'DELIVERED' AND o.delivered_at IS NOT NULL
+                               AND (o.delivered_at AT TIME ZONE c.time_zone)::date = @today AS delivered_today
+                    FROM ordering.orders o
+                    JOIN locations.fulfillment_locations fl ON fl.id = o.fulfillment_location_id
+                    JOIN locations.cities c ON c.id = fl.city_id
+                    WHERE o.status <> 'PAYMENT_FAILED' AND (o.placed_at >= @since OR o.delivered_at >= @since)
+                      AND {Scope("o.fulfillment_location_id")}
+                )
+                SELECT count(*) FILTER (WHERE placed_today)::bigint,
+                       count(*) FILTER (WHERE placed_today AND status = 'CANCELLED')::bigint,
+                       coalesce(sum(value_paise) FILTER (WHERE placed_today AND status <> 'CANCELLED'), 0)::bigint,
+                       count(*) FILTER (WHERE delivered_today)::bigint,
+                       coalesce(sum(value_paise) FILTER (WHERE delivered_today), 0)::bigint
+                FROM o
+                """,
+                Bind,
+                r => DashboardSales.Create(r.GetInt64(0), r.GetInt64(1), r.GetInt64(2), r.GetInt64(3), r.GetInt64(4)),
                 cancellationToken);
             var openComplaints = await ScalarAsync(
                 $"SELECT count(*) FROM ordering.complaints k JOIN ordering.orders o ON o.id = k.order_id WHERE k.status = 'OPEN' AND {Scope("o.fulfillment_location_id")}", Bind, cancellationToken);
@@ -368,7 +409,8 @@ public sealed class ReportReader(FreshOrbitDbContext db, ICurrentActor actor, IC
                 openComplaints,
                 refunds[0].Count,
                 refunds[0].Amount,
-                issues);
+                issues,
+                sales[0]);
         }
         finally
         {
@@ -540,7 +582,40 @@ public sealed record DashboardCount(string Status, long Count);
 
 public sealed record DashboardSlot(Guid SlotId, Guid FulfillmentLocationId, DateTimeOffset StartAt, DateTimeOffset EndAt, int BookedCount, int Capacity, int? FillBp);
 
-public sealed record DashboardLowStock(Guid StockItemId, Guid FulfillmentLocationId, Guid VariantId, string? Sku, string? VariantName, long Available, long LowStockThreshold);
+/// <param name="Available">On hand minus reserved, in <paramref name="StockUnit"/> (grams or pieces); likewise the threshold.</param>
+/// <param name="StockUnit">GRAM or PIECE (G4); null when the variant is unknown to Catalog.</param>
+public sealed record DashboardLowStock(
+    Guid StockItemId,
+    Guid FulfillmentLocationId,
+    Guid VariantId,
+    string? Sku,
+    string? VariantName,
+    long Available,
+    long LowStockThreshold,
+    string? StockUnit,
+    string? ProductName);
+
+/// <summary>
+/// Today's sales tiles (G4), for the caller's locations, by each location's local date. Orders placed today exclude
+/// PAYMENT_FAILED (as <c>daily-sales</c> <c>ordersPlaced</c>). <see cref="OrderValuePaise"/> is the value of today's
+/// orders that are not cancelled (final total once packed, else the estimate); <see cref="DeliveredRevenuePaise"/> is
+/// the REP-R2 revenue of orders delivered today (the same figure as <c>daily-sales</c> <c>netRevenuePaise</c>).
+/// </summary>
+/// <param name="AverageOrderValuePaise">OrderValuePaise / (OrdersPlaced − OrdersCancelled), truncated; null when that is 0.</param>
+public sealed record DashboardSales(
+    long OrdersPlaced,
+    long OrdersCancelled,
+    long OrderValuePaise,
+    long? AverageOrderValuePaise,
+    long OrdersDelivered,
+    long DeliveredRevenuePaise)
+{
+    public static DashboardSales Create(long ordersPlaced, long ordersCancelled, long orderValuePaise, long ordersDelivered, long deliveredRevenuePaise)
+    {
+        var kept = ordersPlaced - ordersCancelled;
+        return new DashboardSales(ordersPlaced, ordersCancelled, orderValuePaise, kept > 0 ? orderValuePaise / kept : null, ordersDelivered, deliveredRevenuePaise);
+    }
+}
 
 /// <summary>Live dashboard (REP-R8); <see cref="AsOf"/> is now.</summary>
 public sealed record DashboardResponse(
@@ -553,4 +628,5 @@ public sealed record DashboardResponse(
     long OpenComplaints,
     long RefundsRequested,
     long RefundsRequestedPaise,
-    long OpenPaymentIssues);
+    long OpenPaymentIssues,
+    DashboardSales Sales);

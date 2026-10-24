@@ -49,6 +49,23 @@ describe("tax rules permissions (D35)", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("quotes the category version in If-Match when scheduling (G9)", async () => {
+    mockRules();
+    let ifMatch: string | null = null;
+    server.use(
+      http.post(`${API}/admin/pricing/tax-rules`, ({ request }) => {
+        ifMatch = request.headers.get("If-Match");
+        return HttpResponse.json({ ...RULE, version: "2" });
+      }),
+    );
+    const { user } = renderApp({ permissions: ["tax.manage"], path: "/pricing/tax-rules" });
+    await user.click(await screen.findByRole("button", { name: "New rate for GST_FRESH_FISH" }));
+    await user.type(screen.getByLabelText(/GST rate/), "12");
+    await user.click(screen.getByRole("button", { name: "Schedule rate" }));
+
+    await expect.poll(() => ifMatch).toBe('"1"');
+  });
+
   it("refuses staff with neither permission", async () => {
     renderApp({ permissions: ["orders.view"], path: "/pricing/tax-rules" });
     expect(await screen.findByText("You do not have access to this page")).toBeInTheDocument();

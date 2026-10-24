@@ -98,6 +98,7 @@ Order `DELIVERED`, `RETURNED`, `DELIVERY_FAILED` keep the redemption `APPLIED` (
 | PROMO-R24 | `GET /coupons` lists `ACTIVE`, started, not expired, city-matching coupons that are marked listed (gap: `is_listed`) and not exhausted for the customer. |
 | PROMO-R26 | **Product offer line** (Catalog's `IProductOfferSource`, CAT-R26): for each product, among the listed coupons usable in the city now (as PROMO-R24, not customer-specific), those whose scope covers the product (no scope = all; CATEGORY covers sub-categories); the most specific wins (PRODUCT, then CATEGORY, then store-wide), then lowest `min_order_paise`, then code. Text composed by the server: "15% off up to ₹100" / "₹50 off" / "Free delivery", + " on orders above ₹499", + " on your first order", + " with code CODE". No amount is computed for display. |
 | PROMO-R25 | Banners: `link_type COUPON` target must be an existing coupon code; `CATEGORY`/`PRODUCT` target must exist (Catalog.Public). Permission `catalog.manage` (API §4.11). |
+| PROMO-R27 | Banner responses (`GET /promotions`, `/home` banners) carry `imageUrl`, the public URL of `imageKey` from file storage, or null when there is no valid key. Clients use the URL as given. Promotions supplies `/home` banners through `IHomeBannerSource` (Catalog.Public). |
 
 ## 4. Events
 

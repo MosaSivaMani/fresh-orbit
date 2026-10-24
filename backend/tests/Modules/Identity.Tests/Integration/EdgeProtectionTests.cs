@@ -100,6 +100,28 @@ public sealed class EdgeProtectionTests(E1Database database) : IAsyncLifetime
         (await RequestIpAsync(phone)).Should().Be("198.51.100.3");
     }
 
+    /// <summary>
+    /// W9: the production layout (infra/compose/docker-compose.prod.yml). The website's Next.js server proxies /api/v1 from
+    /// the trusted "edge" network and forwards the one visitor address Caddy wrote; containers on the "backend" network
+    /// (worker, database, monitoring) and anything else are not believed.
+    /// </summary>
+    [Fact]
+    public async Task Forwarded_for_from_the_web_server_on_the_edge_network_is_honoured_and_other_networks_are_not()
+    {
+        var factory = Create(new Dictionary<string, string?> { ["ForwardedHeaders:KnownNetworks:0"] = "172.30.0.0/24" });
+        var viaWeb = E1ApiFactory.NewPhone();
+        var fromBackend = E1ApiFactory.NewPhone();
+        var fromInternet = E1ApiFactory.NewPhone();
+
+        (await RequestOtpAsync(factory, viaWeb, peer: "172.30.0.7", forwardedFor: "198.51.100.30")).StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await RequestOtpAsync(factory, fromBackend, peer: "172.31.0.4", forwardedFor: "198.51.100.31")).StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await RequestOtpAsync(factory, fromInternet, peer: "203.0.113.9", forwardedFor: "198.51.100.32")).StatusCode.Should().Be(HttpStatusCode.Accepted);
+
+        (await RequestIpAsync(viaWeb)).Should().Be("198.51.100.30");
+        (await RequestIpAsync(fromBackend)).Should().Be("172.31.0.4");
+        (await RequestIpAsync(fromInternet)).Should().Be("203.0.113.9");
+    }
+
     [Fact]
     public async Task Invalid_known_network_stops_the_host()
     {

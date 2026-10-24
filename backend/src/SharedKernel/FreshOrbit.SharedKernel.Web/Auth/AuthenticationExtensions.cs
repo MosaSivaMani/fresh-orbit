@@ -10,6 +10,9 @@ namespace FreshOrbit.SharedKernel.Web.Auth;
 
 public static class AuthenticationExtensions
 {
+    /// <summary>The <c>actor_type</c> claim value of a staff token (<see cref="ActorType.Staff"/> as a code).</summary>
+    public const string StaffActorCode = "STAFF";
+
     /// <summary>
     /// JWT bearer authentication with a symmetric key from <c>Jwt:SigningKey</c> (validated at startup), issuer and
     /// audience checks, claim names kept as issued (<c>sub</c>, <c>perm</c>, …), plus <see cref="HttpCurrentActor"/>
@@ -58,4 +61,14 @@ public static class AuthenticationExtensions
             .RequireAuthenticatedUser()
             .RequireClaim(FreshOrbitClaimTypes.Permission, permission));
     }
+
+    /// <summary>
+    /// Requires an authenticated staff token, whatever its permissions (else 401/403). For staff reference lookups
+    /// (own locations, city and variant names) that every admin screen needs.
+    /// </summary>
+    public static TBuilder RequireStaffActor<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+        => builder.RequireAuthorization(policy => policy
+            .RequireAuthenticatedUser()
+            .RequireClaim(FreshOrbitClaimTypes.ActorType, StaffActorCode));
 }

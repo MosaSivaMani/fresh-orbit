@@ -36,7 +36,25 @@ public interface ICatalogApi
     /// <summary>Product ids by slug for the slugs that exist, any status (missing slugs are absent).</summary>
     Task<IReadOnlyDictionary<string, Guid>> GetProductIdsBySlugsAsync(IReadOnlyCollection<string> slugs, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>
+    /// Storefront cards of the requested products (missing ids are absent), priced at
+    /// <paramref name="fulfillmentLocationId"/> from the same storefront offers the product list uses (one query each
+    /// for products and offers). Without a location, or when not sold there, the price is null.
+    /// </summary>
+    Task<IReadOnlyList<ProductCard>> GetProductCardsAsync(IReadOnlyCollection<Guid> productIds, Guid? fulfillmentLocationId, DateTimeOffset at, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
 }
+
+/// <summary>A product as a storefront card (W5).</summary>
+/// <param name="IsVisible">False when the product is not ACTIVE or its category is inactive (not shown on the storefront).</param>
+/// <param name="ImageUrl">Public URL of the primary image (small rendition); null without an image.</param>
+/// <param name="Price">The lowest current price of a stocked variant at the location; null without a location or when not sold there.</param>
+/// <param name="IsAvailable">True when the price is known and some stocked variant has stock available now.</param>
+public sealed record ProductCard(Guid ProductId, string Slug, string Name, string? ImageUrl, bool IsVisible, ProductCardPrice? Price, bool IsAvailable);
+
+/// <param name="PerUnit">The variant's sell unit (KG, PIECE or PACK).</param>
+public sealed record ProductCardPrice(long UnitPricePaise, long? CompareAtPaise, SellUnit PerUnit);
 
 /// <summary>How a variant is sold. Stored as KG / PIECE / PACK.</summary>
 public enum SellUnit

@@ -52,4 +52,7 @@ public sealed record FulfillmentLocationResponse(
     IReadOnlyList<OperatingHoursResponse> OperatingHours,
     string Version);
 
+/// <summary>A location the signed-in staff member may act on (<c>GET /admin/me/locations</c>, any staff).</summary>
+public sealed record StaffLocationItem(Guid Id, Guid CityId, string Code, string Name, LocationStatus Status);
+
 public sealed record ClosureResponse(Guid Id, Guid FulfillmentLocationId, DateOnly ClosedOn, string? Reason);

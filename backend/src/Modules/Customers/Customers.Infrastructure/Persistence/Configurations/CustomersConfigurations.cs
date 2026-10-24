@@ -1,5 +1,6 @@
 using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
+using FreshOrbit.Customers.Domain.StockAlerts;
 using FreshOrbit.Customers.Domain.Wishlist;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -56,5 +57,20 @@ internal sealed class WishlistItemConfiguration : IEntityTypeConfiguration<Wishl
         builder.ToTable("wishlist_items");
         builder.HasKey(x => new { x.CustomerId, x.ProductId });
         builder.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal sealed class StockAlertConfiguration : IEntityTypeConfiguration<StockAlert>
+{
+    public void Configure(EntityTypeBuilder<StockAlert> builder)
+    {
+        builder.ToTable("stock_alerts");
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+
+        // CUS-R10: one alert per customer, variant and location; the second index serves the back-in-stock handler.
+        builder.HasIndex(x => new { x.CustomerId, x.VariantId, x.FulfillmentLocationId }).IsUnique();
+        builder.HasIndex(x => new { x.VariantId, x.FulfillmentLocationId });
     }
 }

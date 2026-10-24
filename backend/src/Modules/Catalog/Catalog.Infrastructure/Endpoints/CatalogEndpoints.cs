@@ -24,6 +24,7 @@ internal static class CatalogEndpoints
     public const string PincodeHeader = "X-Pincode";
     public const string LocationHeader = "X-Fulfillment-Location";
     public const string ServiceAreaHeader = "X-Service-Area";
+    private const int MaxSearchLength = 100;
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -35,7 +36,7 @@ internal static class CatalogEndpoints
 
     private static void MapStorefront(RouteGroupBuilder group)
     {
-        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IClock clock, CancellationToken ct) =>
+        group.MapGet("/home", async (HttpContext http, StorefrontService service, IStorefrontReads reads, StorefrontEnricher enricher, IEnumerable<FreshOrbit.Catalog.Public.IHomeBannerSource> bannerSources, IClock clock, CancellationToken ct) =>
         {
             var location = await ResolveAsync(http, service, required: false, ct);
             var categories = await reads.GetCategoryTreeAsync(ct);
@@ -43,7 +44,9 @@ internal static class CatalogEndpoints
             var (products, _) = await reads.ListProductsAsync(query, location, clock.UtcNow, ct);
             var featured = await enricher.EnrichAsync(products, location, clock.UtcNow, ct);
             var bestsellers = location is null ? [] : await enricher.BestsellersAsync(location, clock.UtcNow, ct);
-            return TypedResults.Ok(new HomeResponse([], categories, featured, location is null) { Bestsellers = bestsellers });
+            var source = bannerSources.FirstOrDefault();
+            var banners = source is null ? [] : await source.GetHomeBannersAsync(location?.FulfillmentLocationId, clock.UtcNow, ct);
+            return TypedResults.Ok(new HomeResponse(banners, categories, featured, location is null) { Bestsellers = bestsellers });
         })
         .Produces<HomeResponse>()
         .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
@@ -179,8 +182,34 @@ internal static class CatalogEndpoints
 
     private static void MapAdminProducts(RouteGroupBuilder admin)
     {
+        // G3: reference names every staff screen needs (substitution proposals, inventory, pricing); any staff token.
         admin.MapGet("/preparation-methods", async (ICatalogAdminReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ListPreparationMethodsAsync(ct)))
-            .RequirePermission(ManagePermission);
+            .RequireStaffActor();
+
+        admin.MapGet("/catalog/variants", async (
+                [AsParameters] PagedRequest paging,
+                string? q,
+                [FromQuery(Name = "id")] Guid[]? id,
+                bool? activeOnly,
+                ICatalogAdminReads reads,
+                CancellationToken ct) =>
+            {
+                if (q is { Length: > MaxSearchLength })
+                {
+                    throw new RefusalException(new FieldError("q", CatalogErrors.ValidationFailed, $"Search text must be at most {MaxSearchLength} characters."));
+                }
+
+                if (id is { Length: > PagedRequest.MaxPageSize })
+                {
+                    throw new RefusalException(new FieldError("id", CatalogErrors.ValidationFailed, $"Send at most {PagedRequest.MaxPageSize} id values."));
+                }
+
+                var (items, total) = await reads.SearchVariantsAsync(q, id ?? [], activeOnly ?? false, paging.Skip, paging.PageSize, ct);
+                return TypedResults.Ok(new PagedResponse<VariantLookupItem>(items, paging.Page, paging.PageSize, total));
+            })
+            .WithValidation<PagedRequest>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .RequireStaffActor();
 
         admin.MapGet("/products", async (
                 [AsParameters] PagedRequest paging,

@@ -87,6 +87,8 @@ Error codes: `docs/api/README.md` §2 (Catalog, Common).
 | CAT-R25 | **Freshness**: `{ caughtOn, receivedAt }` of the batch the next order is packed from (Inventory's `IVariantFreshnessSource`: ACTIVE, quantity left, best-before after now, FEFO). `null` without location or sellable stock; `caughtOn` `null` when not recorded at receipt. |
 | CAT-R26 | **Offer line**: `{ couponCode, text }` from Promotions' `IProductOfferSource` (PROMO-R26) for the location's city; `null` without location or when none applies. No amount is shown or computed outside the cart. |
 | CAT-R27 | **Public preparation methods** (`GET /preparation-methods`): reference methods offered on at least one active preparation of an active variant of a visible product; with a location, also priced, stocked and charged there. Ordered by `sortOrder`, then code. |
+| CAT-R28 | `/home` banners are typed (`id, title, subtitle, imageKey, imageUrl, linkType, linkTarget, startsAt, endsAt, sortOrder`) and come from the `IHomeBannerSource` port in `Catalog.Public`, implemented by Promotions; with no source registered the list is empty. |
+| CAT-R29 | `ICatalogApi.GetProductCardsAsync(productIds, fulfillmentLocationId?, at)` returns a priced card per product in two queries (products + `storefront_offers`): lowest current unit price at the location, compare-at, `isAvailable` (any offer with stock), small image URL, `isVisible` (ACTIVE). Used by the wishlist (CUS-R11). |
 
 ## 4. Events
 
@@ -118,6 +120,15 @@ Consumed: `ProductImageRemoved` (own, follow-on). No other module's events.
 | ReorderImages | `PUT …/images/order` (IM) | product images | ids = exactly current set | update `sort_order` | `ProductUpdated` |
 | RemoveImage | `DELETE …/images/{imageId}` (IM) | product images | ACTIVE product keeps ≥1 image | delete row | `ProductImageRemoved` |
 | Browse (query) | `GET /api/v1/products`, `/products/{slug}`, `/categories`, `/home`, `/search/suggest` | one SQL per request (Q1) | CAT-R10–R15 | — | — |
+
+### Staff lookups (G3)
+
+`GET /admin/catalog/variants` and `GET /admin/preparation-methods` are readable by any staff token (packing,
+inventory, pricing and coupon screens label variants with them); every write stays `catalog.manage`. The search
+matches part of the product name, variant name or SKU (case-insensitive, `q` ≤ 100 chars), or resolves up to 100
+`id` values; `activeOnly=true` drops inactive variants and archived products. One count and one page query; items
+`{ variantId, productId, productName, variantName, sku, sellUnit, stockUnit, productStatus, isActive }` by product
+name, then SKU.
 
 ## 6. Test scenarios
 

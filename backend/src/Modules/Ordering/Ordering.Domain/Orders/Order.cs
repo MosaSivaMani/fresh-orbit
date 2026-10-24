@@ -230,6 +230,12 @@ public sealed partial class Order : AggregateRoot
             throw new DomainException(OrderingErrors.CartEmpty, "An order needs at least one line.");
         }
 
+        // W10: order times are shown in the location's zone, so an order never exists without it (rule 7).
+        if (string.IsNullOrWhiteSpace(placement.TimeZone))
+        {
+            throw new DomainException(OrderingErrors.ConfigurationMissing, "The delivery location has no time zone; choose another delivery address.", "deliveryAddressId");
+        }
+
         if (placement.PaymentMethod == PaymentMethod.Online && placement.PaymentDueAt is null)
         {
             throw new ArgumentException("An ONLINE order needs a payment due time.", nameof(placement));

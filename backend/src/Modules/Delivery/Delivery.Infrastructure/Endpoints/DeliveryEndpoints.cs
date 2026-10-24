@@ -34,7 +34,8 @@ internal static class DeliveryEndpoints
     public static void Map(IEndpointRouteBuilder endpoints)
     {
         endpoints.MapGet("/delivery-slots", GetCustomerSlotsAsync).RequireRateLimiting(RateLimitPolicies.Public).AllowAnonymous()
-            .Produces<CustomerSlotsResponse>();
+            .Produces<CustomerSlotsResponse>()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         // G7: a minimal rider picker for cash settlement; readable with delivery.manage or cash.settle, so it sits
         // outside the delivery.manage group.
@@ -95,7 +96,7 @@ internal static class DeliveryEndpoints
         IReadOnlyList<CustomerSlotResponse> items = from < dates[0] || to > dates[^1]
             ? []
             : await reads.ListCustomerSlotsAsync(locationId, from, to, cancellationToken);
-        return TypedResults.Ok(new CustomerSlotsResponse(locationId, items));
+        return TypedResults.Ok(new CustomerSlotsResponse(locationId, items, served.TimeZone));
     }
 
     // ---- slot templates ---------------------------------------------------------------------------------------

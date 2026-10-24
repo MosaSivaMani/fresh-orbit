@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -208,9 +209,34 @@ public abstract class StorefrontTestBase(StorefrontDatabase database) : IAsyncLi
         return json;
     }
 
-    /// <summary>A tax rule for the category from now (unchanged when one with this rate is already current).</summary>
-    protected Task<JsonElement> EnsureTaxRuleAsync(string category, int rateBp)
-        => OkAsync(HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", new { taxCategoryCode = category, rateBp });
+    /// <summary>
+    /// A tax rule for the category from now (unchanged when one with this rate is already current). Quotes the
+    /// category's schedule version (G9) and retries when a parallel test class changed it first.
+    /// </summary>
+    protected async Task<JsonElement> EnsureTaxRuleAsync(string category, int rateBp)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            var version = await TaxRuleVersionAsync(category);
+            var response = await SendAsync(Admin, HttpMethod.Post, "/api/v1/admin/pricing/tax-rules", new { taxCategoryCode = category, rateBp }, version, ifNoneMatchAny: version is null);
+            var json = await ReadJsonAsync(response);
+            if (attempt < 5 && response.StatusCode is HttpStatusCode.PreconditionFailed or HttpStatusCode.Conflict)
+            {
+                continue;
+            }
+
+            response.IsSuccessStatusCode.Should().BeTrue($"POST tax-rules answered {(int)response.StatusCode} {json}");
+            return json;
+        }
+    }
+
+    /// <summary>The tax category's schedule version from <c>GET /admin/pricing/tax-rules</c>; null while it has no period.</summary>
+    protected async Task<string?> TaxRuleVersionAsync(string category)
+    {
+        var rules = await OkAsync(HttpMethod.Get, "/api/v1/admin/pricing/tax-rules");
+        return rules.EnumerateArray().Where(r => r.GetProperty("taxCategoryCode").GetString() == category)
+            .Select(r => r.GetProperty("version").GetString()).FirstOrDefault();
+    }
 
     /// <summary>An ACTIVE city with an ACTIVE location and a service area serving one new pincode.</summary>
     protected async Task<ServedLocation> CreateServedLocationAsync()
