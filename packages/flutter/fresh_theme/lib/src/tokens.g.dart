@@ -57,11 +57,16 @@ class FreshColors extends ThemeExtension<FreshColors> {
     required this.infoText,
     required this.surfaceSand,
     required this.surfaceSandStrong,
+    required this.surfacePaper,
+    required this.outlineInk,
+    required this.tealSoft,
     required this.accentCoral,
     required this.onAccentCoral,
     required this.accentCoralSubtle,
     required this.accentCoralText,
-    required this.outlineInk,
+    required this.mango,
+    required this.onMango,
+    required this.ice,
   });
 
   final Color background;
@@ -106,11 +111,16 @@ class FreshColors extends ThemeExtension<FreshColors> {
   final Color infoText;
   final Color surfaceSand;
   final Color surfaceSandStrong;
+  final Color surfacePaper;
+  final Color outlineInk;
+  final Color tealSoft;
   final Color accentCoral;
   final Color onAccentCoral;
   final Color accentCoralSubtle;
   final Color accentCoralText;
-  final Color outlineInk;
+  final Color mango;
+  final Color onMango;
+  final Color ice;
 
   static const FreshColors light = FreshColors(
     background: Color(0xFFF4F8F7),
@@ -153,13 +163,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     onInfo: Color(0xFFFFFFFF),
     infoSubtle: Color(0xFFE3EEF9),
     infoText: Color(0xFF164F82),
-    surfaceSand: Color(0xFFFBF3E6),
-    surfaceSandStrong: Color(0xFFF3E3C7),
-    accentCoral: Color(0xFFF2795A),
-    onAccentCoral: Color(0xFF2A0E06),
-    accentCoralSubtle: Color(0xFFFDE7DF),
-    accentCoralText: Color(0xFFAE3A1E),
-    outlineInk: Color(0xFF0A2630),
+    surfaceSand: Color(0xFFFBF4E8),
+    surfaceSandStrong: Color(0xFFF3E4CC),
+    surfacePaper: Color(0xFFFFFDF8),
+    outlineInk: Color(0xFF14302F),
+    tealSoft: Color(0xFFD8EEEA),
+    accentCoral: Color(0xFFF07A5A),
+    onAccentCoral: Color(0xFF1D0F0A),
+    accentCoralSubtle: Color(0xFFFCE3DA),
+    accentCoralText: Color(0xFFB4432A),
+    mango: Color(0xFFF5B544),
+    onMango: Color(0xFF231707),
+    ice: Color(0xFFDCEFF5),
   );
 
   static const FreshColors dark = FreshColors(
@@ -177,7 +192,7 @@ class FreshColors extends ThemeExtension<FreshColors> {
     primary: Color(0xFF5CCFC0),
     primaryHover: Color(0xFF7ADAD0),
     onPrimary: Color(0xFF042029),
-    accent: Color(0xFF3CC2B1),
+    accent: Color(0xFF3FC0AE),
     accentHover: Color(0xFF5CCFC0),
     onAccent: Color(0xFF042029),
     accentSubtle: Color(0xFF0E3B3B),
@@ -203,13 +218,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     onInfo: Color(0xFF04203B),
     infoSubtle: Color(0xFF10304D),
     infoText: Color(0xFFA9CFF6),
-    surfaceSand: Color(0xFF1F2926),
-    surfaceSandStrong: Color(0xFF2B3530),
-    accentCoral: Color(0xFFFF8E70),
-    onAccentCoral: Color(0xFF2A0E06),
-    accentCoralSubtle: Color(0xFF3F2019),
-    accentCoralText: Color(0xFFFFAD95),
-    outlineInk: Color(0xFF010B0F),
+    surfaceSand: Color(0xFF14201F),
+    surfaceSandStrong: Color(0xFF1C2C2A),
+    surfacePaper: Color(0xFF1A2826),
+    outlineInk: Color(0xFFF4EBDD),
+    tealSoft: Color(0xFF16413C),
+    accentCoral: Color(0xFFF28B6E),
+    onAccentCoral: Color(0xFF1D0F0A),
+    accentCoralSubtle: Color(0xFF3D2620),
+    accentCoralText: Color(0xFFF7A68E),
+    mango: Color(0xFFE9AE45),
+    onMango: Color(0xFF231707),
+    ice: Color(0xFF1D3940),
   );
 
   @override
@@ -256,11 +276,16 @@ class FreshColors extends ThemeExtension<FreshColors> {
     Color? infoText,
     Color? surfaceSand,
     Color? surfaceSandStrong,
+    Color? surfacePaper,
+    Color? outlineInk,
+    Color? tealSoft,
     Color? accentCoral,
     Color? onAccentCoral,
     Color? accentCoralSubtle,
     Color? accentCoralText,
-    Color? outlineInk,
+    Color? mango,
+    Color? onMango,
+    Color? ice,
   }) {
     return FreshColors(
       background: background ?? this.background,
@@ -305,11 +330,16 @@ class FreshColors extends ThemeExtension<FreshColors> {
       infoText: infoText ?? this.infoText,
       surfaceSand: surfaceSand ?? this.surfaceSand,
       surfaceSandStrong: surfaceSandStrong ?? this.surfaceSandStrong,
+      surfacePaper: surfacePaper ?? this.surfacePaper,
+      outlineInk: outlineInk ?? this.outlineInk,
+      tealSoft: tealSoft ?? this.tealSoft,
       accentCoral: accentCoral ?? this.accentCoral,
       onAccentCoral: onAccentCoral ?? this.onAccentCoral,
       accentCoralSubtle: accentCoralSubtle ?? this.accentCoralSubtle,
       accentCoralText: accentCoralText ?? this.accentCoralText,
-      outlineInk: outlineInk ?? this.outlineInk,
+      mango: mango ?? this.mango,
+      onMango: onMango ?? this.onMango,
+      ice: ice ?? this.ice,
     );
   }
 
@@ -361,11 +391,16 @@ class FreshColors extends ThemeExtension<FreshColors> {
       infoText: Color.lerp(infoText, other.infoText, t)!,
       surfaceSand: Color.lerp(surfaceSand, other.surfaceSand, t)!,
       surfaceSandStrong: Color.lerp(surfaceSandStrong, other.surfaceSandStrong, t)!,
+      surfacePaper: Color.lerp(surfacePaper, other.surfacePaper, t)!,
+      outlineInk: Color.lerp(outlineInk, other.outlineInk, t)!,
+      tealSoft: Color.lerp(tealSoft, other.tealSoft, t)!,
       accentCoral: Color.lerp(accentCoral, other.accentCoral, t)!,
       onAccentCoral: Color.lerp(onAccentCoral, other.onAccentCoral, t)!,
       accentCoralSubtle: Color.lerp(accentCoralSubtle, other.accentCoralSubtle, t)!,
       accentCoralText: Color.lerp(accentCoralText, other.accentCoralText, t)!,
-      outlineInk: Color.lerp(outlineInk, other.outlineInk, t)!,
+      mango: Color.lerp(mango, other.mango, t)!,
+      onMango: Color.lerp(onMango, other.onMango, t)!,
+      ice: Color.lerp(ice, other.ice, t)!,
     );
   }
 }

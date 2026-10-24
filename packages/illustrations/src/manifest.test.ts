@@ -124,9 +124,16 @@ describe("manifest.json", () => {
     }
   });
 
-  it("keeps the cast our own (no named studios, no hoodie-and-glasses lead)", () => {
+  it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
-    expect(text).not.toMatch(/pixar|disney|hoodie|glasses|yellow/);
+    expect(text).not.toMatch(/pixar|disney|hoodie/);
+    expect(Object.values(manifest.characters).map((c) => c.name)).toEqual([
+      "Padma",
+      "Ravi",
+      "Anil",
+      "Ammamma",
+      "Chanduva",
+    ]);
   });
 
   it("refuses a missing alt text, a duplicate slot and a stale prompt", () => {
@@ -146,7 +153,7 @@ describe("manifest.json", () => {
     const m = clone();
     const entry = m.slots.find((s) => s.aspect === "1:1")!;
     entry.status = "FINAL";
-    entry.file = "assets/final.webp";
+    entry.file = `assets/${entry.slot.toLowerCase()}.webp`;
     const facts = (size: number, header: Uint8Array): FileFacts => ({
       size: (p) => (p === entry.file ? size : disk.size(p)),
       head: (p) => (p === entry.file ? header : disk.head(p)),
@@ -154,23 +161,40 @@ describe("manifest.json", () => {
     const ok = checkManifest(m, facts(120 * 1024, webpVp8x(1280, 1280)));
     expect(ok).toEqual([]);
 
-    expect(codes(checkManifest(m, facts(151 * 1024, webpVp8x(1280, 1280))))).toEqual([entry.slot]);
+    expect(codes(checkManifest(m, facts(401 * 1024, webpVp8x(1280, 1280))))).toEqual([entry.slot]);
     expect(checkManifest(m, facts(80 * 1024, webpVp8x(800, 800)))[0]).toContain("at least 1024");
     expect(checkManifest(m, facts(80 * 1024, webpVp8x(1280, 960)))[0]).toContain("aspect");
+  });
+
+  it("accepts a PNG final named after the slot and refuses any other name", () => {
+    const m = clone();
+    const entry = m.slots.find((s) => s.aspect === "1:1")!;
+    entry.status = "FINAL";
+    entry.file = `assets/${entry.slot.toLowerCase()}.png`;
+    const png = new Uint8Array(24);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+    png.set([0, 0, 4, 0, 0, 0, 4, 0], 16);
+    const facts: FileFacts = {
+      size: (p) => (p.endsWith(".png") ? 300 * 1024 : disk.size(p)),
+      head: (p) => (p.endsWith(".png") ? png : disk.head(p)),
+    };
+    expect(checkManifest(m, facts)).toEqual([]);
+    entry.file = "assets/Final Image.png";
+    expect(checkManifest(m, facts).join("\n")).toContain(`assets/${entry.slot.toLowerCase()}.png`);
   });
 
   it("refuses a FINAL status that still points at the SVG placeholder", () => {
     const m = clone();
     m.slots[0]!.status = "FINAL";
-    expect(checkManifest(m, disk).join("\n")).toContain("must be a .webp");
+    expect(checkManifest(m, disk).join("\n")).toContain("must be a .png or .webp");
   });
 
   it("serves the placeholder until the slot is FINAL", () => {
     const entry = structuredClone(manifest.slots[0]!);
     expect(toRuntime(entry).src).toMatch(/\.svg$/);
     entry.status = "FINAL";
-    entry.file = "assets/onboarding-fresh.webp";
-    expect(toRuntime(entry)).toMatchObject({ src: "onboarding-fresh.webp", width: 1024 });
+    entry.file = "assets/onboarding_fresh.webp";
+    expect(toRuntime(entry)).toMatchObject({ src: "onboarding_fresh.webp", width: 1024 });
   });
 });
 

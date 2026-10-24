@@ -6,7 +6,9 @@ export type Background = "TRANSPARENT" | "SAND";
 export type Status = "PLACEHOLDER" | "FINAL";
 
 export interface CharacterSheet {
-  /** Who this is in the story. */
+  /** Short name used in docs and the playground (Padma, Ravi, Anil, Ammamma, Chanduva). */
+  name: string;
+  /** Who this is in the story; starts with the name. */
   role: string;
   /** Face, hair, clothes and props, in one paragraph. Copied into every prompt that uses the character. */
   description: string;
@@ -80,14 +82,18 @@ export const REQUIRED_SLOTS = [
 ] as const;
 
 export const LIMITS = {
-  finalMaxBytes: 150 * 1024,
+  finalMaxBytes: 400 * 1024,
   finalMinLongestSide: 1024,
   placeholderMaxBytes: 6 * 1024,
   /** Allowed difference between the image's ratio and its declared aspect. */
   aspectTolerance: 0.02,
 } as const;
 
-export const PROMPT_SUFFIX = "no text, no letters, no logos, no watermark";
+/** File name stem for a slot: the slot code in lower snake case, e.g. EMPTY_CART -> empty_cart. */
+export const fileStem = (slot: string): string => slot.toLowerCase();
+
+export const PROMPT_SUFFIX =
+  "No text, no letters, no numbers, no logos, no watermark. High resolution.";
 
 const ASPECT_RATIO: Record<Aspect, number> = { "1:1": 1, "4:3": 4 / 3 };
 
@@ -131,6 +137,9 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
   const add = (slot: string, message: string) => problems.push(`${slot}: ${message}`);
 
   if (!manifest.stylePrompt?.trim()) problems.push("manifest: stylePrompt is missing.");
+  for (const [key, sheet] of Object.entries(manifest.characters ?? {}))
+    if (!sheet.name?.trim() || !sheet.role?.trim() || !sheet.description?.trim())
+      problems.push(`manifest: character ${key} needs a name, a role and a description.`);
   if (manifest.promptSuffix !== PROMPT_SUFFIX)
     problems.push(`manifest: promptSuffix must be "${PROMPT_SUFFIX}".`);
   for (const word of ["pixar", "disney"]) {
@@ -190,20 +199,28 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
     }
 
     if (entry.placeholder) {
-      if (!entry.placeholder.endsWith(".svg")) add(slot, "placeholder must be an .svg file.");
+      if (entry.placeholder !== `assets/${fileStem(slot)}.svg`)
+        add(slot, `placeholder must be assets/${fileStem(slot)}.svg.`);
       const size = files.size(entry.placeholder);
       if (size !== null && size > LIMITS.placeholderMaxBytes)
         add(slot, `placeholder is ${size} bytes; keep it under ${LIMITS.placeholderMaxBytes}.`);
     }
 
     if (entry.status === "FINAL" && entry.file) {
-      if (!entry.file.endsWith(".webp")) add(slot, "a FINAL file must be a .webp image.");
+      const ext = /\.(png|webp)$/.exec(entry.file)?.[1];
+      if (!ext) add(slot, "a FINAL file must be a .png or .webp image.");
+      else if (entry.file !== `assets/${fileStem(slot)}.${ext}`)
+        add(slot, `a FINAL file must be named assets/${fileStem(slot)}.${ext}.`);
       const size = files.size(entry.file);
       if (size !== null) {
         if (size > LIMITS.finalMaxBytes)
-          add(slot, `file is ${Math.round(size / 1024)} KB; keep it at or under 150 KB.`);
+          add(
+            slot,
+            `file is ${Math.round(size / 1024)} KB; keep it at or under 400 KB (run the optimize script).`,
+          );
         const dims = readImageSize(files.head(entry.file));
-        if (!dims || dims.format !== "WEBP") add(slot, "file is not a readable WebP image.");
+        if (!dims || (ext && dims.format !== ext.toUpperCase()))
+          add(slot, "file is not a readable PNG or WebP image matching its extension.");
         else {
           const longest = Math.max(dims.width, dims.height);
           if (longest < LIMITS.finalMinLongestSide)
@@ -218,7 +235,7 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
           )
             add(
               slot,
-              `file is ${dims.width}x${dims.height}, which does not match aspect ${entry.aspect}.`,
+              `file is ${dims.width}x${dims.height}, which does not match aspect ${entry.aspect}; run the optimize script to crop it.`,
             );
         }
       }

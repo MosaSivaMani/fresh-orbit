@@ -28,6 +28,7 @@
     "build": "node scripts/build.ts",
     "placeholders": "node scripts/placeholders.ts",
     "prompts": "node scripts/prompts.ts",
+    "optimize": "node scripts/optimize.ts",
     "validate": "node scripts/validate.ts",
     "sync-mobile": "node scripts/sync-mobile.ts",
     "typecheck": "tsc --noEmit",
@@ -38,6 +39,7 @@
     "@fresh/config": "workspace:*",
     "@types/node": "26.6.5",
     "eslint": "9.39.5",
+    "sharp": "0.35.5",
     "typescript": "5.9.3",
     "vitest": "5.0.3"
   }
