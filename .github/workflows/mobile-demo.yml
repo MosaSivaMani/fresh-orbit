@@ -1,0 +1,93 @@
+# Demo Android app for the owner's phone (runbooks/owner-testing.md).
+#
+# Builds apps/mobile with --dart-define=DEMO=true: fixture data, no server needed. lib/main.dart refuses DEMO in a
+# release build on a device, so this is a PROFILE build (not release, so DEMO is allowed; compiled ahead of time, so
+# it is fast and much smaller than a debug build). Flutter signs profile builds with the debug key, so no secrets
+# are needed. Profile builds run on real phones (ARM), not on x86 emulators.
+#
+# Every run uploads the APK as a workflow artifact. A manual run from main also publishes it as a GitHub
+# prerelease `demo-apk-<short sha>`, so the owner can download it on the phone from the Releases page.
+name: Mobile demo APK
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/mobile-demo.yml
+
+concurrency:
+  group: mobile-demo-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build demo APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      apk-name: ${{ steps.apk.outputs.name }}
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.7
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build profile APK with DEMO=true
+        run: flutter build apk --profile --dart-define=DEMO=true
+      - name: Name and measure the APK
+        id: apk
+        run: |
+          short_sha="${GITHUB_SHA::7}"
+          name="fresh-orbit-demo-${short_sha}.apk"
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp build/app/outputs/flutter-apk/app-profile.apk "$GITHUB_WORKSPACE/out/$name"
+          size_bytes=$(stat -c %s "$GITHUB_WORKSPACE/out/$name")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "### Demo APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`$name\`: $((size_bytes / 1024 / 1024)) MB ($size_bytes bytes)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-apk
+          path: out/${{ steps.apk.outputs.name }}
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish demo APK as a prerelease
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: demo-apk
+          path: out
+      - name: Create or update the prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          APK: out/${{ needs.build.outputs.apk-name }}
+        run: |
+          tag="demo-apk-${GITHUB_SHA::7}"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            gh release upload "$tag" "$APK" --clobber
+          else
+            gh release create "$tag" "$APK" --prerelease --target "$GITHUB_SHA" \
+              --title "Demo app ${GITHUB_SHA::7}" \
+              --notes "Demo Android app (sample data, no server). Open this page on the phone, tap the .apk file under Assets, then allow installs from your browser. Steps: docs/runbooks/owner-testing.md."
+          fi
