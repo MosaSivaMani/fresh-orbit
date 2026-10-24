@@ -42,7 +42,8 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
   `import` sets `SCENE` or `TRANSPARENT` from the file itself (alpha or not) and rebuilds the prompt to match.
 - **Shapes**: `1:1` (empty states, features, status, onboarding tiles), `4:3` (onboarding, hero, delivery, admin
-  login) or `2:1` (onboarding food banners, 1024 × 512 design size), 2% tolerance.
+  login), `2:1` (onboarding food banners, 1024 × 512 design size) or `3:2` (the home hero, 1024 × 683 design
+  size), 2% tolerance.
 - **Object-only slots**: the onboarding tiles and banners have no `character` (and no `supporting`); their prompt is
   the scene, the style block, the background and the shape only. Their scenes say "no people, no characters and no
   faces" because the style block is written for character renders.
@@ -103,13 +104,28 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `ONBOARDING_BANNER_FRESH` | 2:1 | none (prawns, seer fish, crab, lemon, herbs on ice) | — | — | Page 1 food banner |
 | `ONBOARDING_BANNER_CLEANED` | 2:1 | none (steaks, curry cut, fillet, knife, curry leaves, chillies) | — | — | Page 2 food banner |
 | `ONBOARDING_BANNER_DELIVERY` | 2:1 | none (cold box, scooter, Indian doorstep) | — | — | Page 3 food banner |
+| `HOME_HERO_CATCH` | 3:2 | `FISHMONGER` (Padma with the morning catch) | — | — | Home hero "Today's catch is in!", bottom-right |
+| `HOME_CARD_CLEANED` | 1:1 | none (cleaned cuts on a board) | — | — | Home card "Cleaned your way" |
+| `HOME_CARD_RIDER` | 1:1 | `RIDER` (Ravi with the cold box) | — | — | Home card "Kept cold till your door" |
 
 The twelve onboarding pictures are all `TRANSPARENT` PNGs: save them as
 `docs/design/characters/generated/onboarding_tile_<name>.png` / `onboarding_banner_<name>.png`. Until they are
 bundled the app draws its own stand-ins (a pastel blob with an icon for a tile, a soft wave with a simple drawn
-seafood scene for a banner); the web uses the SVG placeholders. Five finals arrived on 2026-10-24 (morning catch,
-kept chilled, net weight, cold box, cleaned banner): the mobile app bundles resized copies; the package keeps them
+seafood scene for a banner); the web uses the SVG placeholders. All twelve finals arrived on 2026-10-24 (the
+cash / UPI tile redrawn without real notes): the mobile app bundles copies resized with `sips` (tiles 512 × 512,
+banners 1024 × 512, alpha kept), so no onboarding tile or banner shows a stand-in any more; the package keeps them
 PLACEHOLDER until `import` + `optimize` bring them under 600 KB (see `characters/README.md`).
+
+The three home pictures are `TRANSPARENT` too. The owner's `home_hero_catch.png` (1536 × 1024),
+`home_card_cleaned.png` (1254 × 1254) and `home_card_rider.png` (Ravi waving on the scooter) are in
+`docs/design/characters/generated/`; the mobile app bundles copies resized with `sips` (hero 1024 wide, cards 512,
+alpha kept) and the package keeps all three PLACEHOLDER for the same reason.
+
+The category pictures (`category_fish`, `category_prawns`, `category_crabs`, `category_squid`,
+`category_shellfish`) and the sample banners (`sample_banner_seer_steaks`, `sample_banner_prawns`, 1774 × 887)
+are data pictures, not app slots: they belong to categories and home offers, which the server sends. The sample
+loader (`backend/data/sample`) only renders placeholders for category and banner `imageKey`s today, so they are
+not wired in yet.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 

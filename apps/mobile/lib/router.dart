@@ -142,8 +142,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// The five tabs (D88): the food-app tab bar, and on Home and Shop the floating View cart bar while the cart
-/// has lines. The bar's amount is the server cart's subtotal, only formatted.
+/// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it
+/// while the cart has lines. Both sit in the bottom bar slot, so they take their own space and never cover a
+/// screen's content. The cart bar's amount is the server cart's subtotal, only formatted.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
@@ -159,10 +160,12 @@ class AppShell extends ConsumerWidget {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(height: 8),
           if (showCartBar)
             ViewCartBar(
               count: cartCount,
               amount: formatRupees(cart.totals!.subtotalPaise),
+              thumbnails: [for (final line in cart.lines.take(2)) line.imageUrl],
               onTap: () => shell.goBranch(2),
             ),
           FoodTabBar(

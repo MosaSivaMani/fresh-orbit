@@ -1,8 +1,8 @@
 // Types and pure rules for manifest.json, shared by the scripts and their tests. No file access here.
 import { readImageSize } from "./image-size.ts";
 
-/** 1:1 square, 4:3 landscape, 2:1 wide banner (onboarding banners). */
-export type Aspect = "1:1" | "4:3" | "2:1";
+/** 1:1 square, 4:3 landscape, 2:1 wide banner (onboarding banners), 3:2 wide picture (home hero). */
+export type Aspect = "1:1" | "4:3" | "2:1" | "3:2";
 /** SAND: the sand backdrop. TRANSPARENT: cut-out subject. SCENE: a full picture with its own scenery. */
 export type Background = "TRANSPARENT" | "SAND" | "SCENE";
 export type Status = "PLACEHOLDER" | "FINAL";
@@ -99,6 +99,9 @@ export const REQUIRED_SLOTS = [
   "ONBOARDING_BANNER_FRESH",
   "ONBOARDING_BANNER_CLEANED",
   "ONBOARDING_BANNER_DELIVERY",
+  "HOME_HERO_CATCH",
+  "HOME_CARD_CLEANED",
+  "HOME_CARD_RIDER",
 ] as const;
 
 export const LIMITS = {
@@ -121,7 +124,12 @@ export const fileStem = (slot: string): string => slot.toLowerCase();
 export const PROMPT_SUFFIX =
   "No text, no letters, no numbers, no logos, no watermark. High resolution.";
 
-export const ASPECT_RATIO: Record<Aspect, number> = { "1:1": 1, "4:3": 4 / 3, "2:1": 2 };
+export const ASPECT_RATIO: Record<Aspect, number> = {
+  "1:1": 1,
+  "4:3": 4 / 3,
+  "2:1": 2,
+  "3:2": 3 / 2,
+};
 
 /** Intrinsic pixel size we design for (placeholders use it; finals must match the ratio). */
 export function designSize(aspect: Aspect): { width: number; height: number } {
@@ -207,7 +215,7 @@ export function checkManifest(manifest: Manifest, files: FileFacts): string[] {
     for (const key of entry.supporting ?? [])
       if (!manifest.characters[key]) add(slot, `supporting character "${key}" is unknown.`);
     if (!entry.scene?.trim()) add(slot, "scene is missing.");
-    if (!(entry.aspect in ASPECT_RATIO)) add(slot, "aspect must be 1:1, 4:3 or 2:1.");
+    if (!(entry.aspect in ASPECT_RATIO)) add(slot, "aspect must be 1:1, 4:3, 2:1 or 3:2.");
     if (!(entry.background in (manifest.backgrounds ?? {})))
       add(slot, "background must be SAND, TRANSPARENT or SCENE.");
     if (entry.status !== "PLACEHOLDER" && entry.status !== "FINAL")

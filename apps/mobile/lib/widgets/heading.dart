@@ -143,7 +143,8 @@ class ScriptTitle extends StatelessWidget {
   }
 }
 
-/// A painted mango swipe behind its child (the mockup's `.brush`).
+/// A painted mango swipe behind its child (the mockup's `.brush`): the theme package's [BrushHighlight] in
+/// mango, upright. Kept so the Bold blocks screens read the same.
 class BrushSwipe extends StatelessWidget {
   const BrushSwipe({super.key, required this.child, this.color = const Color(0xFFF5B544)});
 
@@ -151,39 +152,7 @@ class BrushSwipe extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => CustomPaint(
-    painter: _BrushPainter(color),
-    child: Padding(padding: const EdgeInsets.fromLTRB(8, 1, 8, 3), child: child),
-  );
-}
-
-class _BrushPainter extends CustomPainter {
-  const _BrushPainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // The mockup's swipe path in a 200 × 60 box, stretched to the text.
-    final sx = size.width / 200;
-    final sy = size.height / 60;
-    Offset p(double x, double y) => Offset(x * sx, y * sy);
-    void c(Path path, Offset a, Offset b, Offset e) => path.cubicTo(a.dx, a.dy, b.dx, b.dy, e.dx, e.dy);
-    final path = Path()..moveTo(p(6, 14).dx, p(6, 14).dy);
-    c(path, p(40, 6), p(110, 4), p(192, 9));
-    c(path, p(196, 10), p(198, 15), p(195, 19));
-    c(path, p(193, 22), p(198, 26), p(196, 31));
-    c(path, p(193, 39), p(198, 43), p(194, 48));
-    c(path, p(164, 54), p(74, 56), p(8, 51));
-    c(path, p(2, 50), p(0, 43), p(4, 39));
-    c(path, p(7, 36), p(2, 31), p(4, 26));
-    c(path, p(6, 21), p(-2, 18), p(2, 14));
-    path.close();
-    canvas.drawPath(path, Paint()..color = color);
-  }
-
-  @override
-  bool shouldRepaint(_BrushPainter old) => old.color != color;
+  Widget build(BuildContext context) => BrushHighlight(color: color, child: child);
 }
 
 class _DoodlePainter extends CustomPainter {
