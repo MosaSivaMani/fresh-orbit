@@ -3,7 +3,7 @@ import { cn, focusRing } from "../lib/cn";
 import { useFormFieldControl } from "./form-field";
 
 export const controlBase = cn(
-  "border-border-strong bg-surface text-text w-full rounded-md border text-sm shadow-xs",
+  "border-border-strong bg-surface text-text w-full rounded-lg border text-sm shadow-xs",
   "placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-50",
   "aria-invalid:border-danger aria-invalid:focus-visible:outline-danger",
   focusRing,

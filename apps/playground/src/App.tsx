@@ -3,6 +3,7 @@ import { Moon, Sun, SunMoon } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { AdminTablePage } from "./pages/AdminTablePage";
 import { ComponentsPage } from "./pages/ComponentsPage";
+import { IllustratedPage } from "./pages/IllustratedPage";
 import { ProductPage } from "./pages/ProductPage";
 import { TokensPage } from "./pages/TokensPage";
 
@@ -59,7 +60,9 @@ export function App() {
               <h1 className="font-display text-lg leading-6 font-semibold">
                 Fresh Orbit Playground
               </h1>
-              <p className="text-text-muted text-xs">Design tokens and @fresh/ui components</p>
+              <p className="text-text-muted text-xs">
+                Design tokens, @fresh/ui components and illustrations
+              </p>
             </div>
           </div>
           <div
@@ -92,12 +95,16 @@ export function App() {
         <Tabs defaultValue="components">
           <TabsList aria-label="Playground sections" className="mb-2 w-full overflow-x-auto">
             <TabsTrigger value="components">Components</TabsTrigger>
+            <TabsTrigger value="illustrated">Illustrated</TabsTrigger>
             <TabsTrigger value="tokens">Tokens</TabsTrigger>
             <TabsTrigger value="admin">Admin table</TabsTrigger>
             <TabsTrigger value="product">Product card</TabsTrigger>
           </TabsList>
           <TabsContent value="components">
             <Themed view={view}>{() => <ComponentsPage />}</Themed>
+          </TabsContent>
+          <TabsContent value="illustrated">
+            <Themed view={view}>{() => <IllustratedPage />}</Themed>
           </TabsContent>
           <TabsContent value="tokens">
             <TokensPage />

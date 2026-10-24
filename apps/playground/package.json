@@ -5,8 +5,8 @@
   "description": "Component and token playground for Fresh Orbit (not deployed).",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "fresh-illustrations-copy public/illustrations && vite",
+    "build": "fresh-illustrations-copy public/illustrations && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
@@ -14,6 +14,7 @@
   "dependencies": {
     "@fresh/core": "workspace:*",
     "@fresh/design-tokens": "workspace:*",
+    "@fresh/illustrations": "workspace:*",
     "@fresh/ui": "workspace:*",
     "lucide-react": "1.54.0",
     "react": "19.3.0",

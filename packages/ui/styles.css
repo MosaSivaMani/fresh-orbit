@@ -51,7 +51,19 @@
   }
 }
 
+/* A slow, small float for hero illustrations (D53). Never runs under prefers-reduced-motion. */
+@keyframes fo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 @theme {
+  --animate-fo-float: fo-float 5s ease-in-out infinite;
   --animate-fo-fade-in: fo-fade-in var(--fo-duration-normal) var(--fo-ease-enter);
   --animate-fo-slide-in-right: fo-slide-in-right var(--fo-duration-slow) var(--fo-ease-enter);
   --animate-fo-slide-in-left: fo-slide-in-left var(--fo-duration-slow) var(--fo-ease-enter);

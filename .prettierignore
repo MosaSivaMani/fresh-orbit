@@ -12,3 +12,5 @@ apps/mobile/
 **/next-env.d.ts
 **/playwright-report/
 **/test-results/
+# Rewritten by `pnpm --filter @fresh/illustrations prompts` (JSON.stringify layout).
+packages/illustrations/manifest.json

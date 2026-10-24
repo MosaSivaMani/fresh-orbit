@@ -95,7 +95,7 @@ export function Pagination({
                   aria-label={`Page ${item}`}
                   aria-current={item === page ? "page" : undefined}
                   className={cn(
-                    "inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md px-2 text-sm font-medium tabular-nums",
+                    "inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-lg px-2 text-sm font-medium tabular-nums",
                     item === page ? "bg-primary text-on-primary" : "text-text hover:bg-muted",
                     focusRing,
                   )}

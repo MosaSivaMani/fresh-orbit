@@ -87,10 +87,10 @@ function NavList({
               <li key={item.id}>
                 {renderLink(item, {
                   className: cn(
-                    "group text-text-muted flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+                    "group text-text-muted flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150",
                     "hover:bg-muted hover:text-text [&_svg]:size-5 [&_svg]:shrink-0",
                     item.active &&
-                      "bg-accent-subtle text-accent-text hover:bg-accent-subtle hover:text-accent-text",
+                      "bg-accent-subtle text-accent-text hover:bg-accent-subtle hover:text-accent-text font-semibold",
                     collapsed && "justify-center px-0",
                     focusRing,
                   ),
@@ -156,7 +156,7 @@ export function AppShell({
     >
       <a
         href={`#${mainId}`}
-        className="bg-primary text-on-primary sr-only z-[1600] rounded-md px-4 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        className="bg-primary text-on-primary sr-only z-[1600] rounded-lg px-4 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
         Skip to content
       </a>

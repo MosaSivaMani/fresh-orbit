@@ -15,6 +15,7 @@
 | Research: hosting, payments, mobile framework, reference ERP | `research/*.md` |
 | **Where we stopped / what next** | `team/next-steps.md` |
 | Design system (Phase 5) | `design/` |
+| Illustrations (D53): cast, style rules, slots, components, swapping in finals | `design/illustrations.md` |
 | Security review and pre-release checklist | `security/` |
 | Customer website (Phase 7): pages, data modes, auth, API gaps | `design/web.md` |
 | Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
