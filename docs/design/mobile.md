@@ -187,7 +187,7 @@ Paths are under `/api/v1/`.
 - Not run against a live API. An end-to-end integration test (browse → cart → checkout) is still to write once
   Cart and Ordering are merged.
 - Complaint photos: the complaint is sent as multipart without images; an image picker is still to add.
-- Fonts (Inter and others, OFL) are not bundled; the theme falls back to system fonts.
+- Final illustrations are not in yet: every slot draws its placeholder until the owner's PNGs land (§14).
 - FCM is not added (below).
 
 ## 10. Push notifications (FCM)
@@ -257,7 +257,7 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 
 ## 13. Tests
 
-`flutter test` (no device): 59 tests.
+`flutter test` (no device): 80 tests.
 
 | Area | File | What it proves |
 |---|---|---|
@@ -267,3 +267,73 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | Cart provider | `test/state/cart_controller_test.dart` | Server cart replaces state, refused writes keep the cart, guest token from the body, `CART_NOT_FOUND`, `CART_LOCATION_CHANGED` then force |
 | Checkout provider | `test/state/checkout_controller_test.dart` | Preview on selection, key reuse on transient errors, new key after 4xx and after price acceptance, `PRICE_CHANGED` |
 | Widgets | `test/widgets/*` | Location (serviceable / not / invalid), product detail, cart, checkout `PRICE_CHANGED` dialog, order tracking (delivery code, cancel with key) |
+| Illustrated UI | `test/widgets/illustrated_test.dart` | Slot codes and PNG names, order status → slot, placeholder when no asset, PNG preferred over WebP, WebP fallback, a broken file falls back, every slot draws in light and dark, semantics label or excluded, `EmptyState`, `ReceiptCard` shows exactly the server values given, reduced motion runs no animation |
+| Demo backend | `test/demo/demo_backend_test.dart` | Demo is off without `DEMO=true`, every fixture parses with the app models, empty and offline switches, unknown order is 404 |
+
+## 14. Illustrated UI (D53)
+
+The app follows the illustrated style concept: sand surfaces, a teal and coral palette, a clay-look cast of
+characters, stickers and receipts. `packages/flutter/fresh_theme` is not edited; the app extends it.
+
+### Theme (`lib/theme/app_theme.dart`)
+
+- `AppTheme.light()` / `AppTheme.dark()` start from `FreshTheme` and add the `IllustratedColors` theme extension
+  (read it with `illustratedColors(context)`).
+- Teal `#0B7D70` (`tealText`) is used for anything that carries text. `#0E9384` (`tealDecor`) is for decoration
+  only. Coral is the sticker and focus-ring accent.
+- Dark mode is designed, not inverted: deep sea-green sand `#14201F`, paper `#1A2826`, ink `#F4EBDD`, teal
+  `#3FC0AE`.
+- Fonts are bundled from `assets/fonts/` under the SIL Open Font License; the licence files sit next to them.
+  Baloo 2 (600–800) is used for display, headline and large titles, and Inter (400–700) for everything else.
+  Both are subset to Latin plus ₹.
+- Shape: cards have a 24 radius (heroes and sheets 28, fields 16), buttons are pills, shadows are soft.
+
+### Widgets
+
+| Widget | File | Notes |
+|---|---|---|
+| `Illustration(slot:, size:)` | `lib/illustrations/illustration.dart` | Loads `assets/illustrations/<slot_lower_snake>.png`, then `.webp`. If neither file is in the asset manifest, or the file fails to decode, it draws `IllustrationPlaceholder`. It gets a semantics label from the slot, or is excluded from semantics when `decorative: true` |
+| `IllustrationPlaceholder` | same | A clay-look `CastPainter` drawing (`lib/illustrations/cast_painter.dart`) with a prop badge. Cast colours follow `docs/design/characters/character-sheet.jpg`: Padma, Ravi, Anil, Ammamma and Chanduva the pomfret |
+| `EmptyState(slot, title, message, action)` | `lib/widgets/states.dart` | The illustration is decorative; the title is a semantics header |
+| `ErrorState`, `NotFoundScreen` | same | `slotForError`: `NETWORK_ERROR` / `TIMEOUT` → `OFFLINE`, 404 → `NOT_FOUND`, anything else → `ERROR_GENERIC` |
+| `Sticker`, `PolaroidCard`, `FeatureCard`, `HelpHero`, `ReceiptCard` | `lib/widgets/illustrated.dart` | Stickers use Baloo 2 800 with a 2.5px ink outline and an offset shadow. `ReceiptCard` has a scalloped edge, a teal-soft total band and a coral-soft note. **It computes nothing**: every row, the total and the note are strings the caller formats from server values |
+| `EntranceMotion`, `motionAllowed` | `lib/widgets/motion.dart` | A gentle fade and rise that runs once. With `MediaQuery.disableAnimations` it shows the child at once, with no ticker |
+
+### Slot per screen
+
+| Screen | Slot(s) |
+|---|---|
+| Splash | `HOME_HERO` |
+| Onboarding (3 polaroid pages) | `ONBOARDING_FRESH`, `ONBOARDING_CLEANED`, `ONBOARDING_DELIVERY` |
+| Location / not serviceable | `LOCATION_PICK`, `NOT_SERVICEABLE` |
+| Home hero, 4 feature cards | `HOME_HERO`; `FEATURE_HONEST_WEIGHT`, `FEATURE_CLEANED_YOUR_WAY`, `FEATURE_COLD_CHAIN`, `FEATURE_SAME_DAY` |
+| Empty cart, wishlist, orders, notifications, addresses | `EMPTY_CART`, `EMPTY_WISHLIST`, `EMPTY_ORDERS`, `EMPTY_NOTIFICATIONS`, `EMPTY_ADDRESSES` |
+| Search and category with no results | `NO_SEARCH_RESULTS` |
+| Product sold out | `OUT_OF_STOCK` |
+| OTP login, signed-out account | `LOGIN_OTP` |
+| Order success (receipt) | `ORDER_PLACED` |
+| Tracking status card | `slotForOrderStatus`: placed/confirmed → `ORDER_PLACED`; `PREPARING`, `PACKED` → `ORDER_PACKING`; `OUT_FOR_DELIVERY` → `ORDER_ON_THE_WAY`; `DELIVERED` → `ORDER_DELIVERED`; `CANCELLED`, `PAYMENT_FAILED`, `RETURNED` → `ORDER_CANCELLED`; `DELIVERY_FAILED` → `ERROR_GENERIC` |
+| Complaint sent (dialog) | `COMPLAINT_RECEIVED` |
+| Help | `HELP_SUPPORT` (`HelpHero`) |
+| Error, offline, unknown route | `ERROR_GENERIC`, `OFFLINE`, `NOT_FOUND` |
+
+**Final art:** drop `<slot_lower_snake>.png` files (for example `empty_cart.png`, `order_on_the_way.png`) into
+`apps/mobile/assets/illustrations/`. No code change is needed; WebP with the same stem is also read.
+
+### Demo mode (web preview)
+
+`lib/demo/` holds a fixture backend that implements every repository with sample data (6 products, one sold
+out; 5 orders in different states; pincode `999999` is not served). It is compiled in only with
+`--dart-define=DEMO=true` (`const demoMode = bool.fromEnvironment('DEMO')`), so normal builds tree-shake it,
+and a release build for a device refuses to start with it. The Account tab shows a Demo panel: switches for
+empty lists and offline, and jumps to each illustrated state.
+
+```sh
+cd apps/mobile
+flutter build web --no-web-resources-cdn --dart-define=DEMO=true   # output: apps/mobile/build/web (~42 MB)
+```
+
+The page makes only same-origin requests. CanvasKit is bundled (`useLocalCanvasKit: true`), and
+`web/flutter_bootstrap.js` points `fontFallbackBaseUrl` at a local path. The gstatic URLs left in the
+compiled JS are the engine's defaults, and this config overrides them. Serve the folder with any static
+server. The build warns that the CupertinoIcons font is not bundled; the app does not use it.

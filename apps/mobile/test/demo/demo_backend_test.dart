@@ -35,10 +35,7 @@ void main() {
     expect(await b.account.addresses(), isEmpty);
 
     b.switches.offline.value = true;
-    await expectLater(
-      b.catalog.home(),
-      throwsA(isA<ApiError>().having((e) => e.code, 'code', ApiError.networkError)),
-    );
+    await expectLater(b.catalog.home(), throwsA(isA<ApiError>().having((e) => e.code, 'code', ApiError.networkError)));
   });
 
   test('an unknown order is a 404', () async {
