@@ -21,7 +21,8 @@ interface Tokens {
   typeScale: Record<string, TypeSize>;
   spacing: Record<string, number | string>;
   radius: Record<string, number>;
-  shadow: Record<string, string>;
+  /** A string is shared by both themes; an object sets each theme. */
+  shadow: Record<string, string | { light: string; dark: string }>;
   motion: { duration: Record<string, number>; easing: Record<string, string> };
   breakpoint: Record<string, number>;
   zIndex: Record<string, number>;
@@ -75,9 +76,11 @@ function buildCss(): string {
   for (const [k, v] of entries(tokens.motion.easing)) shared.push(`  --fo-ease-${k}: ${v};`);
   for (const [k, v] of entries(tokens.zIndex)) shared.push(`  --fo-z-${kebab(k)}: ${v};`);
 
-  const lightShadows = entries(tokens.shadow).map(([k, v]) => `  --fo-shadow-${k}: ${v};`);
+  const lightShadows = entries(tokens.shadow).map(
+    ([k, v]) => `  --fo-shadow-${k}: ${typeof v === "string" ? v : v.light};`,
+  );
   const darkShadows = entries(tokens.shadow).map(
-    ([k, v]) => `  --fo-shadow-${k}: ${darkShadow(v)};`,
+    ([k, v]) => `  --fo-shadow-${k}: ${typeof v === "string" ? darkShadow(v) : v.dark};`,
   );
 
   return `/* ${HEADER} */
@@ -111,7 +114,7 @@ function buildTailwindCss(): string {
     lines.push(`  --text-${k}--line-height: var(--fo-text-${k}-line-height);`);
   }
   for (const k of Object.keys(tokens.radius)) lines.push(`  --radius-${k}: var(--fo-radius-${k});`);
-  for (const k of Object.keys(tokens.shadow)) lines.push(`  --shadow-${k}: var(--fo-shadow-${k});`);
+  for (const [k] of entries(tokens.shadow)) lines.push(`  --shadow-${k}: var(--fo-shadow-${k});`);
   for (const k of Object.keys(tokens.motion.easing))
     lines.push(`  --ease-${k}: var(--fo-ease-${k});`);
 

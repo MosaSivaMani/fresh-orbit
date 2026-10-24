@@ -55,6 +55,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
     required this.onInfo,
     required this.infoSubtle,
     required this.infoText,
+    required this.surfaceSand,
+    required this.surfaceSandStrong,
+    required this.accentCoral,
+    required this.onAccentCoral,
+    required this.accentCoralSubtle,
+    required this.accentCoralText,
+    required this.outlineInk,
   });
 
   final Color background;
@@ -97,6 +104,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
   final Color onInfo;
   final Color infoSubtle;
   final Color infoText;
+  final Color surfaceSand;
+  final Color surfaceSandStrong;
+  final Color accentCoral;
+  final Color onAccentCoral;
+  final Color accentCoralSubtle;
+  final Color accentCoralText;
+  final Color outlineInk;
 
   static const FreshColors light = FreshColors(
     background: Color(0xFFF4F8F7),
@@ -139,6 +153,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
     onInfo: Color(0xFFFFFFFF),
     infoSubtle: Color(0xFFE3EEF9),
     infoText: Color(0xFF164F82),
+    surfaceSand: Color(0xFFFBF3E6),
+    surfaceSandStrong: Color(0xFFF3E3C7),
+    accentCoral: Color(0xFFF2795A),
+    onAccentCoral: Color(0xFF2A0E06),
+    accentCoralSubtle: Color(0xFFFDE7DF),
+    accentCoralText: Color(0xFFAE3A1E),
+    outlineInk: Color(0xFF0A2630),
   );
 
   static const FreshColors dark = FreshColors(
@@ -182,6 +203,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
     onInfo: Color(0xFF04203B),
     infoSubtle: Color(0xFF10304D),
     infoText: Color(0xFFA9CFF6),
+    surfaceSand: Color(0xFF1F2926),
+    surfaceSandStrong: Color(0xFF2B3530),
+    accentCoral: Color(0xFFFF8E70),
+    onAccentCoral: Color(0xFF2A0E06),
+    accentCoralSubtle: Color(0xFF3F2019),
+    accentCoralText: Color(0xFFFFAD95),
+    outlineInk: Color(0xFF010B0F),
   );
 
   @override
@@ -226,6 +254,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
     Color? onInfo,
     Color? infoSubtle,
     Color? infoText,
+    Color? surfaceSand,
+    Color? surfaceSandStrong,
+    Color? accentCoral,
+    Color? onAccentCoral,
+    Color? accentCoralSubtle,
+    Color? accentCoralText,
+    Color? outlineInk,
   }) {
     return FreshColors(
       background: background ?? this.background,
@@ -268,6 +303,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
       onInfo: onInfo ?? this.onInfo,
       infoSubtle: infoSubtle ?? this.infoSubtle,
       infoText: infoText ?? this.infoText,
+      surfaceSand: surfaceSand ?? this.surfaceSand,
+      surfaceSandStrong: surfaceSandStrong ?? this.surfaceSandStrong,
+      accentCoral: accentCoral ?? this.accentCoral,
+      onAccentCoral: onAccentCoral ?? this.onAccentCoral,
+      accentCoralSubtle: accentCoralSubtle ?? this.accentCoralSubtle,
+      accentCoralText: accentCoralText ?? this.accentCoralText,
+      outlineInk: outlineInk ?? this.outlineInk,
     );
   }
 
@@ -317,6 +359,13 @@ class FreshColors extends ThemeExtension<FreshColors> {
       onInfo: Color.lerp(onInfo, other.onInfo, t)!,
       infoSubtle: Color.lerp(infoSubtle, other.infoSubtle, t)!,
       infoText: Color.lerp(infoText, other.infoText, t)!,
+      surfaceSand: Color.lerp(surfaceSand, other.surfaceSand, t)!,
+      surfaceSandStrong: Color.lerp(surfaceSandStrong, other.surfaceSandStrong, t)!,
+      accentCoral: Color.lerp(accentCoral, other.accentCoral, t)!,
+      onAccentCoral: Color.lerp(onAccentCoral, other.onAccentCoral, t)!,
+      accentCoralSubtle: Color.lerp(accentCoralSubtle, other.accentCoralSubtle, t)!,
+      accentCoralText: Color.lerp(accentCoralText, other.accentCoralText, t)!,
+      outlineInk: Color.lerp(outlineInk, other.outlineInk, t)!,
     );
   }
 }
@@ -348,7 +397,7 @@ abstract final class FreshTypeScale {
 abstract final class FreshFonts {
   static const String sans = 'Inter';
   static const List<String> sansFallback = <String>['Noto Sans', 'Segoe UI', 'Roboto'];
-  static const String display = 'Plus Jakarta Sans';
+  static const String display = 'Baloo 2';
   static const List<String> displayFallback = <String>['Inter'];
   static const String mono = 'JetBrains Mono';
 }
@@ -386,6 +435,7 @@ abstract final class FreshRadius {
   static const double lg = 12.0;
   static const double xl = 16.0;
   static const double xl2 = 24.0;
+  static const double xl3 = 32.0;
   static const double full = 9999.0;
 }
 

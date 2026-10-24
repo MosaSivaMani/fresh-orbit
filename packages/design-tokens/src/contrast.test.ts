@@ -38,6 +38,34 @@ describe("design token contrast (WCAG AA)", () => {
     }
   }
 
+  // D53 illustrated look: coral is decorative; anything with text uses accentCoralText or onAccentCoral.
+  for (const theme of themes) {
+    const palette = tokens.color[theme] as Record<Role, string>;
+    for (const bg of ["surface", "background", "surfaceSand", "surfaceSandStrong"] as const) {
+      it(`${theme}: accentCoralText is readable on ${bg}`, () => {
+        expect(contrastRatio(palette.accentCoralText, palette[bg])).toBeGreaterThanOrEqual(AA_TEXT);
+      });
+    }
+    it(`${theme}: sticker label text is readable on coral`, () => {
+      expect(contrastRatio(palette.onAccentCoral, palette.accentCoral)).toBeGreaterThanOrEqual(
+        AA_TEXT,
+      );
+    });
+  }
+
+  it("checks every text-bearing illustrated role in the pair list", () => {
+    const pairs = tokens.contrast.text.map(([fg, bg]) => `${fg}/${bg}`);
+    expect(pairs).toEqual(
+      expect.arrayContaining([
+        "accentCoralText/surface",
+        "accentCoralText/surfaceSand",
+        "onAccentCoral/accentCoral",
+        "text/surfaceSand",
+        "textMuted/surfaceSand",
+      ]),
+    );
+  });
+
   it("keeps the four brand colours exactly", () => {
     expect(tokens.brand).toEqual({
       oceanTeal: "#073B4C",
