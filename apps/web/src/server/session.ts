@@ -49,11 +49,11 @@ function isConfiguredDevelopmentOrigin(origin: string): boolean {
  * browser cannot forge Host for another site, so an Origin that matches it is still same-origin.
  */
 function forwardedOrigin(request: Request): string | null {
-  const host = (request.headers.get("x-forwarded-host") ?? request.headers.get("host"))?.split(",")[0]?.trim();
+  const hostHeader = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const host = hostHeader?.split(",")[0]?.trim();
   if (!host) return null;
-  const proto =
-    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
-    new URL(request.url).protocol.replace(":", "");
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const proto = forwardedProto || new URL(request.url).protocol.replace(":", "");
   return `${proto}://${host}`;
 }
 
