@@ -55,6 +55,8 @@ public sealed class CheckoutWorld
             .Returns(ci => new SlotBooking(true, ci.ArgAt<Guid>(0), Now.AddHours(5), Now.AddHours(7), null));
         Inventory.ReserveAsync(Arg.Any<ReserveStockRequest>(), Arg.Any<CancellationToken>())
             .Returns(_ => new ReserveStockResult(ReserveSucceeds, ReserveSucceeds ? [] : [Lines[0].VariantId]));
+        Inventory.GetOrderStockAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(ci => Stock(ci.Arg<Guid>()));
         Payments.GetAvailablePaymentMethodsAsync(Arg.Any<CancellationToken>())
             .Returns(["COD", "UPI_ON_DELIVERY", "ONLINE"]);
         Payments.GetPaymentStatusAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -83,6 +85,9 @@ public sealed class CheckoutWorld
     public Guid SubstituteVariantId { get; } = Guid.CreateVersion7();
 
     public int SlotRemaining { get; set; } = 5;
+
+    /// <summary>What Inventory reports for an order (admin order detail); empty by default.</summary>
+    public Func<Guid, OrderStock> Stock { get; set; } = orderId => new OrderStock(orderId, [], []);
 
     public bool ReserveSucceeds { get; set; } = true;
 

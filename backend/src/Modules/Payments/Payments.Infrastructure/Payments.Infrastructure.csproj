@@ -5,7 +5,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Payments.Application\Payments.Application.csproj" />
     <ProjectReference Include="..\Payments.Public\Payments.Public.csproj" />
-    <ProjectReference Include="..\..\Customers\Customers.Public\Customers.Public.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.EntityFramework\FreshOrbit.SharedKernel.EntityFramework.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.Web\FreshOrbit.SharedKernel.Web.csproj" />
   </ItemGroup>

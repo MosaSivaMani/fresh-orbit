@@ -262,3 +262,10 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 | Cash | `cash-collected` endpoint and `CashCollected` event are owned by Payments (D14). Delivery records cash given at deliver and raises it inside `ShipmentDelivered` (`cashCollectedPaise`, `cashMode`, `upiReference`). |
 | Location scope | Staff outside a location get 403 `LOCATION_ACCESS_DENIED` from a module-local endpoint filter until SharedKernel maps a forbidden exception. |
 | Customer slots | `GET /delivery-slots` returns `{ fulfillmentLocationId, items }` (not paged; at most 7 days of slots). |
+
+## 10. Admin gaps G7 and G10 (branch `backend/api-gaps-admin-orders`)
+
+| Rule | Behaviour |
+|---|---|
+| DEL-G7 | `GET /api/v1/admin/delivery/riders/lookup` is readable with `delivery.manage` **or** `cash.settle` (cash settlement pickers). Rows are `{ id, fulfillmentLocationId, fullName, phoneLast4, isActive }` (no full phone, no version); filters `fulfillmentLocationId`, `isActive`, `q` (name contains); ordered by name; location-scoped (a `fulfillmentLocationId` outside the caller's locations → 403 `LOCATION_ACCESS_DENIED`). The full rider list stays `delivery.manage`. |
+| DEL-G10 | `GET /api/v1/admin/delivery/shipments` adds `slotDate` (local date of the shipment's slot, `yyyy-MM-dd`) and `sort`: comma list of `placedAt` (default), `slotStartAt`, `status`, `dispatchedAt`, `-` for descending; `placedAt` then id break ties. Unknown or repeated keys → 422 `VALIDATION_FAILED` on `sort`. |

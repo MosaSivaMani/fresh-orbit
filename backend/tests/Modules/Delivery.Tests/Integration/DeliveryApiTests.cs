@@ -259,6 +259,89 @@ public sealed class DeliveryApiTests(DeliveryDatabase database) : IAsyncLifetime
         (await JsonAsync(unknown)).GetProperty("code").GetString().Should().Be("PINCODE_NOT_SERVICEABLE");
     }
 
+    [Fact]
+    public async Task G7_cash_settle_staff_look_up_riders_of_their_locations_with_the_phone_tail_only()
+    {
+        var location = _factory.Locations.AddLocation();
+        var other = _factory.Locations.AddLocation();
+        var manager = Staff(location.Id);
+        var phone = UniquePhone();
+        var created = await manager.PostAsJsonAsync($"{Admin}/riders", new { fulfillmentLocationId = location.Id, fullName = "Selvam K", phone }, Ct);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var riderId = (await JsonAsync(created)).GetProperty("id").GetGuid();
+        using var cashier = _factory.CreateStaffClient(["cash.settle"], [location.Id]);
+
+        var lookup = await cashier.GetAsync($"{Admin}/riders/lookup?fulfillmentLocationId={location.Id}&q=selv", Ct);
+
+        lookup.StatusCode.Should().Be(HttpStatusCode.OK);
+        var page = await JsonAsync(lookup);
+        page.GetProperty("page").GetInt32().Should().Be(1);
+        var row = page.GetProperty("items").EnumerateArray().Should().ContainSingle().Subject;
+        row.GetProperty("id").GetGuid().Should().Be(riderId);
+        row.GetProperty("fullName").GetString().Should().Be("Selvam K");
+        row.GetProperty("phoneLast4").GetString().Should().Be(phone[^4..]);
+        row.TryGetProperty("phone", out _).Should().BeFalse();
+
+        (await cashier.GetAsync($"{Admin}/riders", Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var outside = await cashier.GetAsync($"{Admin}/riders/lookup?fulfillmentLocationId={other.Id}", Ct);
+        outside.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await JsonAsync(outside)).GetProperty("code").GetString().Should().Be("LOCATION_ACCESS_DENIED");
+        var scoped = await JsonAsync(await cashier.GetAsync($"{Admin}/riders/lookup?pageSize=100&q=selvam", Ct));
+        scoped.GetProperty("items").EnumerateArray().Should().OnlyContain(i => i.GetProperty("fulfillmentLocationId").GetGuid() == location.Id);
+        using var viewer = _factory.CreateStaffClient(["orders.view"], [location.Id]);
+        (await viewer.GetAsync($"{Admin}/riders/lookup", Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await manager.GetAsync($"{Admin}/riders/lookup?fulfillmentLocationId={location.Id}", Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task G10_shipments_filter_by_slot_date_and_sort_by_known_keys_only()
+    {
+        var location = _factory.Locations.AddLocation();
+        var client = Staff(location.Id);
+        var now = DateTimeOffset.UtcNow;
+        var lateSlotDate = IstDate(now.AddDays(3));
+        var earlySlotDate = IstDate(now.AddDays(1));
+        var lateSlot = await SeedSlotAsync(location.Id, now.AddDays(3), booked: 1, slotDate: lateSlotDate);
+        var earlySlot = await SeedSlotAsync(location.Id, now.AddDays(1), booked: 2, slotDate: earlySlotDate);
+        var first = await ShipmentOnSlotAsync(location.Id, lateSlot, now);
+        var second = await ShipmentOnSlotAsync(location.Id, earlySlot, now.AddMinutes(1));
+        var third = await ShipmentOnSlotAsync(location.Id, earlySlot, now.AddMinutes(2));
+        var list = $"{Admin}/shipments?fulfillmentLocationId={location.Id}&pageSize=100";
+
+        (await IdsAsync(client, $"{list}&slotDate={earlySlotDate:yyyy-MM-dd}")).Should().Equal(second, third);
+        (await IdsAsync(client, list)).Should().Equal(first, second, third);
+        (await IdsAsync(client, $"{list}&sort=-placedAt")).Should().Equal(third, second, first);
+        (await IdsAsync(client, $"{list}&sort=slotStartAt,-placedAt")).Should().Equal(third, second, first);
+        (await IdsAsync(client, $"{list}&sort=-slotStartAt")).Should().Equal(first, second, third);
+
+        foreach (var bad in new[] { "price", "status,status", "-" })
+        {
+            var refused = await client.GetAsync($"{list}&sort={bad}", Ct);
+            refused.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity, bad);
+            var problem = await JsonAsync(refused);
+            problem.GetProperty("code").GetString().Should().Be("VALIDATION_FAILED");
+            problem.GetProperty("errors").TryGetProperty("sort", out _).Should().BeTrue();
+        }
+    }
+
+    private static async Task<List<Guid>> IdsAsync(HttpClient client, string url)
+    {
+        var response = await client.GetAsync(url, Ct);
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(Ct));
+        return [.. (await JsonAsync(response)).GetProperty("items").EnumerateArray().Select(i => i.GetProperty("id").GetGuid())];
+    }
+
+    private async Task<Guid> ShipmentOnSlotAsync(Guid locationId, Guid slotId, DateTimeOffset placedAt)
+    {
+        var orderId = Guid.CreateVersion7();
+        await InScopeAsync(async sp =>
+        {
+            await sp.GetRequiredService<OrderEventHandlers>().OnOrderPlacedAsync(orderId, locationId, slotId, placedAt, Ct);
+            return await sp.GetRequiredService<FreshOrbitDbContext>().SaveChangesAsync(Ct);
+        });
+        return (await InScopeAsync(sp => sp.GetRequiredService<IDeliveryApi>().GetShipmentForOrderAsync(orderId, Ct)))!.ShipmentId;
+    }
+
     private static DateOnly IstDate(DateTimeOffset instant) => DateOnly.FromDateTime(instant.AddHours(5.5).UtcDateTime);
 
     private HttpClient Staff(Guid locationId) => _factory.CreateStaffClient(["delivery.manage"], [locationId]);

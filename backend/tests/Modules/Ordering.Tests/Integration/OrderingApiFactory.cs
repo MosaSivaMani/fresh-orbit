@@ -3,6 +3,8 @@ using FreshOrbit.Settings.Application.Numbering;
 using FreshOrbit.Settings.Domain.BusinessProfiles;
 using FreshOrbit.Settings.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.Storage;
+using FreshOrbit.SharedKernel.Web.Storage;
 using FreshOrbit.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,9 @@ public sealed class OrderingApiFactory(OrderingDatabase database, CheckoutWorld 
 {
     public CheckoutWorld World => world;
 
+    /// <summary>Local-disk storage in a fresh temporary folder (complaint photos, W12).</summary>
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "freshorbit-ordering-tests", Guid.NewGuid().ToString("N"));
+
     protected override void ConfigureTestServices(IServiceCollection services)
     {
         services.AddSingleton(world);
@@ -32,6 +37,7 @@ public sealed class OrderingApiFactory(OrderingDatabase database, CheckoutWorld 
         services.Replace(ServiceDescriptor.Singleton(world.Pricing));
         services.Replace(ServiceDescriptor.Scoped<ICartApi, FakeCartApi>());
         services.Replace(ServiceDescriptor.Scoped<ISettingsApi, WorldPolicySettings>());
+        services.Replace(ServiceDescriptor.Singleton<IFileStorage>(FileStorageExtensions.CreateLocalDisk(StorageRoot, environmentName: "Testing")));
     }
 }
 

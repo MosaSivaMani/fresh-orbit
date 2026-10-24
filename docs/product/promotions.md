@@ -193,3 +193,9 @@ Redeem runs through `IPromotionsApi.Redeem` inside Ordering's checkout transacti
 | Q4 | Private coupons (not listed) | Add `is_listed` (API gap) |
 | Q5 | Should category scope include descendants? | Yes |
 | Q6 | One coupon per order only? | Yes (`unique order_id`), no stacking |
+
+## Admin gap G16 (branch `backend/api-gaps-admin-orders`)
+
+`GET /api/v1/admin/coupons/{id}/redemptions` rows carry `orderNumber`, read from Ordering through
+`IOrderingApi.GetOrderNumbers(orderIds)` in one call per page (not stored in Promotions: no schema change, numbers never
+drift, old redemptions get them too). `null` when Ordering has no such order.
