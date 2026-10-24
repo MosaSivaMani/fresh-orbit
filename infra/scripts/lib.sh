@@ -17,8 +17,10 @@ if [[ -z ${FO_LIB_LOADED:-} ]]; then
   FO_COMPOSE_FILE="$FO_COMPOSE_DIR/docker-compose.prod.yml"
   FO_ENV_FILE="${FO_ENV_FILE:-$FO_COMPOSE_DIR/.env.prod}"
   FO_STATE_DIR="${FO_STATE_DIR:-$(dirname "$FO_INFRA_DIR")/.deploy}"
-  # Must match `name:` in docker-compose.prod.yml (volume names are <project>_<volume>).
-  FO_PROJECT="freshorbit"
+  # Must match `name:` in docker-compose.prod.yml (volume names are <project>_<volume>). Overridable only for the
+  # local end-to-end check (docs/runbooks/e2e-check.md), which also adds its compose override file.
+  FO_PROJECT="${FO_PROJECT:-freshorbit}"
+  FO_COMPOSE_OVERRIDE="${FO_COMPOSE_OVERRIDE:-}"
   FO_POSTGRES_IMAGE="postgres:17.10-alpine3.24"
   FO_BUSYBOX_IMAGE="busybox:1.37.0"
   FO_RCLONE_IMAGE="rclone/rclone:1.75.2"
@@ -73,7 +75,9 @@ resolve_image_tag() {
 }
 
 compose() {
-  IMAGE_TAG="$(resolve_image_tag)" docker compose --env-file "$FO_ENV_FILE" -f "$FO_COMPOSE_FILE" "$@"
+  local files=(-f "$FO_COMPOSE_FILE")
+  [[ -z $FO_COMPOSE_OVERRIDE ]] || files+=(-f "$FO_COMPOSE_OVERRIDE")
+  IMAGE_TAG="$(resolve_image_tag)" docker compose -p "$FO_PROJECT" --env-file "$FO_ENV_FILE" "${files[@]}" "$@"
 }
 
 postgres_user() { env_value POSTGRES_USER freshorbit; }

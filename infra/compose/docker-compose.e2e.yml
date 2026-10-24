@@ -1,0 +1,53 @@
+# Local end-to-end check of the production stack (docs/runbooks/e2e-check.md). An OVERRIDE on top of
+# docker-compose.prod.yml: production behaviour stays as it is; only what a laptop needs changes.
+#
+#   infra/scripts/e2e-check.sh            # generates .env.e2e, builds, starts, verifies, smoke-tests, tears down
+#
+# Manually (always with its own project name, so it can never touch a real `freshorbit` stack or its volumes):
+#   docker compose -p fo-e2e --env-file infra/compose/.env.e2e \
+#     -f infra/compose/docker-compose.prod.yml -f infra/compose/docker-compose.e2e.yml up -d --build
+#
+# What differs from production:
+#   - images are built from this checkout (`build:`) and tagged ${IMAGE_REGISTRY}/fresh-orbit-*:${IMAGE_TAG}
+#     (the e2e env file uses fo-e2e/...:local, never the GHCR names, so nothing can be pushed by mistake);
+#   - Caddy publishes only on 127.0.0.1 and on high ports (E2E_HTTP_PORT, E2E_HTTPS_PORT), so the check runs next to
+#     anything already on 80/443. DOMAIN=localhost makes Caddy issue every site (localhost, admin.localhost,
+#     api.localhost) from its own local CA instead of Let's Encrypt: no public DNS needed. The script trusts that CA
+#     by copying its root certificate out of the caddy-data volume.
+# Everything else (Caddyfile, healthchecks, memory limits, environment, Production mode) is the production file's.
+
+x-build-common: &build-common
+  context: ../..
+
+services:
+  migrations:
+    build:
+      <<: *build-common
+      dockerfile: infra/docker/migrations.Dockerfile
+
+  api:
+    build:
+      <<: *build-common
+      dockerfile: infra/docker/api.Dockerfile
+
+  worker:
+    build:
+      <<: *build-common
+      dockerfile: infra/docker/worker.Dockerfile
+
+  web:
+    build:
+      <<: *build-common
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?DOMAIN is required}
+
+  admin:
+    build:
+      <<: *build-common
+      dockerfile: infra/docker/admin.Dockerfile
+
+  caddy:
+    ports: !override
+      - "127.0.0.1:${E2E_HTTP_PORT:-18080}:80"
+      - "127.0.0.1:${E2E_HTTPS_PORT:-18443}:443"
