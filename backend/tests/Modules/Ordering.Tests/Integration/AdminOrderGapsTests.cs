@@ -12,7 +12,6 @@ using FreshOrbit.Ordering.Infrastructure.Jobs;
 using FreshOrbit.SharedKernel.Storage;
 using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.Testing;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
