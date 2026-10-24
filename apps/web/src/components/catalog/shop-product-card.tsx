@@ -13,6 +13,7 @@ import { getProduct } from "@/api/endpoints/catalog";
 import { type ProductListItem } from "@/api/types/catalog";
 import { useAddToCart, useCart, useChangeCartItem, useRemoveCartItem } from "@/cart/use-cart";
 import { describeError, hasCode } from "@/lib/errors";
+import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
@@ -23,7 +24,9 @@ export interface ShopProductCardProps {
   product: ProductListItem;
   index?: number;
   priority?: boolean;
-  /** The server's offer for this product (a promotion banner's title), shown on the picture. */
+  /**
+   * Fallback offer line (a promotion banner's title) when the server sends no `offer` for the item (CAT-R26).
+   */
   offer?: string;
   /** Fallback freshness line from the server (e.g. the next delivery slot) when the item has no message. */
   freshness?: string;
@@ -64,6 +67,10 @@ export function ShopProductCard({
   const soldOut = status === "OUT_OF_STOCK" || status === "NOT_SOLD_HERE";
   const href = `/products/${product.slug}`;
   const onError = (e: unknown) => toast({ title: describeError(e), tone: "danger" });
+  // The default variant's serving facts (CAT-R21, CAT-R23), else the local names.
+  const localNames = product.localNames.length > 0 ? product.localNames.join(" · ") : undefined;
+  const meta = servingLine(product.defaultVariant?.serving) ?? localNames;
+  const fresh = product.availability?.message ?? freshnessLine(product.freshness) ?? freshness;
 
   async function onAdd() {
     if (!pincode) {
@@ -135,15 +142,16 @@ export function ShopProductCard({
           <Fish className="text-accent-text size-16" strokeWidth={1.5} />
         )
       }
-      offer={offer}
-      freshness={product.availability?.message ?? freshness}
-      meta={product.localNames.length > 0 ? product.localNames.join(" · ") : undefined}
+      offer={product.offer?.text ?? offer}
+      freshness={fresh}
+      meta={meta}
       price={
         product.fromPrice ? (
           <PriceTag
             paise={product.fromPrice.unitPricePaise}
             mrpPaise={product.fromPrice.compareAtPaise}
             per={sellUnitLabels[product.fromPrice.perUnit]}
+            savingsLabel={discountLabel(product.fromPrice.discountBp)}
             size="sm"
           />
         ) : (

@@ -74,6 +74,43 @@ describe("ShopProductCard", () => {
       .toBe("/products/seer-fish-vanjaram");
   });
 
+  it("shows the server's serving facts, saving, offer and catch date", () => {
+    const item: ProductListItem = {
+      ...seerItem,
+      fromPrice: {
+        unitPricePaise: 129900,
+        compareAtPaise: 149900,
+        perUnit: "KG",
+        discountBp: 1334,
+      },
+      defaultVariant: {
+        id: "v1",
+        name: "Whole fish",
+        sellUnit: "KG",
+        minOrder: { value: 500, unit: "GRAM" },
+        maxOrder: { value: 5000, unit: "GRAM" },
+        orderStep: { value: 250, unit: "GRAM" },
+        defaultPreparationCode: "STEAK",
+        serving: {
+          basis: { value: 1000, unit: "GRAM" },
+          netWeightGrams: 1000,
+          piecesMin: 10,
+          piecesMax: 14,
+          serves: 4,
+        },
+      },
+      offer: { couponCode: "SEER90", text: "₹90 off with SEER90" },
+      freshness: { caughtOn: "2026-10-23", receivedAt: "2026-10-23T02:10:00Z" },
+    };
+    renderWithProviders(<ShopProductCard product={item} offer="Banner offer" />);
+
+    expect(screen.getByText("1 kg · 10–14 pcs · serves 4")).toBeInTheDocument();
+    expect(screen.getByText("13.34% off")).toBeInTheDocument();
+    expect(screen.getByText("₹90 off with SEER90")).toBeInTheDocument();
+    expect(screen.queryByText("Banner offer")).toBeNull();
+    expect(screen.getByText("Caught 23 Oct 2026")).toBeInTheDocument();
+  });
+
   it("has no offer line unless the server gave one", () => {
     const { container } = renderWithProviders(<ShopProductCard product={seerItem} />);
     expect(container.querySelector(".bg-gradient-to-b")).toBeNull();

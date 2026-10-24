@@ -60,7 +60,13 @@ export type HomeBanner = Omit<Schema<"BannerInfo">, "linkType"> & {
 };
 
 /**
- * `GET /home`. The OpenAPI document types `banners` as `unknown[]` (Catalog sends an empty list until home banners
- * come from Promotions); the website reads banners from `GET /promotions` instead.
+ * `GET /home`: featured categories and products, the location's `bestsellers` (CAT-R24) and its banners. The website
+ * reads offer banners from `GET /promotions`.
  */
 export type HomeResponse = Schema<"HomeResponse">;
+
+/** Serving facts of a variant per its basis (CAT-R21): 1 kg net, one pack or one piece. */
+export type ServingInfo = Schema<"ServingInfo">;
+
+/** The batch the next order is packed from (CAT-R25). */
+export type FreshnessInfo = Schema<"FreshnessInfo">;
