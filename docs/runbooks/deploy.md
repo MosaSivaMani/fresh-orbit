@@ -136,7 +136,7 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 | `deploy.sh`: `Missing .../.env.prod` | Create it from `.env.prod.example` (`oracle-setup.md` §7) |
 | compose: `required variable X is missing a value` | Fill X in `.env.prod`; every required key is marked in the example |
 | Migrations failed | `logs.sh migrations --no-follow`; fix and release again; old release is still running. One `Failed executing DbCommand` Error on a brand-new database (EF reads its history table before creating it) is expected; the run still exits 0 |
-| api/worker exit right after start (exit code 139) | A start-up validator refused the configuration: `logs.sh api --no-follow -n 50` shows `OptionsValidationException` naming the key (`security-configuration.md`) |
+| api/worker exit right after start (exit code 1) | A start-up validator refused the configuration: `logs.sh api --no-follow -n 50` shows the Critical line `Start-up refused: … configuration is invalid` naming the key (`security-configuration.md`) |
 | api `unhealthy` | `logs.sh api --no-follow -n 300`; `/health` checks the database connection |
 | Caddy cannot get certificates | DNS A records point at the server? Ports 80/443 open in the Oracle security list and UFW? Cloudflare grey cloud for the first issuance |
 | 502 from Caddy | `logs.sh --status`: is the upstream (api/web/admin) running? |
