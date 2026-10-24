@@ -248,7 +248,9 @@ public sealed class DeliveryApiTests(DeliveryDatabase database) : IAsyncLifetime
         var unknown = await anonymous.GetAsync("/api/v1/delivery-slots?pincode=000001", Ct);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var items = (await JsonAsync(response)).GetProperty("items").EnumerateArray()
+        var body = await JsonAsync(response);
+        body.GetProperty("timeZone").GetString().Should().Be(location.TimeZone);
+        var items = body.GetProperty("items").EnumerateArray()
             .ToDictionary(i => i.GetProperty("id").GetGuid(), i => i.GetProperty("status").GetString());
         items.Should().HaveCount(3);
         items[available].Should().Be("AVAILABLE");
