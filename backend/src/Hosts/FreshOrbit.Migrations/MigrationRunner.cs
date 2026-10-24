@@ -4,6 +4,8 @@ using FreshOrbit.SharedKernel.EntityFramework.Seeding;
 using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Time;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace FreshOrbit.Migrations;
 
@@ -25,6 +27,7 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
         await using (var scope = scopeFactory.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<FreshOrbitDbContext>();
+            await EnsureHistoryTableAsync(db, cancellationToken);
             LogStep("Applying migrations");
             await db.Database.MigrateAsync(cancellationToken);
             LogStep("Creating database objects");
@@ -96,6 +99,19 @@ internal sealed partial class MigrationRunner(IServiceScopeFactory scopeFactory,
 
         LogStep("Done");
         return 0;
+    }
+
+    /// <summary>
+    /// E2E-5: on an empty database EF reads <c>platform.__ef_migrations_history</c> before it creates the table, and
+    /// logs that failed query as an Error although the run is fine (the Npgsql history repository's <c>Exists</c>
+    /// answers true there, so it cannot be used to check). Running the history repository's own idempotent script
+    /// first (<c>CREATE SCHEMA</c> if missing, <c>CREATE TABLE IF NOT EXISTS</c>; <c>MigrateAsync</c> runs the same
+    /// script again before it takes its lock) removes that one false Error without filtering any log event.
+    /// </summary>
+    private static async Task EnsureHistoryTableAsync(FreshOrbitDbContext db, CancellationToken cancellationToken)
+    {
+        var history = db.GetService<IHistoryRepository>();
+        await history.CreateIfNotExistsAsync(cancellationToken);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "{Step}")]
