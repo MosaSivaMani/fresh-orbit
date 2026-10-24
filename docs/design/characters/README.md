@@ -24,3 +24,4 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 | NOT_SERVICEABLE | `generated/not_serviceable.jpg` | 2026-10-24 |
 | EMPTY_CART | `generated/empty_cart.jpg` | 2026-10-24 |
 | EMPTY_WISHLIST | `generated/empty_wishlist.jpg` | 2026-10-24 |
+| EMPTY_ORDERS | `generated/empty_orders.jpg` | 2026-10-24 |
