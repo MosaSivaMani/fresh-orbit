@@ -11,6 +11,7 @@ import {
 } from "../types/account";
 import { type OtpChallenge, type OtpRequestBody } from "../types/auth";
 import { type Address, type AddressInput } from "../types/checkout";
+import { type Page } from "../types/common";
 
 export function requestOtp(http: HttpClient, phone: string): Promise<OtpChallenge> {
   const body: OtpRequestBody = { phone, purpose: "LOGIN" };
@@ -34,9 +35,7 @@ export function deleteAccount(http: HttpClient, version: string): Promise<void> 
 }
 
 export function listAddresses(http: HttpClient): Promise<Address[]> {
-  return http
-    .get<Address[] | { items: Address[] }>("/me/addresses")
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<Address[]>("/me/addresses");
 }
 
 export function addAddress(http: HttpClient, body: AddressInput): Promise<Address> {
@@ -63,9 +62,7 @@ export function makeDefaultAddress(http: HttpClient, addressId: string): Promise
 }
 
 export function listWishlist(http: HttpClient): Promise<WishlistItem[]> {
-  return http
-    .get<WishlistItem[] | { items: WishlistItem[] }>("/me/wishlist")
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<WishlistItem[]>("/me/wishlist");
 }
 
 export function addToWishlist(http: HttpClient, productId: string): Promise<void> {
@@ -105,8 +102,7 @@ export function replacePreferences(
   return http.put<PreferencesResponse>("/me/notification-preferences", { preferences });
 }
 
+/** Coupons the signed-in customer can use at their city; one page holds them all. */
 export function listCoupons(http: HttpClient): Promise<VisibleCoupon[]> {
-  return http
-    .get<VisibleCoupon[] | { items: VisibleCoupon[] }>("/coupons")
-    .then((data) => (Array.isArray(data) ? data : data.items));
+  return http.get<Page<VisibleCoupon>>("/coupons").then((data) => data.items);
 }

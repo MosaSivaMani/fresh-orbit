@@ -26,6 +26,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@fresh/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@fresh/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -166,6 +169,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@fresh/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@fresh/core':
         specifier: workspace:*
         version: link:../../packages/core

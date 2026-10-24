@@ -1,97 +1,48 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §4.2 (addresses), §4.8 (preview, place order) and docs/product/ordering.md,
-// docs/product/customers.md (CUS-R5 address fields).
+// Addresses, checkout preview and place order (docs/api §4.2, §4.8), generated from the backend OpenAPI document
+// (`@fresh/api-client`).
 
-import { type CartCoupon, type CartLine, type CartTotals } from "./cart";
-import { type Issue } from "./common";
+import { type Schema } from "@fresh/api-client";
+import { type CartBlocker, type CartCoupon, type CartLine } from "./cart";
+import { type Coded, type RequestBody } from "./common";
 import { type SlotStatus } from "./locations";
 
 export type AddressLabel = "HOME" | "WORK" | "OTHER";
 
-export interface Address {
-  /** Phase 2 Customers returns `addressId`; docs/api examples use `id`. Use {@link addressIdOf}. */
-  addressId?: string;
-  id?: string;
-  label: AddressLabel;
-  recipientName: string;
-  phone: string;
-  line1: string;
-  line2: string | null;
-  landmark: string | null;
-  locality: string;
-  cityName: string;
-  stateCode: string;
-  pincode: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  isDefault: boolean;
-  /** Null until Customers can ask Locations (CUS-R5). */
-  isServiceable: boolean | null;
-  version: string;
-}
+export type Address = Coded<Schema<"AddressResponse">, { label: AddressLabel }>;
 
-export function addressIdOf(address: Pick<Address, "addressId" | "id">): string {
-  return address.addressId ?? address.id ?? "";
-}
+export type AddressInput = RequestBody<
+  Coded<Schema<"SaveAddressRequest">, { label: AddressLabel }>
+>;
 
-export interface AddressInput {
-  label: AddressLabel;
-  recipientName: string;
-  phone: string;
-  line1: string;
-  line2: string | null;
-  landmark: string | null;
-  locality: string;
-  cityName: string;
-  stateCode: string;
-  pincode: string;
-  isDefault?: boolean | null;
-}
-
-export type PaymentMethod = "COD" | "UPI_ON_DELIVERY" | "ONLINE";
+export type PaymentMethod = Schema<"PaymentMethod">;
 
 export type SubstitutionPreference = "CALL_ME" | "AUTO_SIMILAR" | "NONE";
 
-export interface CheckoutPreviewRequest {
-  addressId: string;
-  deliverySlotId: string;
-  paymentMethod: PaymentMethod;
-  substitutionPreference: SubstitutionPreference;
-}
+/**
+ * Body of `POST /checkout/preview` and `POST /orders` (one record, `CheckoutRequest`); the preview ignores
+ * `customerNotes` and `expectedTotalPaise`.
+ */
+export type CheckoutRequest = Coded<
+  Schema<"CheckoutRequest">,
+  { paymentMethod: PaymentMethod; substitutionPreference: SubstitutionPreference }
+>;
 
-export interface PaymentMethodOption {
-  method: PaymentMethod;
-  enabled: boolean;
-  reasonCode: string | null;
-}
+export type CheckoutPreviewRequest = Omit<CheckoutRequest, "customerNotes" | "expectedTotalPaise">;
 
-export interface CheckoutBlocker extends Issue {
-  lineId?: string | null;
-}
+export type PlaceOrderRequest = CheckoutRequest & { expectedTotalPaise: number };
 
-export interface CheckoutPreview {
-  cartId: string;
-  address: {
-    id: string;
-    label: AddressLabel;
-    line1: string;
-    locality: string;
-    pincode: string;
-    isServiceable: boolean;
-  };
-  fulfillmentLocationCode: string;
-  slot: { id: string; startAt: string; endAt: string; cutoffAt: string; status: SlotStatus } | null;
-  lines: CartLine[];
-  coupon: CartCoupon | null;
-  totals: CartTotals;
-  paymentMethods: PaymentMethodOption[];
-  canPlaceOrder: boolean;
-  blockers: CheckoutBlocker[];
-  /** Send back unchanged as `expectedTotalPaise` when placing the order. */
-  expectedTotalPaise: number;
-}
+export type PaymentMethodOption = Coded<Schema<"PaymentMethodOption">, { method: PaymentMethod }>;
 
-export interface PlaceOrderRequest extends CheckoutPreviewRequest {
-  customerNotes: string | null;
-  expectedTotalPaise: number;
-}
+export type CheckoutBlocker = CartBlocker;
+
+export type CheckoutPreview = Coded<
+  Schema<"CheckoutPreview">,
+  {
+    address: Coded<Schema<"CheckoutAddressDto">, { label: AddressLabel | null }>;
+    /** `NOT_AVAILABLE` (times null) when the slot id is unknown at this location. */
+    slot: Coded<Schema<"CheckoutSlotDto">, { status: SlotStatus | "NOT_AVAILABLE" }>;
+    lines: CartLine[];
+    coupon: CartCoupon | null;
+    paymentMethods: PaymentMethodOption[];
+  }
+>;

@@ -1,86 +1,48 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §1.3, §4.6, §5 and docs/product/cart.md.
+// Cart shapes (docs/api §4.6), generated from the backend OpenAPI document (`@fresh/api-client`).
 
-import { type Availability, type Issue, type Quantity, type SellUnit } from "./common";
+import { type Schema } from "@fresh/api-client";
+import {
+  type AvailabilityStatus,
+  type Coded,
+  type QuantityUnit,
+  type RequestBody,
+  type SellUnit,
+} from "./common";
 
-export interface CartLine {
-  id: string;
-  productId: string;
-  productSlug: string;
-  productName: string;
-  variantId: string;
-  variantName: string;
-  sellUnit: SellUnit;
-  imageUrl: string | null;
-  preparation: { code: string; name: string; yieldBp: number };
-  quantity: Quantity;
-  estimatedNetQuantity: Quantity;
-  maxChargeableQuantity: Quantity;
-  unitPricePaise: number | null;
-  compareAtPaise: number | null;
-  priceUnit: SellUnit;
-  itemPaise: number;
-  preparationChargePaise: number;
-  preparationChargeBasis: string | null;
-  taxRateBp: number;
-  taxPaise: number;
-  estimatedLineTotalPaise: number;
-  maxLineTotalPaise: number;
-  availability: Availability;
-  isSellable: boolean;
-  issues: Issue[];
-}
+/** A cart quantity; the spec types `unit` as a string, the server writes GRAM / PIECE / PACK. */
+export type CartQuantity = Coded<Schema<"QuantityView">, { unit: QuantityUnit }>;
+
+export type CartLine = Coded<
+  Schema<"CartLineView">,
+  {
+    sellUnit: SellUnit;
+    priceUnit: SellUnit;
+    quantity: CartQuantity;
+    estimatedNetQuantity: CartQuantity;
+    maxChargeableQuantity: CartQuantity;
+    availability: Coded<Schema<"CartAvailabilityView">, { status: AvailabilityStatus }>;
+  }
+>;
 
 export type CouponStatus = "APPLIED" | "NOT_APPLICABLE" | "INVALID";
 
-export interface CartCoupon {
-  code: string;
-  status: CouponStatus;
-  discountPaise: number;
-  message: string | null;
-}
+export type CartCoupon = Coded<Schema<"CartCouponView">, { status: CouponStatus }>;
 
-export interface CartTotals {
-  itemsPaise: number;
-  preparationPaise: number;
-  subtotalPaise: number;
-  discountPaise: number;
-  deliveryFeePaise: number;
-  deliveryFeeWaived: boolean;
-  taxPaise: number;
-  estimatedTotalPaise: number;
-  maxTotalPaise: number;
-  minOrderPaise?: number;
-  minOrderShortfallPaise?: number;
-  freeDeliveryShortfallPaise?: number | null;
-}
+export type CartTotals = Schema<"CartTotalsView">;
 
-export interface Cart {
-  id: string | null;
-  /** Issued once to a guest; the website keeps it in an httpOnly cookie and blanks it here. */
-  cartToken: string | null;
-  pincode: string | null;
-  fulfillmentLocationCode: string | null;
-  lines: CartLine[];
-  coupon: CartCoupon | null;
-  totals: CartTotals;
-  canCheckout: boolean;
-  checkoutBlockers: Issue[];
-  messages: string[];
-}
+/** A reason the cart cannot be checked out (line-level when `lineId` is set). */
+export type CartBlocker = Schema<"CartBlockerView">;
 
-export interface AddCartItemRequest {
-  variantId: string;
-  preparationCode?: string;
-  quantity: Quantity;
-}
+export type Cart = Coded<Schema<"CartView">, { lines: CartLine[]; coupon: CartCoupon | null }>;
 
-export interface ChangeCartItemRequest {
-  quantity?: Quantity;
-  preparationCode?: string;
-}
+export type AddCartItemRequest = RequestBody<Schema<"AddCartItemRequest">>;
 
-/** Problem Details member of 409 `CART_LOCATION_CHANGED` (cart.md "API gaps": `lines: [{ id, code }]`). */
+export type ChangeCartItemRequest = RequestBody<Schema<"ChangeCartItemRequest">>;
+
+/**
+ * Problem Details member `lines` of 409 `CART_LOCATION_CHANGED`. Not in the OpenAPI document (Problem Details
+ * extensions are untyped there); shape from `CartEndpoints` `PUT /cart/location`.
+ */
 export interface DroppedCartLine {
   id: string;
   code: string;

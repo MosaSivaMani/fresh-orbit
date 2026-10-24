@@ -14,6 +14,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@fresh/api-client": "workspace:*",
     "@fresh/core": "workspace:*",
     "@fresh/ui": "workspace:*",
     "@hookform/resolvers": "5.9.1",

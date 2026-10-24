@@ -1,5 +1,4 @@
 import { Badge } from "@fresh/ui";
-import Image from "next/image";
 import Link from "next/link";
 import { type HomeBanner } from "@/api/types/catalog";
 
@@ -31,9 +30,7 @@ export function OfferStrip({ banners }: { banners: HomeBanner[] }) {
                 Offer
               </Badge>
               <p className="text-text font-display text-lg font-semibold">{banner.title}</p>
-              {banner.description && (
-                <p className="text-text-muted text-sm">{banner.description}</p>
-              )}
+              {banner.subtitle && <p className="text-text-muted text-sm">{banner.subtitle}</p>}
               {banner.linkType === "COUPON" && banner.linkTarget && (
                 <p className="text-text text-sm">
                   Use code <span className="font-mono font-semibold">{banner.linkTarget}</span> in
@@ -41,11 +38,6 @@ export function OfferStrip({ banners }: { banners: HomeBanner[] }) {
                 </p>
               )}
             </div>
-            {banner.imageUrl && (
-              <div className="relative hidden w-28 shrink-0 overflow-hidden rounded-lg sm:block">
-                <Image src={banner.imageUrl} alt="" fill sizes="112px" className="object-cover" />
-              </div>
-            )}
           </div>
         );
         return (

@@ -28,7 +28,6 @@ import {
   type CheckoutPreview,
   type PaymentMethod,
   type SubstitutionPreference,
-  addressIdOf,
 } from "@/api/types/checkout";
 import { AddressForm } from "@/components/account/address-form";
 import { OrderSummary } from "@/components/cart/order-summary";
@@ -111,11 +110,11 @@ export function CheckoutView() {
 
   const list = addresses.data ?? [];
   const address =
-    list.find((a) => addressIdOf(a) === chosenAddressId) ??
+    list.find((a) => a.addressId === chosenAddressId) ??
     list.find((a) => a.isDefault) ??
     list[0] ??
     null;
-  const addressId = address ? addressIdOf(address) : null;
+  const addressId = address ? address.addressId : null;
 
   const previewKey = ["checkout-preview", addressId, slotId, paymentMethod, substitution] as const;
   const preview = useQuery({
@@ -265,7 +264,7 @@ export function CheckoutView() {
                 setDropped(null);
               }}
               options={list.map((a) => ({
-                value: addressIdOf(a),
+                value: a.addressId,
                 label: `${a.recipientName} · ${a.label.charAt(0)}${a.label.slice(1).toLowerCase()}`,
                 description:
                   addressText(a) +
@@ -293,7 +292,7 @@ export function CheckoutView() {
                 onSubmit={async (input) => {
                   const created = await addAddress(browserHttp(), input);
                   await queryClient.invalidateQueries({ queryKey: queryKeys.addresses });
-                  setAddressId(addressIdOf(created));
+                  setAddressId(created.addressId);
                   setSlotId(null);
                   setAdding(false);
                 }}

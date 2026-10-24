@@ -1,43 +1,14 @@
-// TEMPORARY: replace with @fresh/api-client types after Phase 3
-// Written from docs/api/README.md §4.3 (serviceability, cities) and §4.5 (delivery slots).
+// Serviceability, cities and delivery slots (docs/api §4.3, §4.5), generated from the backend OpenAPI document
+// (`@fresh/api-client`).
 
-export interface ServiceabilityResponse {
-  pincode: string;
-  serviceable: boolean;
-  /** `PINCODE_NOT_SERVICEABLE` (or `CITY_NOT_ACTIVE`) when not served. */
-  reasonCode: string | null;
-  city: { id: string; code: string; name: string } | null;
-  fulfillmentLocation: { id: string; code: string; name: string; hasColdStorage: boolean } | null;
-  serviceArea: {
-    id: string;
-    name: string;
-    deliveryFeePaise: number;
-    freeDeliveryAbovePaise: number | null;
-    minOrderPaise: number;
-  } | null;
-  nextSlot: { id: string; startAt: string; endAt: string } | null;
-}
+import { type Schema } from "@fresh/api-client";
 
-export interface PublicCity {
-  id: string;
-  code: string;
-  name: string;
-  stateCode?: string;
-}
+export type ServiceabilityResponse = Schema<"ServiceabilityResponse">;
 
-export type SlotStatus = "AVAILABLE" | "FULL" | "CUTOFF_PASSED" | "CLOSED";
+export type PublicCity = Schema<"PublicCityResponse">;
 
-export interface DeliverySlot {
-  id: string;
-  /** Location-local date `YYYY-MM-DD`. */
-  slotDate: string;
-  startAt: string;
-  endAt: string;
-  cutoffAt: string;
-  status: SlotStatus;
-}
+export type SlotStatus = Schema<"SlotDisplayStatus">;
 
-export interface DeliverySlotsResponse {
-  fulfillmentLocationId: string;
-  items: DeliverySlot[];
-}
+export type DeliverySlot = Schema<"CustomerSlotResponse">;
+
+export type DeliverySlotsResponse = Schema<"CustomerSlotsResponse">;

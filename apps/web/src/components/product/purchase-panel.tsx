@@ -73,7 +73,7 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
     availability?.status === "OUT_OF_STOCK" || availability?.status === "NOT_SOLD_HERE";
   const maxNow = availability?.maxOrderableNow?.value ?? variant.maxOrder.value;
   const inCart = cart.data?.lines.find(
-    (line) => line.variantId === variant.id && line.preparation.code === preparation,
+    (line) => line.variantId === variant.id && line.preparation?.code === preparation,
   );
 
   function selectVariant(id: string) {
@@ -198,7 +198,7 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
       {inCart ? (
         <div className="border-border bg-surface rounded-lg border p-4 text-sm" aria-live="polite">
           <p className="text-text font-semibold">
-            In your cart: {formatQuantity(inCart.quantity)}, {inCart.preparation.name}
+            In your cart: {formatQuantity(inCart.quantity)}, {inCart.preparation?.name}
           </p>
           <p className="text-text-muted">
             Estimated {formatRupees(inCart.estimatedLineTotalPaise)}

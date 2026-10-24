@@ -23,7 +23,7 @@ import {
   makeDefaultAddress,
   replaceAddress,
 } from "@/api/endpoints/account";
-import { type Address, addressIdOf } from "@/api/types/checkout";
+import { type Address } from "@/api/types/checkout";
 import { asApiError, describeError, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { AddressForm } from "./address-form";
@@ -89,7 +89,7 @@ export function AddressesView() {
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2">
           {addresses.data.map((a) => {
-            const id = addressIdOf(a);
+            const id = a.addressId;
             return (
               <li key={id}>
                 <Card className="h-full">
@@ -167,7 +167,7 @@ export function AddressesView() {
                   else
                     await replaceAddress(
                       browserHttp(),
-                      addressIdOf(editing.address),
+                      editing.address.addressId,
                       input,
                       editing.address.version,
                     );

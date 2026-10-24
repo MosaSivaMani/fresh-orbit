@@ -37,7 +37,6 @@ const COMPLAINT_KINDS: { value: ComplaintKind; label: string }[] = [
   { value: "LATE", label: "Delivered late" },
 ];
 
-const MAX_IMAGES = 4;
 const WHOLE_ORDER = "__order__";
 
 /** Keeps one Idempotency-Key per user action, reused while that action is retried. */
@@ -113,7 +112,6 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
   const [itemId, setItemId] = useState<string>(WHOLE_ORDER);
   const [kind, setKind] = useState<ComplaintKind>("QUALITY");
   const [description, setDescription] = useState("");
-  const [images, setImages] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -123,7 +121,6 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
     const local: Record<string, string> = {};
     if (description.trim().length < 10)
       local.description = "Describe the problem in a sentence or two.";
-    if (images.length > MAX_IMAGES) local.images = `Attach at most ${MAX_IMAGES} photos.`;
     setErrors(local);
     setFormError(null);
     if (Object.keys(local).length) return;
@@ -136,7 +133,6 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
           orderItemId: itemId === WHOLE_ORDER ? null : itemId,
           kind,
           description: description.trim(),
-          images,
         },
         actionKey.get(),
       );
@@ -147,7 +143,7 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
       onClose();
     } catch (e) {
       const fields: Record<string, string> = {};
-      for (const field of ["orderItemId", "kind", "description", "images"]) {
+      for (const field of ["orderItemId", "kind", "description"]) {
         const message = fieldMessage(e, field);
         if (message) fields[field] = message;
       }
@@ -187,19 +183,6 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
             maxLength={1000}
-          />
-        </FormField>
-        <FormField
-          label="Photos (optional)"
-          hint={`Up to ${MAX_IMAGES} photos.`}
-          error={errors.images}
-        >
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            className="text-text text-sm"
-            onChange={(e) => setImages(Array.from(e.target.files ?? []))}
           />
         </FormField>
         {formError && (

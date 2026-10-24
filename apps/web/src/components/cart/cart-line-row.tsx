@@ -26,8 +26,8 @@ function QuantityEditor({ line, onClose }: { line: CartLine; onClose: () => void
   const [value, setValue] = useState(line.quantity.value);
   const [error, setError] = useState<string | null>(null);
   const product = useQuery({
-    queryKey: queryKeys.product(line.productSlug, line.preparation.code, pincode),
-    queryFn: () => getProduct(browserHttp(), line.productSlug, line.preparation.code),
+    queryKey: queryKeys.product(line.productSlug, line.preparation?.code, pincode),
+    queryFn: () => getProduct(browserHttp(), line.productSlug, line.preparation?.code),
   });
   const variant = product.data?.variants.find((v) => v.id === line.variantId);
   const formatValue = (v: number) => formatQuantity({ value: v, unit: line.quantity.unit });
@@ -48,7 +48,9 @@ function QuantityEditor({ line, onClose }: { line: CartLine; onClose: () => void
   return (
     <DialogContent
       title={`Change ${line.productName}`}
-      description={`${line.variantName}, ${line.preparation.name}`}
+      description={
+        line.preparation ? `${line.variantName}, ${line.preparation.name}` : line.variantName
+      }
       size="sm"
       footer={
         <>
@@ -124,7 +126,8 @@ export function CartLineRow({ line }: { line: CartLine }) {
               {line.productName}
             </Link>
             <span className="text-text-muted text-sm">
-              {line.variantName} · {line.preparation.name}
+              {line.variantName}
+              {line.preparation && ` · ${line.preparation.name}`}
             </span>
           </div>
           <div className="text-right">
