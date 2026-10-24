@@ -5,8 +5,8 @@
   "description": "Fresh Orbit customer website (Next.js App Router).",
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3000",
-    "build": "next build",
+    "dev": "fresh-illustrations-copy public/illustrations && next dev --port 3000",
+    "build": "fresh-illustrations-copy public/illustrations && next build",
     "start": "next start --port 3000",
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
@@ -16,6 +16,7 @@
   "dependencies": {
     "@fresh/api-client": "workspace:*",
     "@fresh/core": "workspace:*",
+    "@fresh/illustrations": "workspace:*",
     "@fresh/ui": "workspace:*",
     "@tanstack/react-query": "5.104.1",
     "lucide-react": "1.54.0",

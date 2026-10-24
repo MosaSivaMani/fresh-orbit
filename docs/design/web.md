@@ -7,6 +7,34 @@ HTTP and formatting from `@fresh/core`. Owner: E2. Wireframes: `docs/design/READ
 amount on screen is a server value formatted by `@fresh/core` (`formatRupees`, `formatQuantity`, …). The only
 arithmetic is unit conversion of user input (shop price filter: rupees typed → paise sent) and display paging.
 
+## 0. Look: food-app style (D95)
+
+The website follows `docs/design/mockups/web-food-app.html` **version 2** (the owner rejected a widened copy of
+the app; the mobile app keeps D88 "Bold blocks"). Fonts per D89: Baloo 2 800 headings, Dancing Script 700 for
+the handwritten word, Inter body, all self-hosted from `@fresh/ui/fonts.css`. Phone widths use the same
+components; nothing is a separate mobile design.
+
+| Part | What it is | Data |
+|---|---|---|
+| Header (`components/header/site-header.tsx`, `header-nav.tsx`) | Coral bar at every width: logo, "Delivering to 530017 ▾" (opens the pincode picker), Offers, Help, Orders (signed in), Sign in / Account, ink Cart pill with a coral count. Phones show the link icons; the words stay as the links' names | Cart count = lines in the server's cart |
+| Home hero (`app/page.tsx`, `FoodHero`) | Coral block, headline "Fresh fish. *Cleaned your way.* At your door, in your slot." (the handwritten words on a paper brush swipe), a white pincode box (`PincodeForm variant="hero"`, asks `GET /serviceability`), the search box with suggestions, three white `PromiseCard`s, two tilted character photos at the sides from `lg` up (`ONBOARDING_CLEANED`, `ONBOARDING_DELIVERY`) | Third promise shows the server's next slot; the other two state store policy (cut choice, pay for net weight) only |
+| "What's on your *mind?*" (`CategoryRail`, `CategoryCircle`) | Round 88/110 px circles with the category picture, muted label; scrolls sideways on phones | `GET /home` `featuredCategories` |
+| "Top picks in *city*" | Picture-card grid, 1 column below 480 px, then 2/3/4 | `featuredProducts`; city from `GET /serviceability` `city.name` (rule 7: no city names in code); "Top picks *today*" without a pincode |
+| Picture card (`ShopProductCard` → `FoodCard`) | 16:11 picture, offer line on a dark gradient, name, round teal mark + freshness line, local names, price with struck MRP, ADD → − n + stepper | Offer line only from `GET /promotions` (a banner linking to the product, or on a category page a banner linking to that category); freshness = the item's availability message, else the next slot; nothing invented |
+| ADD | With one size: fetches the product, adds `minOrder` with the default cut through `POST /cart/items`; with several sizes: opens the product page. Becomes a stepper when the cart holds exactly one line of the product (bounds from the product endpoint) | Server cart |
+| Offers, "Filter and *pick*" | Mango offer cards (`OfferStrip`); link chips (price sort and "Under ₹500" only with a pincode, wild, farmed, in stock, newest) over eight more cards | `GET /promotions`, `GET /products?pageSize=8` |
+| Get the app (`GetTheApp`, `AppBand`) | Mango-soft band, store buttons, character circle | Links from `FRESH_PLAY_STORE_URL` / `FRESH_APP_STORE_URL`; unset → "coming soon" text, no invented links |
+| Footer | Dark ink: logo, shop and help links, cities we serve, small print | `GET /cities` |
+| Shop, category, search (`PageBand`) | Coral page band with breadcrumbs, title (handwritten word), description and the search box; then the category circles, the chip row (sort, wild, farmed, in stock, "More filters" sheet with categories and price), the card grid and pagination. No results → `CharacterState` (`NO_SEARCH_RESULTS`) | `GET /products` with the URL filters |
+| Product | Ice-tinted picture panel with a source sticker; title with the first local name handwritten; facts row (source, region, next slot); size and cut on `OptionTile`s ("Choose your cut"); pack/piece weight; coral net-weight note; quantity stepper and a teal "Add to cart · ₹/unit" bar (sticky at the bottom on phones); delivery box; tabs; "More *category*"; get the app | `GET /products/{slug}`, serviceability |
+
+Images: the API returns picture URLs as paths (`/media/...`). `app/media/[...path]/route.ts` serves them on the
+website's origin from `FRESH_API_ORIGIN` (GET, images only, no cookies forwarded), so cards show the real product
+photos in development and behind Caddy.
+
+Pages owned by W2 on `web/food-app-pages` (cart, checkout, login, orders and tracking, account, empty and error
+pages) use the same header, footer, `PageBand` and `CharacterState`.
+
 ## 1. Run it
 
 | Task | Command |
@@ -19,7 +47,8 @@ arithmetic is unit conversion of user input (shop price filter: rupees typed →
 
 Environment (`apps/web/.env.example`): `FRESH_API_ORIGIN` (API origin, server-side only; missing → pages that need
 the API show their error state, the proxy and BFF answer 503 `SERVICE_UNAVAILABLE`), `NEXT_PUBLIC_SITE_URL` (canonical
-URLs, JSON-LD, sitemap; missing → no canonical host, empty sitemap, robots disallow all).
+URLs, JSON-LD, sitemap; missing → no canonical host, empty sitemap, robots disallow all), `FRESH_PLAY_STORE_URL` and
+`FRESH_APP_STORE_URL` (optional; the "get the app" band shows only the links that are set).
 
 ## 2. Page inventory
 
@@ -121,9 +150,9 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 | # | Gap | Status | What the website does now / what closes it |
 |---|---|---|---|
-| W1 | No bestsellers endpoint | STILL OPEN | Home shows `GET /home` `featuredProducts` titled "Featured today". Closes with a Catalog/Reporting bestsellers read |
+| W1 | No bestsellers endpoint | STILL OPEN | Home shows `GET /home` `featuredProducts` titled "Top picks in <city>" (D95). Closes with a Catalog/Reporting bestsellers read |
 | W2 | No price quote for a chosen weight before it is in the cart | STILL OPEN | `GET /products/{id}/availability` gives the unit price only; estimate and maximum appear from the cart line. Closes with a quote endpoint (variant, preparation, quantity → estimate, max chargeable) |
-| W3 | Product list items carry no variant ids | STILL OPEN | No quick-add on cards. Closes with the default variant id (and its order rules) on `ProductListItem` |
+| W3 | Product list items carry no variant ids | STILL OPEN | ADD on a card first reads the product (one extra request), then adds when there is one size; with several it opens the product page. Closes with the default variant id (and its order rules) on `ProductListItem` |
 | W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Quantity editor fetches the product when opened. Closes with the three fields on `CartLineView` |
 | W5 | `GET /me/wishlist` returns ids only | STILL OPEN | Always a dated placeholder row linking nowhere. Closes with a product summary (slug, name, image, price) per item |
 | W6 | Shapes not shown in docs/api | CLOSED | All in the spec now; `/promotions`, `/products`, `/orders` are paged, `/cities`, `/suggest`, `/me/addresses`, `/me/wishlist`, complaints are bare arrays. `GET /home` `banners` is still `object[]`, so banners come from `/promotions` |
@@ -133,6 +162,11 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W10 | Time zone for display | STILL OPEN | `@fresh/core` formats in IST. Closes with the location's `timeZone` in slot and order responses |
 | W11 | Banner `imageKey` is a storage key, not a URL | NEW, OPEN | Offer strip shows text only. Closes with a resolved image URL on `BannerInfo` |
 | W12 | Complaint create is JSON with no attachments | NEW, OPEN | Report-a-problem form has no photo field. Closes with a photo upload (multipart or upload URL) on complaints |
+
+| W13 | List items carry no weight, pieces or serves | NEW, OPEN | Picture cards show local names instead of the mockup's "500 g · 6–8 pcs · serves 3"; the product page shows pack and average piece weight. Closes with pack size, piece range and serves on `ProductListItem` |
+| W14 | A CATEGORY banner's `linkTarget` is the category id, not its slug | NEW, OPEN | Offer strip maps id → slug from the category tree (no link when unknown); category pages match the id. Closes with the slug (or both) in `BannerInfo` |
+| W15 | Image URLs are paths on the API origin (`/media/...`) | NEW, OPEN | The website serves them through `/media/*` (route handler). Closes with absolute public image URLs, or keeps the route |
+| W16 | No product-specific offer or freshness ("caught 5:40 am") fields | NEW, OPEN | Offer line only from banners that link to the product or its category; freshness line = availability message or the next slot. Closes with an offer label and a batch time on list items |
 
 ## 7. API types (generated)
 

@@ -3,13 +3,13 @@
 import {
   Button,
   Checkbox,
+  FilterChip,
   FormField,
   Input,
   Select,
   Sheet,
   SheetContent,
   SheetTrigger,
-  Switch,
 } from "@fresh/ui";
 import { SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -78,26 +78,6 @@ function FilterPanel({ filters, categories, hasLocation }: ShopFiltersProps) {
           ))}
         </fieldset>
       )}
-      <fieldset className="flex flex-col gap-2.5">
-        <legend className="text-text mb-2 text-sm font-semibold">Source</legend>
-        {(["WILD", "FARMED"] as const).map((source) => (
-          <Checkbox
-            key={source}
-            label={sourceTypeLabels[source]}
-            checked={filters.sourceTypes.includes(source)}
-            onCheckedChange={(checked) =>
-              update((p) => toggle(p, "source", source, checked === true))
-            }
-          />
-        ))}
-      </fieldset>
-      <Switch
-        label="In stock only"
-        checked={filters.inStock}
-        onCheckedChange={(checked) =>
-          update((p) => (checked ? p.set("inStock", "true") : p.delete("inStock")))
-        }
-      />
       <form onSubmit={applyPrice} className="flex flex-col gap-3">
         <fieldset disabled={!hasLocation} className="flex flex-col gap-3">
           <legend className="text-text mb-1 text-sm font-semibold">Price (₹ per unit)</legend>
@@ -129,26 +109,17 @@ function FilterPanel({ filters, categories, hasLocation }: ShopFiltersProps) {
   );
 }
 
-/** Desktop: left column. Mobile: "Filters" button opening a bottom sheet. */
+/** "More filters" chip opening a bottom sheet with categories and price (same on phone and desktop). */
 export function ShopFilters(props: ShopFiltersProps) {
   return (
-    <>
-      <div className="hidden lg:block">
+    <Sheet>
+      <SheetTrigger asChild>
+        <FilterChip icon={<SlidersHorizontal aria-hidden="true" />}>More filters</FilterChip>
+      </SheetTrigger>
+      <SheetContent side="bottom" title="Filters">
         <FilterPanel {...props} />
-      </div>
-      <div className="lg:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" leadingIcon={<SlidersHorizontal aria-hidden="true" />}>
-              Filters
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" title="Filters">
-            <FilterPanel {...props} />
-          </SheetContent>
-        </Sheet>
-      </div>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -158,17 +129,19 @@ export interface ActiveChip {
   label: string;
 }
 
-/** Active filter chips and the sort control, above the grid. */
+/** The app's filter chip row: sort, source and stock chips, more filters, then removable active filters. */
 export function ShopToolbar({
   chips,
-  sort,
+  filters,
   hasLocation,
   hasQuery,
+  categories,
 }: {
   chips: ActiveChip[];
-  sort: string | undefined;
+  filters: Filters;
   hasLocation: boolean;
   hasQuery: boolean;
+  categories?: CategoryRef[];
 }) {
   const { update, pending } = useUrlUpdater();
   const options = SORT_OPTIONS.filter((o) => !o.needsQuery || hasQuery).map((o) => ({
@@ -176,44 +149,65 @@ export function ShopToolbar({
     label: o.needsLocation && !hasLocation ? `${o.label} (set pincode)` : o.label,
     ...(o.needsLocation && !hasLocation ? { disabled: true } : {}),
   }));
+  const removable = chips.filter((c) => c.key !== "source" && c.key !== "inStock");
   return (
-    <div
-      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      aria-busy={pending || undefined}
-    >
-      <ul className="flex flex-wrap gap-2" aria-label="Active filters">
-        {chips.map((chip) => (
-          <li key={`${chip.key}:${chip.value ?? ""}`}>
-            <button
-              type="button"
-              onClick={() =>
-                update((p) =>
-                  chip.value ? toggle(p, chip.key, chip.value, false) : p.delete(chip.key),
-                )
-              }
-              className="border-border bg-surface text-text hover:bg-muted inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
-              aria-label={`Remove filter ${chip.label}`}
-            >
-              {chip.label}
-              <X aria-hidden="true" className="size-3.5" />
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="flex items-center gap-2">
-        <span className="text-text-muted text-sm" id="sort-label">
-          Sort by
-        </span>
+    <div className="flex flex-col gap-3" aria-busy={pending || undefined}>
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
         <Select
           aria-label="Sort by"
-          className="w-56"
-          value={sort ?? "default"}
+          className="border-border bg-surface-paper h-9 w-auto shrink-0 rounded-full border px-3.5 font-semibold shadow-none"
+          value={filters.sort ?? "default"}
           options={options}
           onValueChange={(value) =>
             update((p) => (value === "default" ? p.delete("sort") : p.set("sort", value)))
           }
         />
+        {(["WILD", "FARMED"] as const).map((source) => {
+          const on = filters.sourceTypes.includes(source);
+          return (
+            <FilterChip
+              key={source}
+              pressed={on}
+              onClick={() => update((p) => toggle(p, "source", source, !on))}
+            >
+              {sourceTypeLabels[source]}
+            </FilterChip>
+          );
+        })}
+        <FilterChip
+          pressed={filters.inStock}
+          onClick={() =>
+            update((p) => (filters.inStock ? p.delete("inStock") : p.set("inStock", "true")))
+          }
+        >
+          In stock
+        </FilterChip>
+        <ShopFilters
+          filters={filters}
+          hasLocation={hasLocation}
+          {...(categories ? { categories } : {})}
+        />
       </div>
+      {removable.length > 0 && (
+        <ul className="flex flex-wrap gap-2" aria-label="Active filters">
+          {removable.map((chip) => (
+            <li key={`${chip.key}:${chip.value ?? ""}`}>
+              <FilterChip
+                pressed
+                onClick={() =>
+                  update((p) =>
+                    chip.value ? toggle(p, chip.key, chip.value, false) : p.delete(chip.key),
+                  )
+                }
+                aria-label={`Remove filter ${chip.label}`}
+              >
+                {chip.label}
+                <X aria-hidden="true" />
+              </FilterChip>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

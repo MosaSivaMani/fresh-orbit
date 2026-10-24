@@ -2,3 +2,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Copied from @fresh/illustrations by the dev and build scripts (docs/design/illustrations.md)
+public/illustrations/

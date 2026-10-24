@@ -117,6 +117,16 @@ export interface QuantityStepperProps {
   /** Shows a spinner while the server confirms the change. */
   pending?: boolean;
   size?: "sm" | "md";
+  /**
+   * Bold blocks look (D88): `outline` = teal border on paper (cart lines, product page), `solid` = teal fill
+   * (the ADD button turned stepper on product cards). Default outline.
+   */
+  variant?: "outline" | "solid";
+  /**
+   * Going below `min` proposes 0 ("Remove X from cart") instead of being disabled, so a card can fall back to
+   * its ADD button. The server still decides what is in the cart.
+   */
+  allowRemove?: boolean;
   className?: string;
 }
 
@@ -132,13 +142,20 @@ export function QuantityStepper({
   disabled = false,
   pending = false,
   size = "md",
+  variant = "outline",
+  allowRemove = false,
   className,
 }: QuantityStepperProps) {
-  const canDecrease = !disabled && !pending && value - step >= min;
-  const canIncrease = !disabled && !pending && value + step <= max;
+  const busy = disabled || pending;
+  const below = value - step < min;
+  const removes = allowRemove && below && value > 0;
+  const canDecrease = !busy && (!below || removes);
+  const canIncrease = !busy && value + step <= max;
+  const solid = variant === "solid";
   const buttonClass = cn(
-    "text-accent-text hover:bg-accent-subtle inline-flex items-center justify-center rounded-md disabled:cursor-not-allowed disabled:opacity-40",
-    size === "sm" ? "size-8" : "size-10",
+    "inline-flex cursor-pointer items-center justify-center rounded-lg disabled:cursor-not-allowed disabled:opacity-40 [&_svg]:stroke-[2.75]",
+    solid ? "hover:bg-accent-hover" : "text-accent-text hover:bg-teal-soft",
+    size === "sm" ? "size-8 [&_svg]:size-3.5" : "size-10 [&_svg]:size-4",
     focusRing,
   );
   return (
@@ -146,25 +163,30 @@ export function QuantityStepper({
       role="group"
       aria-label={`Quantity of ${label}`}
       aria-busy={pending || undefined}
+      data-variant={variant}
       className={cn(
-        "border-border-strong bg-surface inline-flex items-center rounded-lg border p-0.5",
+        "inline-flex items-center rounded-[10px] p-0.5",
+        solid
+          ? "bg-accent text-on-accent shadow-soft-sm"
+          : "border-accent bg-surface-paper text-accent-text border-[1.5px]",
         className,
       )}
     >
       <button
         type="button"
         className={buttonClass}
-        onClick={() => onChange(value - step)}
+        onClick={() => onChange(removes ? 0 : value - step)}
         disabled={!canDecrease}
-        aria-label={`Decrease quantity of ${label}`}
+        aria-label={removes ? `Remove ${label} from cart` : `Decrease quantity of ${label}`}
       >
-        <Minus aria-hidden="true" className="size-4" />
+        <Minus aria-hidden="true" />
       </button>
       <output
         aria-live="polite"
         className={cn(
-          "text-text flex min-w-16 items-center justify-center px-2 font-semibold tabular-nums",
-          size === "sm" ? "text-sm" : "text-base",
+          "flex items-center justify-center px-1.5 font-extrabold tabular-nums",
+          size === "sm" ? "min-w-8 text-sm" : "min-w-14 text-base",
+          !solid && "text-accent-text",
         )}
       >
         {pending ? <Spinner size="sm" label="Updating quantity" /> : formatValue(value)}
@@ -176,7 +198,7 @@ export function QuantityStepper({
         disabled={!canIncrease}
         aria-label={`Increase quantity of ${label}`}
       >
-        <Plus aria-hidden="true" className="size-4" />
+        <Plus aria-hidden="true" />
       </button>
     </div>
   );

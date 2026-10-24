@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { type ReactNode } from "react";
 import { SiteHeader } from "@/components/header/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -7,13 +6,7 @@ import { getSiteUrl } from "@/server/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  display: "swap",
-  weight: ["600", "700"],
-});
+// Fonts (Baloo 2, Inter, Dancing Script) are self-hosted from @fresh/ui/fonts.css, imported by globals.css (D89).
 
 const siteUrl = getSiteUrl();
 
@@ -36,14 +29,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#073B4C",
+  themeColor: "#F07A5A",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en-IN" className={`${inter.variable} ${jakarta.variable}`}>
+    <html lang="en-IN">
       <body className="flex min-h-dvh flex-col">
         <a
           href="#main"

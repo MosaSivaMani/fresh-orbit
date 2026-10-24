@@ -1,7 +1,7 @@
 "use client";
 
 import { formatPercentFromBp, formatQuantity, formatRupees } from "@fresh/core";
-import { Button, PriceTag, QuantityStepper, RadioGroup, StatusBadge, toast } from "@fresh/ui";
+import { Button, OptionTile, PriceTag, QuantityStepper, StatusBadge, toast } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -39,7 +39,7 @@ export interface PurchasePanelProps {
 }
 
 /**
- * Variant, preparation and quantity choice, then "Add to cart". Bounds and steps are the server's; the estimate for the
+ * Size and cut chosen on tiles (D95), quantity on the stepper, then the teal "Add to cart" bar. Bounds and steps are the server's; the estimate for the
  * chosen weight is the server's cart line (docs/api §5), shown once the item is in the cart.
  */
 export function PurchasePanel({ product: initial }: PurchasePanelProps) {
@@ -114,7 +114,7 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
   const formatValue = (v: number) => formatQuantity({ value: v, unit: variant.minOrder.unit });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         {priced ? (
           <PriceTag
@@ -139,64 +139,78 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
       </div>
 
       {product.variants.length > 1 && (
-        <RadioGroup
-          label="Size"
-          value={variant.id}
-          onValueChange={selectVariant}
-          options={product.variants.map((v) => ({ value: v.id, label: v.name }))}
-        />
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-text font-display mb-2 text-base font-extrabold">
+            Choose your size
+          </legend>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {product.variants.map((v) => (
+              <OptionTile
+                key={v.id}
+                name="variant"
+                value={v.id}
+                label={v.name}
+                checked={v.id === variant.id}
+                onChange={() => selectVariant(v.id)}
+              />
+            ))}
+          </div>
+        </fieldset>
       )}
       {product.variants.length === 1 && (
         <p className="text-text text-sm">
-          <span className="font-medium">Size:</span> {variant.name}
+          <span className="font-semibold">Size:</span> {variant.name}
+        </p>
+      )}
+      {(variant.packSizeGrams !== null || variant.avgPieceGrams !== null) && (
+        <p className="text-text-muted text-sm">
+          {[
+            variant.packSizeGrams !== null &&
+              `Pack of ${formatQuantity({ value: variant.packSizeGrams, unit: "GRAM" })}`,
+            variant.avgPieceGrams !== null &&
+              `about ${formatQuantity({ value: variant.avgPieceGrams, unit: "GRAM" })} a piece`,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       )}
 
       {variant.preparations.length > 0 && (
-        <RadioGroup
-          label="Preparation"
-          value={preparation}
-          onValueChange={(code) => {
-            setPreparation(code);
-            setError(null);
-          }}
-          options={variant.preparations.map((p) => ({
-            value: p.code,
-            label: p.name,
-            description: `${chargeText(p)}${p.yieldBp < 10000 ? ` · about ${formatPercentFromBp(p.yieldBp)} of the whole weight remains after cleaning` : ""}`,
-            ...(p.chargePaise === null ? { disabled: true } : {}),
-          }))}
-        />
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-text font-display mb-2 text-base font-extrabold">
+            Choose your cut
+          </legend>
+          <div className="grid grid-cols-2 gap-2">
+            {variant.preparations.map((p) => (
+              <OptionTile
+                key={p.code}
+                name="preparation"
+                value={p.code}
+                label={p.name}
+                description={`${chargeText(p)}${p.yieldBp < 10000 ? ` · about ${formatPercentFromBp(p.yieldBp)} remains after cleaning` : ""}`}
+                checked={p.code === preparation}
+                disabled={p.chargePaise === null}
+                onChange={() => {
+                  setPreparation(p.code);
+                  setError(null);
+                }}
+              />
+            ))}
+          </div>
+        </fieldset>
       )}
 
-      <div className="flex flex-col gap-2">
-        <span className="text-text text-sm font-medium" id="qty-label">
-          {variant.isWeightVariable ? "Net weight after cleaning" : "Quantity"}
-        </span>
-        <QuantityStepper
-          label={product.name}
-          value={quantity}
-          min={variant.minOrder.value}
-          max={maxNow}
-          step={variant.orderStep.value}
-          formatValue={formatValue}
-          onChange={setQuantity}
-          disabled={!priced || unavailable}
-        />
-        <p className="text-text-muted text-xs">
-          From {formatValue(variant.minOrder.value)} to {formatValue(variant.maxOrder.value)}, in
-          steps of {formatValue(variant.orderStep.value)}.
-        </p>
-      </div>
-
-      {variant.isWeightVariable && (
-        <p className="bg-accent-subtle text-accent-text rounded-lg p-3 text-sm">
+      {variant.isWeightVariable && product.netWeightNote && (
+        <p className="bg-accent-coral-subtle text-accent-coral-text rounded-[10px] px-3 py-2 text-sm">
           {product.netWeightNote}
         </p>
       )}
 
       {inCart ? (
-        <div className="border-border bg-surface rounded-lg border p-4 text-sm" aria-live="polite">
+        <div
+          className="bg-surface-paper rounded-[18px] p-4 text-sm shadow-[0_2px_10px_rgb(20_48_47/0.08)]"
+          aria-live="polite"
+        >
           <p className="text-text font-semibold">
             In your cart: {formatQuantity(inCart.quantity)}, {inCart.preparation?.name}
           </p>
@@ -228,25 +242,50 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
         </p>
       )}
 
-      <div className="border-border bg-surface/95 fixed inset-x-0 bottom-0 z-[1100] flex items-center gap-3 border-t p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
-        {priced && (
-          <div className="sm:hidden">
-            <PriceTag
-              paise={variant.unitPricePaise!}
-              per={sellUnitLabels[variant.sellUnit]}
-              size="sm"
-            />
-          </div>
-        )}
+      <div className="flex flex-col gap-1">
+        <span className="text-text text-sm font-semibold" id="qty-label">
+          {variant.isWeightVariable ? "Net weight after cleaning" : "Quantity"}
+        </span>
+        <p className="text-text-muted text-xs">
+          From {formatValue(variant.minOrder.value)} to {formatValue(variant.maxOrder.value)}, in
+          steps of {formatValue(variant.orderStep.value)}.
+        </p>
+      </div>
+
+      {/* The app's add bar: stepper and the teal Add to cart. Sticky on phones, in the column on the website. */}
+      <div className="border-border bg-surface-paper fixed inset-x-0 bottom-0 z-[1100] grid grid-cols-[auto_1fr] items-center gap-2.5 border-t px-3 pt-2.5 pb-4 md:static md:border-0 md:bg-transparent md:p-0">
+        <QuantityStepper
+          label={product.name}
+          value={quantity}
+          min={variant.minOrder.value}
+          max={maxNow}
+          step={variant.orderStep.value}
+          formatValue={formatValue}
+          onChange={setQuantity}
+          disabled={!priced || unavailable}
+        />
         <Button
           size="lg"
-          className="flex-1 sm:flex-none"
+          className="h-12 justify-between rounded-2xl px-[18px] text-[15px] font-extrabold"
           leadingIcon={<ShoppingBag aria-hidden="true" />}
           loading={add.isPending}
           disabled={(pincode !== null && !priced) || unavailable}
           onClick={() => void addToCart()}
         >
-          {pincode ? (unavailable ? "Not available" : "Add to cart") : "Set pincode to buy"}
+          <span className="flex flex-1 items-center justify-between gap-3">
+            <span>
+              {pincode ? (unavailable ? "Not available" : "Add to cart") : "Set pincode to buy"}
+            </span>
+            {priced && !unavailable && (
+              <span aria-hidden="true" className="font-display text-lg font-extrabold">
+                {formatRupees(variant.unitPricePaise!)}
+                <span className="text-xs font-semibold opacity-80">
+                  {" "}
+                  {sellUnitLabels[variant.sellUnit]}
+                </span>
+              </span>
+            )}
+          </span>
         </Button>
       </div>
       {prep && (

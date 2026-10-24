@@ -7,8 +7,8 @@ export default function Loading() {
         Loading product
       </span>
       <div className="bg-muted h-4 w-56 animate-pulse rounded" />
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="bg-muted aspect-[4/3] animate-pulse rounded-2xl" />
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+        <div className="bg-ice-soft aspect-[4/3] animate-pulse rounded-[28px]" />
         <div className="flex flex-col gap-4">
           <div className="bg-muted h-10 w-3/4 animate-pulse rounded" />
           <div className="bg-muted h-6 w-1/3 animate-pulse rounded" />

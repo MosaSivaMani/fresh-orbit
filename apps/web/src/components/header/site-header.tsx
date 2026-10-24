@@ -1,43 +1,23 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { Logo } from "../logo";
-import { AccountLink, CartLink, PincodeChip } from "./header-actions";
-import { SearchBox } from "./search-box";
+import { PincodeChip } from "./header-actions";
+import { HeaderNav } from "./header-nav";
 
-function SearchFallback() {
-  return (
-    <div className="bg-surface border-border-strong h-10 rounded-md border" aria-hidden="true" />
-  );
-}
-
+/**
+ * The coral header (D95 food-app style): logo and pincode on the left; Offers, Help, Orders, Sign in or Account and
+ * the ink cart pill on the right. The same header at every width; phones show the link icons only.
+ */
 export function SiteHeader() {
   return (
-    <header className="border-border bg-surface/95 sticky top-0 z-[1100] border-b backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 sm:gap-4 lg:px-8">
+    <header className="bg-block-coral text-on-block-coral sticky top-0 z-[1100]">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 sm:gap-x-5 sm:px-6 lg:px-8">
         <Link href="/" className="shrink-0 rounded-md" aria-label="Fresh Orbit home">
-          <Logo />
+          <Logo tone="coral" />
         </Link>
         <PincodeChip />
-        <div className="hidden flex-1 md:block">
-          <Suspense fallback={<SearchFallback />}>
-            <SearchBox />
-          </Suspense>
+        <div className="ml-auto">
+          <HeaderNav />
         </div>
-        <nav aria-label="Main" className="ml-auto flex items-center gap-1">
-          <Link
-            href="/shop"
-            className="text-text hover:bg-muted hidden h-10 items-center rounded-md px-3 text-sm font-medium sm:inline-flex"
-          >
-            Shop
-          </Link>
-          <AccountLink />
-          <CartLink />
-        </nav>
-      </div>
-      <div className="px-4 pb-2 md:hidden">
-        <Suspense fallback={<SearchFallback />}>
-          <SearchBox />
-        </Suspense>
       </div>
     </header>
   );

@@ -116,3 +116,9 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D110 | 2026-10-24 | Language choice stored only (for now) | EN / తెలుగు / हिं is saved; the app stays English until translations exist and says so |
 | D111 | 2026-10-24 | Settings reachable signed out | Notification switches and log out show only when signed in |
 | D112 | 2026-10-24 | Legal policy drafts (proposed, LG) | Policies live in `docs/legal/` (one Markdown file each, `{{OWNER: …}}` placeholders, **Check with lawyer:** marks) and supersede the policy drafts in `docs/content/`; the website support pages are filled from them only after owner and lawyer approval. Each policy states only behaviour the system has; unbuilt items it relies on are listed in `docs/legal/README.md` |
+| D113 | 2026-10-24 | Website header replaces tab bar | On the web the coral header (logo, pincode chip, Offers, Help, Orders, account, Cart pill with server line count) replaces the tab bar and floating cart bar at every width; phones show icons only |
+| D114 | 2026-10-24 | Offer lines on website cards | Only from promotion banners that link to the product or its category; never invented |
+| D115 | 2026-10-24 | ADD on a website list card | Reads the product first; adds directly (minimum quantity, default cut) when there is one size, else opens the product page |
+| D116 | 2026-10-24 | Website serves `/media/*` from the API | `app/media/[...path]/route.ts` proxies API image paths so pictures load on the website origin |
+| D117 | 2026-10-24 | Website hero text ink on coral | Ink headline on coral with the handwritten words on a paper brush, because white on coral is about 2.6:1 (fails contrast) |
+| D118 | 2026-10-24 | Web font loading and Heading API | Canvas, block and script tokens; `Heading` with script line and brush; fonts via `@fontsource` (Baloo 2, Inter, Dancing Script) instead of next/font |

@@ -67,6 +67,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     required this.mango,
     required this.onMango,
     required this.ice,
+    required this.canvas,
+    required this.mangoSoft,
+    required this.iceSoft,
+    required this.onOutlineInk,
+    required this.blockCoral,
+    required this.onBlockCoral,
+    required this.blockTeal,
+    required this.onBlockTeal,
+    required this.blockMango,
+    required this.onBlockMango,
+    required this.blockIce,
+    required this.onBlockIce,
   });
 
   final Color background;
@@ -121,6 +133,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
   final Color mango;
   final Color onMango;
   final Color ice;
+  final Color canvas;
+  final Color mangoSoft;
+  final Color iceSoft;
+  final Color onOutlineInk;
+  final Color blockCoral;
+  final Color onBlockCoral;
+  final Color blockTeal;
+  final Color onBlockTeal;
+  final Color blockMango;
+  final Color onBlockMango;
+  final Color blockIce;
+  final Color onBlockIce;
 
   static const FreshColors light = FreshColors(
     background: Color(0xFFF4F8F7),
@@ -175,6 +199,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     mango: Color(0xFFF5B544),
     onMango: Color(0xFF231707),
     ice: Color(0xFFDCEFF5),
+    canvas: Color(0xFFF4EEE3),
+    mangoSoft: Color(0xFFFBEBC8),
+    iceSoft: Color(0xFFE4F3F8),
+    onOutlineInk: Color(0xFFFFFDF8),
+    blockCoral: Color(0xFFF07A5A),
+    onBlockCoral: Color(0xFF14302F),
+    blockTeal: Color(0xFF0B7D70),
+    onBlockTeal: Color(0xFFFFFDF8),
+    blockMango: Color(0xFFF5B544),
+    onBlockMango: Color(0xFF14302F),
+    blockIce: Color(0xFFBFE3EE),
+    onBlockIce: Color(0xFF14302F),
   );
 
   static const FreshColors dark = FreshColors(
@@ -230,6 +266,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     mango: Color(0xFFE9AE45),
     onMango: Color(0xFF231707),
     ice: Color(0xFF1D3940),
+    canvas: Color(0xFF101918),
+    mangoSoft: Color(0xFF3A2F17),
+    iceSoft: Color(0xFF1D3940),
+    onOutlineInk: Color(0xFF0C1B1A),
+    blockCoral: Color(0xFFE0714F),
+    onBlockCoral: Color(0xFF0C1B1A),
+    blockTeal: Color(0xFF2FA595),
+    onBlockTeal: Color(0xFF0C1B1A),
+    blockMango: Color(0xFFE0A43C),
+    onBlockMango: Color(0xFF0C1B1A),
+    blockIce: Color(0xFF4D93A6),
+    onBlockIce: Color(0xFF0C1B1A),
   );
 
   @override
@@ -286,6 +334,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
     Color? mango,
     Color? onMango,
     Color? ice,
+    Color? canvas,
+    Color? mangoSoft,
+    Color? iceSoft,
+    Color? onOutlineInk,
+    Color? blockCoral,
+    Color? onBlockCoral,
+    Color? blockTeal,
+    Color? onBlockTeal,
+    Color? blockMango,
+    Color? onBlockMango,
+    Color? blockIce,
+    Color? onBlockIce,
   }) {
     return FreshColors(
       background: background ?? this.background,
@@ -340,6 +400,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
       mango: mango ?? this.mango,
       onMango: onMango ?? this.onMango,
       ice: ice ?? this.ice,
+      canvas: canvas ?? this.canvas,
+      mangoSoft: mangoSoft ?? this.mangoSoft,
+      iceSoft: iceSoft ?? this.iceSoft,
+      onOutlineInk: onOutlineInk ?? this.onOutlineInk,
+      blockCoral: blockCoral ?? this.blockCoral,
+      onBlockCoral: onBlockCoral ?? this.onBlockCoral,
+      blockTeal: blockTeal ?? this.blockTeal,
+      onBlockTeal: onBlockTeal ?? this.onBlockTeal,
+      blockMango: blockMango ?? this.blockMango,
+      onBlockMango: onBlockMango ?? this.onBlockMango,
+      blockIce: blockIce ?? this.blockIce,
+      onBlockIce: onBlockIce ?? this.onBlockIce,
     );
   }
 
@@ -401,6 +473,18 @@ class FreshColors extends ThemeExtension<FreshColors> {
       mango: Color.lerp(mango, other.mango, t)!,
       onMango: Color.lerp(onMango, other.onMango, t)!,
       ice: Color.lerp(ice, other.ice, t)!,
+      canvas: Color.lerp(canvas, other.canvas, t)!,
+      mangoSoft: Color.lerp(mangoSoft, other.mangoSoft, t)!,
+      iceSoft: Color.lerp(iceSoft, other.iceSoft, t)!,
+      onOutlineInk: Color.lerp(onOutlineInk, other.onOutlineInk, t)!,
+      blockCoral: Color.lerp(blockCoral, other.blockCoral, t)!,
+      onBlockCoral: Color.lerp(onBlockCoral, other.onBlockCoral, t)!,
+      blockTeal: Color.lerp(blockTeal, other.blockTeal, t)!,
+      onBlockTeal: Color.lerp(onBlockTeal, other.onBlockTeal, t)!,
+      blockMango: Color.lerp(blockMango, other.blockMango, t)!,
+      onBlockMango: Color.lerp(onBlockMango, other.onBlockMango, t)!,
+      blockIce: Color.lerp(blockIce, other.blockIce, t)!,
+      onBlockIce: Color.lerp(onBlockIce, other.onBlockIce, t)!,
     );
   }
 }
@@ -434,6 +518,7 @@ abstract final class FreshFonts {
   static const List<String> sansFallback = <String>['Noto Sans', 'Segoe UI', 'Roboto'];
   static const String display = 'Baloo 2';
   static const List<String> displayFallback = <String>['Inter'];
+  static const String script = 'Dancing Script';
   static const String mono = 'JetBrains Mono';
 }
 

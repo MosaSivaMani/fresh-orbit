@@ -1,18 +1,19 @@
+@import "@fresh/ui/fonts.css";
 @import "tailwindcss";
 @import "@fresh/config/tailwind.css";
 @import "@fresh/ui/styles.css";
 
-/* Fonts are self-hosted by next/font; point the token font stacks at them. */
-:root {
-  --fo-font-sans: var(--font-inter), "Noto Sans", ui-sans-serif, system-ui, sans-serif;
-  --fo-font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-}
-
+/* Food-app website (D95) with the D89 type: Baloo 2 800 headings, Inter body, white page. */
 @layer base {
+  body {
+    background-color: var(--fo-color-surface);
+  }
+
   h1,
   h2,
   h3 {
     font-family: var(--fo-font-display);
+    font-weight: 800;
     letter-spacing: -0.01em;
   }
 }

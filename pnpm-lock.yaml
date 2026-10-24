@@ -181,6 +181,9 @@ importers:
       '@fresh/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@fresh/illustrations':
+        specifier: workspace:*
+        version: link:../../packages/illustrations
       '@fresh/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -401,6 +404,9 @@ importers:
   packages/ui:
     dependencies:
       '@fontsource/baloo-2':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/dancing-script':
         specifier: 5.3.0
         version: 5.3.0
       '@fontsource/inter':
@@ -840,6 +846,9 @@ packages:
 
   '@fontsource/baloo-2@5.3.0':
     resolution: {integrity: sha512-CBuxZ27jvMmD5+KaaPkMWv/yjdRNppVAd5/002yAyvyQyLNL3aZCbkx6gbAT/bjxPd1A0VMdDQjfcELI8chccQ==}
+
+  '@fontsource/dancing-script@5.3.0':
+    resolution: {integrity: sha512-/FFbz4ZCNN+eG2a6phkZB41iKmyCC6rq2blA/kG9OFeI3/tpzLNazND1bBdEnogLhpfg7o4NfauTbEEYSpSUGg==}
 
   '@fontsource/inter@5.3.0':
     resolution: {integrity: sha512-RofMylZmjlJEfELXeNHFWBRcSs75rGU/6bV2S2jfnvv/3rPXPGe0LgUJTklcHZ9lM4OZmAVFhcJPnACfb91A3g==}
@@ -4941,6 +4950,8 @@ snapshots:
   '@floating-ui/utils@0.2.12': {}
 
   '@fontsource/baloo-2@5.3.0': {}
+
+  '@fontsource/dancing-script@5.3.0': {}
 
   '@fontsource/inter@5.3.0': {}
 

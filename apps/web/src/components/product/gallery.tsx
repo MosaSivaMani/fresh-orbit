@@ -13,8 +13,8 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
 
   if (!current) {
     return (
-      <div className="bg-muted text-text-muted flex aspect-[4/3] items-center justify-center rounded-2xl">
-        <Fish aria-hidden="true" className="size-16 opacity-50" />
+      <div className="text-accent-text flex aspect-[4/3] items-center justify-center rounded-[22px]">
+        <Fish aria-hidden="true" className="size-24" strokeWidth={1.25} />
         <span className="sr-only">No photo of {name} yet</span>
       </div>
     );
@@ -27,7 +27,7 @@ export function Gallery({ images, name }: { images: ProductImage[]; name: string
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-muted relative aspect-[4/3] overflow-hidden rounded-2xl">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[22px]">
         <Image
           src={current.url}
           alt={current.altText || name}
