@@ -120,6 +120,14 @@ partition keys are in `docs/api/README.md` §1.9.
 Limits are counted per instance, in memory. With more than one Api instance, each instance allows the full limit,
 so the effective limit is multiplied by the number of instances.
 
+### 3.1 Data Protection keys: `DataProtection:KeysPath` (Api)
+
+An absolute directory for the ASP.NET Core Data Protection key ring, application name `FreshOrbit`. Required outside
+Development and Testing; a missing or relative path stops the Api at start-up (exit 1). In `docker-compose.prod.yml` it
+is `/keys` on the `dataprotection-keys` volume (mode 700, app user). Nothing protects data with it yet (JWT only), so
+the keys are not encrypted or backed up; revisit both when a feature starts using it (for example the D40 staff
+refresh cookie). Details: `research/deploy-gaps-ops-2026-10.md`.
+
 ## 4. Staff login lockout: `Identity:*` (Api)
 
 D33, IDN-R11, IDN-R12 and IDN-R20 in `docs/product/identity.md`. The defaults below are the documented values, so
