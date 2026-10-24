@@ -137,7 +137,8 @@ Oracle's `ubuntu` user keeps working (it has sudo); the `deploy` user is for dep
 
    The security settings (SMS DLT credentials `SMS_DLT_*`, and the compose subnet `DOCKER_SUBNET` that the API trusts
    for forwarded headers) are explained in `security-configuration.md`. The API and Worker refuse to start outside
-   Development without the SMS values, so get the DLT provider credentials before the first deploy.
+   Development without the SMS values (including a DLT template id per SMS template), so finish the DLT registration
+   (`security-configuration.md` §2.1) before the first deploy.
 
    Store every secret in the team password manager as well. Losing `JWT_SIGNING_KEY` only logs users out; losing
    `POSTGRES_PASSWORD` is recoverable; losing the rclone crypt password makes offsite backups unreadable.

@@ -14,11 +14,28 @@ proves migrations + reference data + idempotency, health behind Caddy, the Produ
 removes everything. Last result (2026-10-24): all green; findings in `docs/research/e2e-deploy-check-2026-10.md`.
 
 Notes from that check that matter on a server:
-- In Production, OTP sign-in returns 500 until the DLT provider client is written (`security-configuration.md` §2);
-  `smoke.sh` against a Production server therefore needs `SMOKE_STOP_BEFORE_OTP=true`.
+- In Production, OTP SMS go through the DLT sender and the Fast2SMS adapter (E2E-1). Before the first deploy, the
+  owner completes the DLT registration in `security-configuration.md` §2.1 and fills every `SMS_DLT_*` value
+  (including the 13 `SMS_DLT_TEMPLATE_*` ids); without them the Api and Worker exit 1 at start-up. A failed send
+  answers 503 `SMS_PROVIDER_UNAVAILABLE`. `smoke.sh` against a Production server still needs
+  `SMOKE_STOP_BEFORE_OTP=true`, because it cannot read the SMS.
 - `smoke.sh` follows the absolute image URLs the API returns behind Caddy (`FileStorage__PublicBaseUrl`).
 - `deploy.sh` now prunes only `${IMAGE_REGISTRY}/fresh-orbit-*` images (`SKIP_IMAGE_PRUNE=true` to skip pruning);
   `FO_PROJECT` / `FO_COMPOSE_OVERRIDE` exist only for the e2e check, leave them unset on servers.
+- `deploy.sh` runs on the server's bash with `flock`, exactly as before. It also runs on macOS bash 3.2 without
+  `flock`, using a `mkdir` lock (`.deploy/deploy.lock.d`), so it can be tried against the local `fo-e2e` stack
+  (`e2e-check.md` §5). Run it with bash (`./infra/scripts/deploy.sh` or `bash …`): `sh deploy.sh` is refused with a
+  clear message.
+- **Data Protection keys (E2E-3).** The api keeps its ASP.NET Core Data Protection key ring on the named volume
+  `dataprotection-keys`, mounted at `/keys` (`DataProtection__KeysPath`). The directory is owned by the app user,
+  mode 700, so restarts and new releases keep the same keys. Nothing protects data with them today (authentication is
+  JWT), and the volume is deliberately **not** backed up. The api refuses to start outside Development and Testing
+  without `DataProtection:KeysPath`. The warning `No XML encryptor configured`, logged when a key is created (first
+start, then about every 90 days), is expected
+  (`research/deploy-gaps-ops-2026-10.md` §1). Never delete the volume casually: once a feature uses Data Protection
+  (for example cookie sign-in), deleting it signs everyone out.
+- Website: the footer's city list is cached for up to 5 minutes (was 1 hour), so a newly activated city shows there
+  within about 5 minutes (E2E-6).
 
 ## 1. One-time GitHub setup (repository owner)
 
@@ -135,7 +152,8 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 | Workflow fails at "Configure SSH" | Environment secrets set? `DEPLOY_KNOWN_HOSTS` matches the server key? |
 | `deploy.sh`: `Missing .../.env.prod` | Create it from `.env.prod.example` (`oracle-setup.md` §7) |
 | compose: `required variable X is missing a value` | Fill X in `.env.prod`; every required key is marked in the example |
-| Migrations failed | `logs.sh migrations --no-follow`; fix and release again; old release is still running. One `Failed executing DbCommand` Error on a brand-new database (EF reads its history table before creating it) is expected; the run still exits 0 |
+| Migrations failed | `logs.sh migrations --no-follow`; fix and release again; old release is still running. A brand-new database no longer logs the `Failed executing DbCommand` Error on the history table (E2E-5: the Migrations host creates that table first), so any Error line from migrations is real |
+| api exits 1 with `DataProtection:KeysPath is required…` | The api's environment lacks `DataProtection__KeysPath` (set in `docker-compose.prod.yml` to `/keys` with the `dataprotection-keys` volume); an old compose file was copied? |
 | api/worker exit right after start (exit code 1) | A start-up validator refused the configuration: `logs.sh api --no-follow -n 50` shows the Critical line `Start-up refused: … configuration is invalid` naming the key (`security-configuration.md`) |
 | api `unhealthy` | `logs.sh api --no-follow -n 300`; `/health` checks the database connection |
 | Caddy cannot get certificates | DNS A records point at the server? Ports 80/443 open in the Oracle security list and UFW? Cloudflare grey cloud for the first issuance |

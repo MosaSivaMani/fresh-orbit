@@ -69,7 +69,7 @@ public sealed class TemplateAdminService(
                 await email.SendAsync(new EmailMessage(user.Email, "[TEST] " + subject, body), cancellationToken);
                 return new TestSendResponse(true, channelCode, user.Email, subject, body);
             case Channel.Sms when !string.IsNullOrEmpty(user?.Phone):
-                await sms.SendAsync(new SmsMessage(user.Phone, body, template.DltTemplateId), cancellationToken);
+                await sms.SendAsync(new SmsMessage(user.Phone, template.Code, body, TemplateText.OrderedValues(template.Body, values)), cancellationToken);
                 return new TestSendResponse(true, channelCode, user.Phone, subject, body);
             default:
                 return new TestSendResponse(false, channelCode, null, subject, body);

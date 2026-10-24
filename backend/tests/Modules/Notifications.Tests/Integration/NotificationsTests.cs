@@ -4,10 +4,12 @@ using AwesomeAssertions;
 using FreshOrbit.Customers.Domain.Customers;
 using FreshOrbit.E1Testing;
 using FreshOrbit.Notifications.Application.Sending;
+using FreshOrbit.Notifications.Application.Shared;
 using FreshOrbit.Notifications.Domain.Devices;
 using FreshOrbit.Notifications.Domain.Messages;
 using FreshOrbit.Notifications.Domain.Shared;
 using FreshOrbit.Notifications.Public;
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +74,44 @@ public sealed class NotificationsTests(E1Database database) : E1ApiTestBase(data
         email.LastError.Should().Be(NotificationsErrors.NoRecipientAddress);
         Factory.Sms.Sent.Should().Contain(s => s.Phone == session.Phone && s.Text.Contains("FO-260042"));
         Factory.Push.Sent.Should().Contain(p => p.Tokens.Contains(pushToken));
+    }
+
+    [Fact]
+    public async Task Worker_passes_the_sms_template_code_and_variables_in_template_order()
+    {
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        await QueueAsync(new QueueCustomerNotificationRequest(await CustomerIdAsync(session.UserId), "ORDER_CONFIRMED", OrderData, [NotificationChannel.Sms], null));
+
+        await DispatchAllAsync();
+
+        var sms = Factory.Sms.Sent.Single(s => s.Phone == session.Phone && s.TemplateCode == "ORDER_CONFIRMED");
+        sms.Variables.Should().HaveCount(6);
+        sms.Variables.Take(5).Should().Equal("FO-260042", "24 Oct", "2:00–4:00 PM", "₹450.00", "Cash on delivery");
+    }
+
+    [Theory]
+    [InlineData(SmsFailureKind.Rejected, MessageStatus.Failed)]
+    [InlineData(SmsFailureKind.TemplateNotRegistered, MessageStatus.Failed)]
+    [InlineData(SmsFailureKind.Unreachable, MessageStatus.Queued)]
+    public async Task Worker_retries_only_sms_outages(SmsFailureKind kind, MessageStatus expected)
+    {
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        await QueueAsync(new QueueCustomerNotificationRequest(await CustomerIdAsync(session.UserId), "ORDER_CONFIRMED", OrderData, [NotificationChannel.Sms], null));
+
+        Factory.Sms.FailWith = kind;
+        try
+        {
+            await DispatchAllAsync();
+        }
+        finally
+        {
+            Factory.Sms.FailWith = null;
+        }
+
+        var message = (await MessagesAsync(session.UserId)).Single();
+        message.Status.Should().Be(expected);
+        message.Attempts.Should().Be(1);
+        message.LastError.Should().Be("SMS_" + EnumCodes.ToCode(kind));
     }
 
     [Fact]

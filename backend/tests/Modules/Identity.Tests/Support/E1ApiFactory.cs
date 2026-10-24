@@ -89,8 +89,16 @@ public sealed class CapturingSmsSender : ISmsSender
 {
     public ConcurrentQueue<SmsMessage> Sent { get; } = new();
 
+    /// <summary>When set, sends throw <see cref="SmsDeliveryException"/> of this kind (E2E-1).</summary>
+    public SmsFailureKind? FailWith { get; set; }
+
     public Task<string?> SendAsync(SmsMessage message, CancellationToken cancellationToken)
     {
+        if (FailWith is { } kind)
+        {
+            throw new SmsDeliveryException(kind);
+        }
+
         Sent.Enqueue(message);
         return Task.FromResult<string?>("sms-" + Sent.Count);
     }

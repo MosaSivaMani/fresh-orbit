@@ -84,6 +84,10 @@ Any other transition → 409 `INVALID_STATUS_TRANSITION`.
 | LOC-R16 | Resolution results are cached in memory for 60 s per pincode; any Locations event below clears the cache. |
 | LOC-R17 | All times in UTC; dates and times of day (`closed_on`, `opens_at`) are in the location's city time zone. |
 
+Website note (E2E-6): the website footer's "Cities we serve" list comes from `GET /cities` and is cached for up to
+5 minutes, so a city that was just activated, paused or retired shows there within about 5 minutes. Serviceability,
+prices and checkout never use that cache: they are checked on every request. Details are in `design/web.md` §5.
+
 ## 4. Events
 
 | Event (raised) | Payload | Consumers |
