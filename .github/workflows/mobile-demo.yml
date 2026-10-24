@@ -45,7 +45,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - name: Build profile APK with DEMO=true
-        run: flutter build apk --profile --dart-define=DEMO=true
+        run: flutter build apk --profile --dart-define=DEMO=true --target-platform android-arm,android-arm64
       - name: Name and measure the APK
         id: apk
         run: |
