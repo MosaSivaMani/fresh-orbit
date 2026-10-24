@@ -66,6 +66,7 @@ public sealed class OrderingModule : IModule
 
         services.AddScoped<IOrderingApi, OrderingApi>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICityRetirementCheck, OrderingCityRetirementCheck>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<Catalog.Public.IBestsellerSource, OrderingBestsellerSource>());
         services.AddScoped<OrderingCustomerDeletionCheck>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ICustomerDeletionCheck, OrderingCustomerDeletionCheck>());
 

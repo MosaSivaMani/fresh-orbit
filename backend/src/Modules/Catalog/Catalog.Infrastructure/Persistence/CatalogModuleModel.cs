@@ -85,10 +85,11 @@ public sealed class CatalogModuleModel : IModuleModel
         FROM pricing.preparation_charges pc;
         """;
 
-    /// <summary>docs/api §1.4 location context: served pincodes (active pincode, area, ACTIVE location in an ACTIVE city).</summary>
+    /// <summary>docs/api §1.4 location context: served pincodes (active pincode, area, ACTIVE location in an ACTIVE city). New columns go last (CREATE OR REPLACE VIEW).</summary>
     public const string StorefrontLocationsViewSql = """
         CREATE OR REPLACE VIEW catalog.storefront_locations AS
-        SELECT CAST(p.pincode AS text) AS pincode, a.id AS service_area_id, l.id AS fulfillment_location_id, l.code AS fulfillment_location_code
+        SELECT CAST(p.pincode AS text) AS pincode, a.id AS service_area_id, l.id AS fulfillment_location_id, l.code AS fulfillment_location_code,
+               l.city_id
         FROM locations.pincodes p
         JOIN locations.service_areas a ON a.id = p.service_area_id AND a.is_active
         JOIN locations.fulfillment_locations l ON l.id = a.fulfillment_location_id AND l.status = 'ACTIVE'

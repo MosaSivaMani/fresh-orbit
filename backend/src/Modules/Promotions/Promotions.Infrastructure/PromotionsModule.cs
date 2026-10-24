@@ -43,6 +43,7 @@ public sealed class PromotionsModule : IModule
         services.AddEventHandler<OrderCancelled, PromotionsOrderCancelledHandler>();
         services.AddEventHandler<OrderPaymentFailed, PromotionsOrderPaymentFailedHandler>();
         services.AddScoped<IPromotionsApi, PromotionsApi>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<Catalog.Public.IProductOfferSource, ProductOfferService>());
 
         services.AddScoped<ExpireCouponsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PromotionsJobs>());
