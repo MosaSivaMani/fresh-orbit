@@ -26,3 +26,4 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 | EMPTY_WISHLIST | `generated/empty_wishlist.jpg` | 2026-10-24 |
 | EMPTY_ORDERS | `generated/empty_orders.jpg` | 2026-10-24 |
 | EMPTY_NOTIFICATIONS | `generated/empty_notifications.jpg` | 2026-10-24 |
+| EMPTY_ADDRESSES | `generated/empty_addresses.jpg` (Ravi with map and pin) | 2026-10-24 |
