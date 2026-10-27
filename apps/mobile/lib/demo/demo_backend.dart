@@ -235,13 +235,27 @@ class _DemoOrders implements OrderRepository {
   });
 
   @override
-  Future<void> raiseComplaint(
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
+  }) => _b._answer(
+    () => Complaint(id: 'demo-complaint', orderItemId: orderItemId, kind: kind, status: 'OPEN', description: description),
+  );
+
+  @override
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
   }) => _b._answer(() {});
+
+  @override
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept}) =>
+      order(orderId);
 
   @override
   Future<List<Complaint>> complaints(String orderId) => _b._answer(() => const <Complaint>[]);

@@ -172,14 +172,37 @@ class FakeOrderRepository implements OrderRepository {
   @override
   Future<Cart> reorder(String orderId) async => Cart.empty;
 
+  final List<String> complaintCalls = [];
+
   @override
-  Future<void> raiseComplaint(
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
-  }) async {}
+  }) async {
+    complaintCalls.add('raise:$kind');
+    return Complaint(id: 'c1', orderItemId: orderItemId, kind: kind, status: 'OPEN', description: description);
+  }
+
+  @override
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  }) async => complaintCalls.add('photo:$complaintId:$fileName');
+
+  /// What accept/reject returns; the test sets it.
+  OrderDetail Function(String substitutionId, bool accept)? onAnswer;
+  final List<String> answers = [];
+
+  @override
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept}) async {
+    answers.add('${accept ? 'accept' : 'reject'}:$substitutionId');
+    return (onAnswer ?? (_, _) => _unexpected('answerSubstitution'))(substitutionId, accept);
+  }
 
   @override
   Future<List<Complaint>> complaints(String orderId) async => const [];

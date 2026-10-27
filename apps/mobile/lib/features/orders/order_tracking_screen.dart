@@ -16,6 +16,7 @@ import '../../api/api_error.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../core/launch.dart';
+import '../../core/photo_picker.dart';
 import '../../illustrations/illustration_slot.dart';
 import '../../state/core_providers.dart';
 import '../../state/orders_state.dart';
@@ -136,6 +137,7 @@ class _TrackingBody extends ConsumerWidget {
         const SizedBox(height: FreshSpacing.s3),
         ProgressSteps(labels: const ['Placed', 'Packed', 'On the way', 'Delivered'], reached: reached),
       ],
+      if (order.substitutions.isNotEmpty) _Substitutions(order: order),
       if (t?.deliveryCode != null) ...[
         const SizedBox(height: FreshSpacing.s4),
         _DeliveryCodeCard(code: t!.deliveryCode!),
@@ -606,6 +608,19 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
   String? _itemId;
   final _description = TextEditingController();
   String? _fieldError;
+  final List<ComplaintPhotoUpload> _photos = [];
+
+  /// Photos per complaint the app offers (the server checks its own limit).
+  static const _maxPhotos = 4;
+
+  Future<void> _addPhoto() async {
+    try {
+      final photo = await ref.read(photoPickerProvider)();
+      if (photo != null && mounted) setState(() => _photos.add(photo));
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    }
+  }
 
   @override
   void dispose() {
@@ -629,7 +644,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Semantics(header: true, child: Text('Report a problem', style: Theme.of(context).textTheme.titleLarge)),
+              const PageTitle(text: 'Report a', brushed: 'problem', size: 22),
               const SizedBox(height: FreshSpacing.s2),
               Wrap(
                 spacing: FreshSpacing.s2,
@@ -662,10 +677,49 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                 maxLength: 1000,
                 decoration: InputDecoration(labelText: 'What went wrong?', errorText: _fieldError),
               ),
-              Text(
-                'Photo upload will be added soon; our team may call you for photos.',
-                style: Theme.of(context).textTheme.bodySmall,
+              Wrap(
+                key: const Key('complaintPhotos'),
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (var i = 0; i < _photos.length; i++)
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                          child: Image.memory(
+                            _photos[i].bytes,
+                            width: 72,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            semanticLabel: 'Photo ${i + 1}',
+                            errorBuilder: (_, _, _) => const SizedBox(width: 72, height: 48),
+                          ),
+                        ),
+                        Positioned(
+                          right: -10,
+                          top: -10,
+                          child: IconButton(
+                            tooltip: 'Remove photo ${i + 1}',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.cancel_rounded, size: 20),
+                            onPressed: busy ? null : () => setState(() => _photos.removeAt(i)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (_photos.length < _maxPhotos)
+                    OutlinedButton.icon(
+                      key: const Key('addComplaintPhoto'),
+                      onPressed: busy ? null : _addPhoto,
+                      icon: const Icon(Icons.add_a_photo_outlined),
+                      label: Text(_photos.isEmpty ? 'Add photos' : 'Add another'),
+                    ),
+                ],
               ),
+              const SizedBox(height: 8),
               if (error != null) InfoBanner(tone: BannerTone.danger, text: error!),
               const SizedBox(height: FreshSpacing.s3),
               PrimaryButton(
@@ -690,6 +744,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                           kind: _kind,
                           description: _description.text.trim(),
                           idempotencyKey: key,
+                          photos: List.of(_photos),
                         ),
                   );
                   if (ok && context.mounted) Navigator.pop(context, true);
@@ -740,6 +795,114 @@ class _Complaints extends ConsumerWidget {
               subtitle: c.description == null ? null : Text(c.description!),
               trailing: FreshBadge(label: humanizeCode(c.status)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Replacements the store proposed for short items. A PROPOSED one shows Accept and Reject; the server answers
+/// with the updated order. The price difference is the server's, only formatted.
+class _Substitutions extends ConsumerStatefulWidget {
+  const _Substitutions({required this.order});
+
+  final OrderDetail order;
+
+  @override
+  ConsumerState<_Substitutions> createState() => _SubstitutionsState();
+}
+
+class _SubstitutionsState extends ConsumerState<_Substitutions> {
+  String? _busy;
+
+  Future<void> _answer(OrderSubstitution s, {required bool accept}) async {
+    setState(() => _busy = s.id);
+    try {
+      await ref.read(orderActionsProvider).answerSubstitution(widget.order.id, s.id, accept: accept);
+      if (mounted) showInfoSnack(context, accept ? 'Replacement accepted.' : 'Replacement declined.');
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  static String _difference(int paise) => paise == 0
+      ? 'Same price'
+      : paise > 0
+      ? '${formatRupees(paise)} more'
+      : '${formatRupees(-paise)} less';
+
+  static String _status(String status) => switch (status) {
+    'ACCEPTED' => 'Accepted',
+    'REJECTED' => 'Declined',
+    'EXPIRED' => 'Expired',
+    _ => humanizeCode(status),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    final theme = Theme.of(context);
+    final order = widget.order;
+    return Padding(
+      padding: const EdgeInsets.only(top: FreshLayout.sectionGap),
+      child: Column(
+        key: const Key('orderSubstitutions'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const PageTitle(text: 'A replacement', brushed: 'for you', size: 19),
+          const SizedBox(height: 8),
+          for (final s in order.substitutions) ...[
+            SectionBox(
+              key: ValueKey('substitution-${s.id}'),
+              color: s.awaitsAnswer ? c.mangoSoft : null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Instead of ${order.items.where((i) => i.id == s.orderItemId).firstOrNull?.productName ?? 'an item'}',
+                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                  ),
+                  Text(
+                    '${s.proposedName}, ${formatQuantity(s.proposedQuantity)}',
+                    style: AppText.display(c.ink, 16),
+                  ),
+                  Text(_difference(s.priceDifferencePaise), style: theme.textTheme.bodyMedium),
+                  if (s.awaitsAnswer) ...[
+                    Text('Answer by ${formatTime(s.expiresAt)}', style: theme.textTheme.bodySmall),
+                    const SizedBox(height: 8),
+                    if (_busy == s.id)
+                      const LinearProgressIndicator()
+                    else
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              key: ValueKey('rejectSubstitution-${s.id}'),
+                              onPressed: _busy != null ? null : () => _answer(s, accept: false),
+                              child: const Text('No, thanks'),
+                            ),
+                          ),
+                          const SizedBox(width: FreshLayout.cardGap),
+                          Expanded(
+                            child: FilledButton(
+                              key: ValueKey('acceptSubstitution-${s.id}'),
+                              onPressed: _busy != null ? null : () => _answer(s, accept: true),
+                              child: const Text('Accept'),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ] else ...[
+                    const SizedBox(height: 6),
+                    FreshBadge(label: _status(s.status)),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: FreshLayout.cardGap),
+          ],
         ],
       ),
     );

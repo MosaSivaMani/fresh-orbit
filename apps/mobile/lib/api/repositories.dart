@@ -193,15 +193,28 @@ abstract class OrderRepository {
   Future<OrderTracking> tracking(String orderId);
   Future<OrderDetail> cancel(String orderId, {required String reasonCode, required String idempotencyKey});
   Future<Cart> reorder(String orderId);
-  Future<void> raiseComplaint(
+
+  /// `POST /orders/{id}/complaints` (JSON) with `Idempotency-Key`; returns the created complaint.
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
   });
+
+  /// `POST /orders/{id}/complaints/{cid}/photos`: one photo per request, multipart field `file`.
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  });
   Future<List<Complaint>> complaints(String orderId);
   Future<InvoiceLink> invoice(String orderId);
+
+  /// `POST /orders/{id}/substitutions/{sid}/accept` or `/reject`; returns the updated order.
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept});
 }
 
 class HttpOrderRepository implements OrderRepository {
@@ -248,20 +261,40 @@ class HttpOrderRepository implements OrderRepository {
       parseObject(await _api.post('orders/${_seg(orderId)}/reorder'), Cart.fromJson);
 
   @override
-  Future<void> raiseComplaint(
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
-  }) async {
-    // Multipart per docs/api §4.8. Photo upload (up to 4 images) is not wired yet: needs an image picker.
+  }) async => parseObject(
     await _api.post(
       'orders/${_seg(orderId)}/complaints',
-      body: _multipart({'orderItemId': orderItemId, 'kind': kind, 'description': description}),
+      body: {'orderItemId': ?orderItemId, 'kind': kind, 'description': description},
       headers: {'Idempotency-Key': idempotencyKey},
+    ),
+    Complaint.fromJson,
+  );
+
+  @override
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  }) async {
+    await _api.post(
+      'orders/${_seg(orderId)}/complaints/${_seg(complaintId)}/photos',
+      body: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: fileName)}),
     );
   }
+
+  @override
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept}) async =>
+      parseObject(
+        await _api.post('orders/${_seg(orderId)}/substitutions/${_seg(substitutionId)}/${accept ? 'accept' : 'reject'}'),
+        OrderDetail.fromJson,
+      );
 
   @override
   Future<List<Complaint>> complaints(String orderId) async =>
@@ -270,11 +303,6 @@ class HttpOrderRepository implements OrderRepository {
   @override
   Future<InvoiceLink> invoice(String orderId) async =>
       parseObject(await _api.get('orders/${_seg(orderId)}/invoice'), InvoiceLink.fromJson);
-
-  static FormData _multipart(Map<String, String?> fields) => FormData.fromMap({
-    for (final e in fields.entries)
-      if (e.value != null) e.key: e.value!,
-  });
 }
 
 // ---------------------------------------------------------------- account
