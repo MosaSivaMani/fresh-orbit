@@ -1,6 +1,7 @@
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
 using FreshOrbit.Cart.Infrastructure.Seeding;
 using FreshOrbit.Cart.Application.Handlers;
+using FreshOrbit.Identity.Public;
 using FreshOrbit.Identity.Public.Events;
 using FreshOrbit.Cart.Application.Abstractions;
 using FreshOrbit.Cart.Application.Carts;
@@ -37,6 +38,7 @@ public sealed class CartModule : IModule
         services.AddScoped<PriceQuoteService>();
         services.AddEventHandler<CustomerSignedIn, CartCustomerSignedInHandler>();
         services.AddScoped<ICartApi, CartApi>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IGuestCartMerger, CartGuestCartMerger>());
 
         services.AddScoped<AbandonCartsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, CartJobs>());

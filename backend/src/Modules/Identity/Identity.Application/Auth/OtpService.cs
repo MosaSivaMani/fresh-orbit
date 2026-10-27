@@ -23,8 +23,12 @@ public sealed record OtpVerifyRequest(Guid ChallengeId, string Phone, string Cod
 
 public sealed record CustomerLoginUser(Guid Id, string? Phone, string? FullName, bool IsNewCustomer);
 
-/// <summary>Guest cart merge result; null because Cart merges asynchronously on <c>CustomerSignedIn</c>.</summary>
-public sealed record CustomerLoginCart(Guid Id, int MergedLineCount);
+/// <summary>
+/// The customer's cart after the guest cart named by <c>guestCartToken</c> was merged into it (CART-R27..R30); null
+/// when no token was sent or it names no ACTIVE guest cart. Read the priced cart with <c>GET /cart</c>.
+/// </summary>
+/// <param name="DroppedLineCount">Guest lines that could not be kept (variant gone, or the cart line limit reached).</param>
+public sealed record CustomerLoginCart(Guid Id, int MergedLineCount, int DroppedLineCount);
 
 public sealed record CustomerLoginResponse(
     string AccessToken,
@@ -73,7 +77,8 @@ public sealed class OtpService(
     IRequestContext requestContext,
     IUnitOfWork unitOfWork,
     IClock clock,
-    IdentitySettings settings) : IOtpService
+    IdentitySettings settings,
+    IEnumerable<IGuestCartMerger> cartMergers) : IOtpService
 {
     public async Task<OtpRequestResponse> RequestAsync(OtpRequestRequest request, CancellationToken cancellationToken)
     {
@@ -143,13 +148,28 @@ public sealed class OtpService(
         user.RecordCustomerSignIn(account.CustomerId, account.IsNew, request.GuestCartToken, request.DeviceLabel, now);
         var session = sessions.IssueCustomer(user, account.CustomerId, null, request.DeviceLabel);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Follow-on after the login committed: Cart merges in its own transaction so the answer carries the cart; the
+        // CustomerSignedIn handler then finds the guest cart merged and does nothing.
+        var cart = await MergeGuestCartAsync(request.GuestCartToken, account.CustomerId, cancellationToken);
         return new CustomerLoginResponse(
             session.AccessToken,
             session.AccessTokenExpiresAt,
             session.RefreshToken,
             session.RefreshTokenExpiresAt,
             new CustomerLoginUser(user.Id, user.Phone, account.FullName, account.IsNew),
-            null);
+            cart);
+    }
+
+    private async Task<CustomerLoginCart?> MergeGuestCartAsync(string? guestCartToken, Guid customerId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(guestCartToken) || cartMergers.FirstOrDefault() is not { } merger)
+        {
+            return null;
+        }
+
+        var merged = await merger.MergeAsync(guestCartToken, customerId, cancellationToken);
+        return merged is null ? null : new CustomerLoginCart(merged.CartId, merged.MergedLineCount, merged.DroppedLineCount);
     }
 
     /// <summary>IDN-R3, IDN-R4.</summary>
