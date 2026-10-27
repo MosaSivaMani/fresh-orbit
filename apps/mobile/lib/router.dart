@@ -153,7 +153,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it
 /// while the cart has lines. Both sit in the bottom bar slot, so they take their own space and never cover a
-/// screen's content. The cart bar's amount is the server cart's subtotal, only formatted.
+/// screen's content. The cart bar's amount is the server cart's estimated total, only formatted.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 

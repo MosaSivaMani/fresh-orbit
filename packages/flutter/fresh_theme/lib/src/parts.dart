@@ -527,7 +527,7 @@ class FreshCartBar extends StatelessWidget {
 
   final int count;
 
-  /// Already formatted from a server value (the cart's subtotal).
+  /// Already formatted from a server value (the cart's estimated total).
   final String amount;
   final VoidCallback onTap;
 
