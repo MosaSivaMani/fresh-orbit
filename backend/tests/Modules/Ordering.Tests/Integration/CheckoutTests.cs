@@ -22,6 +22,7 @@ public sealed class CheckoutTests(OrderingDatabase database) : OrderingTestBase(
         preview.GetProperty("canPlaceOrder").GetBoolean().Should().BeTrue();
         preview.GetProperty("expectedTotalPaise").GetInt64().Should().Be(World.EstimatedTotalPaise);
         preview.GetProperty("slot").GetProperty("status").GetString().Should().Be("AVAILABLE");
+        preview.GetProperty("address").GetProperty("label").GetString().Should().Be("HOME");
         preview.GetProperty("paymentMethods").EnumerateArray().Select(m => m.GetProperty("method").GetString()).Should().Equal("COD", "UPI_ON_DELIVERY", "ONLINE");
         await World.Inventory.DidNotReceive().ReserveAsync(Arg.Any<ReserveStockRequest>(), Arg.Any<CancellationToken>());
     }

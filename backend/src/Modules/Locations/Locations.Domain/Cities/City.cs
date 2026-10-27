@@ -38,6 +38,9 @@ public sealed class City : AggregateRoot
 
     public string StateCode { get; private set; }
 
+    /// <summary>Display name of the state ("Andhra Pradesh"); optional configured data, never derived from the code.</summary>
+    public string? StateName { get; private set; }
+
     /// <summary>IANA time zone; dates and times of day of the city's locations are in it (LOC-R17).</summary>
     public string TimeZone { get; private set; }
 
@@ -48,7 +51,8 @@ public sealed class City : AggregateRoot
     /// <summary>User id of the staff member who last activated the city.</summary>
     public Guid? ActivatedBy { get; private set; }
 
-    public static City Create(string? code, string? name, string? stateCode, string? timeZone)
+    /// <param name="stateName">Optional display name of the state; blank → none.</param>
+    public static City Create(string? code, string? name, string? stateCode, string? timeZone, string? stateName = null)
     {
         var errors = new List<FieldError>();
         if (!Rules.IsCityCode(code))
@@ -56,18 +60,20 @@ public sealed class City : AggregateRoot
             errors.Add(new FieldError("code", LocationsErrors.ValidationFailed, "Enter the code in UPPER_SNAKE (letters, digits and underscores), at most 40 characters."));
         }
 
-        Validate(errors, name, stateCode, timeZone);
+        Validate(errors, name, stateCode, timeZone, stateName);
         Rules.ThrowIfAny(errors);
-        return new City(code!, name!.Trim(), stateCode!, timeZone!);
+        return new City(code!, name!.Trim(), stateCode!, timeZone!) { StateName = Rules.TrimToNull(stateName) };
     }
 
-    public void Update(string? name, string? stateCode, string? timeZone)
+    /// <param name="stateName">Optional display name of the state; null or blank clears it.</param>
+    public void Update(string? name, string? stateCode, string? timeZone, string? stateName = null)
     {
         var errors = new List<FieldError>();
-        Validate(errors, name, stateCode, timeZone);
+        Validate(errors, name, stateCode, timeZone, stateName);
         Rules.ThrowIfAny(errors);
         Name = name!.Trim();
         StateCode = stateCode!;
+        StateName = Rules.TrimToNull(stateName);
         TimeZone = timeZone!;
     }
 
@@ -121,12 +127,17 @@ public sealed class City : AggregateRoot
         Raise(new CityRetired(Id));
     }
 
-    private static void Validate(List<FieldError> errors, string? name, string? stateCode, string? timeZone)
+    private static void Validate(List<FieldError> errors, string? name, string? stateCode, string? timeZone, string? stateName)
     {
         Rules.RequireName(errors, "name", name);
         if (!Rules.IsStateCode(stateCode))
         {
             errors.Add(new FieldError("stateCode", LocationsErrors.ValidationFailed, "Enter the two-letter state code, for example TN."));
+        }
+
+        if (stateName is not null && stateName.Trim().Length > Rules.StateNameMaxLength)
+        {
+            errors.Add(new FieldError("stateName", LocationsErrors.ValidationFailed, $"Enter a stateName of at most {Rules.StateNameMaxLength} characters, or leave it empty."));
         }
 
         if (!Rules.IsTimeZone(timeZone))

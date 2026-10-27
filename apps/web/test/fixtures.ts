@@ -9,7 +9,14 @@ export const serviceable: ServiceabilityResponse = {
   pincode: "600041",
   serviceable: true,
   reasonCode: null,
-  city: { id: "c1", code: "CHENNAI", name: "Chennai", timeZone: "Asia/Kolkata" },
+  city: {
+    id: "c1",
+    code: "CHENNAI",
+    name: "Chennai",
+    timeZone: "Asia/Kolkata",
+    stateCode: "TN",
+    stateName: "Tamil Nadu",
+  },
   fulfillmentLocation: {
     id: "l1",
     code: "CHN-TVM",

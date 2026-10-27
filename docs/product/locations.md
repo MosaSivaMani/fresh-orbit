@@ -83,7 +83,8 @@ Any other transition → 409 `INVALID_STATUS_TRANSITION`.
 | LOC-R15 | Fulfillment location `code` UPPER_SNAKE / hyphen (`CHN-TVM`), unique, immutable. |
 | LOC-R16 | Resolution results are cached in memory for 60 s per pincode; any Locations event below clears the cache. |
 | LOC-R17 | All times in UTC; dates and times of day (`closed_on`, `opens_at`) are in the location's city time zone. |
-| LOC-R18 | `GET /serviceability` returns `city { id, code, name, timeZone }` and `nextSlot { id, startAt, endAt, date, cutoffAt }`: the earliest bookable slot, `date` in the location's time zone, `cutoffAt` the last moment to order for it; null when none (delivery ETA). |
+| LOC-R18 | `GET /serviceability` returns `city { id, code, name, timeZone, stateCode, stateName }` and `nextSlot { id, startAt, endAt, date, cutoffAt }`: the earliest bookable slot, `date` in the location's time zone, `cutoffAt` the last moment to order for it; null when none (delivery ETA). |
+| LOC-R19 | **State name** (address form prefill): a city stores its state's display name as optional data (`cities.state_name`, `stateName` on city create/update, at most 60 characters, trimmed, blank = none; 422 `VALIDATION_FAILED` on `stateName` when longer). It is never derived from `stateCode` in code (rule 7; the same state can carry different codes in data, e.g. TG and TS). `GET /serviceability` returns `city.stateCode` and `city.stateName` (null when not configured); admin city responses and `GET /cities` return `stateName` too. PUT replaces it: omitting it clears it. |
 
 Website note (E2E-6): the website footer's "Cities we serve" list comes from `GET /cities` and is cached for up to
 5 minutes, so a city that was just activated, paused or retired shows there within about 5 minutes. Serviceability,
@@ -170,6 +171,8 @@ UPPER_SNAKE codes every `ICityRetirementCheck` reported (`ORDERS_OPEN` today), `
 | I8 | Add closure → outbox row `LocationClosureAdded` in same transaction | outbox row present |
 | I9 | Resolution query count | 1 SQL statement per resolve |
 | I10 | Retire with fake retirement check returning open orders | 422, status unchanged |
+| I11 | City PUT with `stateName` "  Tamil Nadu ", activate, `GET /serviceability` | `city.stateCode` TN, `city.stateName` "Tamil Nadu"; null when not set |
+| I12 | Create city with a 61-character `stateName` | 422, `errors.stateName` |
 
 ## 7. Open questions (with proposed answers)
 

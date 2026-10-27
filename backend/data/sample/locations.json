@@ -7,6 +7,7 @@
       "code": "VISAKHAPATNAM",
       "name": "Visakhapatnam",
       "stateCode": "AP",
+      "stateName": "Andhra Pradesh",
       "timeZone": "Asia/Kolkata",
       "targetStatus": "ACTIVE",
       "sampleNote": "[SAMPLE] Real city, fictional Fresh Orbitt operation. Activated last, after every module has loaded (LOC-R6)."

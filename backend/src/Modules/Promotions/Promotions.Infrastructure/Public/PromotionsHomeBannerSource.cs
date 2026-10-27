@@ -21,6 +21,6 @@ internal sealed class PromotionsHomeBannerSource(IPromotionsApi promotions, ILoc
         }
 
         var banners = await promotions.GetActiveBannersAsync(cityId, at, cancellationToken);
-        return [.. banners.Select(b => new HomeBanner(b.Id, b.Title, b.Subtitle, b.ImageKey, b.ImageUrl, b.LinkType, b.LinkTarget, b.StartsAt, b.EndsAt, b.SortOrder) { LinkSlug = b.LinkSlug })];
+        return [.. banners.Select(b => new HomeBanner(b.Id, b.Title, b.Subtitle, b.ImageKey, b.ImageUrl, b.LinkType, b.LinkTarget, b.StartsAt, b.EndsAt, b.SortOrder) { LinkSlug = b.LinkSlug, Badge = b.Badge })];
     }
 }

@@ -59,4 +59,8 @@ public sealed record DeliveryAddress(
     string StateCode,
     string Pincode,
     decimal? Latitude,
-    decimal? Longitude);
+    decimal? Longitude)
+{
+    /// <summary>HOME / WORK / OTHER, as the customer saved the address.</summary>
+    public string? Label { get; init; }
+}
