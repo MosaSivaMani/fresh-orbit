@@ -62,7 +62,7 @@ internal static class LocationsEndpoints
                 served.Pincode,
                 true,
                 null,
-                new ServiceabilityCity(served.CityId, served.CityCode, served.CityName, served.TimeZone),
+                new ServiceabilityCity(served.CityId, served.CityCode, served.CityName, served.TimeZone, served.StateCode, served.StateName),
                 new ServiceabilityLocation(served.FulfillmentLocationId, served.FulfillmentLocationCode, served.FulfillmentLocationName, served.HasColdStorage),
                 new ServiceabilityArea(served.ServiceAreaId, served.ServiceAreaName, served.DeliveryFeePaise, served.FreeDeliveryAbovePaise, served.MinOrderPaise),
                 slot is null ? null : new ServiceabilitySlot(slot.SlotId, slot.StartAt, slot.EndAt)
@@ -102,7 +102,10 @@ internal static class LocationsEndpoints
                 var city = await reads.GetCityAsync(cityId, ct) ?? throw new NotFoundException(LocationsErrors.CityNotFound, "No city has this id.");
                 var readiness = await service.GetReadinessAsync(cityId, ct);
                 SetETag(response, city.Version);
-                return TypedResults.Ok(new CityDetailResponse(city.Id, city.Code, city.Name, city.StateCode, city.TimeZone, city.Status, city.ActivatedAt, city.ActivatedBy, city.Version, readiness));
+                return TypedResults.Ok(new CityDetailResponse(city.Id, city.Code, city.Name, city.StateCode, city.TimeZone, city.Status, city.ActivatedAt, city.ActivatedBy, city.Version, readiness)
+                {
+                    StateName = city.StateName,
+                });
             })
             .RequirePermission(ManagePermission);
 

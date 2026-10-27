@@ -9374,6 +9374,7 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
             imageUrl?: null | string;
+            badge?: null | string;
             linkSlug?: null | string;
         };
         BatchResponse: {
@@ -9733,6 +9734,7 @@ export interface components {
             activatedBy: null | string;
             version: string;
             readiness: components["schemas"]["ReadinessResponse"];
+            stateName?: null | string;
         };
         CityLookupItem: {
             /** Format: uuid */
@@ -9754,6 +9756,7 @@ export interface components {
             /** Format: uuid */
             activatedBy: null | string;
             version: string;
+            stateName?: null | string;
         };
         CityRetirementBlockedProblem: {
             type: null | string;
@@ -9933,6 +9936,7 @@ export interface components {
             name: null | string;
             stateCode: null | string;
             timeZone: null | string;
+            stateName?: null | string;
         };
         CreateFulfillmentLocationRequest: {
             /** Format: uuid */
@@ -10057,6 +10061,8 @@ export interface components {
             id: string;
             /** Format: int32 */
             mergedLineCount: number;
+            /** Format: int32 */
+            droppedLineCount: number;
         };
         CustomerLoginResponse: {
             accessToken: string;
@@ -10366,6 +10372,7 @@ export interface components {
             endsAt: null | string;
             /** Format: int32 */
             sortOrder: number;
+            badge?: null | string;
             linkSlug?: null | string;
         };
         HomeResponse: {
@@ -11404,6 +11411,7 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
             isActive: boolean;
+            badge?: null | string;
         };
         PromotionResponse: {
             /** Format: uuid */
@@ -11423,6 +11431,7 @@ export interface components {
             sortOrder: number;
             isActive: boolean;
             version: string;
+            badge?: null | string;
         };
         ProposeSubstitutionRequest: {
             /** Format: uuid */
@@ -11448,6 +11457,7 @@ export interface components {
             code: string;
             name: string;
             stateCode: string;
+            stateName?: null | string;
         };
         QuantityInput: {
             /** Format: int32 */
@@ -11786,6 +11796,8 @@ export interface components {
             code: string;
             name: string;
             timeZone: string;
+            stateCode: string;
+            stateName: null | string;
         };
         ServiceabilityLocation: {
             /** Format: uuid */
@@ -12230,6 +12242,7 @@ export interface components {
             name: null | string;
             stateCode: null | string;
             timeZone: null | string;
+            stateName?: null | string;
         };
         UpdateFulfillmentLocationRequest: {
             name: null | string;

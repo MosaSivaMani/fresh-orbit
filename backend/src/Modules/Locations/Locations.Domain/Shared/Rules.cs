@@ -9,6 +9,12 @@ public static partial class Rules
     public const int NameMaxLength = 120;
     public const int CodeMaxLength = 40;
 
+    /// <summary>Longest state display name (city <c>state_name</c>).</summary>
+    public const int StateNameMaxLength = 60;
+
+    /// <summary>The trimmed text, or null when it is null or blank.</summary>
+    public static string? TrimToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     /// <summary>LOC-R2: six digits, not starting with 0.</summary>
     public static bool IsPincode(string? value) => value is not null && PincodePattern().IsMatch(value);
 

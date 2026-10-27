@@ -63,6 +63,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 | CART-R10 | Totals exactly as API §5.2: `itemsPaise`, `preparationPaise` over sellable lines only; `subtotal = items + preparation`; `discount` from Promotions; delivery fee from service area, 0 when `subtotal − discount >= freeDeliveryAbovePaise` or FREE_DELIVERY coupon; `estimatedTotal = subtotal − discount + deliveryFee`; `maxTotal` same with max line totals; `minOrderShortfall` on `subtotal − discount`; `freeDeliveryShortfall` null when not configured. `taxPaise` = Σ line tax + contained tax on the delivery fee (tax category `DELIVERY_SERVICE`, D5). |
 | CART-R11 | `canCheckout` = cart has ≥ 1 line, every line `isSellable`, no min-order shortfall, coupon not `INVALID`. `checkoutBlockers` list the §2 codes (`CART_EMPTY`, `OUT_OF_STOCK`, `PRICE_NOT_AVAILABLE`, `PRODUCT_NOT_AVAILABLE`, `QUANTITY_ABOVE_MAX`, `MIN_ORDER_NOT_MET`, `COUPON_*`). |
 | CART-R12 | Price and stock reads are batched: one call per dependency for all lines (no call per line). |
+| CART-R32 | **Cart bar.** Every figure a cart bar or summary shows is in `totals` (CART-R10), so clients add nothing up: `totals.subtotalPaise` (items + preparation, before the discount), `totals.discountPaise` (applied coupon; also `coupon.discountPaise`), `totals.deliveryFeePaise` with `totals.deliveryFeeWaived`, and `totals.estimatedTotalPaise` (the payable estimate: subtotal − discount + delivery fee). The line count is `lines.length`. Without a pincode (or with no lines) the cart is not priced: `lines` is empty and `totals` is all zero (`CartTotalsView.Empty`), so the fee is "not known yet" until the cart has a pincode. |
 
 ### Availability messages
 
@@ -98,7 +99,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 
 | Key | Rule |
 |---|---|
-| CART-R27 | `MergeGuestCart(guestToken, customerId)` is called by Identity after `POST /auth/otp/verify` commits (separate transaction, Q1). Failure never fails login (`cart` in the response is then `null`). |
+| CART-R27 | `MergeGuestCart(guestToken, customerId)` is called by Identity after `POST /auth/otp/verify` commits (separate transaction, Q1), through `IGuestCartMerger` (Identity.Public, implemented by Cart's `CartGuestCartMerger`). The verify response carries `cart { id, mergedLineCount, droppedLineCount }`: `id` is the customer's ACTIVE cart; the client reads it priced with `GET /cart`. Failure never fails login (`cart` is then `null` and the `CustomerSignedIn` handler merges later). |
 | CART-R28 | Target = customer's `ACTIVE` cart, created if absent. Matching variant + preparation → quantities added, capped at `maxOrder`; other lines appended until 30 lines; dropped lines counted. |
 | CART-R29 | Pincode: guest cart pincode wins when both have one (latest intent); unsellable lines are kept and shown with issues (not removed). |
 | CART-R30 | Guest cart → `CONVERTED` in the same transaction. Unknown or already `CONVERTED` token → no-op, `mergedLineCount = 0` (idempotent). |

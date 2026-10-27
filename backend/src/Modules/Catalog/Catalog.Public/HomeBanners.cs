@@ -30,6 +30,9 @@ public sealed record HomeBanner(
     DateTimeOffset? EndsAt,
     int SortOrder)
 {
+    /// <summary>Short label the admin set for the banner ("NEW", "20% OFF"); null when none. Show it as given.</summary>
+    public string? Badge { get; init; }
+
     /// <summary>Slug of the CATEGORY or PRODUCT link target (W14); null for COUPON or a missing target. <c>LinkTarget</c> stays the id.</summary>
     public string? LinkSlug { get; init; }
 }

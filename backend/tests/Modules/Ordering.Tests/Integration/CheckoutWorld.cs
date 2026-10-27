@@ -43,7 +43,7 @@ public sealed class CheckoutWorld
             .Returns(ci => new CustomerSummary(ci.Arg<Guid>(), Guid.NewGuid(), "Priya Raman", "+919876543210", null, CustomerStatus.Active));
         Customers.GetDeliveryAddressAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(ci => ci.ArgAt<Guid>(1) == AddressId
-                ? new DeliveryAddress(AddressId, "Priya Raman", "+919876543210", "12, 3rd Cross Street", null, "Near RTO", "Thiruvanmiyur", "Chennai", "TN", Pincode, null, null)
+                ? new DeliveryAddress(AddressId, "Priya Raman", "+919876543210", "12, 3rd Cross Street", null, "Near RTO", "Thiruvanmiyur", "Chennai", "TN", Pincode, null, null) { Label = "HOME" }
                 : null);
         Locations.ResolvePincodeAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(ci => new Serviceability(true, ci.Arg<string>(), CityId, "CHN", TimeZone, LocationId, ServiceAreaId, 0, 50000, 20000));

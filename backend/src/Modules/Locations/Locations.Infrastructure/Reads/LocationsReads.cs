@@ -38,7 +38,7 @@ public sealed class LocationsReads(FreshOrbitDbContext db) : ILocationsReads
     public async Task<IReadOnlyList<PublicCityResponse>> ListActiveCitiesAsync(CancellationToken cancellationToken)
         => await Cities.Where(c => c.Status == CityStatus.Active)
             .OrderBy(c => c.Name)
-            .Select(c => new PublicCityResponse(c.Id, c.Code, c.Name, c.StateCode))
+            .Select(c => new PublicCityResponse(c.Id, c.Code, c.Name, c.StateCode) { StateName = c.StateName })
             .ToListAsync(cancellationToken);
 
     public async Task<CityResponse?> GetCityAsync(Guid cityId, CancellationToken cancellationToken)
@@ -176,6 +176,8 @@ public sealed class LocationsReads(FreshOrbitDbContext db) : ILocationsReads
                 c.Code,
                 c.Name,
                 c.TimeZone,
+                c.StateCode,
+                c.StateName,
                 l.Id,
                 l.Code,
                 l.Name,

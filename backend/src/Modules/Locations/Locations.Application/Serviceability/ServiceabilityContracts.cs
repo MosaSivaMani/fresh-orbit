@@ -7,6 +7,8 @@ public sealed record ServedPincode(
     string CityCode,
     string CityName,
     string TimeZone,
+    string StateCode,
+    string? StateName,
     Guid FulfillmentLocationId,
     string FulfillmentLocationCode,
     string FulfillmentLocationName,
@@ -19,7 +21,9 @@ public sealed record ServedPincode(
 
 /// <param name="Name">City name for display ("Top picks in {name}").</param>
 /// <param name="TimeZone">IANA time zone of the city (W10); required on every city, so never null here.</param>
-public sealed record ServiceabilityCity(Guid Id, string Code, string Name, string TimeZone);
+/// <param name="StateCode">Two-letter state code of the city (required on every city), for the address form.</param>
+/// <param name="StateName">Display name of the state as configured on the city; null when not configured (never guessed from the code).</param>
+public sealed record ServiceabilityCity(Guid Id, string Code, string Name, string TimeZone, string StateCode, string? StateName);
 
 public sealed record ServiceabilityLocation(Guid Id, string Code, string Name, bool HasColdStorage);
 

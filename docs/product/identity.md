@@ -19,7 +19,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 |---|
 | Identity never references Customers. The customer record is created through `ICustomerAccountDirectory` (interface in `Identity.Public`, implemented by Customers), tracked on the shared context and saved in the login transaction. The JWT `customer_id` comes from the same interface. |
 | The OTP SMS is sent through `IOtpSender` (interface in `Identity.Public`, implemented by Notifications with the `OTP_LOGIN` template and its `ISmsSender`). The code is never stored in clear and never written to `notifications.messages`. |
-| Guest cart merge is not done by Identity: OTP login raises `CustomerSignedIn` with the guest cart token; Cart merges in its handler (seconds of lag). The verify response therefore returns `cart: null`. |
+| Guest cart merge is done by Cart, never inside the login transaction. After the login commits, `OtpService` calls `IGuestCartMerger` (interface in `Identity.Public`, implemented by Cart) once, which merges in Cart's own transaction, so the verify response carries `cart { id, mergedLineCount, droppedLineCount }` (CART-R27). `cart` is `null` when no `guestCartToken` was sent, the token names no ACTIVE guest cart, or the merge failed; a failed merge never fails the login. Login also raises `CustomerSignedIn` with the token; Cart's handler then finds the guest cart `CONVERTED` and does nothing (CART-R30), or merges it when the login-time merge failed. |
 
 ### Public API (`Identity.Public`)
 
@@ -33,6 +33,7 @@ Owner: E1. Schema `identity`. Uses no other module's `.Public`. Endpoints: `docs
 | `IIdentityApi.AnonymiseUserAsync(userId)` | tracked change: phone/email cleared, `DISABLED`, tokens revoked | Customers (account deletion) |
 | `ICustomerAccountDirectory` (implemented by Customers) | ensure customer, customer id ↔ user id, customer email | Identity, Notifications |
 | `IOtpSender` (implemented by Notifications) | sends the OTP SMS now | Identity |
+| `IGuestCartMerger` (implemented by Cart) | merges a guest cart into the customer's cart after the login committed; `GuestCartMerge { cartId, mergedLineCount, droppedLineCount }` or null | Identity (`POST /auth/otp/verify`) |
 
 ## 2. States
 

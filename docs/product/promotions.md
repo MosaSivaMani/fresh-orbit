@@ -50,6 +50,7 @@ Order `DELIVERED`, `RETURNED`, `DELIVERY_FAILED` keep the redemption `APPLIED` (
 ### Promotion (banner)
 
 `is_active` flag; shown when `is_active` and `starts_at <= at < ends_at` (`ends_at` null = open). No state machine.
+Optional `badge` (PROMO-R29).
 
 ## 3. Business rules
 
@@ -100,6 +101,8 @@ Order `DELIVERED`, `RETURNED`, `DELIVERY_FAILED` keep the redemption `APPLIED` (
 | PROMO-R25 | Banners: `link_type COUPON` target must be an existing coupon code; `CATEGORY`/`PRODUCT` target must exist (Catalog.Public). Permission `catalog.manage` (API §4.11). |
 | PROMO-R27 | Banner responses (`GET /promotions`, `/home` banners) carry `imageUrl`, the public URL of `imageKey` from file storage, or null when there is no valid key. Clients use the URL as given. Promotions supplies `/home` banners through `IHomeBannerSource` (Catalog.Public). |
 | PROMO-R28 | Banner responses carry `linkSlug` (W14): the storefront slug of a CATEGORY or PRODUCT `linkTarget`, read from Catalog in two queries for the whole list (`ICatalogApi.GetCategorySlugsAsync`, product summaries); null for COUPON links and for a target that no longer exists. `linkTarget` stays the id. |
+| PROMO-R29 | **Banner badge.** Admin may set an optional short label on a banner (`badge`, e.g. "NEW", "20% OFF"; `promotions.badge`, at most 20 characters, trimmed, blank = none; longer → 422 `VALIDATION_FAILED` on `badge`). It is configured text shown as given: the server never derives it from the linked coupon. `GET /promotions` items, `/home` `banners[]` and the admin banner responses carry `badge` (null when none). PUT replaces it: omitting it clears it. |
+| PROMO-R30 | **Location context of `GET /coupons`.** The city comes from `?pincode=` or `X-Pincode` only. Without either, only all-city coupons (`city_id` null) are listed (PROMO-R24's city match against no city), so a city-scoped coupon such as the sample `WELCOME100` is missing although its banner shows (the client sends `X-Pincode` for `/promotions`). Clients send the visitor's pincode on `GET /coupons` as on every LOC-optional route. |
 
 ## 4. Events
 
@@ -185,6 +188,7 @@ Redeem runs through `IPromotionsApi.Redeem` inside Ordering's checkout transacti
 | I7 | Stale `If-Match` on PUT | 412 `CONCURRENCY_CONFLICT` |
 | I8 | `ExpireCoupons` with nothing due | no writes |
 | I9 | `GET /promotions` city filter and window | only current banners for the city + all-city ones |
+| I10 | Banner with badge "20% OFF" saved and read back | `badge` round-trips (unit: trimmed, blank = null, 21 characters → `errors.badge`) |
 
 ## 8. Open questions
 
