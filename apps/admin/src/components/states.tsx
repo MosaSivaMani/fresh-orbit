@@ -1,5 +1,6 @@
-// Illustrated states (U3, D53). Characters appear only here: empty lists, "all caught up", no access (403),
-// failed loads and 404 — always inside a card, on a tinted panel, at size `sm`, never pasted over a page.
+// Illustrated states (U3, D53, D88). Characters appear only here: empty lists, "all caught up", no access (403),
+// failed loads and 404 — always inside a card, in a round frame (paper border, ink ring) on a tinted fill, at size
+// `sm`, never pasted over a page as a rectangle.
 // Styling uses design-token classes only (surface-paper, teal-soft, surface-sand-strong, accent-coral-subtle,
 // outline-ink, font-display), so a colour or font swap happens in @fresh/design-tokens / @fresh/ui alone.
 import { Button, Illustration, type IllustrationSlot, cn } from "@fresh/ui";
@@ -18,13 +19,13 @@ export type AdminSlot = Extract<
   | "ADMIN_LOGIN"
 >;
 
-/** Tinted panel behind the character, one per slot. */
+/** Fill of the round frame behind the character, one block colour per slot (D88). */
 const PANEL_TONE: Record<Exclude<AdminSlot, "ADMIN_LOGIN">, string> = {
-  ADMIN_EMPTY: "bg-surface-sand-strong",
+  ADMIN_EMPTY: "bg-mango-soft",
   ADMIN_ALL_CAUGHT_UP: "bg-teal-soft",
-  ADMIN_NO_ACCESS: "bg-surface-sand-strong",
+  ADMIN_NO_ACCESS: "bg-block-ice",
   ERROR_GENERIC: "bg-accent-coral-subtle",
-  NOT_FOUND: "bg-teal-soft",
+  NOT_FOUND: "bg-ice-soft",
 };
 
 export interface IllustratedStateProps {
@@ -57,19 +58,25 @@ export function IllustratedState({
       role={role}
       data-state-slot={slot}
       className={cn(
-        "border-border bg-surface-paper mx-auto my-4 flex w-full max-w-xl flex-col items-center gap-5 rounded-2xl border p-5 text-center shadow-xs sm:flex-row sm:text-left",
+        "border-outline-ink/10 bg-surface-paper shadow-soft-sm mx-auto my-4 flex w-full max-w-xl flex-col items-center gap-5 rounded-3xl border p-5 text-center sm:flex-row sm:p-6 sm:text-left",
         className,
       )}
     >
       <div
-        className={cn("flex shrink-0 items-center justify-center rounded-xl p-2", PANEL_TONE[slot])}
+        className={cn(
+          "border-surface-paper flex size-[150px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[5px] shadow-[0_0_0_3px_var(--fo-color-outline-ink)]",
+          PANEL_TONE[slot],
+        )}
       >
-        <Illustration slot={slot} size="sm" decorative />
+        <Illustration slot={slot} size="sm" fit="cover" decorative className="size-full" />
       </div>
       <div className="flex min-w-0 flex-col items-center gap-2 sm:items-start">
         {createElement(
           headingLevel ? `h${headingLevel}` : "p",
-          { className: "font-display text-text text-xl leading-7 font-bold text-balance" },
+          {
+            className:
+              "font-display text-text text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance",
+          },
           title,
         )}
         {description && <p className="text-text-muted text-sm">{description}</p>}
@@ -166,7 +173,7 @@ export function RouteError({ fullPage = false }: { fullPage?: boolean }) {
     <div
       className={cn(
         "flex items-center justify-center",
-        fullPage && "bg-surface-sand min-h-dvh p-4",
+        fullPage && "bg-canvas min-h-dvh p-4",
       )}
     >
       {notFound ? (

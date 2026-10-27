@@ -1,14 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isApiError } from "@fresh/core";
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Illustration,
-} from "@fresh/ui";
+import { AvatarCircle, Button, CardContent, CardDescription, CardHeader, Script } from "@fresh/ui";
 import { AlertCircle, Clock, Fish } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -115,24 +107,26 @@ export function LoginPage() {
   });
 
   return (
-    <div className="bg-surface-sand flex min-h-dvh items-center justify-center p-4">
-      <Card
+    <div className="bg-canvas flex min-h-dvh items-center justify-center p-4">
+      <div
         data-state-slot="ADMIN_LOGIN"
-        className="bg-surface-paper grid w-full max-w-sm overflow-hidden p-0 md:max-w-3xl md:grid-cols-2"
+        className="bg-surface-paper text-text shadow-soft-lg grid w-full max-w-sm overflow-hidden rounded-[34px] md:max-w-3xl md:grid-cols-2"
       >
-        {/* Side panel (md and up): the staff character on a tinted panel, inside the card. */}
-        <div className="bg-teal-soft hidden flex-col justify-center gap-4 p-6 md:flex">
-          <Illustration slot="ADMIN_LOGIN" size="fill" priority decorative />
-          <p className="font-display text-text text-lg leading-7 font-bold text-balance">
-            Today's catch, packed and on its way.
+        {/* Side panel (md and up): a mango block (sign-in, D88) with the staff character in a ringed circle. */}
+        <div className="bg-block-mango text-on-block-mango hidden flex-col items-center justify-center gap-6 p-8 text-center md:flex">
+          <p className="font-display text-4xl leading-[0.98] font-extrabold tracking-[-0.01em] text-balance">
+            Today's catch, <Script>packed and on its way.</Script>
           </p>
+          <AvatarCircle slot="ADMIN_LOGIN" size="md" priority />
         </div>
         <div className="flex flex-col justify-center py-2">
           <CardHeader>
-            <div className="bg-primary text-on-primary mb-2 flex size-10 items-center justify-center rounded-lg">
+            <div className="bg-block-mango text-on-block-mango border-outline-ink mb-2 flex size-11 items-center justify-center rounded-full border-2">
               <Fish aria-hidden="true" className="size-5" />
             </div>
-            <CardTitle>Sign in to Fresh Orbitt Admin</CardTitle>
+            <h1 className="font-display fo-doodle pr-[1em] text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance">
+              Sign in to Fresh Orbitt Admin
+            </h1>
             <CardDescription>Sign in with your staff email and password.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -189,7 +183,7 @@ export function LoginPage() {
             </form>
           </CardContent>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

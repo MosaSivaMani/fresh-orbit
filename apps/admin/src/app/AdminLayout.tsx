@@ -86,6 +86,15 @@ function UserMenu() {
   );
 }
 
+/** The fish mark in a mango circle with an ink ring (Bold blocks, D88). */
+function BrandMark() {
+  return (
+    <span className="bg-block-mango text-on-block-mango border-outline-ink flex size-9 items-center justify-center rounded-full border-2">
+      <Fish aria-hidden="true" className="size-4" />
+    </span>
+  );
+}
+
 function Shell() {
   const can = useCan();
   const { pathname } = useLocation();
@@ -106,18 +115,15 @@ function Shell() {
 
   return (
     <AppShell
-      className="bg-surface-sand"
       brand={
-        <span className="font-display flex items-center gap-2 text-lg font-bold">
-          <span className="bg-primary text-on-primary flex size-8 items-center justify-center rounded-md">
-            <Fish aria-hidden="true" className="size-4" />
-          </span>
+        <span className="font-display flex items-center gap-2 text-xl leading-none font-extrabold tracking-[-0.01em]">
+          <BrandMark />
           Fresh Orbitt
         </span>
       }
       brandCollapsed={
-        <span className="bg-primary text-on-primary flex size-8 items-center justify-center rounded-md">
-          <Fish aria-hidden="true" className="size-4" />
+        <span className="flex">
+          <BrandMark />
           <span className="sr-only">Fresh Orbitt</span>
         </span>
       }

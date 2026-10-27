@@ -208,14 +208,14 @@ export function DataTable<TData>({
           {selectionActions?.(selectedIds)}
         </div>
       )}
-      <div className="border-border bg-surface shadow-soft-sm overflow-x-auto rounded-xl border">
+      <div className="border-outline-ink/10 bg-surface-paper shadow-soft-sm overflow-x-auto rounded-3xl border">
         <table className="w-full border-collapse text-sm" aria-busy={isLoading || undefined}>
           <caption
             className={cn(showCaption ? "text-text p-3 text-left font-semibold" : "sr-only")}
           >
             {caption}
           </caption>
-          <thead className="bg-muted/60">
+          <thead className="bg-canvas/70">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id} className="border-border border-b">
                 {group.headers.map((header) => {
@@ -239,7 +239,7 @@ export function DataTable<TData>({
                       }
                       className={cn(
                         cellPad,
-                        "text-text-muted text-left text-xs font-semibold tracking-wide whitespace-nowrap uppercase",
+                        "text-text-muted text-left text-xs font-bold tracking-[0.08em] whitespace-nowrap uppercase",
                         alignClass(header.column.columnDef.meta),
                         header.column.id === "__select" && "w-10",
                       )}

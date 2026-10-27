@@ -32,12 +32,22 @@ function countOf(data: DashboardResponse | undefined, status: string): number | 
   return data.ordersByStatus.find((s) => s.status === status)?.count ?? 0;
 }
 
+/** Bold blocks tile colours (D88); `paper` keeps the warning and danger figure colours readable. */
+const KPI_BLOCK = {
+  teal: "bg-block-teal text-on-block-teal",
+  coral: "bg-block-coral text-on-block-coral",
+  mango: "bg-block-mango text-on-block-mango",
+  ice: "bg-block-ice text-on-block-ice",
+  paper: "bg-surface-paper text-text border-outline-ink/10 border",
+} as const;
+
 function Kpi({
   label,
   value,
   sub,
   to,
   tone,
+  block = "paper",
   loading,
 }: {
   label: string;
@@ -45,31 +55,35 @@ function Kpi({
   sub?: ReactNode;
   to?: string;
   tone?: "danger" | "warning";
+  block?: keyof typeof KPI_BLOCK;
   loading: boolean;
 }) {
+  const onPaper = block === "paper";
   const body = (
-    <Card className="hover:border-border-strong h-full transition-colors">
-      <CardContent className="flex flex-col gap-1 p-4">
-        <span className="text-text-muted text-sm font-medium">{label}</span>
-        {loading ? (
-          <Skeleton className="h-8 w-20" />
-        ) : (
-          <span
-            className={`text-2xl leading-8 font-semibold tabular-nums ${
-              tone === "danger" ? "text-danger-text" : tone === "warning" ? "text-warning-text" : ""
-            }`}
-          >
-            {value}
-          </span>
-        )}
-        {sub && <span className="text-text-muted text-xs">{sub}</span>}
-      </CardContent>
-    </Card>
+    <div
+      className={`shadow-soft-sm flex h-full flex-col gap-1 rounded-3xl p-4 transition-transform motion-safe:hover:-translate-y-0.5 ${KPI_BLOCK[block]}`}
+    >
+      <span className={`text-sm font-bold ${onPaper ? "text-text-muted" : ""}`}>{label}</span>
+      {loading ? (
+        <Skeleton className="h-8 w-20" />
+      ) : (
+        <span
+          className={`font-display text-3xl leading-9 font-extrabold tracking-[-0.01em] tabular-nums ${
+            tone === "danger" ? "text-danger-text" : tone === "warning" ? "text-warning-text" : ""
+          }`}
+        >
+          {value}
+        </span>
+      )}
+      {sub && (
+        <span className={`text-xs font-semibold ${onPaper ? "text-text-muted" : ""}`}>{sub}</span>
+      )}
+    </div>
   );
   return to ? (
     <Link
       to={to}
-      className="focus-visible:outline-ring rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="focus-visible:outline-ring rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-2"
     >
       {body}
     </Link>
@@ -139,6 +153,7 @@ export function DashboardPage() {
           >
             <Kpi
               label="Orders today"
+              block="teal"
               loading={loading}
               value={sales ? sales.ordersPlaced : "—"}
               sub={sales ? `Cancelled: ${sales.ordersCancelled}` : undefined}
@@ -146,6 +161,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Sales today"
+              block="coral"
               loading={loading}
               value={sales ? formatRupees(sales.orderValuePaise, { paise: "never" }) : "—"}
               sub={
@@ -157,6 +173,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Waiting to pack"
+              block="mango"
               loading={loading}
               value={countOf(data, "CONFIRMED") ?? "—"}
               sub={`Preparing: ${countOf(data, "PREPARING") ?? "—"}`}
@@ -164,6 +181,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Out for delivery"
+              block="ice"
               loading={loading}
               value={countOf(data, "OUT_FOR_DELIVERY") ?? "—"}
               sub={`Packed: ${countOf(data, "PACKED") ?? "—"}`}
@@ -188,9 +206,9 @@ export function DashboardPage() {
           </section>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card>
+            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
               <CardHeader>
-                <CardTitle>Today's slots</CardTitle>
+                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Today's slots</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -241,9 +259,9 @@ export function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
               <CardHeader>
-                <CardTitle>Low stock</CardTitle>
+                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Low stock</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -296,9 +314,9 @@ export function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card>
+            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
               <CardHeader>
-                <CardTitle>Orders by status</CardTitle>
+                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Orders by status</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -311,7 +329,7 @@ export function DashboardPage() {
                       <li key={s.status}>
                         <Link
                           to={orderLink(s.status)}
-                          className="border-border hover:bg-muted inline-flex items-center gap-2 rounded-md border px-3 py-1.5"
+                          className="border-border hover:bg-muted inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
                         >
                           <StatusBadge code={s.status} map={ORDER_STATUS} />
                           <span className="font-semibold tabular-nums">{s.count}</span>
@@ -323,9 +341,9 @@ export function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
               <CardHeader>
-                <CardTitle>Needs attention</CardTitle>
+                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Needs attention</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading || !data ? (
