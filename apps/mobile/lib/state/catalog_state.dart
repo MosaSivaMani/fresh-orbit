@@ -3,7 +3,9 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../api/api_error.dart';
 import '../api/models/catalog.dart';
+import '../api/models/common.dart';
 import 'core_providers.dart';
 import 'location_state.dart';
 
@@ -86,4 +88,40 @@ final searchSuggestionsProvider = FutureProvider.autoDispose.family<List<SearchS
   await Future<void>.delayed(const Duration(milliseconds: 250));
   if (disposed) return const [];
   return ref.read(catalogRepositoryProvider).suggest(q.trim());
+});
+
+/// The business's public profile (support contacts). Not set up yet (404) reads as an empty profile.
+final businessProfileProvider = FutureProvider<BusinessProfile>((ref) async {
+  try {
+    return await ref.read(catalogRepositoryProvider).businessProfile();
+  } on ApiError catch (e) {
+    if (e.code == 'BUSINESS_PROFILE_NOT_CONFIGURED') return const BusinessProfile();
+    rethrow;
+  }
+});
+
+/// One line priced by the server for the chosen size, cut and quantity at the current pincode.
+class PriceQuoteRequest {
+  const PriceQuoteRequest({required this.variantId, this.preparation, required this.quantity});
+
+  final String variantId;
+  final String? preparation;
+  final Quantity quantity;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PriceQuoteRequest &&
+      other.variantId == variantId &&
+      other.preparation == preparation &&
+      other.quantity == quantity;
+
+  @override
+  int get hashCode => Object.hash(variantId, preparation, quantity);
+}
+
+final priceQuoteProvider = FutureProvider.autoDispose.family<PriceQuote, PriceQuoteRequest>((ref, request) {
+  ref.watch(pincodeProvider);
+  return ref
+      .read(catalogRepositoryProvider)
+      .priceQuote(variantId: request.variantId, preparation: request.preparation, quantity: request.quantity);
 });

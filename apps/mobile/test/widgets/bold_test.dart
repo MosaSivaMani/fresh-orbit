@@ -5,8 +5,6 @@ import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:fresh_orbit_app/widgets/bold.dart';
 import 'package:fresh_orbit_app/widgets/commerce.dart';
-import 'package:fresh_orbit_app/widgets/heading.dart';
-import 'package:fresh_orbit_app/widgets/illustrated.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 Future<void> _pump(
@@ -148,12 +146,15 @@ void main() {
       );
     });
 
-    testWidgets('ScriptTitle reads as one header', (tester) async {
+    testWidgets('PageTitle reads as one header, the key word on the brush with sparks', (tester) async {
       final handle = tester.ensureSemantics();
-      await _pump(tester, const ScriptTitle(text: 'Your', script: 'cart'));
+      await _pump(tester, const PageTitle(text: 'Your', brushed: 'cart'));
 
       expect(find.bySemanticsLabel('Your cart'), findsOneWidget);
-      expect(tester.widget<Text>(find.text('cart')).style!.fontFamily, AppFonts.script);
+      expect(find.ancestor(of: find.text('cart'), matching: find.byType(BrushHighlight)), findsOneWidget);
+      expect(find.ancestor(of: find.text('Your'), matching: find.byType(BrushHighlight)), findsNothing);
+      expect(find.byType(Sparks), findsOneWidget);
+      expect(tester.widget<Text>(find.text('cart')).style!.fontFamily, AppFonts.display);
       handle.dispose();
     });
   });

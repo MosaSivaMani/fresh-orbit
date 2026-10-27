@@ -10,6 +10,9 @@ class Serviceability {
     required this.serviceable,
     this.reasonCode,
     this.cityName,
+    this.cityStateCode,
+    this.cityStateName,
+    this.locationId,
     this.locationName,
     this.serviceAreaName,
     this.deliveryFeePaise,
@@ -28,6 +31,9 @@ class Serviceability {
       serviceable: reqBool(j, 'serviceable'),
       reasonCode: optString(j, 'reasonCode'),
       cityName: city == null ? null : reqString(city, 'name'),
+      cityStateCode: city == null ? null : optString(city, 'stateCode'),
+      cityStateName: city == null ? null : optString(city, 'stateName'),
+      locationId: location == null ? null : optString(location, 'id'),
       locationName: location == null ? null : reqString(location, 'name'),
       serviceAreaName: area == null ? null : optString(area, 'name'),
       deliveryFeePaise: area == null ? null : optInt(area, 'deliveryFeePaise'),
@@ -41,6 +47,13 @@ class Serviceability {
   final bool serviceable;
   final String? reasonCode;
   final String? cityName;
+
+  /// The city's state (newer API; null when the server does not send it). Prefills the address form.
+  final String? cityStateCode;
+  final String? cityStateName;
+
+  /// The store that serves the pincode; a back-in-stock alert names it.
+  final String? locationId;
   final String? locationName;
   final String? serviceAreaName;
   final int? deliveryFeePaise;

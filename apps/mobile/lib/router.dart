@@ -42,6 +42,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier<bool>(ref.read(sessionProvider).signedIn);
   ref.listen(sessionProvider, (_, next) => sessionChanges.value = next.signedIn);
   ref.onDispose(sessionChanges.dispose);
+  // The header's back button: pop when a page is below, else home (a screen opened from a link).
+  BackCircleButton.defaultBack = (context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  };
 
   return GoRouter(
     initialLocation: '/splash',
@@ -165,7 +173,7 @@ class AppShell extends ConsumerWidget {
           if (showCartBar)
             FreshCartBar(
               count: cartCount,
-              amount: formatRupees(cart.totals!.subtotalPaise),
+              amount: formatRupees(cart.totals!.estimatedTotalPaise),
               // Only lines that have a picture; none leaves the space out (no empty circles).
               thumbnails: [
                 for (final line in cart.lines)

@@ -9,7 +9,6 @@ import '../../api/models/catalog.dart';
 import '../../core/format.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
@@ -66,7 +65,7 @@ class ProductGrid extends ConsumerWidget {
               slivers: [
                 if (head != null) SliverToBoxAdapter(child: head),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, FreshSpacing.s4),
+                  padding: FreshLayout.list,
                   sliver: SliverGrid.builder(
                     gridDelegate: productGridDelegate,
                     itemCount: list.items.length,

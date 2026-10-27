@@ -26,6 +26,7 @@ internal sealed class CityConfiguration : IEntityTypeConfiguration<City>
         builder.Property(x => x.Code).HasMaxLength(Rules.CodeMaxLength).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(Rules.NameMaxLength).IsRequired();
         builder.Property(x => x.StateCode).HasMaxLength(2).IsRequired();
+        builder.Property(x => x.StateName).HasMaxLength(Rules.StateNameMaxLength);
         builder.Property(x => x.TimeZone).HasMaxLength(60).IsRequired();
         builder.HasIndex(x => x.Code).IsUnique().HasDatabaseName("ux_cities_code");
     }

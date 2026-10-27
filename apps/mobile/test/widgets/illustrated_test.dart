@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:fresh_orbit_app/widgets/illustrated.dart';
-import 'package:fresh_orbit_app/widgets/motion.dart';
 import 'package:fresh_orbit_app/widgets/states.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 Future<void> _pump(WidgetTester tester, Widget child, {bool reduceMotion = false, ThemeData? theme}) async {
   tester.view.devicePixelRatio = 3;

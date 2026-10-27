@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
-import '../theme/app_theme.dart';
 import 'cast_painter.dart';
 import 'illustration_slot.dart';
 
@@ -234,7 +234,7 @@ class IllustrationPlaceholder extends StatelessWidget {
   IllustrationSlot.homeCardRider => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
 };
 
-/// The owner's category and offer pictures bundled in the app (D194, D208), used when the server sends no
+/// The owner's category and offer pictures bundled in the app (D194, D220), used when the server sends no
 /// picture (the demo fixtures send none). Matched by slug words; anything else gets no picture rather than a
 /// wrong one.
 abstract final class BundledPictures {

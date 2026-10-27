@@ -1,9 +1,9 @@
-// Gentle motion: one short entrance (fade, small rise, settle), never a loop. Off when the platform asks for
-// reduced motion (MediaQuery.disableAnimations): the widget is then drawn in its final state straight away.
+// The one entrance motion of the app (a short rise and fade), off when the platform asks for less motion.
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 /// False when the system or the user asked for reduced motion.
 bool motionAllowed(BuildContext context) => !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);

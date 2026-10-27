@@ -5,12 +5,12 @@
 // row, which starts on the gutter and lets the second card peek. The harbour, the palms and the sparks are drawn
 // with the theme package's scenery and are not read by screen readers.
 //
-// The page fits one screen (D182, D209): it is laid out at the screen width and scaled down to the space above the
+// The page fits one screen (D182, D221): it is laid out at the screen width and scaled down to the space above the
 // cart bar and the menu (both live in the shell, so they never cover it). Only at a system text scale of 1.5 or
 // more does it scroll, with clamping physics (no bounce). A page shorter than the screen gives the room left to
 // the offer pictures, so no dead gap is left above the cart bar. The chip, cards, category tiles and offer cards
 // are the theme package's parts (D207); categories and offers without a server picture show the owner's bundled
-// pictures (D208).
+// pictures (D220).
 //
 // Every business value comes from the server (rule 4): the pincode and city (serviceability), the first name
 // (profile), the next slot, the categories and their pictures, the offers, and the cart in the shell.
@@ -30,7 +30,6 @@ import '../../state/account_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/location_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/states.dart';
 
 /// Pincode chip for app bars: "Delivering to 600041" → change pincode.
@@ -126,7 +125,7 @@ class HomeScreen extends ConsumerWidget {
               }
               // Full width always: a page taller than the screen is laid out wider and scaled down, never
               // narrowed with side gaps (D182). A shorter page gives the room left to the specials, so no dead
-              // gap is left above the cart bar (D209).
+              // gap is left above the cart bar (D221).
               return Align(
                 alignment: Alignment.topCenter,
                 child: FreshFitWidth(
@@ -675,7 +674,7 @@ class _KnifePainter extends CustomPainter {
 }
 
 /// Six equal columns: the first five featured categories (server order) and "More". A category's picture is the
-/// server's; with none (the demo fixtures) the owner's bundled picture for its slug (D208), else its first letter.
+/// server's; with none (the demo fixtures) the owner's bundled picture for its slug (D220), else its first letter.
 class _CategoryRow extends StatelessWidget {
   const _CategoryRow({required this.categories});
 
@@ -788,7 +787,7 @@ class _SpecialsHeader extends StatelessWidget {
   }
 }
 
-/// "Today's special" and the offers under it. Given a height (the room the blocks above leave, D209) the cards'
+/// "Today's special" and the offers under it. Given a height (the room the blocks above leave, D221) the cards'
 /// pictures grow into it, up to the 3:2 frame (D193), so no dead gap is left above the cart bar; with no height
 /// (very large text, scrolling) they keep their smallest size.
 class _Specials extends StatelessWidget {
@@ -890,7 +889,7 @@ class _SpecialsRow extends StatelessWidget {
 }
 
 /// The server's offer picture; else (the demo fixtures, or when it fails) the owner's bundled offer picture
-/// (D208); else the soft tint.
+/// (D220); else the soft tint.
 Widget _specialPicture(HomeBanner banner, int index, Color tint) {
   final soft = ColoredBox(color: tint);
   final bundled = BundledPicture(path: BundledPictures.special(banner.linkSlug, index), fallback: soft);

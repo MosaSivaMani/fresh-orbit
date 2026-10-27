@@ -68,6 +68,27 @@ void main() {
     expect(find.byKey(const Key('checkoutButton')), findsNothing);
   });
 
+  testWidgets('change cut: lists the server cuts for the line size and sends the chosen one', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.cart.current = cart();
+    deps.catalog.onProduct = (_, _) async => productDetail();
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('pageHeader')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('changeCut-line1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('changeCutSheet')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cut-WHOLE')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cut-STEAK')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('cut-FILLET')));
+    await tester.pumpAndSettle();
+
+    expect(deps.cart.calls, contains('changePreparation'));
+    expect(find.byKey(const Key('changeCutSheet')), findsNothing);
+  });
+
   testWidgets('coupon: applied by the server, refusal shown at the field', (tester) async {
     final deps = TestDeps(pincode: '600041', signedIn: true);
     deps.cart.current = cart();
@@ -94,5 +115,37 @@ void main() {
 
     expect(deps.cart.calls, contains('applyCoupon:FRESH100'));
     expect(find.text('Applied: you save ₹100.'), findsOneWidget);
+  });
+
+  testWidgets('view offers lists the server coupons for the area and applies the chosen one', (tester) async {
+    final deps = TestDeps(pincode: '600041', signedIn: true);
+    deps.cart.current = cart();
+    deps.cart.couponList = [
+      VisibleCoupon.fromJson({
+        'code': 'FRESH100',
+        'description': 'Rs 100 off your order',
+        'minOrderPaise': 49900,
+        'validTo': null,
+        'firstOrderOnly': false,
+      }),
+    ];
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('viewOffers')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('viewOffers')));
+    await tester.pumpAndSettle();
+
+    expect(deps.cart.calls, contains('coupons'));
+    final offer = find.byKey(const ValueKey('offer-FRESH100'));
+    expect(offer, findsOneWidget);
+    deps.cart.afterWrite = () =>
+        cart(coupon: {'code': 'FRESH100', 'status': 'APPLIED', 'discountPaise': 10000, 'message': null});
+    await tester.tap(find.descendant(of: offer, matching: find.byType(TextButton)));
+    await tester.pumpAndSettle();
+
+    expect(deps.cart.calls, contains('applyCoupon:FRESH100'));
+    expect(find.byKey(const Key('offersSheet')), findsNothing);
   });
 }

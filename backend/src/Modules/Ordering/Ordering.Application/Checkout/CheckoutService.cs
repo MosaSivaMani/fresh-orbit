@@ -252,7 +252,7 @@ public sealed class CheckoutService(
             ?? throw new NotFoundException("The address does not exist.");
         var serviceability = await locations.ResolvePincodeAsync(address.Pincode, cancellationToken);
         var serviceable = serviceability is { IsServiceable: true, FulfillmentLocationId: not null, CityId: not null, ServiceAreaId: not null };
-        var addressDto = new CheckoutAddressDto(address.AddressId, null, address.Line1, address.Locality, address.Pincode, serviceable);
+        var addressDto = new CheckoutAddressDto(address.AddressId, address.Label, address.Line1, address.Locality, address.Pincode, serviceable);
         var unknownSlot = new CheckoutSlotDto(request.DeliverySlotId, null, null, null, "NOT_AVAILABLE");
 
         var cart = await carts.GetCheckoutCartAsync(customerId, cancellationToken);

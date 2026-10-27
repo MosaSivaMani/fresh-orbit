@@ -8,7 +8,7 @@
 // fit above the button, and only very large system text (1.5× and up) lets it scroll (D182). The title and the tile
 // labels stay on one line (fitted to the width), captions take two lines at most, and the three pages reserve the
 // same height for their text and tiles (the tallest page sets it), so the banner is the same size on every page
-// (D206).
+// (D219).
 
 import 'dart:math' as math;
 
@@ -20,9 +20,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/motion.dart';
 import 'onboarding_art.dart';
 
 // Preview colours that stay the same in light and dark (like the stickers and the avatar rings).

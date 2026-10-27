@@ -40,7 +40,7 @@ public sealed partial class LocationsSampleDataLoader(
         var insertedCities = 0;
         foreach (var row in file.Cities.Where(c => !cityIds.ContainsKey(c.Code)))
         {
-            var city = await cities.CreateAsync(new CreateCityRequest(row.Code, row.Name, row.StateCode, row.TimeZone), cancellationToken);
+            var city = await cities.CreateAsync(new CreateCityRequest(row.Code, row.Name, row.StateCode, row.TimeZone, row.StateName), cancellationToken);
             context.Track<City>(db, city.Id);
             cityIds[row.Code] = city.Id;
             cityZones[row.Code] = city.TimeZone;
@@ -147,7 +147,7 @@ public sealed partial class LocationsSampleDataLoader(
         IReadOnlyList<ClosureRow> Closures,
         IReadOnlyList<AreaRow> ServiceAreas);
 
-    internal sealed record CityRow(string Code, string Name, string StateCode, string TimeZone, string? TargetStatus);
+    internal sealed record CityRow(string Code, string Name, string StateCode, string TimeZone, string? TargetStatus, string? StateName = null);
 
     internal sealed record LocationRow(
         string Code,

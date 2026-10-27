@@ -2,6 +2,7 @@ using FreshOrbit.Customers.Domain.Addresses;
 using FreshOrbit.Customers.Domain.Customers;
 using FreshOrbit.Customers.Public;
 using FreshOrbit.Identity.Public;
+using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using DomainCustomerStatus = FreshOrbit.Customers.Domain.Customers.CustomerStatus;
@@ -29,11 +30,29 @@ internal sealed class CustomersApi(FreshOrbitDbContext db, IIdentityApi identity
             customer.Status == DomainCustomerStatus.Deleted ? PublicCustomerStatus.Deleted : PublicCustomerStatus.Active);
     }
 
-    public Task<DeliveryAddress?> GetDeliveryAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken = default)
-        => db.Set<Address>().AsNoTracking()
-            .Where(a => a.Id == addressId && a.CustomerId == customerId && a.IsActive)
-            .Select(a => new DeliveryAddress(a.Id, a.RecipientName, a.Phone, a.Line1, a.Line2, a.Landmark, a.Locality, a.CityName, a.StateCode, a.Pincode, a.Latitude, a.Longitude))
-            .FirstOrDefaultAsync(cancellationToken);
+    public async Task<DeliveryAddress?> GetDeliveryAddressAsync(Guid customerId, Guid addressId, CancellationToken cancellationToken = default)
+    {
+        var address = await db.Set<Address>().AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == addressId && a.CustomerId == customerId && a.IsActive, cancellationToken);
+        return address is null
+            ? null
+            : new DeliveryAddress(
+                address.Id,
+                address.RecipientName,
+                address.Phone,
+                address.Line1,
+                address.Line2,
+                address.Landmark,
+                address.Locality,
+                address.CityName,
+                address.StateCode,
+                address.Pincode,
+                address.Latitude,
+                address.Longitude)
+            {
+                Label = address.Label.ToCode(),
+            };
+    }
 
     public Task<Guid?> FindCustomerIdByUserAsync(Guid userId, CancellationToken cancellationToken = default)
         => db.Set<Customer>().AsNoTracking().Where(c => c.UserId == userId).Select(c => (Guid?)c.Id).FirstOrDefaultAsync(cancellationToken);

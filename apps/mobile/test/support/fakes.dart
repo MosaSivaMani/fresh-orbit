@@ -51,6 +51,20 @@ class FakeCatalogRepository implements CatalogRepository {
 
   @override
   Future<List<SearchSuggestion>> suggest(String q) => (onSuggest ?? (_) async => const <SearchSuggestion>[])(q);
+
+  Future<PriceQuote> Function(String variantId, String? preparation, Quantity quantity)? onQuote;
+  final List<String> quotes = [];
+
+  @override
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity}) {
+    quotes.add('$variantId:$preparation:${quantity.value}');
+    return (onQuote ?? (_, _, _) => _unexpected('priceQuote'))(variantId, preparation, quantity);
+  }
+
+  BusinessProfile profile = const BusinessProfile();
+
+  @override
+  Future<BusinessProfile> businessProfile() async => profile;
 }
 
 class FakeCartRepository implements CartRepository {
@@ -123,6 +137,14 @@ class FakeCartRepository implements CartRepository {
 
   @override
   Future<Cart> removeCoupon() => _write('removeCoupon', afterWrite ?? () => current);
+
+  List<VisibleCoupon> couponList = [];
+
+  @override
+  Future<List<VisibleCoupon>> coupons() async {
+    calls.add('coupons');
+    return couponList;
+  }
 }
 
 class PlaceCall {
@@ -172,14 +194,37 @@ class FakeOrderRepository implements OrderRepository {
   @override
   Future<Cart> reorder(String orderId) async => Cart.empty;
 
+  final List<String> complaintCalls = [];
+
   @override
-  Future<void> raiseComplaint(
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
-  }) async {}
+  }) async {
+    complaintCalls.add('raise:$kind');
+    return Complaint(id: 'c1', orderItemId: orderItemId, kind: kind, status: 'OPEN', description: description);
+  }
+
+  @override
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  }) async => complaintCalls.add('photo:$complaintId:$fileName');
+
+  /// What accept/reject returns; the test sets it.
+  OrderDetail Function(String substitutionId, bool accept)? onAnswer;
+  final List<String> answers = [];
+
+  @override
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept}) async {
+    answers.add('${accept ? 'accept' : 'reject'}:$substitutionId');
+    return (onAnswer ?? (_, _) => _unexpected('answerSubstitution'))(substitutionId, accept);
+  }
 
   @override
   Future<List<Complaint>> complaints(String orderId) async => const [];
@@ -256,6 +301,12 @@ class FakeAccountRepository implements AccountRepository {
 
   @override
   Future<void> unregisterDeviceToken(String pushToken) async {}
+
+  final List<String> stockAlerts = [];
+
+  @override
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId}) async =>
+      stockAlerts.add('$variantId@$fulfillmentLocationId');
 }
 
 class FakeAuthRepository implements AuthRepository {

@@ -7,8 +7,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-
-import '../theme/app_theme.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 enum CastMember { padma, ravi, anil, ammamma, chanduva }
 

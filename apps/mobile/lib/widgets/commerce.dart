@@ -7,9 +7,7 @@ import 'package:fresh_theme/fresh_theme.dart';
 import '../api/models/catalog.dart';
 import '../api/models/common.dart';
 import '../core/format.dart';
-import '../theme/app_theme.dart';
 import 'bold.dart';
-import 'states.dart';
 
 /// Paise in, ₹ out: price, optional struck-through compare-at price ("Original price"), optional unit.
 class PriceTag extends StatelessWidget {
@@ -138,35 +136,6 @@ class QuantityStepper extends StatelessWidget {
   }
 }
 
-/// Small text badge. Tone is decoration; the text carries the meaning.
-class FreshBadge extends StatelessWidget {
-  const FreshBadge({super.key, required this.label, this.tone = BannerTone.info, this.highlight = false});
-
-  final String label;
-  final BannerTone tone;
-
-  /// Warm sand (offers, bestsellers).
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = freshColors(context);
-    final (bg, fg) = highlight
-        ? (c.highlightSubtle, c.highlightText)
-        : switch (tone) {
-            BannerTone.info => (c.infoSubtle, c.infoText),
-            BannerTone.warning => (c.warningSubtle, c.warningText),
-            BannerTone.danger => (c.dangerSubtle, c.dangerText),
-            BannerTone.success => (c.successSubtle, c.successText),
-          };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s2, vertical: FreshSpacing.s0_5),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshRadius.full)),
-      child: Text(label, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: fg)),
-    );
-  }
-}
-
 /// Availability status → badge (server message wins when present).
 class AvailabilityBadge extends StatelessWidget {
   const AvailabilityBadge({super.key, required this.status, this.message});
@@ -228,50 +197,17 @@ const paymentMethodLabels = <String, String>{
 
 String paymentMethodLabel(String code) => paymentMethodLabels[code] ?? humanizeCode(code);
 
-/// Network image with a calm placeholder; decorative unless [semanticLabel] is given.
-class ProductPhoto extends StatelessWidget {
-  const ProductPhoto({
-    super.key,
-    required this.url,
-    this.semanticLabel,
-    this.aspectRatio = 1,
-    this.radius = AppRadius.field,
-    this.transparent = false,
-  });
-
-  final String? url;
-  final String? semanticLabel;
-  final double aspectRatio;
-  final double radius;
-
-  /// No placeholder fill: the caller's tint shows behind the fish icon.
-  final bool transparent;
-
-  @override
-  Widget build(BuildContext context) {
-    final ill = illustratedColors(context);
-    final placeholder = Container(
-      color: transparent ? null : ill.tealSoft,
-      alignment: Alignment.center,
-      child: Icon(Icons.set_meal_rounded, color: ill.tealDeep.withValues(alpha: 0.75), size: 44),
-    );
-    return AspectRatio(
-      aspectRatio: aspectRatio,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: url == null
-            ? ExcludeSemantics(child: placeholder)
-            : Image.network(
-                url!,
-                fit: BoxFit.cover,
-                semanticLabel: semanticLabel,
-                excludeFromSemantics: semanticLabel == null,
-                errorBuilder: (_, _, _) => placeholder,
-                loadingBuilder: (context, child, progress) => progress == null ? child : placeholder,
-              ),
-      ),
-    );
-  }
+/// A cut's charge at the pincode, as the server gives it: "Free", "+₹40/kg", or "Not available here" when the
+/// server has no charge for it (not offered at this location).
+String preparationChargeText(Preparation p) {
+  final c = p.chargePaise;
+  if (c == null) return 'Not available here';
+  if (c == 0) return 'Free';
+  return switch (p.chargeBasis) {
+    'PER_KG' => '+${formatRupees(c)}/kg',
+    'PER_ITEM' => '+${formatRupees(c)}/piece',
+    _ => '+${formatRupees(c)}',
+  };
 }
 
 /// What the picture-edge button of a [ProductCard] shows.
@@ -345,13 +281,13 @@ class ProductCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ill.paper,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
         boxShadow: cardShadow(context),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -363,10 +299,16 @@ class ProductCard extends StatelessWidget {
                     child: Opacity(
                       opacity: soldOut ? 0.55 : 1,
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(FreshLayout.cardRadius)),
                         child: ColoredBox(
                           color: tint ?? ill.tealSoft,
-                          child: ProductPhoto(url: product.imageUrl, aspectRatio: 1.4, radius: 0, transparent: true),
+                          // The 3:2 picture frame of every card (D193).
+                          child: ProductPhoto(
+                            url: product.imageUrl,
+                            aspectRatio: FreshLayout.pictureAspect,
+                            radius: 0,
+                            transparent: true,
+                          ),
                         ),
                       ),
                     ),
@@ -390,7 +332,7 @@ class ProductCard extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                  padding: const EdgeInsets.fromLTRB(FreshLayout.cardGap, 6, FreshLayout.cardGap, FreshLayout.cardGap),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -519,36 +461,5 @@ class _CardControl extends StatelessWidget {
         ),
       ),
     };
-  }
-}
-
-/// A full-width primary button with a loading state that disables it (one action per tap).
-class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, required this.onPressed, this.loading = false, this.icon});
-
-  final String label;
-  final VoidCallback? onPressed;
-  final bool loading;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final child = loading
-        ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2, semanticsLabel: 'Working'),
-          )
-        : Text(label);
-    return SizedBox(
-      width: double.infinity,
-      child: Semantics(
-        button: true,
-        label: loading ? '$label, working' : null,
-        child: icon == null || loading
-            ? FilledButton(onPressed: loading ? null : onPressed, child: child)
-            : FilledButton.icon(onPressed: onPressed, icon: Icon(icon), label: child),
-      ),
-    );
   }
 }

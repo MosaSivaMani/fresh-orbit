@@ -665,7 +665,7 @@ class _CartThumbs extends StatelessWidget {
 
 /// [head] then [tail] in one column across the width. When both together are shorter than [minHeight], the tail
 /// is laid out again with exactly the room left, so a page fills the screen with no dead gap at the bottom
-/// (D209). With no room to give (or an unbounded [minHeight] of 0) both keep their natural height.
+/// (D221). With no room to give (or an unbounded [minHeight] of 0) both keep their natural height.
 class FreshGrowTail extends MultiChildRenderObjectWidget {
   FreshGrowTail({super.key, required this.minHeight, required Widget head, required Widget tail})
     : super(children: [head, tail]);

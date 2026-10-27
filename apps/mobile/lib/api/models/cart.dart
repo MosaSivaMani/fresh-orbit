@@ -118,6 +118,32 @@ class CartCoupon {
   final String? message;
 }
 
+/// A coupon the customer may use (GET /coupons, for the pincode's city): the code, the owner's description and
+/// the minimum order, all as the server sends them. The app never works out a discount from it.
+class VisibleCoupon {
+  const VisibleCoupon({
+    required this.code,
+    this.description,
+    required this.minOrderPaise,
+    this.validTo,
+    required this.firstOrderOnly,
+  });
+
+  factory VisibleCoupon.fromJson(Json j) => VisibleCoupon(
+    code: reqString(j, 'code'),
+    description: optString(j, 'description'),
+    minOrderPaise: optInt(j, 'minOrderPaise') ?? 0,
+    validTo: optInstant(j, 'validTo'),
+    firstOrderOnly: optBool(j, 'firstOrderOnly') ?? false,
+  );
+
+  final String code;
+  final String? description;
+  final int minOrderPaise;
+  final DateTime? validTo;
+  final bool firstOrderOnly;
+}
+
 CartCoupon? optCoupon(Json j) {
   final v = asJsonOrNull(j['coupon'], 'coupon');
   return v == null ? null : CartCoupon.fromJson(v);
