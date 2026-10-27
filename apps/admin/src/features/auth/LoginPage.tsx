@@ -130,66 +130,66 @@ export function LoginPage() {
           </>
         }
       >
-          <CardHeader>
-            <Wordmark markSrc="/brand/mark.png" className="mb-2" />
-            <h1 className="font-display fo-doodle pr-[1em] text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance">
-              Sign in to Fresh Orbitt Admin
-            </h1>
-            <CardDescription>Sign in with your staff email and password.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-              {throttled && (
-                <p
-                  role="alert"
-                  data-code="RATE_LIMITED"
-                  className="bg-warning-subtle text-warning-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
-                >
-                  <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                  <span>
-                    Too many sign-in attempts. Try again in{" "}
-                    <span data-testid="retry-after">{formatWait(waitSeconds)}</span>.
-                  </span>
-                </p>
-              )}
-              {expired && !formError && !throttled && (
-                <p
-                  role="status"
-                  className="bg-info-subtle text-info-text rounded-md px-3 py-2 text-sm"
-                >
-                  Your session ended. Sign in again to continue.
-                </p>
-              )}
-              {formError && (
-                <p
-                  role="alert"
-                  className="bg-danger-subtle text-danger-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
-                >
-                  <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                  {formError}
-                </p>
-              )}
-              <TextField
-                form={form}
-                name="email"
-                label="Email"
-                type="email"
-                autoComplete="username"
-                required
-              />
-              <TextField
-                form={form}
-                name="password"
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-              <Button type="submit" loading={login.isPending} disabled={throttled} fullWidth>
-                Sign in
-              </Button>
-            </form>
-          </CardContent>
+        <CardHeader>
+          <Wordmark markSrc="/brand/mark.png" className="mb-2" />
+          <h1 className="font-display fo-doodle pr-[1em] text-2xl leading-tight font-extrabold tracking-[-0.01em] text-balance">
+            Sign in to Fresh Orbitt Admin
+          </h1>
+          <CardDescription>Sign in with your staff email and password.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+            {throttled && (
+              <p
+                role="alert"
+                data-code="RATE_LIMITED"
+                className="bg-warning-subtle text-warning-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
+              >
+                <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  Too many sign-in attempts. Try again in{" "}
+                  <span data-testid="retry-after">{formatWait(waitSeconds)}</span>.
+                </span>
+              </p>
+            )}
+            {expired && !formError && !throttled && (
+              <p
+                role="status"
+                className="bg-info-subtle text-info-text rounded-md px-3 py-2 text-sm"
+              >
+                Your session ended. Sign in again to continue.
+              </p>
+            )}
+            {formError && (
+              <p
+                role="alert"
+                className="bg-danger-subtle text-danger-text flex items-start gap-2 rounded-md px-3 py-2 text-sm"
+              >
+                <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {formError}
+              </p>
+            )}
+            <TextField
+              form={form}
+              name="email"
+              label="Email"
+              type="email"
+              autoComplete="username"
+              required
+            />
+            <TextField
+              form={form}
+              name="password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
+            <Button type="submit" loading={login.isPending} disabled={throttled} fullWidth>
+              Sign in
+            </Button>
+          </form>
+        </CardContent>
       </BlockSplitCard>
     </div>
   );

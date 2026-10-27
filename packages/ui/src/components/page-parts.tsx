@@ -228,7 +228,9 @@ export function StatTile({
           {value}
         </span>
       )}
-      {sub && <span className={cn("text-xs font-semibold", onPaper && "text-text-muted")}>{sub}</span>}
+      {sub && (
+        <span className={cn("text-xs font-semibold", onPaper && "text-text-muted")}>{sub}</span>
+      )}
     </div>
   );
 }
@@ -243,7 +245,13 @@ export interface BlockSplitCardProps extends Omit<ComponentProps<"div">, "childr
 }
 
 /** A paper card with 34 px corners split into a colour block and a paper side (sign-in). */
-export function BlockSplitCard({ tone, aside, children, className, ...props }: BlockSplitCardProps) {
+export function BlockSplitCard({
+  tone,
+  aside,
+  children,
+  className,
+  ...props
+}: BlockSplitCardProps) {
   return (
     <div
       className={cn(

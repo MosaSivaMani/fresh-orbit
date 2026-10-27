@@ -49,7 +49,9 @@ describe("SectionCard and DetailList", () => {
 
 describe("StatTile", () => {
   it("shows the figure on its block colour", () => {
-    const { container } = render(<StatTile tone="teal" label="Orders today" value={12} sub="Cancelled: 1" />);
+    const { container } = render(
+      <StatTile tone="teal" label="Orders today" value={12} sub="Cancelled: 1" />,
+    );
     expect(container.firstElementChild).toHaveAttribute("data-tone", "teal");
     expect(container.firstElementChild).toHaveTextContent("Orders today12Cancelled: 1");
   });

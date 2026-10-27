@@ -144,12 +144,7 @@ export function RouteError({ fullPage = false }: { fullPage?: boolean }) {
   const error = useRouteError();
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center",
-        fullPage && "bg-canvas min-h-dvh p-4",
-      )}
-    >
+    <div className={cn("flex items-center justify-center", fullPage && "bg-canvas min-h-dvh p-4")}>
       {notFound ? (
         <IllustratedState
           slot="NOT_FOUND"
