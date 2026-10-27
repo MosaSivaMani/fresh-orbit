@@ -1,7 +1,8 @@
 import { Heading, Script } from "@fresh/ui";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode } from "react";
+import { Sparks } from "./theme/marks";
 
 export function Container({ children, className, ...rest }: ComponentProps<"div">) {
   return (
@@ -20,7 +21,7 @@ export function Section({
   id,
 }: {
   title: string;
-  /** A handwritten word after the title (D89), e.g. title "Fresh this" + script "morning". */
+  /** A handwritten word after the title (D89), e.g. "Fresh this" + "morning"; sparks follow. */
   script?: string;
   description?: string;
   action?: { href: string; label: string };
@@ -46,16 +47,17 @@ export function Section({
                 <Script tone="accent">{script}</Script>
               </>
             )}
+            <Sparks className="text-accent-coral ml-1 w-6 -translate-y-3 sm:w-7" />
           </Heading>
           {description && <p className="text-text-muted">{description}</p>}
         </div>
         {action && (
           <Link
             href={action.href}
-            className="text-accent-text inline-flex shrink-0 items-center gap-0.5 text-sm font-bold underline-offset-4 hover:underline"
+            className="border-primary text-primary hover:bg-primary hover:text-on-primary inline-flex shrink-0 items-center gap-1 rounded-full border-[1.5px] px-4 py-1.5 text-sm font-bold"
           >
             {action.label}
-            <ChevronRight aria-hidden="true" className="size-4" />
+            <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         )}
       </div>
