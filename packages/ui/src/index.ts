@@ -39,6 +39,22 @@ export {
   type CartAddControlProps,
 } from "./components/bold-blocks";
 export {
+  BlockSplitCard,
+  DetailList,
+  PageHeader,
+  SectionCard,
+  StatTile,
+  Wordmark,
+  backLinkClass,
+  type BlockSplitCardProps,
+  type DetailListProps,
+  type PageHeaderProps,
+  type SectionCardProps,
+  type StatTileProps,
+  type StatTileTone,
+  type WordmarkProps,
+} from "./components/page-parts";
+export {
   AppBand,
   CategoryCircle,
   CharacterState,

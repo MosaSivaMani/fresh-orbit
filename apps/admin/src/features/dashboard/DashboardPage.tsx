@@ -16,9 +16,10 @@ import {
   EmptyState,
   ErrorState,
   Skeleton,
+  StatTile,
+  type StatTileProps,
   StatusBadge,
 } from "@fresh/ui";
-import { type ReactNode } from "react";
 import { Link } from "react-router";
 import { useDashboard } from "../../api/reports";
 import { type DashboardLowStock, type DashboardResponse } from "../../api/types/reports";
@@ -32,49 +33,18 @@ function countOf(data: DashboardResponse | undefined, status: string): number | 
   return data.ordersByStatus.find((s) => s.status === status)?.count ?? 0;
 }
 
-function Kpi({
-  label,
-  value,
-  sub,
-  to,
-  tone,
-  loading,
-}: {
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-  to?: string;
-  tone?: "danger" | "warning";
-  loading: boolean;
-}) {
-  const body = (
-    <Card className="hover:border-border-strong h-full transition-colors">
-      <CardContent className="flex flex-col gap-1 p-4">
-        <span className="text-text-muted text-sm font-medium">{label}</span>
-        {loading ? (
-          <Skeleton className="h-8 w-20" />
-        ) : (
-          <span
-            className={`text-2xl leading-8 font-semibold tabular-nums ${
-              tone === "danger" ? "text-danger-text" : tone === "warning" ? "text-warning-text" : ""
-            }`}
-          >
-            {value}
-          </span>
-        )}
-        {sub && <span className="text-text-muted text-xs">{sub}</span>}
-      </CardContent>
-    </Card>
-  );
+/** A dashboard figure: the shared `StatTile`, as a link to the list behind it. */
+function Kpi({ to, ...props }: StatTileProps & { to?: string }) {
+  const tile = <StatTile {...props} />;
   return to ? (
     <Link
       to={to}
-      className="focus-visible:outline-ring rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2"
+      className="focus-visible:outline-ring rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      {body}
+      {tile}
     </Link>
   ) : (
-    body
+    tile
   );
 }
 
@@ -139,6 +109,7 @@ export function DashboardPage() {
           >
             <Kpi
               label="Orders today"
+              tone="teal"
               loading={loading}
               value={sales ? sales.ordersPlaced : "—"}
               sub={sales ? `Cancelled: ${sales.ordersCancelled}` : undefined}
@@ -146,6 +117,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Sales today"
+              tone="coral"
               loading={loading}
               value={sales ? formatRupees(sales.orderValuePaise, { paise: "never" }) : "—"}
               sub={
@@ -157,6 +129,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Waiting to pack"
+              tone="mango"
               loading={loading}
               value={countOf(data, "CONFIRMED") ?? "—"}
               sub={`Preparing: ${countOf(data, "PREPARING") ?? "—"}`}
@@ -164,6 +137,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Out for delivery"
+              tone="ice"
               loading={loading}
               value={countOf(data, "OUT_FOR_DELIVERY") ?? "—"}
               sub={`Packed: ${countOf(data, "PACKED") ?? "—"}`}
@@ -174,7 +148,7 @@ export function DashboardPage() {
               loading={loading}
               value={data ? data.lowStock.length : "—"}
               sub="Items at or below threshold"
-              tone={data && data.lowStock.length > 0 ? "warning" : undefined}
+              emphasis={data && data.lowStock.length > 0 ? "warning" : undefined}
               to="/inventory?lowStockOnly=true"
             />
             <Kpi
@@ -182,7 +156,7 @@ export function DashboardPage() {
               loading={loading}
               value={countOf(data, "DELIVERY_FAILED") ?? "—"}
               sub={data ? `Open complaints: ${data.openComplaints}` : undefined}
-              tone={(countOf(data, "DELIVERY_FAILED") ?? 0) > 0 ? "danger" : undefined}
+              emphasis={(countOf(data, "DELIVERY_FAILED") ?? 0) > 0 ? "danger" : undefined}
               to={orderLink("DELIVERY_FAILED")}
             />
           </section>
@@ -311,7 +285,7 @@ export function DashboardPage() {
                       <li key={s.status}>
                         <Link
                           to={orderLink(s.status)}
-                          className="border-border hover:bg-muted inline-flex items-center gap-2 rounded-md border px-3 py-1.5"
+                          className="border-border hover:bg-muted inline-flex items-center gap-2 rounded-full border px-3 py-1.5"
                         >
                           <StatusBadge code={s.status} map={ORDER_STATUS} />
                           <span className="font-semibold tabular-nums">{s.count}</span>

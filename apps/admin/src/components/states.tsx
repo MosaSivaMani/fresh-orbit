@@ -1,10 +1,9 @@
-// Illustrated states (U3, D53). Characters appear only here: empty lists, "all caught up", no access (403),
-// failed loads and 404 — always inside a card, on a tinted panel, at size `sm`, never pasted over a page.
-// Styling uses design-token classes only (surface-paper, teal-soft, surface-sand-strong, accent-coral-subtle,
-// outline-ink, font-display), so a colour or font swap happens in @fresh/design-tokens / @fresh/ui alone.
-import { Button, Illustration, type IllustrationSlot, cn } from "@fresh/ui";
+// Illustrated states (U3, D53, D88). Characters appear only here: empty lists, "all caught up", no access (403),
+// failed loads and 404. Each is the shared `CharacterState` from @fresh/ui (the character in a ringed circle, never a
+// rectangle laid over a page) on a paper card; this file only picks the slot, words and action (D207).
+import { Button, CharacterState, type IllustrationSlot, cn } from "@fresh/ui";
 import { RotateCw } from "lucide-react";
-import { type ReactNode, createElement } from "react";
+import { type ReactNode } from "react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
 
 /** Admin uses only these slots (docs/design/illustrations.md §3). */
@@ -18,21 +17,12 @@ export type AdminSlot = Extract<
   | "ADMIN_LOGIN"
 >;
 
-/** Tinted panel behind the character, one per slot. */
-const PANEL_TONE: Record<Exclude<AdminSlot, "ADMIN_LOGIN">, string> = {
-  ADMIN_EMPTY: "bg-surface-sand-strong",
-  ADMIN_ALL_CAUGHT_UP: "bg-teal-soft",
-  ADMIN_NO_ACCESS: "bg-surface-sand-strong",
-  ERROR_GENERIC: "bg-accent-coral-subtle",
-  NOT_FOUND: "bg-teal-soft",
-};
-
 export interface IllustratedStateProps {
   slot: Exclude<AdminSlot, "ADMIN_LOGIN">;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
-  /** Render the title as a heading of this level (page-level states); otherwise a paragraph. */
+  /** Heading level of the title: 1 for page-level states, default 2. */
   headingLevel?: 1 | 2 | 3;
   /** `alert` for failed loads. */
   role?: "alert" | "status";
@@ -41,42 +31,33 @@ export interface IllustratedStateProps {
   className?: string;
 }
 
-/** A compact card: character on a tinted panel, then the title, a line of text and one action. */
+/** A paper card holding the shared character state: the character, the title, a line of text and one action. */
 export function IllustratedState({
   slot,
   title,
   description,
   action,
-  headingLevel,
+  headingLevel = 2,
   role,
   footnote,
   className,
 }: IllustratedStateProps) {
   return (
-    <div
+    <CharacterState
       role={role}
       data-state-slot={slot}
+      slot={slot}
+      title={title}
+      description={description}
+      actions={action}
+      headingLevel={headingLevel}
       className={cn(
-        "border-border bg-surface-paper mx-auto my-4 flex w-full max-w-xl flex-col items-center gap-5 rounded-2xl border p-5 text-center shadow-xs sm:flex-row sm:text-left",
+        "border-outline-ink/10 bg-surface-paper shadow-soft-sm mx-auto my-4 w-full max-w-xl rounded-3xl border px-5 py-8 sm:py-10",
         className,
       )}
     >
-      <div
-        className={cn("flex shrink-0 items-center justify-center rounded-xl p-2", PANEL_TONE[slot])}
-      >
-        <Illustration slot={slot} size="sm" decorative />
-      </div>
-      <div className="flex min-w-0 flex-col items-center gap-2 sm:items-start">
-        {createElement(
-          headingLevel ? `h${headingLevel}` : "p",
-          { className: "font-display text-text text-xl leading-7 font-bold text-balance" },
-          title,
-        )}
-        {description && <p className="text-text-muted text-sm">{description}</p>}
-        {footnote}
-        {action && <div className="mt-1 flex flex-wrap gap-2">{action}</div>}
-      </div>
-    </div>
+      {footnote}
+    </CharacterState>
   );
 }
 
@@ -163,12 +144,7 @@ export function RouteError({ fullPage = false }: { fullPage?: boolean }) {
   const error = useRouteError();
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   return (
-    <div
-      className={cn(
-        "flex items-center justify-center",
-        fullPage && "bg-surface-sand min-h-dvh p-4",
-      )}
-    >
+    <div className={cn("flex items-center justify-center", fullPage && "bg-canvas min-h-dvh p-4")}>
       {notFound ? (
         <IllustratedState
           slot="NOT_FOUND"

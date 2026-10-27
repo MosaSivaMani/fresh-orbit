@@ -16,11 +16,14 @@ async function findStateCard(container: HTMLElement, slot: string): Promise<HTML
   const found = card as unknown as HTMLElement;
   const img = found.querySelector(`img[data-slot="${slot}"]`);
   expect(img).not.toBeNull();
-  // Characters are decorative next to the card's own title, served from /illustrations at size sm (160 px).
+  // Characters are decorative next to the card's own title, served from /illustrations, always in the shared ringed
+  // circle (D88): `md` on the sign-in panel, `sm` in every other state.
   expect(img).toHaveAttribute("alt", "");
   expect(img?.getAttribute("src")).toMatch(/^\/illustrations\//);
-  // The login side panel shows the 4:3 ADMIN_LOGIN at the panel's width; every other state is `sm`.
-  if (slot !== "ADMIN_LOGIN") expect(img).toHaveAttribute("width", "160");
+  expect(img?.closest("[data-avatar-size]")).toHaveAttribute(
+    "data-avatar-size",
+    slot === "ADMIN_LOGIN" ? "md" : "sm",
+  );
   return found;
 }
 
