@@ -12,6 +12,7 @@ import '../../state/catalog_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/heading.dart';
+import '../../widgets/screen.dart';
 import 'home_screen.dart';
 import 'product_grid.dart';
 
@@ -90,8 +91,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Padding(
+          padding: FreshLayout.page,
+          child: Align(alignment: Alignment.centerLeft, child: PincodeChip()),
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: FreshLayout.page,
           child: Semantics(
             button: true,
             label: 'Search fish, prawns, crabs',
@@ -99,19 +104,27 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             child: Material(
               color: c.paper,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
                 side: BorderSide(color: c.line, width: 1.5),
               ),
               child: InkWell(
-                borderRadius: BorderRadius.circular(14),
+                key: const Key('shopSearch'),
+                borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
                 onTap: () => context.push('/search'),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: FreshLayout.gutter, vertical: 13),
                   child: Row(
                     children: [
                       Icon(Icons.search_rounded, size: 18, color: c.muted),
                       const SizedBox(width: 8),
-                      Text('Search “seer fish”, “prawns”…', style: TextStyle(color: c.muted, fontSize: 13)),
+                      Flexible(
+                        child: Text(
+                          'Search “seer fish”, “prawns”…',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontFamily: AppFonts.body, color: c.muted, fontSize: 14),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -120,10 +133,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
         ),
         SizedBox(
-          height: 88,
+          height: 92,
           child: ListView(
+            key: const Key('shopCategories'),
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+            // The bubbles' own 64 dp boxes centre a 54 dp circle, so the row starts 5 dp inside the gutter.
+            padding: const EdgeInsets.fromLTRB(FreshLayout.gutter - 5, FreshLayout.cardGap, FreshLayout.gutter - 5, 0),
             children: [
               CategoryBubble(
                 label: 'All',
@@ -144,10 +159,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
         ),
         SizedBox(
-          height: 46,
+          height: 48,
           child: ListView(
+            key: const Key('shopFilters'),
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 2),
+            padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 8, FreshLayout.gutter, 4),
             children: [
               FilterPill(
                 key: const Key('sortPill'),
@@ -155,7 +171,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 label: _query.sort == 'relevance' ? 'Sort' : _sorts[_query.sort] ?? 'Sort',
                 onTap: _openSort,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               FilterPill(
                 label: 'In stock',
                 selected: _query.inStock == true,
@@ -166,7 +182,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 ),
               ),
               for (final e in _sources.entries) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 FilterPill(label: e.value, selected: _query.sourceType == e.key, onTap: () => _toggleSource(e.key)),
               ],
             ],
@@ -175,26 +191,25 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ],
     );
     return Scaffold(
+      appBar: PageHeader(
+        text: 'Shop',
+        brushed: 'fresh',
+        back: false,
+        actions: [
+          PaperCircleButton(
+            key: const Key('shopFiltersButton'),
+            icon: Icons.tune_rounded,
+            label: _activeFilters == 0 ? 'Filters' : 'Filters, $_activeFilters on',
+            onTap: _openFilters,
+            badge: _activeFilters == 0 ? null : CountPip(_activeFilters),
+          ),
+        ],
+      ),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 4, 6, 6),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: ScriptTitle(text: 'Shop', script: 'fresh'),
-                  ),
-                  const PincodeChip(),
-                  RoundIconButton(
-                    icon: Icons.tune_rounded,
-                    tooltip: _activeFilters == 0 ? 'Filters' : 'Filters, $_activeFilters on',
-                    onPressed: _openFilters,
-                  ),
-                ],
-              ),
-            ),
             Expanded(
               child: ProductGrid(
                 query: _query,
@@ -234,12 +249,12 @@ class _FilterSheetState extends State<_FilterSheet> {
     final theme = Theme.of(context);
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(FreshSpacing.s4, 0, FreshSpacing.s4, FreshSpacing.s4),
+        padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Semantics(header: true, child: Text('Filters', style: theme.textTheme.titleLarge)),
+            const PageTitle(text: '', brushed: 'Filters', size: 22),
             const SizedBox(height: FreshSpacing.s4),
             Text('Source', style: theme.textTheme.titleSmall),
             Wrap(

@@ -66,7 +66,7 @@ class ProductGrid extends ConsumerWidget {
               slivers: [
                 if (head != null) SliverToBoxAdapter(child: head),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, FreshSpacing.s4),
+                  padding: FreshLayout.list,
                   sliver: SliverGrid.builder(
                     gridDelegate: productGridDelegate,
                     itemCount: list.items.length,
