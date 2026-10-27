@@ -1,5 +1,8 @@
 # Go-live plan: Fresh Orbitt (checked 2026-10-27)
 
+> **On hold (owner, 2026-10-27, D208):** the next few days are product development only. Licences, DLT, domain,
+> server and Play account wait; the owner tests on their own devices with the live demo APK and the Render demo.
+
 The owner wants to go live in the coming days. This page lists what is ready, what blocks a real launch, and the
 fastest safe order. Decisions behind it: project plan §6 Phase 10 and §7, D127 (Hostinger near launch), COD launch.
 
