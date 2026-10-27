@@ -82,6 +82,36 @@
       "isActive": true,
       "imageKey": "sample/categories/ready-to-cook.webp",
       "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "marinated",
+      "parentSlug": null,
+      "name": "Marinated",
+      "description": "Fish and prawns in house masalas, ready for the pan.",
+      "sortOrder": 70,
+      "isActive": true,
+      "imageKey": "sample/categories/marinated.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "fish-eggs",
+      "parentSlug": null,
+      "name": "Fish Eggs",
+      "description": "Fish roe, cleaned and packed.",
+      "sortOrder": 80,
+      "isActive": true,
+      "imageKey": "sample/categories/fish-eggs.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
+    },
+    {
+      "slug": "ready-to-eat",
+      "parentSlug": null,
+      "name": "Ready to Eat",
+      "description": "Cooked seafood; warm it and serve.",
+      "sortOrder": 90,
+      "isActive": true,
+      "imageKey": "sample/categories/ready-to-eat.webp",
+      "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample."
     }
   ],
   "products": [

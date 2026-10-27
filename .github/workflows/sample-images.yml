@@ -1,0 +1,31 @@
+name: Sample images
+
+# Makes the sample set's small WebP pictures from the owner's pictures (backend/data/sample/tools/make_images.py) on
+# the runner, because the development Mac runs no tools. Download the `sample-images` artifact and commit it under
+# backend/data/sample/images when it differs.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - docs/design/characters/generated/**
+      - backend/data/sample/tools/make_images.py
+      - .github/workflows/sample-images.yml
+
+jobs:
+  images:
+    name: Make sample images
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow==11.3.0
+      - run: python3 backend/data/sample/tools/make_images.py
+      - name: Show whether the committed images are current
+        run: git status --short -- backend/data/sample/images
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sample-images
+          path: backend/data/sample/images

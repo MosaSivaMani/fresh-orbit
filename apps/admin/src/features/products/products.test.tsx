@@ -200,6 +200,35 @@ describe("products", () => {
     expect(screen.getByLabelText(/Yield %/)).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("loads and sends the variant's serving facts", async () => {
+    catalogHandlers();
+    const saved = product().variants[0]!;
+    let sent: Record<string, unknown> | undefined;
+    server.use(
+      http.get(`${API}/admin/products/${PRODUCT_ID}`, () =>
+        HttpResponse.json(product({ variants: [{ ...saved, piecesMin: 10, serves: 4 }] })),
+      ),
+      http.get(`${API}/admin/preparation-methods`, () => HttpResponse.json([])),
+      http.put(`${API}/admin/products/${PRODUCT_ID}/variants/variant-1`, async ({ request }) => {
+        sent = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(product());
+      }),
+    );
+    const { user } = renderApp({
+      path: `/products/${PRODUCT_ID}`,
+      permissions: ["catalog.manage"],
+    });
+
+    await user.click(await screen.findByRole("tab", { name: /Variants/ }));
+    await user.click(screen.getByRole("button", { name: "Edit variant SEER-STEAK" }));
+    expect(await screen.findByLabelText(/Fewest pieces \(per kg net\)/)).toHaveValue("10");
+    await user.type(screen.getByLabelText(/Most pieces/), "14");
+    await user.click(screen.getByRole("button", { name: "Save variant" }));
+
+    await waitFor(() => expect(sent).toBeDefined());
+    expect(sent).toMatchObject({ piecesMin: 10, piecesMax: 14, serves: 4 });
+  });
+
   it("refuses the editor without catalog.manage", async () => {
     renderApp({ path: `/products/${PRODUCT_ID}`, permissions: ["orders.view"] });
     expect(await screen.findByText("You do not have access to this page")).toBeInTheDocument();

@@ -59,6 +59,11 @@ const columns: ColumnDef<Payment>[] = [
     cell: ({ row }) => <StatusBadge code={row.original.status} map={PAYMENT_STATUS} />,
   },
   {
+    id: "created",
+    header: "Created",
+    cell: ({ row }) => formatDateTime(row.original.createdAt),
+  },
+  {
     id: "when",
     header: "Captured / collected",
     cell: ({ row }) => {

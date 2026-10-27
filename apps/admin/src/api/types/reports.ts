@@ -32,7 +32,7 @@ export type DashboardCount = Schema<"DashboardCount">;
 
 export type DashboardSlot = Schema<"DashboardSlot">;
 
-/** `available` and `lowStockThreshold` are stock-item units (grams or pieces); the unit is not sent (gap G4). */
+/** `available` and `lowStockThreshold` are in `stockUnit` (GRAM or PIECE; G4). */
 export type DashboardLowStock = Schema<"DashboardLowStock">;
 
 export type DashboardResponse = Omit<Schema<"DashboardResponse">, "filters"> & {

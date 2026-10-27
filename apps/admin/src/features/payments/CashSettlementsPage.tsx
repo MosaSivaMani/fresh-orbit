@@ -98,7 +98,7 @@ export function CashSettlementsPage() {
     ...(scope.locationId ? { fulfillmentLocationId: scope.locationId } : {}),
   });
   const ridersQuery = useRiderOptions(scope.locationId);
-  // 403 without delivery.manage: fall back to typing the rider id (API gap noted in docs/design/admin.md).
+  // A 403 (neither delivery.manage nor cash.settle) falls back to typing the rider id.
   const riders: readonly RiderOption[] | null =
     ridersQuery.data?.items ??
     (isApiError(ridersQuery.error) && ridersQuery.error.status === 403 ? null : []);

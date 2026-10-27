@@ -9,6 +9,7 @@ import {
   type PreparationMethod,
   type ProductRequest,
   type UpdateCategoryRequest,
+  type VariantLookup,
   type VariantRequest,
 } from "./types/catalog";
 import { type Id, type ListQuery, type Version } from "./types/common";
@@ -21,6 +22,7 @@ export const catalogKeys = {
   products: (q: object) => ["catalog", "products", q] as const,
   product: (id: Id) => ["catalog", "product", id] as const,
   preparationMethods: ["catalog", "preparation-methods"] as const,
+  variantLookup: ["catalog", "variant-lookup"] as const,
 };
 
 export interface ProductListQuery extends ListQuery {
@@ -93,6 +95,25 @@ export function usePreparationMethods(enabled = true) {
     queryFn: ({ signal }) =>
       http.get<PreparationMethod[]>("/admin/preparation-methods", { signal }),
     staleTime: 30 * 60_000,
+    enabled,
+  });
+}
+
+/**
+ * Active variants of every product for pickers (`GET /admin/catalog/variants`, any staff member; G3), by product
+ * name then SKU. One page of 100 is searched in the browser; a store with more active variants needs a server-side
+ * search box (`q`).
+ */
+export function useVariantLookup(enabled = true) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: catalogKeys.variantLookup,
+    queryFn: ({ signal }) =>
+      http.get<Page<VariantLookup>>("/admin/catalog/variants", {
+        query: { activeOnly: true, pageSize: 100 },
+        signal,
+      }),
+    staleTime: 5 * 60_000,
     enabled,
   });
 }

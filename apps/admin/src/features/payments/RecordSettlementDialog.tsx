@@ -28,7 +28,7 @@ export function RecordSettlementDialog({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** null when the rider list cannot be read (no delivery.manage): the form asks for the rider id instead. */
+  /** null when the rider lookup is refused (403): the form asks for the rider id instead. */
   riders: readonly RiderOption[] | null;
 }) {
   const create = useCreateCashSettlement();
@@ -171,7 +171,7 @@ export function RecordSettlementDialog({
                 <Select
                   options={riders.map((r) => ({
                     value: r.id,
-                    label: `${r.fullName} · ${r.phone}`,
+                    label: `${r.fullName} · ••${r.phoneLast4}`,
                   }))}
                   value={riderId}
                   onValueChange={(v) => edit(() => setRiderId(v))}

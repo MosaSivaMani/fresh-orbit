@@ -115,6 +115,11 @@ public sealed class DemoEnvironmentTests(SampleDatabase database)
         System.Text.Encoding.ASCII.GetString(bytes, 0, 4).Should().Be("RIFF");
         var banner = await client.GetAsync("/media/sample/banners/gone.png", Ct);
         banner.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
+
+        // A sample key with a committed picture is answered with that file, not a drawing.
+        var welcome = await client.GetAsync("/media/sample/banners/welcome.webp", Ct);
+        welcome.Content.Headers.ContentType!.MediaType.Should().Be("image/webp");
+        (await welcome.Content.ReadAsByteArrayAsync(Ct)).Should().Equal(await File.ReadAllBytesAsync(Path.Combine(SampleDataTests.DataPath("sample"), "images", "banners", "welcome.webp"), Ct));
         (await client.GetAsync("/media/products/x/original", Ct)).StatusCode.Should().Be(HttpStatusCode.NotFound, "only image extensions are drawn");
     }
 
@@ -204,6 +209,7 @@ public sealed class DemoEnvironmentTests(SampleDatabase database)
             builder.UseSetting(ApiHostingOptions.RunBackgroundJobsInApiKey, "true");
             builder.UseSetting(BackgroundJobsSetup.WorkerCountKey, "1");
             builder.UseSetting("FileStorage:RootPath", Path.Combine(Path.GetTempPath(), "freshorbit-demo-api-tests", Guid.NewGuid().ToString("N")));
+            builder.UseSetting(DemoSetup.SampleDataPathKey, SampleDataTests.DataPath("sample"));
         }
     }
 }

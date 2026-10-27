@@ -8,7 +8,6 @@ import {
   useRecordSubstitutionResponse,
 } from "../../api/orders";
 import { usePreparationMethods } from "../../api/catalog";
-import { type AdminVariant } from "../../api/types/catalog";
 import {
   type AdminOrderDetail,
   type OrderItem,
@@ -16,7 +15,11 @@ import {
   type StaffCancelReason,
   type Substitution,
 } from "../../api/types/orders";
-import { type VariantChoice, VariantPicker } from "../../components/VariantPicker";
+import {
+  type PickedVariant,
+  type VariantChoice,
+  VariantPicker,
+} from "../../components/VariantPicker";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { parseRupeesToPaise, parseWholeNumber } from "../../lib/units";
 
@@ -134,7 +137,7 @@ export function ProposeSubstitutionDialog({
     variantId: "",
     preparationCode: "",
   });
-  const [variant, setVariant] = useState<AdminVariant | null>(null);
+  const [variant, setVariant] = useState<PickedVariant | null>(null);
   const [quantity, setQuantity] = useState("");
   const [touched, setTouched] = useState(false);
   const unit = variant
@@ -143,8 +146,7 @@ export function ProposeSubstitutionDialog({
       : "PIECE"
     : item.orderedQuantity.unit;
   const parsed = parseWholeNumber(quantity);
-  // The API takes the preparation method id; the picker gives its code. The method list needs
-  // `catalog.manage` (gap G3), so without it the proposal cannot be sent.
+  // The API takes the preparation method id; the picker gives its code. Any staff member reads the methods (G3).
   const methods = usePreparationMethods(open);
   const preparationMethodId =
     methods.data?.find((m) => m.code === choice.preparationCode)?.id ?? null;
@@ -228,7 +230,7 @@ export function ProposeSubstitutionDialog({
           required
           error={quantityError}
           hint={
-            variant
+            variant?.orderStep !== undefined
               ? `Order step ${variant.orderStep}, min ${variant.minOrder}, max ${variant.maxOrder}.`
               : undefined
           }

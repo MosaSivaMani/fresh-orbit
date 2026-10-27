@@ -29,18 +29,18 @@ export const STAFF_CANCEL_REASONS = [
 export type StaffCancelReason = (typeof STAFF_CANCEL_REASONS)[number];
 
 /**
- * List row. `totalPaise` is the estimate; `finalTotalPaise` is set once packed. The row has no `version`
- * (gap G13): bulk actions read it from the order detail first.
+ * List row. `totalPaise` is the estimate; `finalTotalPaise` is set once packed. `version` is the order's row
+ * version (G13), quoted by bulk actions.
  */
 export type AdminOrderSummary = Coded<
   Schema<"AdminOrderListItem">,
   { status: OrderStatus; paymentMethod: PaymentMethod }
 >;
 
-/** `status` takes one code (the API refuses a list); `slotDate` narrows by the slot's local date. */
+/** `status` takes one or more codes (G14); `slotDate` narrows by the slot's local date. */
 export interface AdminOrderListQuery {
   fulfillmentLocationId?: Id;
-  status?: string;
+  status?: string | string[];
   slotDate?: CalendarDate;
   slotId?: Id;
   paymentMethod?: string;
@@ -80,8 +80,14 @@ export type OrderAdjustment = Coded<
   { kind: "WEIGHT" | "SHORT_SUPPLY" | "SUBSTITUTION" | "GOODWILL" }
 >;
 
-/** Gross stock reserved per line (`grossQuantity` in the stock unit), from Inventory. */
-export type OrderLineStock = Coded<Schema<"OrderLineStockDto">, { grossQuantity: Quantity }>;
+/** One batch a line's stock was taken from when packed (G17). */
+export type OrderLineBatch = Coded<Schema<"OrderLineBatchDto">, { quantity: Quantity }>;
+
+/** Gross stock reserved per line (`grossQuantity` in the stock unit) and its batches, from Inventory. */
+export type OrderLineStock = Coded<
+  Schema<"OrderLineStockDto">,
+  { grossQuantity: Quantity; batches: OrderLineBatch[] }
+>;
 
 export type CustomerOrderDetail = Coded<
   Schema<"OrderDetailResponse">,
@@ -150,7 +156,10 @@ export type GoodwillRequest = Schema<"GoodwillRequest">;
 /** `grossQuantity` is in `stockUnit` (GRAM or PIECE). */
 export type PickListItem = Coded<Schema<"PickListLine">, { stockUnit: "GRAM" | "PIECE" }>;
 
-/** `GET /admin/orders/pick-list` (ORD-R60): gross quantities per variant × preparation for a slot. */
+/**
+ * `GET /admin/orders/pick-list` (ORD-R60): gross quantities per variant × preparation for a slot, with the slot's
+ * times (null for an unknown slot) and the number of orders (G18).
+ */
 export type PickList = Coded<Schema<"PickListResponse">, { lines: PickListItem[] }>;
 
 export type ComplaintKind = "MISSING" | "DAMAGED" | "QUALITY" | "WRONG_ITEM" | "LATE";
@@ -163,6 +172,17 @@ export type ComplaintDetail = Coded<
   { kind: ComplaintKind; status: ComplaintStatus; resolution: ComplaintResolution | null }
 >;
 export type ComplaintSummary = ComplaintDetail;
+
+/**
+ * The complained-about line as the server names it ("Seer fish · Steaks · Curry cut", G15), "One item" when the
+ * server has no name for it, or "Whole order".
+ */
+export function complaintItemLabel(complaint: ComplaintDetail): string {
+  if (!complaint.orderItemId) return "Whole order";
+  const { productName, variantName, preparationName } = complaint;
+  const named = [productName, variantName, preparationName].filter(Boolean).join(" · ");
+  return named || "One item";
+}
 
 export interface DecideComplaintRequest {
   status: "APPROVED" | "REJECTED";

@@ -500,6 +500,36 @@
         "width": 1200,
         "height": 800
       }
+    },
+    {
+      "categorySlug": "marinated",
+      "imageKey": "sample/categories/marinated.webp",
+      "placeholder": {
+        "background": "#A0522D",
+        "label": "Marinated",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "fish-eggs",
+      "imageKey": "sample/categories/fish-eggs.webp",
+      "placeholder": {
+        "background": "#E0A800",
+        "label": "Fish Eggs",
+        "width": 1200,
+        "height": 800
+      }
+    },
+    {
+      "categorySlug": "ready-to-eat",
+      "imageKey": "sample/categories/ready-to-eat.webp",
+      "placeholder": {
+        "background": "#7B4B94",
+        "label": "Ready to Eat",
+        "width": 1200,
+        "height": 800
+      }
     }
   ],
   "banners": [

@@ -39,14 +39,30 @@ export function InventoryNav() {
   );
 }
 
+/** The variant fields inventory responses carry: Catalog's names and SKU, null for a variant Catalog no longer has. */
+export interface VariantNames {
+  variantId: string;
+  productName?: string | null;
+  variantName?: string | null;
+  sku?: string | null;
+}
+
 /**
- * Inventory responses carry `variantId` only (variant names live in Catalog, not in the inventory schema —
- * API gap noted in docs/design/admin.md). Shows a short id with the full id as a tooltip.
+ * "Seer fish · Steaks" with the SKU, as the server names the variant; a short id (full id as a tooltip) when the
+ * server has no name for it.
  */
-export function VariantRef({ variantId }: { variantId: string }) {
+export function VariantRef({ item }: { item: VariantNames }) {
+  if (!item.productName) {
+    return (
+      <span className="font-mono text-xs" title={item.variantId}>
+        …{item.variantId.slice(-12)}
+      </span>
+    );
+  }
   return (
-    <span className="font-mono text-xs" title={variantId}>
-      …{variantId.slice(-12)}
+    <span title={item.variantId}>
+      {item.variantName ? `${item.productName} · ${item.variantName}` : item.productName}
+      {item.sku && <span className="text-text-muted ml-1.5 font-mono text-xs">{item.sku}</span>}
     </span>
   );
 }
