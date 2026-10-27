@@ -168,8 +168,16 @@ public sealed class OtpService(
             return null;
         }
 
-        var merged = await merger.MergeAsync(guestCartToken, customerId, cancellationToken);
-        return merged is null ? null : new CustomerLoginCart(merged.CartId, merged.MergedLineCount, merged.DroppedLineCount);
+        try
+        {
+            var merged = await merger.MergeAsync(guestCartToken, customerId, cancellationToken);
+            return merged is null ? null : new CustomerLoginCart(merged.CartId, merged.MergedLineCount, merged.DroppedLineCount);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // CART-R27: a failed merge never fails the login (it has committed); the CustomerSignedIn handler retries it.
+            return null;
+        }
     }
 
     /// <summary>IDN-R3, IDN-R4.</summary>
