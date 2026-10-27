@@ -134,6 +134,8 @@ for code, c in cities.items():
         err(w, "stateCode must be two upper-case letters")
     if not c.get("timeZone"):
         err(w, "timeZone is required (IANA name)")
+    if c.get("stateName") is not None and (not isinstance(c["stateName"], str) or not c["stateName"].strip() or len(c["stateName"].strip()) > 60):
+        err(w, "stateName must be null or 1 to 60 characters (Rules.StateNameMaxLength)")
 
 locations = {l.get("code"): l for l in loc.get("fulfillmentLocations", [])}
 unique("locations.fulfillmentLocations", [l.get("code") for l in loc.get("fulfillmentLocations", [])], "location code")
@@ -561,6 +563,8 @@ for key, b in banners.items():
         err(w, "title is required and must be at most 120 characters (Promotion.MaxTitleLength)")
     if b.get("subtitle") is not None and len(b["subtitle"]) > 200:
         err(w, "subtitle must be at most 200 characters (Promotion.MaxSubtitleLength)")
+    if b.get("badge") is not None and (not isinstance(b["badge"], str) or not b["badge"].strip() or len(b["badge"].strip()) > 20):
+        err(w, "badge must be null or 1 to 20 characters (Promotion.MaxBadgeLength)")
     if not isinstance(b.get("sortOrder"), int) or not isinstance(b.get("isActive"), bool):
         err(w, "sortOrder must be an integer and isActive true or false (PromotionRequest)")
     target = b.get("linkTarget")
