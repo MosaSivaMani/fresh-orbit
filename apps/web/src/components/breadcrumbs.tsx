@@ -7,7 +7,7 @@ export interface Crumb {
   label: string;
 }
 
-/** `band`: ink text on the coral page band (D95). */
+/** `band`: on the harbour-sky page band (D188), the same muted ink as on the page. */
 export function Breadcrumbs({
   items,
   tone = "default",
@@ -21,21 +21,18 @@ export function Breadcrumbs({
       <ol
         className={cx(
           "flex flex-wrap items-center gap-1 text-sm",
-          band ? "text-on-block-coral" : "text-text-muted",
+          band ? "text-text-muted font-medium" : "text-text-muted",
         )}
       >
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`} className="flex items-center gap-1">
             {index > 0 && <ChevronRight aria-hidden="true" className="size-3.5" />}
             {item.href ? (
-              <Link
-                href={item.href}
-                className={cx("underline-offset-4 hover:underline", !band && "hover:text-text")}
-              >
+              <Link href={item.href} className="hover:text-text underline-offset-4 hover:underline">
                 {item.label}
               </Link>
             ) : (
-              <span aria-current="page" className={cx("font-semibold", !band && "text-text")}>
+              <span aria-current="page" className="text-text font-semibold">
                 {item.label}
               </span>
             )}

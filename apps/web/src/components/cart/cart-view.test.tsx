@@ -6,6 +6,7 @@ import { cartWithSeer, emptyCart, problem, seerFish, seerLine } from "../../../t
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
+import { PINCODE_COOKIE, writeBrowserCookie } from "@/lib/cookies";
 import { CartView, checkoutHref } from "./cart-view";
 
 const slots = {
@@ -145,6 +146,48 @@ describe("CartView", () => {
 
     expect(await screen.findByText("This coupon has expired.")).toBeInTheDocument();
     expect(screen.getByLabelText("Coupon code")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("lists the server's offers for the pincode and applies the one chosen", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let applied: unknown = null;
+    let askedPincode: string | null = null;
+    server.use(
+      ...cartReads(),
+      http.get(`${API}/coupons`, ({ request }) => {
+        askedPincode = new URL(request.url).searchParams.get("pincode");
+        return HttpResponse.json({
+          items: [
+            {
+              code: "FISH50",
+              description: "₹50 off your order",
+              discountType: "FLAT",
+              discountValue: 5000,
+              maxDiscountPaise: null,
+              minOrderPaise: 50000,
+              validTo: null,
+              firstOrderOnly: false,
+            },
+          ],
+          page: 1,
+          pageSize: 20,
+          totalCount: 1,
+        });
+      }),
+      http.put(`${API}/cart/coupon`, async ({ request }) => {
+        applied = await request.json();
+        return HttpResponse.json(cartWithSeer);
+      }),
+    );
+    renderWithProviders(<CartView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "View offers" }));
+    const offers = await screen.findByRole("list", { name: "Available offers" });
+    expect(within(offers).getByText("Orders from ₹500.")).toBeInTheDocument();
+    await userEvent.click(within(offers).getByRole("button", { name: "Apply FISH50" }));
+
+    await waitFor(() => expect(applied).toEqual({ code: "FISH50" }));
+    expect(askedPincode).toBe("600041");
   });
 
   it("shows the empty-cart character state for an empty cart", async () => {

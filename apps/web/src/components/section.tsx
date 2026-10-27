@@ -1,5 +1,5 @@
-import { Heading, Script } from "@fresh/ui";
-import { ChevronRight } from "lucide-react";
+import { SectionAction, SectionHeader } from "@fresh/ui";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode } from "react";
 
@@ -20,7 +20,7 @@ export function Section({
   id,
 }: {
   title: string;
-  /** A handwritten word after the title (D89), e.g. title "Fresh this" + script "morning". */
+  /** A handwritten word after the title (D89), e.g. "Fresh this" + "morning"; sparks follow. */
   script?: string;
   description?: string;
   action?: { href: string; label: string };
@@ -36,29 +36,22 @@ export function Section({
   }-heading`;
   return (
     <section aria-labelledby={headingId} id={id} className="flex scroll-mt-24 flex-col gap-5">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <Heading id={headingId} level={2} size="section" className="text-text">
-            {title}
-            {script && (
-              <>
-                {" "}
-                <Script tone="accent">{script}</Script>
-              </>
-            )}
-          </Heading>
-          {description && <p className="text-text-muted">{description}</p>}
-        </div>
-        {action && (
-          <Link
-            href={action.href}
-            className="text-accent-text inline-flex shrink-0 items-center gap-0.5 text-sm font-bold underline-offset-4 hover:underline"
-          >
-            {action.label}
-            <ChevronRight aria-hidden="true" className="size-4" />
-          </Link>
-        )}
-      </div>
+      <SectionHeader
+        id={headingId}
+        title={title}
+        script={script}
+        description={description}
+        action={
+          action && (
+            <SectionAction asChild>
+              <Link href={action.href}>
+                {action.label}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </SectionAction>
+          )
+        }
+      />
       {children}
     </section>
   );

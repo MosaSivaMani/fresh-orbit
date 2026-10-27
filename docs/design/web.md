@@ -32,8 +32,42 @@ Images: the API returns picture URLs as paths (`/media/...`). `app/media/[...pat
 website's origin from `FRESH_API_ORIGIN` (GET, images only, no cookies forwarded), so cards show the real product
 photos in development and behind Caddy.
 
-Pages owned by W2 on `web/food-app-pages` (cart, checkout, login, orders and tracking, account, empty and error
-pages) use the same header, footer, `PageBand` and `CharacterState`.
+### 0.1 Inner pages in the app theme (D181, D188; PR #22)
+
+Every page except the home (PR #20) uses the same look as the app and the owner's home reference. The parts are
+shared (owner rule D207): `packages/ui/src/components/theme.tsx`, exported from `@fresh/ui`, with `.fo-sky` in
+`packages/ui/styles.css`. The website keeps only thin wrappers (`Section`, `ContentPage`) that pass its `Link` and
+breadcrumbs in.
+
+| Part | What it is |
+|---|---|
+| `ThemeBand` (replaces `PageBand` on the web) | The home hero's peach-to-cream harbour sky (`.fo-sky`), shorter: breadcrumbs, a Baloo 2 800 heading with the key word in a `Highlight` (the yellow `#F5D04A` brush), coral `Sparks` after it, an optional coral Dancing Script line with a `Swoosh`, a description, `Gulls`, an optional owner picture in a ringed circle from `sm` up, and `BandWaves` curving into the page. Shop, category, search, cart, checkout, sign-in, account and order pages |
+| `Highlight` | `Brush` from `@fresh/ui` in the home's yellow; the word stays ink text |
+| `SkyPanel` | The same sky behind a whole-page state: 404, route error (global error uses `.fo-sky` on the body) |
+| `SectionHeader`, `SectionAction` | Section title row: coral sparks after the teal script word; the action is an outlined dark-teal "View all →" pill (as on the reference). The web `Section` wraps them |
+| `TextPageShell` (web `ContentPage`) | About, help and the three policies: band, then the text on a paper card (radius 24) with a side card from `lg` (contact, other policies, "Ready to order?") |
+| `CompactProductCard` | Small horizontal product card (radius 20) for saved items: picture, name, the server's price line, a coral note |
+| `OfferRow` | One coupon in the cart's "View offers" list: code, description, terms, Apply |
+| Cards | Small cards radius 20 (D189): wishlist cards, FAQ items, product facts, delivery box, substitutions, offers |
+| Pictures | Owner pictures (FINAL slots) in the band circle: shop and about `ONBOARDING_FRESH`, cart `ONBOARDING_CLEANED`, checkout and help `ONBOARDING_DELIVERY`; empty states keep their EMPTY_* pictures |
+
+The marks (`Sparks`, `Swoosh`, `Gulls`, `BandWaves`) are our own shapes and are decorative (`aria-hidden`, no
+motion). Web Server Components use `cx`, never `cn` (client bundle); they render the shared parts as client
+components. The home's `scenery.tsx` (PR #20) has its own copies; one shared set is a follow-up.
+
+Behaviour added in the same PR (QA findings):
+
+| Where | What | API |
+|---|---|---|
+| Order page | "Substitutions" card: each proposed item with the server's price difference and deadline, Accept / Reject; the answer's re-priced order replaces the cached one | `POST /orders/{id}/substitutions/{sid}/accept`, `/reject` |
+| Report a problem | Optional photos, sent one by one after the complaint is created; a refused photo shows the server's message and never undoes the complaint | `POST /orders/{id}/complaints/{cid}/photos` (multipart `file`) |
+| Checkout | The place-order `Idempotency-Key` is dropped when the address, slot, payment method, substitution choice or note changes, so a retry never reuses a key with a new body | `POST /orders` |
+| Header | "Offers" shows only when the server has a banner for the pincode (`/#offers` exists only then) | `GET /promotions` |
+| Cart offers | "View offers" lists the coupons for the visitor's pincode; without a pincode it asks for one (the server returns nothing without it) | `GET /coupons?pincode=` |
+| Address form | Pincode first; a full pincode fills an empty city and state code from the server (`city.name`, `city.stateCode`, LOC-R19) | `GET /serviceability` |
+| Product | Sold-out size: "Notify me when it is back" (guests sign in first), "Stop alert" when set; the quote line under the options | `/me/stock-alerts`, `GET /price-quote` |
+| Cart | "View offers": the customer's coupons with the server's description, minimum order and end date, each with Apply | `GET /coupons`, `PUT /cart/coupon` |
+| Wishlist, help | Product cards; contact card | `GET /me/wishlist`, `GET /business-profile` |
 
 ## 1. Run it
 
@@ -82,13 +116,15 @@ prerendered, data fetched in the browser with TanStack Query through the same-or
 | 404, error, global error | Character states (NOT_FOUND, ERROR_GENERIC), retry with trace id | Done | — | — |
 | `/sitemap.xml`, `/robots.txt` | Catalogue sitemap (static pages, categories, up to 2,000 products); robots disallows customer pages, allows all only in production with a site URL | Done | Dynamic | `GET /categories`, `GET /products` (cached 1 h) |
 
-Loading skeletons: root, `/shop`, `/products/[slug]`, and inside each client view. Empty states: cart, orders,
+Loading skeletons: `/shop` only (in the `shop/(all)` route group), and inside each client view. A loading boundary
+above a page flushes a 200 shell before `notFound()` runs, so the root and product loading files were removed and
+unknown product and category slugs answer a real 404 (QA 5). Empty states: cart, orders,
 addresses, wishlist, inbox, slots, search, listing. The cart, checkout, sign-in, orders, account, empty, error and
 not-found pages follow the food-app look (§10).
 
-**Placeholder text for the owner.** `<OwnerPlaceholder>` (in `src/components/content-page.tsx`) renders a dashed
-"Placeholder text: to be replaced by the store owner" box. It is on About, Support (contact) and all three policy
-pages, whose sections are outlines prefixed `[Placeholder]`. Search the code for `OwnerPlaceholder` before launch.
+**Owner text.** About and the three policy pages show plain, neutral customer text with no percentages, timelines or
+charges the server does not provide. A code comment `OWNER TEXT` marks where the owner's final wording goes. No
+developer note is ever visible to customers (QA 1). The help page's contact card reads `GET /business-profile`.
 
 ## 3. Location (pincode)
 
@@ -153,17 +189,17 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | # | Gap | Status | What the website does now / what closes it |
 |---|---|---|---|
 | W1 | No bestsellers endpoint | CLOSED (`web/api-adoption`) | Home keeps "Top picks in <city>" from `featuredProducts` and adds "Bestsellers in <city>" from `/home` `bestsellers` (CAT-R24); the section is left out when the list is empty, never filled |
-| W2 | No price quote for a chosen weight before it is in the cart | STILL OPEN | `GET /products/{id}/availability` gives the unit price only; estimate and maximum appear from the cart line. Closes with a quote endpoint (variant, preparation, quantity → estimate, max chargeable) |
+| W2 | No price quote for a chosen weight before it is in the cart | ADOPTED (PR #22): the product panel shows `GET /price-quote` (estimate, and the maximum for weighed items) | Adopted in the website |
 | W3 | Product list items carry no variant ids | STILL OPEN | ADD on a card first reads the product (one extra request), then adds when there is one size; with several it opens the product page. Closes with the default variant id (and its order rules) on `ProductListItem` |
 | W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Each line's − n + stepper reads its product (`GET /products/{slug}`, cached 60 s) for the bounds and stays disabled until they arrive: one read per line. Closes with the three fields on `CartLineView` |
-| W5 | `GET /me/wishlist` returns ids only | STILL OPEN | Always a dated placeholder row linking nowhere. Closes with a product summary (slug, name, image, price) per item |
+| W5 | `GET /me/wishlist` returns ids only | ADOPTED (PR #22): saved items are cards with picture, name, server price and a link | Adopted in the website |
 | W6 | Shapes not shown in docs/api | CLOSED | All in the spec now; `/promotions`, `/products`, `/orders` are paged, `/cities`, `/suggest`, `/me/addresses`, `/me/wishlist`, complaints are bare arrays. `GET /home` `banners` is still `object[]`, so banners come from `/promotions` |
-| W7 | No public business profile (support phone, email, hours) | STILL OPEN | Static owner placeholder on `/support`. Closes with a public `GET /business-profile` |
+| W7 | No public business profile (support phone, email, hours) | ADOPTED (PR #22): help page contact card | Adopted in the website |
 | W8 | No public list of preparation methods for filtering | STILL OPEN | Preparation filter omitted on `/shop`. Closes with a public `GET /preparation-methods` |
 | W9 | API must trust `X-Forwarded-For` from the web host | STILL OPEN | Proxy sends it. Closes with forwarded-headers config for the web host (security review SEC-2) |
 | W10 | Time zone for display | STILL OPEN | `@fresh/core` formats in IST. Closes with the location's `timeZone` in slot and order responses |
 | W11 | Banner `imageKey` is a storage key, not a URL | NEW, OPEN | Offer strip shows text only. Closes with a resolved image URL on `BannerInfo` |
-| W12 | Complaint create is JSON with no attachments | NEW, OPEN | Report-a-problem form has no photo field. Closes with a photo upload (multipart or upload URL) on complaints |
+| W12 | Complaint create is JSON with no attachments | ADOPTED (PR #22): photos go one by one to `POST …/complaints/{id}/photos` after the complaint is created | Adopted in the website |
 
 | W13 | List items carry no weight, pieces or serves | CLOSED (`web/api-adoption`) | Picture cards show the default variant's `serving` as "1 kg · 10–14 pcs · serves 4" (`lib/product-facts.ts` `servingLine`, per the server's basis, never scaled), else the local names; the product page adds the chosen size's line under pack and piece weight |
 | W14 | A CATEGORY banner's `linkTarget` is the category id, not its slug | CLOSED (`web/api-adoption`) | Offer strip links CATEGORY banners by `linkSlug` (featured-category id → slug map as fallback) and PRODUCT banners by `linkSlug` only (they linked to `/products/<id>` before, a broken page); `offersBySlug` keys product offers by `linkSlug` (it keyed by the id and never matched a card) |

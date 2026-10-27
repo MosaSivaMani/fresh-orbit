@@ -1,11 +1,14 @@
 "use client";
 
-import { Button, CharacterState } from "@fresh/ui";
+import { Button, CharacterState, SkyPanel } from "@fresh/ui";
 import { RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
-/** Route error boundary (D95): the ERROR_GENERIC character, a calm message, the reference for support and a retry. */
+/**
+ * Route error boundary (D181): the harbour sky, the ERROR_GENERIC character, a calm message, the reference for
+ * support and a retry.
+ */
 export default function RouteError({
   error,
   reset,
@@ -17,7 +20,7 @@ export default function RouteError({
     console.error(error);
   }, [error]);
   return (
-    <div role="alert" className="mx-auto max-w-xl px-4">
+    <SkyPanel role="alert">
       <CharacterState
         slot="ERROR_GENERIC"
         avatarSize="sm"
@@ -46,6 +49,6 @@ export default function RouteError({
           </>
         }
       />
-    </div>
+    </SkyPanel>
   );
 }

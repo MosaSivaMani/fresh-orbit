@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/support/delivery-policy" },
 };
 
+// OWNER TEXT: the store owner's final delivery policy replaces these sections.
 export default function DeliveryPolicyPage() {
   return (
     <PolicyPage
@@ -13,23 +14,19 @@ export default function DeliveryPolicyPage() {
       sections={[
         {
           heading: "Where we deliver",
-          outline:
-            "Explain that delivery areas are checked by pincode on the website and may change.",
+          body: "Enter your pincode to check whether we deliver to you. The areas we serve can change over time.",
         },
         {
           heading: "Delivery slots",
-          outline:
-            "Explain how slots, order cut-off times and full slots work, and what happens if a slot is missed.",
+          body: "You choose a delivery slot in your cart or at checkout. Only slots that are still open are shown, and full slots cannot be picked.",
         },
         {
           heading: "Delivery fees and minimum order",
-          outline:
-            "Explain that the fee and minimum order depend on the area and are shown in the cart before ordering.",
+          body: "Any delivery fee or minimum order for your area is shown in your cart and at checkout before you place the order.",
         },
         {
           heading: "Receiving your order",
-          outline:
-            "Explain the delivery code, what happens if nobody is available, and how cold items are handed over.",
+          body: "When your order is on its way, your order page shows a short delivery code. Share it with the delivery partner when you receive your order.",
         },
       ]}
     />

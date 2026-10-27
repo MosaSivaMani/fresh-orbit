@@ -1,4 +1,4 @@
-import { FilterChip, PageBand, Script } from "@fresh/ui";
+import { FilterChip, Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCategories } from "@/api/endpoints/catalog";
@@ -28,16 +28,16 @@ export default async function SearchPage(props: PageProps<"/search">) {
     const categories = await settle(getCategories(publicHttp(300)));
     return (
       <>
-        <PageBand
+        <ThemeBand
           eyebrow={<Breadcrumbs tone="band" items={crumbs} />}
           title={
             <>
-              Find your <Script>fish</Script>
+              Find your <Highlight>fish</Highlight>
             </>
           }
         >
           <PageSearch />
-        </PageBand>
+        </ThemeBand>
         <Container className="flex flex-col gap-6 py-8">
           <p className="text-text-muted">
             Type at least two letters in the search box above. Local names work too, for example
@@ -62,16 +62,16 @@ export default async function SearchPage(props: PageProps<"/search">) {
   const api = await requestApi();
   return (
     <>
-      <PageBand
+      <ThemeBand
         eyebrow={<Breadcrumbs tone="band" items={crumbs} />}
         title={
           <>
-            Results for <Script>“{filters.q}”</Script>
+            Results for <Highlight>“{filters.q}”</Highlight>
           </>
         }
       >
         <PageSearch />
-      </PageBand>
+      </ThemeBand>
       <Container className="py-6 sm:py-8">
         <ProductListing
           api={api}

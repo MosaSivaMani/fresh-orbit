@@ -5,14 +5,34 @@ import { BadgePercent, LifeBuoy, ReceiptText, ShoppingCart, UserRound } from "lu
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { browserHttp } from "@/api/browser";
+import { getPromotions } from "@/api/endpoints/catalog";
 import { useSession } from "@/auth/use-session";
 import { useCart } from "@/cart/use-cart";
+import { queryKeys } from "@/lib/query-keys";
+import { useLocation } from "@/location/location-context";
 
 /** Whether `href` is the current section; the home page only matches itself. */
 export function isCurrent(pathname: string, href: string): boolean {
   const path = href.split(/[?#]/)[0] ?? href;
   if (path === "/") return pathname === "/";
   return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+/**
+ * Whether the home shows its "Today's offers" section (`/#offers`): the server has at least one banner for the
+ * visitor's pincode. Until that is known, and when it fails, the Offers link stays hidden, never a dead anchor.
+ */
+function useHasOffers(): boolean {
+  const { pincode, ready } = useLocation();
+  const promotions = useQuery({
+    queryKey: queryKeys.promotions(pincode),
+    queryFn: () => getPromotions(browserHttp()),
+    enabled: ready,
+    staleTime: 300_000,
+  });
+  return (promotions.data?.length ?? 0) > 0;
 }
 
 function NavLink({
@@ -53,14 +73,17 @@ export function HeaderNav() {
   const cart = useCart();
   const signedIn = status === "signedIn";
   const count = cart.data?.lines.length ?? 0;
+  const hasOffers = useHasOffers();
   return (
     <nav aria-label="Main" className="flex items-center gap-1 sm:gap-4">
-      <NavLink
-        href="/#offers"
-        icon={<BadgePercent aria-hidden="true" />}
-        label="Offers"
-        current={false}
-      />
+      {hasOffers && (
+        <NavLink
+          href="/#offers"
+          icon={<BadgePercent aria-hidden="true" />}
+          label="Offers"
+          current={false}
+        />
+      )}
       <NavLink
         href="/support"
         icon={<LifeBuoy aria-hidden="true" />}

@@ -2,6 +2,8 @@
 
 import { Button, Checkbox, FormField, Input, RadioGroup } from "@fresh/ui";
 import { type FormEvent, useState } from "react";
+import { browserHttp } from "@/api/browser";
+import { getServiceability } from "@/api/endpoints/catalog";
 import { type Address, type AddressInput, type AddressLabel } from "@/api/types/checkout";
 import { isValidPincode } from "@/lib/cookies";
 import { asApiError, describeError } from "@/lib/errors";
@@ -65,6 +67,36 @@ export function AddressForm({
 
   function set<K extends keyof AddressInput>(key: K, value: AddressInput[K]) {
     setInput((current) => ({ ...current, [key]: value }));
+  }
+
+  /**
+   * A full pincode fills an empty city and state from the server: the city from `GET /serviceability`, its state
+   * code from `GET /cities`. Fields the customer already typed are left alone; on any failure they simply type them.
+   */
+  async function prefillFromPincode(pincode: string) {
+    try {
+      // The server names the city and its state with the pincode (LOC-R19).
+      const area = await getServiceability(browserHttp(), pincode);
+      const city = area.city;
+      if (!city) return;
+      setInput((current) =>
+        current.pincode !== pincode
+          ? current
+          : {
+              ...current,
+              cityName: current.cityName.trim() ? current.cityName : city.name,
+              stateCode: current.stateCode.trim() ? current.stateCode : city.stateCode,
+            },
+      );
+    } catch {
+      // Not resolved: the customer types the city and state.
+    }
+  }
+
+  function changePincode(value: string) {
+    const pincode = value.replace(/\D/g, "").slice(0, 6);
+    set("pincode", pincode);
+    if (isValidPincode(pincode)) void prefillFromPincode(pincode);
   }
 
   async function submit(event: FormEvent) {
@@ -136,13 +168,17 @@ export function AddressForm({
         {text("locality", "Locality or area", { autoComplete: "address-level3" })}
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
+        <FormField label="Pincode" error={errors.pincode} required>
+          <Input
+            inputMode="numeric"
+            maxLength={6}
+            autoComplete="postal-code"
+            value={input.pincode}
+            onChange={(e) => changePincode(e.target.value)}
+          />
+        </FormField>
         {text("cityName", "City", { autoComplete: "address-level2" })}
         {text("stateCode", "State code", { maxLength: 2, placeholder: "e.g. KA" })}
-        {text("pincode", "Pincode", {
-          inputMode: "numeric",
-          maxLength: 6,
-          autoComplete: "postal-code",
-        })}
       </div>
       <Checkbox
         label="Use as my default address"

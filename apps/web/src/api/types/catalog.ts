@@ -70,3 +70,6 @@ export type ServingInfo = Schema<"ServingInfo">;
 
 /** The batch the next order is packed from (CAT-R25). */
 export type FreshnessInfo = Schema<"FreshnessInfo">;
+
+/** `GET /price-quote`: the server's estimate and maximum for a chosen size, cut and weight (gap W2 closed). */
+export type PriceQuote = Schema<"PriceQuoteResponse">;
