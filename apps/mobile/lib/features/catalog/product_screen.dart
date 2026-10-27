@@ -2,10 +2,9 @@
 // cart. Variant and preparation choice (with yield note and the location's preparation charge),
 // quantity stepper bounded by the server's min / max / step / maxOrderableNow, and add to cart.
 //
-// Prices: the screen shows the server's unit price and preparation charge. The estimated line price and the
-// maximum chargeable amount come from the server's priced cart line after adding (and are shown here when the
-// same variant and preparation is already in the cart). The product endpoint has no per-quantity estimate,
-// so the app does not invent one (docs/api §5: a missing value is a missing API field).
+// Prices: the screen shows the server's unit price and preparation charge, and for the chosen size, cut and
+// quantity the server's estimate and maximum (GET /price-quote); the app computes none of them. A sold-out
+// size offers "Notify me", a back-in-stock alert at the store that serves the pincode (POST /me/stock-alerts).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +19,8 @@ import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
+import '../../state/core_providers.dart';
+import '../../state/location_state.dart';
 import '../../state/session.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
@@ -44,6 +45,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   bool _adding = false;
   String? _quantityError;
   ProductDetail? _last;
+  bool _notifying = false;
+
+  /// Sizes the customer asked to hear about in this visit.
+  final Set<String> _alerted = {};
 
   Variant _variant(ProductDetail d) => d.variants.firstWhere((v) => v.id == _variantId, orElse: () => d.variants.first);
 
@@ -102,6 +107,32 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       }
     } finally {
       if (mounted) setState(() => _adding = false);
+    }
+  }
+
+  Future<void> _notify(ProductDetail d, Variant v) async {
+    if (!ref.read(sessionProvider).signedIn) {
+      await context.push(Uri(path: '/login', queryParameters: {'from': '/product/${d.slug}'}).toString());
+      return;
+    }
+    setState(() => _notifying = true);
+    try {
+      final locationId = (await ref.read(currentServiceabilityProvider.future))?.locationId;
+      if (!mounted) return;
+      if (locationId == null) {
+        await context.push('/location?change=1');
+        return;
+      }
+      await ref.read(accountRepositoryProvider).addStockAlert(variantId: v.id, fulfillmentLocationId: locationId);
+      if (!mounted) return;
+      setState(() => _alerted.add(v.id));
+      showInfoSnack(context, 'We will tell you when it is back.');
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      if (e.code == 'STOCK_AVAILABLE') ref.invalidate(productDetailProvider(ProductRequest(widget.slug, _requestedPrep)));
+      showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _notifying = false);
     }
   }
 
@@ -322,6 +353,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, in steps of ${formatQuantity(v.orderStep)} (net weight).',
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                 ),
+                if (!locationRequired && (v.availability?.canAdd ?? true)) ...[
+                  const SizedBox(height: 10),
+                  _Estimate(request: PriceQuoteRequest(variantId: v.id, preparation: prep, quantity: qty)),
+                ],
                 if (detail.netWeightNote.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Container(
@@ -398,6 +433,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           adding: _adding,
           onAdd: () => _add(detail, v, prep, qty),
           onSetPincode: () => context.push('/location?change=1'),
+          notifying: _notifying,
+          notified: _alerted.contains(v.id),
+          onNotify: () => _notify(detail, v),
         ),
       ),
     );
@@ -516,6 +554,9 @@ class _AddAction extends StatelessWidget {
     required this.adding,
     required this.onAdd,
     required this.onSetPincode,
+    required this.notifying,
+    required this.notified,
+    required this.onNotify,
   });
 
   final Variant variant;
@@ -523,15 +564,23 @@ class _AddAction extends StatelessWidget {
   final bool adding;
   final VoidCallback onAdd;
   final VoidCallback onSetPincode;
+  final bool notifying;
+  final bool notified;
+  final VoidCallback onNotify;
 
   @override
   Widget build(BuildContext context) {
     if (locationRequired) return TealActionButton(label: 'Set pincode to buy', onPressed: onSetPincode);
     final availability = variant.availability;
     if (availability != null && !availability.canAdd) {
+      if (availability.status == 'NOT_SOLD_HERE') {
+        return const TealActionButton(label: 'Not sold in your area', onPressed: null);
+      }
       return TealActionButton(
-        label: availability.status == 'NOT_SOLD_HERE' ? 'Not sold in your area' : 'Sold out',
-        onPressed: null,
+        key: const Key('notifyMe'),
+        label: notified ? 'We will tell you' : 'Notify me',
+        loading: notifying,
+        onPressed: notified ? null : onNotify,
       );
     }
     return TealActionButton(key: const Key('addToCart'), label: 'Add to cart', loading: adding, onPressed: onAdd);
@@ -632,5 +681,32 @@ class _SoldOutCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// The server's estimate for the chosen size, cut and quantity (GET /price-quote). Hidden when the server
+/// gives none (no price at this store, or the quote is refused); the cart prices the line again when added.
+class _Estimate extends ConsumerWidget {
+  const _Estimate({required this.request});
+
+  final PriceQuoteRequest request;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quote = ref.watch(priceQuoteProvider(request));
+    return switch (quote) {
+      AsyncData(:final value) => PriceEstimateRow(
+        key: const Key('priceQuote'),
+        estimate: 'Estimated ${formatRupees(value.estimatedTotalPaise)} for ${formatQuantity(value.quantity)}',
+        atMost: value.maxChargeablePaise == null
+            ? null
+            : value.maxChargeableQuantity == null
+            ? 'You pay at most ${formatRupees(value.maxChargeablePaise!)}.'
+            : 'You pay at most ${formatRupees(value.maxChargeablePaise!)} '
+                  '(up to ${formatQuantity(value.maxChargeableQuantity!)}).',
+      ),
+      AsyncError() => const SizedBox.shrink(),
+      _ => const SkeletonBox(height: 48),
+    };
   }
 }

@@ -18,6 +18,7 @@ export 'src/layout.dart';
 export 'src/look.dart';
 export 'src/motion.dart';
 export 'src/page.dart';
+export 'src/prices.dart';
 export 'src/scenery.dart';
 export 'src/stickers.dart';
 export 'src/titles.dart';
