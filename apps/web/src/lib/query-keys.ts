@@ -16,4 +16,5 @@ export const queryKeys = {
   complaints: (orderId: string) => ["order", orderId, "complaints"] as const,
   slots: (pincode: string) => ["slots", pincode] as const,
   coupons: ["coupons"] as const,
+  promotions: (pincode: string | null) => ["promotions", pincode] as const,
 };
