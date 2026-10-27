@@ -649,16 +649,13 @@ class _ChangeCutSheet extends ConsumerWidget {
                     for (final p in cuts)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: SizedBox(
-                          height: 56,
-                          child: OptionTile(
-                            key: ValueKey('cut-${p.code}'),
-                            title: p.name,
-                            subtitle: '${preparationChargeText(p)} · ${formatYieldNote(p.yieldBp)}',
-                            subtitleLines: 2,
-                            selected: p.code == line.preparation?.code,
-                            onTap: () => Navigator.pop(context, p.code),
-                          ),
+                        child: OptionTile(
+                          key: ValueKey('cut-${p.code}'),
+                          title: p.name,
+                          subtitle: '${preparationChargeText(p)} · ${formatYieldNote(p.yieldBp)}',
+                          subtitleLines: 2,
+                          selected: p.code == line.preparation?.code,
+                          onTap: () => Navigator.pop(context, p.code),
                         ),
                       ),
                   ],
