@@ -16,11 +16,7 @@ import '../../illustrations/illustration.dart';
 import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/states.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.from});

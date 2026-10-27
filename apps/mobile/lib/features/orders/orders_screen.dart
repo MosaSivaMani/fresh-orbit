@@ -11,12 +11,8 @@ import '../../core/format.dart';
 import '../../illustrations/illustration_slot.dart';
 import '../../state/orders_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/illustrated.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 class OrdersScreen extends ConsumerWidget {

@@ -9,10 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../state/catalog_state.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/screen.dart';
 import 'home_screen.dart';
 import 'product_grid.dart';
 

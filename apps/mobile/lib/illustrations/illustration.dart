@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
-import '../theme/app_theme.dart';
 import 'cast_painter.dart';
 import 'illustration_slot.dart';
 

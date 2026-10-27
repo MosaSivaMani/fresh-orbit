@@ -1,14 +1,11 @@
 // Headings in the home theme (D181): heavy Baloo 2 lines, one key word on the yellow brush with coral sparks
-// after it ([PageTitle], the home's "What's cooking *today?*"), and on the colour-block screens a big heading whose
-// handwritten Dancing Script line (tilted −3°, 1.12×) can sit on the brush, with sparks at its top corner
-// ([Heading]). The brush and the sparks are the theme package's ([BrushHighlight], [Sparks]).
+// after it ([PageTitle], the home's "What's cooking *today?*"), and on the colour-block screens a big heading
+// whose handwritten Dancing Script line (tilted -3 degrees, 1.12x) can sit on the brush ([Heading]).
 
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
-
-import '../theme/app_theme.dart';
 
 /// One line of a [Heading].
 @immutable

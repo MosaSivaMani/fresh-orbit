@@ -5,8 +5,6 @@ import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:fresh_orbit_app/widgets/bold.dart';
 import 'package:fresh_orbit_app/widgets/commerce.dart';
-import 'package:fresh_orbit_app/widgets/heading.dart';
-import 'package:fresh_orbit_app/widgets/illustrated.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 Future<void> _pump(

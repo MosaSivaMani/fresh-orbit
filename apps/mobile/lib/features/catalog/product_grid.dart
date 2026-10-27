@@ -9,7 +9,6 @@ import '../../api/models/catalog.dart';
 import '../../core/format.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';

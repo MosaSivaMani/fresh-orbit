@@ -17,9 +17,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/motion.dart';
 import 'onboarding_art.dart';
 
 // Preview colours that stay the same in light and dark (like the stickers and the avatar rings).

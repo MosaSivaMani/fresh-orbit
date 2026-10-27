@@ -20,13 +20,8 @@ import '../../core/photo_picker.dart';
 import '../../illustrations/illustration_slot.dart';
 import '../../state/core_providers.dart';
 import '../../state/orders_state.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/illustrated.dart';
-import '../../widgets/motion.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 const _terminal = {'DELIVERED', 'CANCELLED', 'PAYMENT_FAILED', 'RETURNED'};

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/models/account.dart';
@@ -11,9 +12,6 @@ import '../../app.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 const languageNames = {'en': 'EN', 'te': 'తెలుగు', 'hi': 'हिं'};

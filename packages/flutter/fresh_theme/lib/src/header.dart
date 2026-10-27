@@ -1,13 +1,8 @@
-// The frame of every app screen in the home theme (D181): the theme package's header with round paper buttons and
-// a title whose key word sits on the yellow brush. The parts themselves live in `fresh_theme` (FreshPageHeader,
-// FreshCircleButton, HighlightTitle); this file only gives them the app's colours and fonts.
+// The frame of every app screen in the home theme (D181): the page header with round paper buttons and a
+// title whose key word sits on the yellow brush, the back button and the small count pip.
 
 import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
-import 'package:go_router/go_router.dart';
-
-import '../theme/app_theme.dart';
-import 'heading.dart';
 
 /// The home's round paper button (search, saved, back, filters) in the app's colours.
 class PaperCircleButton extends StatelessWidget {
@@ -37,7 +32,11 @@ class PaperCircleButton extends StatelessWidget {
 class BackCircleButton extends StatelessWidget {
   const BackCircleButton({super.key, this.onTap});
 
-  /// Replaces the default pop.
+  /// The app's back action (its router pops, or goes home when nothing is below). The app sets it once where it
+  /// builds its router; without it the button pops the nearest navigator when it can.
+  static void Function(BuildContext context)? defaultBack;
+
+  /// Replaces the default back action.
   final VoidCallback? onTap;
 
   @override
@@ -48,10 +47,11 @@ class BackCircleButton extends StatelessWidget {
     onTap:
         onTap ??
         () {
-          if (context.canPop()) {
-            context.pop();
+          final back = defaultBack;
+          if (back != null) {
+            back(context);
           } else {
-            context.go('/home');
+            Navigator.maybePop(context);
           }
         },
   );

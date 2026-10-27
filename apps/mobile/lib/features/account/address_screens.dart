@@ -11,10 +11,6 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
-import '../../widgets/commerce.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 class AddressesScreen extends ConsumerWidget {

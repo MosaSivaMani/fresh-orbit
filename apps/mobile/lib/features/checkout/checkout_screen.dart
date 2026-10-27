@@ -15,10 +15,7 @@ import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/checkout_state.dart';
 import '../../state/location_state.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import '../cart/totals_card.dart';
 

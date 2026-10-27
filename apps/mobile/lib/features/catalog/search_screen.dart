@@ -7,9 +7,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../state/catalog_state.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/commerce.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import 'product_grid.dart';
 

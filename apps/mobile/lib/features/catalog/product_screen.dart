@@ -21,12 +21,8 @@ import '../../state/account_state.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/illustrated.dart';
-import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {

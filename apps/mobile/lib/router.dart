@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/format.dart';
@@ -41,6 +42,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier<bool>(ref.read(sessionProvider).signedIn);
   ref.listen(sessionProvider, (_, next) => sessionChanges.value = next.signedIn);
   ref.onDispose(sessionChanges.dispose);
+  // The header's back button: pop when a page is below, else home (a screen opened from a link).
+  BackCircleButton.defaultBack = (context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  };
 
   return GoRouter(
     initialLocation: '/splash',

@@ -6,11 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 import '../../core/launch.dart';
-import '../../widgets/bold.dart';
-import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
-import '../../widgets/screen.dart';
-import '../../widgets/states.dart';
 
 const supportPhoneDefine = String.fromEnvironment('SUPPORT_PHONE');
 const supportEmailDefine = String.fromEnvironment('SUPPORT_EMAIL');
