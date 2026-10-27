@@ -662,9 +662,14 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                 const SizedBox(height: FreshSpacing.s3),
                 DropdownButtonFormField<String>(
                   initialValue: _itemId,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Which item?'),
                   items: [
-                    for (final i in widget.order.items) DropdownMenuItem(value: i.id, child: Text(i.productName)),
+                    for (final i in widget.order.items)
+                      DropdownMenuItem(
+                        value: i.id,
+                        child: Text(i.productName, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
                   ],
                   onChanged: (v) => setState(() => _itemId = v),
                 ),
