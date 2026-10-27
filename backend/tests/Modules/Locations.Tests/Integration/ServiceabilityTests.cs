@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using AwesomeAssertions;
 using FreshOrbit.Locations.Domain.ServiceAreas;
 using FreshOrbit.Locations.Public;
@@ -25,6 +26,8 @@ public sealed class ServiceabilityTests(LocationsDatabase database) : LocationsT
         json.GetProperty("city").GetProperty("id").GetGuid().Should().Be(setup.CityId);
         json.GetProperty("city").GetProperty("name").GetString().Should().Be("Test City");
         json.GetProperty("city").GetProperty("timeZone").GetString().Should().Be("Asia/Kolkata");
+        json.GetProperty("city").GetProperty("stateCode").GetString().Should().Be("TN");
+        json.GetProperty("city").GetProperty("stateName").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
         json.GetProperty("fulfillmentLocation").GetProperty("id").GetGuid().Should().Be(setup.LocationId);
         json.GetProperty("serviceArea").GetProperty("deliveryFeePaise").GetInt64().Should().Be(3900);
         json.GetProperty("serviceArea").GetProperty("minOrderPaise").GetInt64().Should().Be(29900);
@@ -41,6 +44,38 @@ public sealed class ServiceabilityTests(LocationsDatabase database) : LocationsT
             MinOrderPaise = (long?)29900,
         });
         resolved.FulfillmentLocationCode.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task City_state_name_is_configured_data_shown_by_serviceability()
+    {
+        var setup = await CreateServedSetupAsync();
+        var version = (await VersionOfAsync($"/api/v1/admin/cities/{setup.CityId}")).Trim('"');
+        var updated = await SendOkAsync(
+            HttpMethod.Put,
+            $"/api/v1/admin/cities/{setup.CityId}",
+            new { name = "Test City", stateCode = "TN", timeZone = "Asia/Kolkata", stateName = "  Tamil Nadu " },
+            version);
+        updated.GetProperty("stateName").GetString().Should().Be("Tamil Nadu");
+        await SendOkAsync(HttpMethod.Post, $"/api/v1/admin/cities/{setup.CityId}/activate", null, (await VersionOfAsync($"/api/v1/admin/cities/{setup.CityId}")).Trim('"'));
+
+        var json = await ReadJsonAsync(await Factory.CreateClient().GetAsync($"/api/v1/serviceability?pincode={setup.Pincode}", Ct));
+
+        json.GetProperty("city").GetProperty("stateCode").GetString().Should().Be("TN");
+        json.GetProperty("city").GetProperty("stateName").GetString().Should().Be("Tamil Nadu");
+    }
+
+    [Fact]
+    public async Task Too_long_state_name_is_refused_on_the_field()
+    {
+        var response = await Admin.PostAsJsonAsync(
+            "/api/v1/admin/cities",
+            new { code = UniqueCode("CITY"), name = "Long", stateCode = "TN", timeZone = "Asia/Kolkata", stateName = new string('x', 61) },
+            Ct);
+        var json = await ReadJsonAsync(response);
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        json.GetProperty("errors").TryGetProperty("stateName", out _).Should().BeTrue(json.ToString());
     }
 
     [Fact]
