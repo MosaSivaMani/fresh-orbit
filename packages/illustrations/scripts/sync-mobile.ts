@@ -35,6 +35,7 @@ const DART_RATIO: Record<Aspect, string> = {
   "4:3": "4 / 3",
   "2:1": "2.0",
   "3:2": "3 / 2",
+  "20:7": "20 / 7",
 };
 const dartString = (s: string): string => `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
 
