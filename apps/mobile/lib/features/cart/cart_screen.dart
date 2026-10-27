@@ -479,27 +479,126 @@ class _CouponStripState extends ConsumerState<_CouponStrip> {
         ),
       );
     }
-    return strip(
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _field,
-              textCapitalization: TextCapitalization.characters,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9_-]'))],
-              decoration: InputDecoration(
-                labelText: 'Coupon code',
-                errorText: _error,
-                isDense: true,
-                fillColor: c.paper,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        strip(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _field,
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9_-]'))],
+                  decoration: InputDecoration(
+                    labelText: 'Coupon code',
+                    errorText: _error,
+                    isDense: true,
+                    fillColor: c.paper,
+                  ),
+                  onSubmitted: (_) => _apply(),
+                ),
               ),
-              onSubmitted: (_) => _apply(),
-            ),
+              const SizedBox(width: 6),
+              TextButton(onPressed: _busy ? null : _apply, child: const Text('Apply')),
+            ],
           ),
-          const SizedBox(width: 6),
-          TextButton(onPressed: _busy ? null : _apply, child: const Text('Apply')),
-        ],
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            key: const Key('viewOffers'),
+            onPressed: _busy
+                ? null
+                : () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    showDragHandle: true,
+                    builder: (_) => const _OffersSheet(),
+                  ),
+            icon: const Icon(Icons.local_offer_outlined, size: 18),
+            label: const Text('View offers'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The coupons the customer may use in the pincode's city (GET /coupons). Apply sends the code; the cart
+/// shows the server's result. The app never works out a saving from the list.
+class _OffersSheet extends ConsumerStatefulWidget {
+  const _OffersSheet();
+
+  @override
+  ConsumerState<_OffersSheet> createState() => _OffersSheetState();
+}
+
+class _OffersSheetState extends ConsumerState<_OffersSheet> {
+  String? _applying;
+
+  /// The server's conditions, formatted: "On orders of ₹499 or more, first order only, until 31 Oct 2026".
+  static String? _condition(VisibleCoupon o) {
+    final parts = [
+      if (o.minOrderPaise > 0) 'On orders of ${formatRupees(o.minOrderPaise)} or more',
+      if (o.firstOrderOnly) 'first order only',
+      if (o.validTo != null) 'until ${formatDate(o.validTo!)}',
+    ];
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+
+  Future<void> _apply(String code) async {
+    setState(() => _applying = code);
+    try {
+      await ref.read(cartProvider.notifier).applyCoupon(code);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _applying = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final offers = ref.watch(couponsProvider);
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+        child: ListView(
+          key: const Key('offersSheet'),
+          shrinkWrap: true,
+          padding: FreshLayout.list,
+          children: [
+            const PageTitle(text: 'Offers for', brushed: 'you', size: 22),
+            const SizedBox(height: FreshLayout.cardGap),
+            ...switch (offers) {
+              AsyncData(:final value) when value.isEmpty => [
+                const InfoBanner(text: 'There are no offers for your area right now.'),
+              ],
+              AsyncData(:final value) => [
+                for (final o in value)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: FreshLayout.cardGap),
+                    child: CouponTile(
+                      key: ValueKey('offer-${o.code}'),
+                      code: o.code,
+                      description: o.description,
+                      condition: _condition(o),
+                      actionLabel: 'Apply',
+                      busy: _applying == o.code,
+                      onAction: _applying != null ? null : () => _apply(o.code),
+                    ),
+                  ),
+              ],
+              AsyncError(:final error) => [
+                ErrorState(error: error, onRetry: () => ref.invalidate(couponsProvider)),
+              ],
+              _ => [const LoadingSemantics(child: SkeletonBox(height: 72))],
+            },
+          ],
+        ),
       ),
     );
   }

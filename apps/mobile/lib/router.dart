@@ -173,7 +173,7 @@ class AppShell extends ConsumerWidget {
           if (showCartBar)
             ViewCartBar(
               count: cartCount,
-              amount: formatRupees(cart.totals!.subtotalPaise),
+              amount: formatRupees(cart.totals!.estimatedTotalPaise),
               thumbnails: [for (final line in cart.lines.take(2)) line.imageUrl],
               onTap: () => shell.goBranch(2),
             ),
