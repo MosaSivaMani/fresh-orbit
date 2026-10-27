@@ -162,6 +162,7 @@ class _HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = illustratedColors(context);
     final service = ref.watch(currentServiceabilityProvider).value;
+    final keptCold = service?.hasColdStorage == true;
     final signedIn = ref.watch(sessionProvider.select((s) => s.signedIn));
     final name = signedIn ? ref.watch(profileProvider).value?.fullName?.trim().split(' ').first : null;
     final hello = greeting(DateTime.now());
@@ -242,15 +243,17 @@ class _HomePage extends ConsumerWidget {
                       pictureSize: const Size.square(_cleanedPicture),
                       onTap: () => context.go('/shop'),
                     ),
+                    // "Kept cold" is said only when the serving store has cold storage (D212, D239); otherwise
+                    // the same card offers the delivery terms without the claim.
                     FreshFeatureCard(
                       key: const Key('homeCardCold'),
                       color: HomeColors.mangoCard,
                       accent: HomeColors.tealText,
                       icon: const Snowflake(color: HomeColors.tealText, scale: 0.62),
-                      title: 'Kept cold',
+                      title: keptCold ? 'Kept cold' : 'Delivered',
                       secondLine: 'till your door',
                       titleStyle: _cardTitle,
-                      body: 'Fresh on ice in every order.',
+                      body: keptCold ? 'Fresh on ice in every order.' : 'Slots, fee and minimum order.',
                       action: 'See delivery',
                       // Below the title like the cleaned card's picture, so it never covers "door".
                       picture: _cardPicture(
@@ -322,7 +325,8 @@ void _showDelivery(BuildContext context, Serviceability? service) {
                 child: Text('Delivery to ${service.pincode}', style: AppText.display(c.ink, 22)),
               ),
               const SizedBox(height: 4),
-              Text('Packed on ice in a cold box.', style: _inter(c.muted, 14, FontWeight.w400)),
+              if (service.hasColdStorage == true)
+                Text('Packed on ice in a cold box.', style: _inter(c.muted, 14, FontWeight.w400)),
               const SizedBox(height: 12),
               for (final line in lines)
                 Padding(
@@ -337,8 +341,8 @@ void _showDelivery(BuildContext context, Serviceability? service) {
   );
 }
 
-/// Pin, "Delivering to `pincode` ⌄" with the city under it (both from the server), and the search and wishlist
-/// buttons on the right.
+/// Pin, "Delivering to `pincode` ⌄" with the city and its state under it (both from the server), and the search
+/// and wishlist buttons on the right.
 class _DeliveryHeader extends ConsumerWidget {
   const _DeliveryHeader({required this.service});
 
@@ -348,7 +352,15 @@ class _DeliveryHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = illustratedColors(context);
     final pincode = ref.watch(pincodeProvider);
-    final city = service?.pincode == pincode ? service?.cityName : null;
+    final here = service?.pincode == pincode ? service : null;
+    // The state name is the city's own data (D209); it is left out when the server does not send it (D238).
+    final city = switch (here) {
+      Serviceability(cityName: final name?, :final cityStateName) => [
+        name,
+        if (cityStateName != null && cityStateName.isNotEmpty) cityStateName,
+      ].join(', '),
+      _ => null,
+    };
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 52),
       child: Row(

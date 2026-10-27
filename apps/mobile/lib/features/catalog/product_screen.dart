@@ -95,7 +95,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         );
     } on ApiError catch (e) {
       if (!mounted) return;
-      if (e.code == 'LOCATION_REQUIRED' || e.code == 'PINCODE_NOT_SERVICEABLE') {
+      if (e.needsPincode) {
         await context.push('/location?change=1');
         return;
       }
@@ -264,6 +264,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                         style: AppText.price(c.ink, size: 22),
                       ),
                     if (v.availability != null) AvailabilityBadge(status: v.availability!.status),
+                    if (v.freshness?.caughtOn case final caught?)
+                      FreshBadge(key: const Key('productCaught'), label: 'Caught ${formatCalendarDate(caught)}'),
                     if (async.isLoading) const FreshBadge(label: 'Updating…'),
                   ],
                 ),

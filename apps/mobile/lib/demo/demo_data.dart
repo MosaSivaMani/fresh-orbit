@@ -193,7 +193,7 @@ Json demoServiceability(String pincode) => pincode == demoUnservedPincode
         'pincode': pincode,
         'serviceable': true,
         'city': {'id': 'c1', 'code': 'SAMPLE_CITY', 'name': 'Sample City'},
-        'fulfillmentLocation': {'id': 'l1', 'code': 'SAMPLE_STORE', 'name': 'Sample Store'},
+        'fulfillmentLocation': {'id': 'l1', 'code': 'SAMPLE_STORE', 'name': 'Sample Store', 'hasColdStorage': true},
         'serviceArea': {'deliveryFeePaise': 3900, 'freeDeliveryAbovePaise': 49900, 'minOrderPaise': 29900},
         'nextSlot': {'id': 's1', 'startAt': '2026-10-24T08:30:00Z', 'endAt': '2026-10-24T10:30:00Z'},
       };

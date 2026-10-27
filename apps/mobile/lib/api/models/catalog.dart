@@ -32,6 +32,7 @@ class ProductSummary {
     this.fromPrice,
     this.availability,
     required this.locationRequired,
+    this.freshness,
   });
 
   factory ProductSummary.fromJson(Json j) {
@@ -46,6 +47,7 @@ class ProductSummary {
       fromPrice: price == null ? null : FromPrice.fromJson(price),
       availability: optAvailability(j, 'availability'),
       locationRequired: optBool(j, 'locationRequired') ?? false,
+      freshness: Freshness.fromJsonOrNull(j['freshness']),
     );
   }
 
@@ -58,6 +60,24 @@ class ProductSummary {
   final FromPrice? fromPrice;
   final Availability? availability;
   final bool locationRequired;
+
+  /// The default variant's next batch (CAT-R25); null without a pincode or sellable stock.
+  final Freshness? freshness;
+}
+
+/// `{ caughtOn, receivedAt }` of the batch the next order is packed from (CAT-R25). Shown as given; nothing is
+/// shown when it is null, and no catch time is guessed (D212, D240).
+class Freshness {
+  const Freshness({this.caughtOn, this.receivedAt});
+
+  static Freshness? fromJsonOrNull(Object? value) {
+    final j = asJsonOrNull(value, 'freshness');
+    return j == null ? null : Freshness(caughtOn: optString(j, 'caughtOn'), receivedAt: optInstant(j, 'receivedAt'));
+  }
+
+  /// Calendar date `YYYY-MM-DD`; null when the catch date was not recorded at receipt.
+  final String? caughtOn;
+  final DateTime? receivedAt;
 }
 
 class Category {
@@ -88,8 +108,8 @@ class Category {
 }
 
 /// Home banner (Promotions `HomeBanner`). Kept loose on purpose. `linkType` is CATEGORY, PRODUCT or COUPON;
-/// `linkSlug` is the category or product slug (D172), null for a coupon or a missing target. The API has no
-/// badge yet; the app shows one only when the server sends it.
+/// `linkSlug` is the category or product slug (D172), null for a coupon or a missing target. `badge` is the
+/// admin's optional short text (D210), shown as given.
 class HomeBanner {
   const HomeBanner({required this.title, this.subtitle, this.imageUrl, this.badge, this.linkType, this.linkSlug});
 
@@ -212,6 +232,7 @@ class Variant {
     this.compareAtPaise,
     required this.preparations,
     this.availability,
+    this.freshness,
   });
 
   factory Variant.fromJson(Json j) {
@@ -228,6 +249,7 @@ class Variant {
       compareAtPaise: optInt(j, 'compareAtPaise'),
       preparations: listOrEmpty(j, 'preparations', Preparation.fromJson),
       availability: availability == null ? null : VariantAvailability.fromJson(availability),
+      freshness: Freshness.fromJsonOrNull(j['freshness']),
     );
   }
 
@@ -244,6 +266,9 @@ class Variant {
   final int? compareAtPaise;
   final List<Preparation> preparations;
   final VariantAvailability? availability;
+
+  /// This size's next batch (CAT-R25).
+  final Freshness? freshness;
 
   Preparation? get defaultPreparation {
     for (final p in preparations) {

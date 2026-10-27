@@ -1,11 +1,13 @@
 // Search: suggestions while typing (server trigram match on names and local names), results grid on submit.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
+import '../../core/search_text.dart';
 import '../../state/catalog_state.dart';
 import '../../widgets/states.dart';
 import 'product_grid.dart';
@@ -30,8 +32,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
+  // Only a search the server accepts is sent (D235); anything else leaves the hint on screen.
   void _submit(String q) {
-    if (q.trim().isEmpty) return;
+    if (!isSearchable(q)) return;
     FocusScope.of(context).unfocus();
     setState(() => _submitted = q.trim());
   }
@@ -53,6 +56,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           controller: _field,
           autofocus: widget.initialQuery == null,
           textInputAction: TextInputAction.search,
+          inputFormatters: [LengthLimitingTextInputFormatter(searchMaxLength)],
           decoration: InputDecoration(
             hintText: 'Search fish, prawns, crabs…',
             isDense: true,
@@ -99,11 +103,11 @@ class _Suggestions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (query.trim().length < 2) {
+    if (!isSearchable(query)) {
       return const EmptyState(
         slot: IllustrationSlot.noSearchResults,
         title: 'Search the catch',
-        message: 'Type at least two letters. Local names work too.',
+        message: 'Type at least two letters or numbers. Local names work too.',
       );
     }
     final suggestions = ref.watch(searchSuggestionsProvider(query));

@@ -555,3 +555,18 @@ order detail → account all link up; no button is dead.
 
 The demo build refuses price quotes (no price engine; the page shows the unit price only), lists one sample
 coupon that it does not apply, and answers stock alerts and the business profile with sample values.
+
+## 18. Requests the server accepts (API contract audit, D235–D241)
+
+Every call the app sends was checked against the server's validators and the Render demo
+(`docs/research/mobile-api-audit-2026-10.md`). What the app does so no screen meets a refusal it cannot get out of:
+
+| Where | Behaviour |
+|---|---|
+| Search | A search is sent only when it has 2 to 60 characters after trimming and at least one letter or digit (CAT-R12, `core/search_text.dart`); otherwise the "Search the catch" hint stays and neither `/products` nor `/search/suggest` is called. The field stops at 60 characters (D235) |
+| Any catalogue error | `PINCODE_NOT_SERVICEABLE` or `LOCATION_REQUIRED` (a stored pincode that is no longer served, or none) shows "Choose where to deliver" with **Change pincode** (opens `/location?change=1`) beside Try again (D236) |
+| Clear cart | `DELETE /cart` answered 404 `CART_NOT_FOUND` (the cart was ordered or expired) reads as the empty cart (D237) |
+| Home header | The city line is "City, State" when `/serviceability` sends `city.stateName` (D209), else the city alone (D238) |
+| Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Delivered till your door" with the same delivery terms (D212, D239) |
+| Product page | "Caught Fri, 23 Oct" from the chosen size's `freshness.caughtOn` (CAT-R25); nothing when the server sends none (D240) |
+| Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |

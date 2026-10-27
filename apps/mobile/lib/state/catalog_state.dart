@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_error.dart';
 import '../api/models/catalog.dart';
 import '../api/models/common.dart';
+import '../core/search_text.dart';
 import 'core_providers.dart';
 import 'location_state.dart';
 
@@ -81,7 +82,7 @@ final productDetailProvider = FutureProvider.autoDispose.family<ProductDetail, P
 });
 
 final searchSuggestionsProvider = FutureProvider.autoDispose.family<List<SearchSuggestion>, String>((ref, q) async {
-  if (q.trim().length < 2) return const [];
+  if (!isSearchable(q)) return const [];
   // Debounce typing: a newer query disposes this provider before the delay ends.
   var disposed = false;
   ref.onDispose(() => disposed = true);

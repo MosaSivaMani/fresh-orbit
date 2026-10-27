@@ -344,6 +344,36 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the city line carries the state name when the server sends one (D209, D238)', (tester) async {
+    final json = serviceableJson()
+      ..['city'] = {'id': 'c1', 'code': 'CITY1', 'name': 'Sample City', 'stateCode': 'AP', 'stateName': 'Andhra'};
+    await _pump(tester, service: Serviceability.fromJson(json));
+
+    expect(find.text('Sample City, Andhra'), findsOneWidget);
+  });
+
+  testWidgets('says "Kept cold" only when the serving store has cold storage (D212, D239)', (tester) async {
+    final json = serviceableJson()
+      ..['fulfillmentLocation'] = {'id': 'l1', 'code': 'LOC1', 'name': 'Sample Store', 'hasColdStorage': false};
+    await _pump(tester, service: Serviceability.fromJson(json));
+
+    expect(find.textContaining('Kept cold'), findsNothing);
+    expect(find.text('See delivery →'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('homeCardCold')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('homeDeliverySheet')), findsOneWidget);
+    expect(find.text('Packed on ice in a cold box.'), findsNothing);
+  });
+
+  testWidgets('with cold storage the card and the delivery sheet say so', (tester) async {
+    await _pump(tester);
+
+    expect(find.textContaining('Kept cold'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('homeCardCold')));
+    await tester.pumpAndSettle();
+    expect(find.text('Packed on ice in a cold box.'), findsOneWidget);
+  });
+
   test('banner routes follow the link type and slug', () {
     HomeBanner b(String? type, String? slug) =>
         HomeBanner.fromJson({'title': 't', 'linkType': type, 'linkSlug': slug});
