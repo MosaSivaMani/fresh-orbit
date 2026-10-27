@@ -51,6 +51,20 @@ class FakeCatalogRepository implements CatalogRepository {
 
   @override
   Future<List<SearchSuggestion>> suggest(String q) => (onSuggest ?? (_) async => const <SearchSuggestion>[])(q);
+
+  Future<PriceQuote> Function(String variantId, String? preparation, Quantity quantity)? onQuote;
+  final List<String> quotes = [];
+
+  @override
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity}) {
+    quotes.add('$variantId:$preparation:${quantity.value}');
+    return (onQuote ?? (_, _, _) => _unexpected('priceQuote'))(variantId, preparation, quantity);
+  }
+
+  BusinessProfile profile = const BusinessProfile();
+
+  @override
+  Future<BusinessProfile> businessProfile() async => profile;
 }
 
 class FakeCartRepository implements CartRepository {
@@ -123,6 +137,14 @@ class FakeCartRepository implements CartRepository {
 
   @override
   Future<Cart> removeCoupon() => _write('removeCoupon', afterWrite ?? () => current);
+
+  List<VisibleCoupon> couponList = [];
+
+  @override
+  Future<List<VisibleCoupon>> coupons() async {
+    calls.add('coupons');
+    return couponList;
+  }
 }
 
 class PlaceCall {
@@ -279,6 +301,12 @@ class FakeAccountRepository implements AccountRepository {
 
   @override
   Future<void> unregisterDeviceToken(String pushToken) async {}
+
+  final List<String> stockAlerts = [];
+
+  @override
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId}) async =>
+      stockAlerts.add('$variantId@$fulfillmentLocationId');
 }
 
 class FakeAuthRepository implements AuthRepository {

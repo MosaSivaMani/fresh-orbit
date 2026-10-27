@@ -10,6 +10,7 @@ import '../api/models/catalog.dart';
 import '../api/models/common.dart';
 import '../api/repositories.dart';
 import 'core_providers.dart';
+import 'location_state.dart';
 import 'session.dart';
 
 final cartProvider = AsyncNotifierProvider<CartController, Cart>(CartController.new);
@@ -130,3 +131,10 @@ class QuickAddChoice {
   final Preparation? preparation;
   final Quantity quantity;
 }
+
+/// Coupons the signed-in customer may use in the current pincode's city. The API client sends the pincode as
+/// X-Pincode; without one the server lists none.
+final couponsProvider = FutureProvider.autoDispose<List<VisibleCoupon>>((ref) {
+  ref.watch(pincodeProvider);
+  return ref.read(cartRepositoryProvider).coupons();
+});

@@ -132,6 +132,29 @@ class _DemoCatalog implements CatalogRepository {
   @override
   Future<List<SearchSuggestion>> suggest(String q) =>
       _b._answer(() => _b._empty ? <SearchSuggestion>[] : demoSuggestions(q).map(SearchSuggestion.fromJson).toList());
+
+  /// The demo has no price engine, so it refuses the quote as a server without a price would; the product page
+  /// then shows the unit price only.
+  @override
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity}) =>
+      _b._answer(
+        () => throw const ApiError(
+          status: 422,
+          code: 'PRICE_NOT_AVAILABLE',
+          detail: 'Prices for a quantity are not set up in the demo.',
+          traceId: 'demo-quote',
+        ),
+      );
+
+  @override
+  Future<BusinessProfile> businessProfile() => _b._answer(
+    () => BusinessProfile.fromJson({
+      'tradeName': 'Fresh Orbitt (demo)',
+      'supportPhone': '+91 90000 00000',
+      'supportEmail': 'support@example.com',
+      'supportHours': '7 am to 9 pm',
+    }),
+  );
 }
 
 class _DemoCart implements CartRepository {
@@ -182,6 +205,21 @@ class _DemoCart implements CartRepository {
 
   @override
   Future<Cart> removeCoupon() => _b._answer(_current);
+
+  @override
+  Future<List<VisibleCoupon>> coupons() => _b._answer(
+    () => _b._empty
+        ? const <VisibleCoupon>[]
+        : [
+            VisibleCoupon.fromJson({
+              'code': 'DEMO100',
+              'description': 'A sample coupon. Coupons are not applied in the demo.',
+              'minOrderPaise': 50000,
+              'validTo': null,
+              'firstOrderOnly': false,
+            }),
+          ],
+  );
 }
 
 class _DemoOrders implements OrderRepository {
@@ -352,4 +390,7 @@ class _DemoAccount implements AccountRepository {
 
   @override
   Future<void> unregisterDeviceToken(String pushToken) async {}
+
+  @override
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId}) => _b._answer(() {});
 }

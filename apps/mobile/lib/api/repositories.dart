@@ -98,6 +98,12 @@ abstract class CatalogRepository {
   Future<Paged<ProductSummary>> products(ProductQuery query);
   Future<ProductDetail> product(String slug, {String? preparation});
   Future<List<SearchSuggestion>> suggest(String q);
+
+  /// One line priced by the server for the current pincode (X-Pincode), before it is added.
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity});
+
+  /// Legal name and support contacts.
+  Future<BusinessProfile> businessProfile();
 }
 
 class HttpCatalogRepository implements CatalogRepository {
@@ -125,6 +131,25 @@ class HttpCatalogRepository implements CatalogRepository {
   @override
   Future<List<SearchSuggestion>> suggest(String q) async =>
       parseArray(await _api.get('search/suggest', query: {'q': q}), SearchSuggestion.fromJson);
+
+  @override
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity}) async =>
+      parseObject(
+        await _api.get(
+          'price-quote',
+          query: {
+            'variantId': variantId,
+            'preparation': ?preparation,
+            'quantity': quantity.value,
+            'unit': quantity.unit,
+          },
+        ),
+        PriceQuote.fromJson,
+      );
+
+  @override
+  Future<BusinessProfile> businessProfile() async =>
+      parseObject(await _api.get('business-profile'), BusinessProfile.fromJson);
 }
 
 // ---------------------------------------------------------------- cart
@@ -139,6 +164,9 @@ abstract class CartRepository {
   Future<Cart> setLocation(String pincode, {bool force = false});
   Future<Cart> applyCoupon(String code);
   Future<Cart> removeCoupon();
+
+  /// Coupons the signed-in customer may use in the pincode's city (X-Pincode; none without it).
+  Future<List<VisibleCoupon>> coupons();
 }
 
 class HttpCartRepository implements CartRepository {
@@ -179,6 +207,10 @@ class HttpCartRepository implements CartRepository {
 
   @override
   Future<Cart> removeCoupon() async => _cart(await _api.delete('cart/coupon'));
+
+  @override
+  Future<List<VisibleCoupon>> coupons() async =>
+      parseObject(await _api.get('coupons'), (Json j) => Paged.fromJson(j, VisibleCoupon.fromJson)).items;
 }
 
 // ---------------------------------------------------------------- checkout and orders
@@ -330,6 +362,9 @@ abstract class AccountRepository {
 
   Future<void> registerDeviceToken({required String pushToken, required String platform});
   Future<void> unregisterDeviceToken(String pushToken);
+
+  /// Asks to be told when a sold-out size is back at the store (201 new, 200 already asked).
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId});
 }
 
 class HttpAccountRepository implements AccountRepository {
@@ -436,5 +471,10 @@ class HttpAccountRepository implements AccountRepository {
   @override
   Future<void> unregisterDeviceToken(String pushToken) async {
     await _api.delete('me/device-tokens/${_seg(pushToken)}');
+  }
+
+  @override
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId}) async {
+    await _api.post('me/stock-alerts', body: {'variantId': variantId, 'fulfillmentLocationId': fulfillmentLocationId});
   }
 }
