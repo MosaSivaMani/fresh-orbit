@@ -1,5 +1,8 @@
 // Addresses (docs/api §4.2): list with default, add, edit (If-Match), delete, make default. Field errors from
-// the server's Problem Details are shown at the fields.
+// the server's Problem Details are shown at the fields. A new address starts from the shopping pincode, and the
+// city and state the server knows for a pincode fill the empty fields.
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +14,8 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
+import '../../state/core_providers.dart';
+import '../../state/location_state.dart';
 import '../../widgets/states.dart';
 
 class AddressesScreen extends ConsumerWidget {
@@ -164,6 +169,26 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
 
   String? _opt(String f) => _c[f]!.text.trim().isEmpty ? null : _c[f]!.text.trim();
 
+  String? _prefilledFor;
+
+  /// Fills the city and state the server knows for [pincode] (GET /serviceability), only into empty fields;
+  /// the customer can still change them. A failed check fills nothing.
+  Future<void> _prefill(String pincode) async {
+    if (_prefilledFor == pincode || !isPincodeShape(pincode)) return;
+    _prefilledFor = pincode;
+    try {
+      final s = await ref.read(locationRepositoryProvider).serviceability(pincode);
+      if (!mounted || !s.serviceable) return;
+      final city = _c['cityName']!;
+      final state = _c['stateCode']!;
+      if (city.text.trim().isEmpty && s.cityName != null) city.text = s.cityName!;
+      final code = s.cityStateCode;
+      if (state.text.trim().isEmpty && code != null && code.length == 2) state.text = code;
+    } catch (_) {
+      // The fields stay for the customer to fill.
+    }
+  }
+
   Future<void> _save() async {
     setState(() => _serverErrors = {});
     if (!_form.currentState!.validate()) return;
@@ -211,6 +236,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     String? Function(String)? check,
     String? prefix,
     Iterable<String>? autofill,
+    ValueChanged<String>? onChanged,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: FreshSpacing.s3),
     child: TextFormField(
@@ -218,6 +244,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       keyboardType: keyboard,
       inputFormatters: formatters,
       autofillHints: autofill,
+      onChanged: onChanged,
       decoration: InputDecoration(labelText: required ? label : '$label (optional)', prefixText: prefix),
       validator: (v) {
         final value = (v ?? '').trim();
@@ -250,6 +277,15 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
           appBar: PageHeader(text: 'Edit', brushed: 'address'),
           body: ListSkeleton(rows: 4),
         );
+      }
+    }
+    if (id == null && !_loaded) {
+      // A new address starts from the pincode the customer shops with.
+      _loaded = true;
+      final pincode = ref.read(pincodeProvider);
+      if (pincode != null) {
+        _c['pincode']!.text = pincode;
+        unawaited(_prefill(pincode));
       }
     }
     return Scaffold(
@@ -303,6 +339,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
                 check: (v) => isPincodeShape(v) ? null : 'Enter a 6-digit pincode.',
                 autofill: const [AutofillHints.postalCode],
+                onChanged: (v) => unawaited(_prefill(v.trim())),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
