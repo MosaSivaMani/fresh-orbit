@@ -1,5 +1,5 @@
-import { Button, AppShell, type NavSection, Select } from "@fresh/ui";
-import { Fish, LogOut, Moon, Sun } from "lucide-react";
+import { Button, AppShell, type NavSection, Select, Wordmark } from "@fresh/ui";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation } from "react-router";
 import { useLogout, useMe } from "../api/auth";
@@ -86,14 +86,8 @@ function UserMenu() {
   );
 }
 
-/** The fish mark in a mango circle with an ink ring (Bold blocks, D88). */
-function BrandMark() {
-  return (
-    <span className="bg-block-mango text-on-block-mango border-outline-ink flex size-9 items-center justify-center rounded-full border-2">
-      <Fish aria-hidden="true" className="size-4" />
-    </span>
-  );
-}
+/** The owner's brand mark (D119), served from `public/brand`. */
+const MARK_SRC = "/brand/mark.png";
 
 function Shell() {
   const can = useCan();
@@ -115,18 +109,8 @@ function Shell() {
 
   return (
     <AppShell
-      brand={
-        <span className="font-display flex items-center gap-2 text-xl leading-none font-extrabold tracking-[-0.01em]">
-          <BrandMark />
-          Fresh Orbitt
-        </span>
-      }
-      brandCollapsed={
-        <span className="flex">
-          <BrandMark />
-          <span className="sr-only">Fresh Orbitt</span>
-        </span>
-      }
+      brand={<Wordmark markSrc={MARK_SRC} tone="inherit" />}
+      brandCollapsed={<Wordmark markSrc={MARK_SRC} compact />}
       navigation={navigation}
       renderLink={(item, props) => (
         <NavLink

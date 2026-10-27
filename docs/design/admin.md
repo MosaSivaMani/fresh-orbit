@@ -154,28 +154,32 @@ body text `var(--fo-font-sans)` from the preset. Fonts are self-hosted through `
 `@fresh/ui/fonts.css`.
 
 **Bold blocks (D88, D89, D181), branch `admin/screens-theme`.** The admin uses the app's theme, restyled only: no
-behaviour, route, label, query or permission changes. It is done in the shared parts, so every screen follows:
-`AppShell` and `DataTable` in `@fresh/ui` (used only by the admin and the playground; the website uses neither), and
-`PageHeader`, `Section`, `DetailList`, the illustrated states, the sign-in page and the dashboard in `apps/admin`.
+behaviour, route, label, query or permission changes. Every reusable part lives in `@fresh/ui` and the admin only
+composes it (D207): `AppShell` and `DataTable` (used only by the admin and the playground; the website uses neither),
+and the new `page-parts.tsx`: `Wordmark` (the owner's mark, D119, served from `apps/admin/public/brand/mark.png`, with
+"Orbitt" handwritten), `PageHeader` (router-free; `backLinkClass` for the app's back link), `SectionCard`,
+`DetailList`, `StatTile` and `BlockSplitCard`. The illustrated states use the existing `CharacterState`; the sign-in
+character uses `AvatarCircle`. `apps/admin/src/components/page.tsx` and `states.tsx` are thin adapters (router links,
+slot and words).
 
 | Where | Look |
 |---|---|
-| Shell | Warm canvas page (`bg-canvas`); a teal block sidebar (`bg-block-teal`, paper text) whose current page is a paper pill with the ink sticker shadow; in the phone drawer (paper) the current page is a teal pill. Brand: "Fresh Orbitt" in Baloo 2 800 beside a fish mark in a mango circle with an ink ring. Top bar on the canvas |
+| Shell | Warm canvas page (`bg-canvas`); a teal block sidebar (`bg-block-teal`, paper text) whose current page is a paper pill with the ink sticker shadow; in the phone drawer (paper) the current page is a teal pill. Brand: `Wordmark` (the mark in a ringed circle, "Fresh *Orbitt*"); collapsed, the mark alone. Top bar on the canvas |
 | Page titles | `PageHeader` h1: Baloo 2 800, 30–36 px, with the hand-drawn dash doodle at its corner (`fo-doodle`) |
 | Sections, cards, tables | Paper (`bg-surface-paper`), 24 px corners (`rounded-3xl`), a faint ink outline and the soft shadow; section titles Baloo 2 800; table and detail labels in bold small caps |
-| Dashboard | The first four figures are colour-block tiles: Orders today teal, Sales today coral, Waiting to pack mango, Out for delivery ice; the figure in Baloo 2 800. Low stock and Delivery exceptions stay on paper so their warning and danger colours stay readable. Status chips are pills. Values are the server's, only formatted |
-| Sign-in | A paper card with 34 px corners: on md and wider, a mango block (sign-in, D88) with "Today's catch, *packed and on its way.*" (second part in Dancing Script) above the `ADMIN_LOGIN` character in a ringed circle (`AvatarCircle`); the form side has the mango fish mark and the h1 "Sign in to Fresh Orbitt Admin" with the doodle |
+| Dashboard | `StatTile`s; the first four figures are colour-block tiles: Orders today teal, Sales today coral, Waiting to pack mango, Out for delivery ice; the figure in Baloo 2 800. Low stock and Delivery exceptions stay on paper so their warning and danger colours stay readable. Panels are the shared `Card`; status chips are pills. Values are the server's, only formatted |
+| Sign-in | `BlockSplitCard` (34 px corners): on md and wider, a mango block (sign-in, D88) with "Today's catch, *packed and on its way.*" (second part in Dancing Script) above the `ADMIN_LOGIN` character in a ringed circle (`AvatarCircle` md); the form side has the `Wordmark` and the h1 "Sign in to Fresh Orbitt Admin" with the doodle |
 | Tables, forms, detail pages | Dense: **no characters** |
-| Characters | Only in `src/components/states.tsx` and the sign-in panel, always in a round frame (paper border, ink ring) on a block-colour fill, decorative (the card's title says the same). Never a rectangle laid over a page (D88) |
+| Characters | Only in `src/components/states.tsx` (`CharacterState` on a paper card: `AvatarCircle` sm, heading level 2, or 1 for page-level states) and the sign-in panel. Always in the ringed circle, decorative (the card's title says the same). Never a rectangle laid over a page (D88) |
 
-| State | Component | Slot | Frame fill | Used on |
-|---|---|---|---|---|
-| Login side panel | `LoginPage` | `ADMIN_LOGIN` (`AvatarCircle` md, `priority`) | mango block | `/login`, md and wider (hidden on phones so the form comes first) |
-| Empty list | `ListEmpty` | `ADMIN_EMPTY` | `mango-soft` | Every list screen's table empty state (orders, complaints, shipments, slots, templates, riders, stock, batches, movements, reservations, cold chain, products, categories, prices, tax rules, coupons, cities, customers, reports, payments, refunds, webhook events, cash settlements, staff, number series, notification templates, audit) |
-| All caught up | `AllCaughtUp` | `ADMIN_ALL_CAUGHT_UP` | `teal-soft` | No payment issues; nothing to pick for a slot; nothing low on stock (low-stock filter) |
-| No access (403) | `NoAccess` | `ADMIN_NO_ACCESS` | `block-ice` | A route without the permission; a 403 from a detail query |
-| Not found (404) | `NotFound`, `RouteError` | `NOT_FOUND` | `ice-soft` | Unknown paths; a 404 from a detail query |
-| Failed load | `LoadError`, `RouteError` | `ERROR_GENERIC` | `accent-coral-subtle` | A detail query that fails (trace id + Try again); a screen that throws or a code chunk that fails to load (route error boundary, shell kept) |
+| State | Component | Slot | Used on |
+|---|---|---|---|
+| Login side panel | `LoginPage` | `ADMIN_LOGIN` (`AvatarCircle` md, `priority`) | `/login`, md and wider (hidden on phones so the form comes first) |
+| Empty list | `ListEmpty` | `ADMIN_EMPTY` | Every list screen's table empty state (orders, complaints, shipments, slots, templates, riders, stock, batches, movements, reservations, cold chain, products, categories, prices, tax rules, coupons, cities, customers, reports, payments, refunds, webhook events, cash settlements, staff, number series, notification templates, audit) |
+| All caught up | `AllCaughtUp` | `ADMIN_ALL_CAUGHT_UP` | No payment issues; nothing to pick for a slot; nothing low on stock (low-stock filter) |
+| No access (403) | `NoAccess` | `ADMIN_NO_ACCESS` | A route without the permission; a 403 from a detail query |
+| Not found (404) | `NotFound`, `RouteError` | `NOT_FOUND` | Unknown paths; a 404 from a detail query |
+| Failed load | `LoadError`, `RouteError` | `ERROR_GENERIC` | A detail query that fails (trace id + Try again); a screen that throws or a code chunk that fails to load (route error boundary, shell kept) |
 
 Small in-panel empty states (no addresses, no photos, no variants, "choose a slot first", "choose a location",
 coupon not used yet, city without locations) keep the icon `EmptyState`, so detail pages stay dense. A list's

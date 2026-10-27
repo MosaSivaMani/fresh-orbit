@@ -16,9 +16,10 @@ import {
   EmptyState,
   ErrorState,
   Skeleton,
+  StatTile,
+  type StatTileProps,
   StatusBadge,
 } from "@fresh/ui";
-import { type ReactNode } from "react";
 import { Link } from "react-router";
 import { useDashboard } from "../../api/reports";
 import { type DashboardLowStock, type DashboardResponse } from "../../api/types/reports";
@@ -32,63 +33,18 @@ function countOf(data: DashboardResponse | undefined, status: string): number | 
   return data.ordersByStatus.find((s) => s.status === status)?.count ?? 0;
 }
 
-/** Bold blocks tile colours (D88); `paper` keeps the warning and danger figure colours readable. */
-const KPI_BLOCK = {
-  teal: "bg-block-teal text-on-block-teal",
-  coral: "bg-block-coral text-on-block-coral",
-  mango: "bg-block-mango text-on-block-mango",
-  ice: "bg-block-ice text-on-block-ice",
-  paper: "bg-surface-paper text-text border-outline-ink/10 border",
-} as const;
-
-function Kpi({
-  label,
-  value,
-  sub,
-  to,
-  tone,
-  block = "paper",
-  loading,
-}: {
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-  to?: string;
-  tone?: "danger" | "warning";
-  block?: keyof typeof KPI_BLOCK;
-  loading: boolean;
-}) {
-  const onPaper = block === "paper";
-  const body = (
-    <div
-      className={`shadow-soft-sm flex h-full flex-col gap-1 rounded-3xl p-4 transition-transform motion-safe:hover:-translate-y-0.5 ${KPI_BLOCK[block]}`}
-    >
-      <span className={`text-sm font-bold ${onPaper ? "text-text-muted" : ""}`}>{label}</span>
-      {loading ? (
-        <Skeleton className="h-8 w-20" />
-      ) : (
-        <span
-          className={`font-display text-3xl leading-9 font-extrabold tracking-[-0.01em] tabular-nums ${
-            tone === "danger" ? "text-danger-text" : tone === "warning" ? "text-warning-text" : ""
-          }`}
-        >
-          {value}
-        </span>
-      )}
-      {sub && (
-        <span className={`text-xs font-semibold ${onPaper ? "text-text-muted" : ""}`}>{sub}</span>
-      )}
-    </div>
-  );
+/** A dashboard figure: the shared `StatTile`, as a link to the list behind it. */
+function Kpi({ to, ...props }: StatTileProps & { to?: string }) {
+  const tile = <StatTile {...props} />;
   return to ? (
     <Link
       to={to}
       className="focus-visible:outline-ring rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-2"
     >
-      {body}
+      {tile}
     </Link>
   ) : (
-    body
+    tile
   );
 }
 
@@ -153,7 +109,7 @@ export function DashboardPage() {
           >
             <Kpi
               label="Orders today"
-              block="teal"
+              tone="teal"
               loading={loading}
               value={sales ? sales.ordersPlaced : "—"}
               sub={sales ? `Cancelled: ${sales.ordersCancelled}` : undefined}
@@ -161,7 +117,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Sales today"
-              block="coral"
+              tone="coral"
               loading={loading}
               value={sales ? formatRupees(sales.orderValuePaise, { paise: "never" }) : "—"}
               sub={
@@ -173,7 +129,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Waiting to pack"
-              block="mango"
+              tone="mango"
               loading={loading}
               value={countOf(data, "CONFIRMED") ?? "—"}
               sub={`Preparing: ${countOf(data, "PREPARING") ?? "—"}`}
@@ -181,7 +137,7 @@ export function DashboardPage() {
             />
             <Kpi
               label="Out for delivery"
-              block="ice"
+              tone="ice"
               loading={loading}
               value={countOf(data, "OUT_FOR_DELIVERY") ?? "—"}
               sub={`Packed: ${countOf(data, "PACKED") ?? "—"}`}
@@ -192,7 +148,7 @@ export function DashboardPage() {
               loading={loading}
               value={data ? data.lowStock.length : "—"}
               sub="Items at or below threshold"
-              tone={data && data.lowStock.length > 0 ? "warning" : undefined}
+              emphasis={data && data.lowStock.length > 0 ? "warning" : undefined}
               to="/inventory?lowStockOnly=true"
             />
             <Kpi
@@ -200,15 +156,15 @@ export function DashboardPage() {
               loading={loading}
               value={countOf(data, "DELIVERY_FAILED") ?? "—"}
               sub={data ? `Open complaints: ${data.openComplaints}` : undefined}
-              tone={(countOf(data, "DELIVERY_FAILED") ?? 0) > 0 ? "danger" : undefined}
+              emphasis={(countOf(data, "DELIVERY_FAILED") ?? 0) > 0 ? "danger" : undefined}
               to={orderLink("DELIVERY_FAILED")}
             />
           </section>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Today's slots</CardTitle>
+                <CardTitle>Today's slots</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -259,9 +215,9 @@ export function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Low stock</CardTitle>
+                <CardTitle>Low stock</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -314,9 +270,9 @@ export function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Orders by status</CardTitle>
+                <CardTitle>Orders by status</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -341,9 +297,9 @@ export function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-surface-paper border-outline-ink/10 shadow-soft-sm">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-xl font-extrabold tracking-[-0.01em]">Needs attention</CardTitle>
+                <CardTitle>Needs attention</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading || !data ? (
