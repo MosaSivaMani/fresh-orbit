@@ -46,7 +46,7 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         ["identity.staff_members"] = 2,
         ["customers.customers"] = 3,
         ["customers.addresses"] = 5,
-        ["catalog.categories"] = 8,
+        ["catalog.categories"] = 11,
         ["catalog.products"] = 26,
         ["catalog.product_variants"] = 28,
         ["catalog.product_images"] = 26,
@@ -91,6 +91,10 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         (await ScalarAsync("SELECT count(DISTINCT slot_date) FROM delivery.delivery_slots")).Should().Be(7, "slots cover the next 7 days");
         (await ScalarAsync("SELECT count(*) FROM inventory.stock_items WHERE on_hand > 0")).Should().Be(28, "on-hand is the fold of the RECEIPT movements");
         File.Exists(Path.Combine(_mediaRoot, "sample", "banners", "prawn-week.webp")).Should().BeTrue();
+        var committed = await File.ReadAllBytesAsync(Path.Combine(DataPath("sample"), "images", "categories", "fish.webp"), Ct);
+        (await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, "sample", "categories", "fish.webp"), Ct)).Should().Equal(committed, "a committed sample picture is stored as it is, not drawn");
+        var drawn = await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, "sample", "categories", "fish-eggs.webp"), Ct);
+        System.Text.Encoding.ASCII.GetString(drawn, 0, 4).Should().Be("RIFF", "a key without a committed picture is drawn as a WebP placeholder");
         (await ScalarAsync("SELECT count(*) FROM promotions.promotions WHERE link_type = 'CATEGORY' AND link_target = (SELECT id::text FROM catalog.categories WHERE slug = 'prawns-shrimp')")).Should().Be(1);
 
         // Idempotent: a second run inserts nothing.
@@ -139,7 +143,7 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    private static string DataPath(string kind)
+    internal static string DataPath(string kind)
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {

@@ -691,6 +691,19 @@ for entry in im.get("banners", []):
     if entry.get("bannerKey") not in banners:
         err(f"images.banners[{entry.get('bannerKey')}]", "bannerKey does not exist")
 
+# Committed pictures: images/<path> is the file of image key sample/<path> (SampleImageFiles); every file needs a key
+# and the same extension, and stays small.
+image_keys = {e.get("imageKey") for e in im.get("categories", []) + im.get("banners", [])}
+image_dir = SAMPLE_DIR / "images"
+for f in sorted(image_dir.rglob("*")) if image_dir.is_dir() else []:
+    if not f.is_file():
+        continue
+    key = "sample/" + f.relative_to(image_dir).as_posix()
+    if key not in image_keys:
+        err(f"images/{f.relative_to(image_dir).as_posix()}", f"no category or banner in images.json has the key '{key}'")
+    if f.stat().st_size > 400_000:
+        err(f"images/{f.relative_to(image_dir).as_posix()}", "keep sample pictures under 400 KB")
+
 # ------------------------------------------------------------------ city readiness (LOC-R6)
 for code, city in cities.items():
     if city.get("targetStatus") != "ACTIVE":
