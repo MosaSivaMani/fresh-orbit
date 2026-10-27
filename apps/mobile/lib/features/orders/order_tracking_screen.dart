@@ -22,8 +22,10 @@ import '../../state/orders_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
 import '../../widgets/motion.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 const _terminal = {'DELIVERED', 'CANCELLED', 'PAYMENT_FAILED', 'RETURNED'};
@@ -83,7 +85,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final loaded = detail.value != null;
     return Scaffold(
       backgroundColor: loaded ? BlockTone.teal.background(c) : null,
-      appBar: loaded ? null : AppBar(title: const Text('Order')),
+      appBar: loaded ? null : const PageHeader(text: 'Your', brushed: 'order'),
       body: RefreshIndicator(
         onRefresh: () async {
           _refresh();
@@ -154,7 +156,7 @@ class _TrackingBody extends ConsumerWidget {
         ),
       ],
       const SizedBox(height: FreshSpacing.s5),
-      Semantics(header: true, child: Text('Status', style: theme.textTheme.titleMedium)),
+      const PageTitle(text: 'Order', brushed: 'status', size: 19),
       const SizedBox(height: FreshSpacing.s2),
       if (t != null)
         _Timeline(entries: t.timeline)
@@ -186,7 +188,12 @@ class _TrackingBody extends ConsumerWidget {
             color: c.paper,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
           ),
-          padding: EdgeInsets.fromLTRB(18, 20, 18, 24 + MediaQuery.paddingOf(context).bottom),
+          padding: EdgeInsets.fromLTRB(
+            FreshLayout.gutter + 4,
+            FreshLayout.sectionGap,
+            FreshLayout.gutter + 4,
+            FreshLayout.sectionGap + MediaQuery.paddingOf(context).bottom,
+          ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: sheet),
         ),
       ],
@@ -235,7 +242,7 @@ class _StatusHero extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RoundIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: onBack),
+            BackCircleButton(onTap: onBack),
             const SizedBox(height: 8),
             Text('ORDER $orderNumber', style: AppText.eyebrow(fg.withValues(alpha: 0.85))),
             const SizedBox(height: 4),
