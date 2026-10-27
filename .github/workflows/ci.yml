@@ -64,9 +64,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: TEMP show formatting diff
-        continue-on-error: true
-        run: pnpm format > /dev/null; git --no-pager diff -- apps packages; git checkout -- apps packages
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm lint
