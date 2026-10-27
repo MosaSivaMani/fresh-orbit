@@ -114,9 +114,10 @@ public sealed record PromotionRequest(
     DateTimeOffset StartsAt,
     DateTimeOffset? EndsAt,
     int SortOrder,
-    bool IsActive)
+    bool IsActive,
+    string? Badge = null)
 {
-    public PromotionDefinition ToDefinition() => new(Title, Subtitle, ImageKey, LinkType, LinkTarget, CityId, StartsAt, EndsAt, SortOrder, IsActive);
+    public PromotionDefinition ToDefinition() => new(Title, Subtitle, ImageKey, LinkType, LinkTarget, CityId, StartsAt, EndsAt, SortOrder, IsActive, Badge);
 }
 
 public sealed record PromotionResponse(
@@ -133,6 +134,9 @@ public sealed record PromotionResponse(
     bool IsActive,
     string Version)
 {
+    /// <summary>Short label shown on the banner ("NEW", "20% OFF"); null when none.</summary>
+    public string? Badge { get; init; }
+
     public static PromotionResponse From(Promotion promotion)
     {
         ArgumentNullException.ThrowIfNull(promotion);
@@ -148,7 +152,10 @@ public sealed record PromotionResponse(
             promotion.EndsAt,
             promotion.SortOrder,
             promotion.IsActive,
-            promotion.Version.ToString(CultureInfo.InvariantCulture));
+            promotion.Version.ToString(CultureInfo.InvariantCulture))
+        {
+            Badge = promotion.Badge,
+        };
     }
 }
 

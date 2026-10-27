@@ -70,6 +70,7 @@ internal sealed class PromotionConfiguration : IEntityTypeConfiguration<Promotio
         builder.Property(x => x.Title).HasMaxLength(Promotion.MaxTitleLength).IsRequired();
         builder.Property(x => x.Subtitle).HasMaxLength(Promotion.MaxSubtitleLength);
         builder.Property(x => x.ImageKey).HasMaxLength(300);
+        builder.Property(x => x.Badge).HasMaxLength(Promotion.MaxBadgeLength);
         builder.Property(x => x.LinkTarget).HasMaxLength(100).IsRequired();
         builder.HasIndex(x => new { x.CityId, x.StartsAt });
     }

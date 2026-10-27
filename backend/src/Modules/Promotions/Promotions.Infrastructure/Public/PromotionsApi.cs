@@ -23,6 +23,7 @@ internal sealed class PromotionsApi(CouponRedemptionService redemptionService, I
         return [.. shown.Select(p => new BannerInfo(p.Id, p.Title, p.Subtitle, p.ImageKey, p.LinkType.ToCode(), p.LinkTarget, p.StartsAt, p.EndsAt, p.SortOrder)
         {
             ImageUrl = ImageUrl(p.ImageKey),
+            Badge = p.Badge,
             LinkSlug = p.LinkType is PromotionLinkType.Coupon || !Guid.TryParse(p.LinkTarget, out var id) ? null : slugs.GetValueOrDefault(id),
         })];
     }

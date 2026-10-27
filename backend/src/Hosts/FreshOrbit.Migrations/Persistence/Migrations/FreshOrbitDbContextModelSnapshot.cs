@@ -2620,6 +2620,11 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("character varying(2)")
                         .HasColumnName("state_code");
 
+                    b.Property<string>("StateName")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("state_name");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -5375,6 +5380,11 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("Badge")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("badge");
 
                     b.Property<Guid?>("CityId")
                         .HasColumnType("uuid")
