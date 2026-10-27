@@ -5,6 +5,9 @@
 # it is fast and much smaller than a debug build). Flutter signs profile builds with the debug key, so no secrets
 # are needed. Profile builds run on real phones (ARM), not on x86 emulators.
 #
+# A second APK, `fresh-orbit-live-<sha>.apk`, is a profile build WITHOUT DEMO, pointed at the free Render demo API
+# (vars.DEMO_API_ORIGIN, default below), so the owner sees the real sample catalogue, pictures, OTP sign-in and orders.
+#
 # Every run uploads the APK as a workflow artifact. A manual run from main also publishes it as a GitHub
 # prerelease `demo-apk-<short sha>`, so the owner can download it on the phone from the Releases page.
 name: Mobile demo APK
@@ -29,6 +32,7 @@ jobs:
     timeout-minutes: 40
     outputs:
       apk-name: ${{ steps.apk.outputs.name }}
+      live-name: ${{ steps.live.outputs.name }}
     defaults:
       run:
         working-directory: apps/mobile
@@ -57,10 +61,23 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "### Demo APK" >> "$GITHUB_STEP_SUMMARY"
           echo "\`$name\`: $((size_bytes / 1024 / 1024)) MB ($size_bytes bytes)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Build profile APK against the Render demo API
+        env:
+          API_ORIGIN: ${{ vars.DEMO_API_ORIGIN || 'https://fresh-orbit-demo-api.onrender.com' }}
+        run: flutter build apk --profile --dart-define=API_BASE_URL="$API_ORIGIN" --target-platform android-arm,android-arm64
+      - name: Name the live APK
+        id: live
+        run: |
+          name="fresh-orbit-live-${GITHUB_SHA::7}.apk"
+          cp build/app/outputs/flutter-apk/app-profile.apk "$GITHUB_WORKSPACE/out/$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "\`$name\`: talks to the Render demo API" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
         with:
           name: demo-apk
-          path: out/${{ steps.apk.outputs.name }}
+          path: |
+            out/${{ steps.apk.outputs.name }}
+            out/${{ steps.live.outputs.name }}
           if-no-files-found: error
           retention-days: 30
 
@@ -82,12 +99,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           APK: out/${{ needs.build.outputs.apk-name }}
+          LIVE: out/${{ needs.build.outputs.live-name }}
         run: |
           tag="demo-apk-${GITHUB_SHA::7}"
           if gh release view "$tag" > /dev/null 2>&1; then
-            gh release upload "$tag" "$APK" --clobber
+            gh release upload "$tag" "$APK" "$LIVE" --clobber
           else
-            gh release create "$tag" "$APK" --prerelease --target "$GITHUB_SHA" \
+            gh release create "$tag" "$APK" "$LIVE" --prerelease --target "$GITHUB_SHA" \
               --title "Demo app ${GITHUB_SHA::7}" \
-              --notes "Demo Android app (sample data, no server). Open this page on the phone, tap the .apk file under Assets, then allow installs from your browser. Steps: docs/runbooks/owner-testing.md."
+              --notes "Two Android apps: fresh-orbit-live-*.apk uses the free Render demo server (real sample pictures, OTP sign-in, orders; the first open can take a minute while the server wakes); fresh-orbit-demo-*.apk uses built-in sample data, no server. Open this page on the phone, tap the .apk file under Assets, then allow installs from your browser. Steps: docs/runbooks/owner-testing.md."
           fi
