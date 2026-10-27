@@ -1,7 +1,7 @@
-// Big headings of the Bold blocks look (D89 amended): heavy Baloo 2 lines paired with a handwritten Dancing
-// Script line (tilted −3°, 1.12×), sometimes on a mango brush swipe, and a small dash doodle at the heading's
-// top corner (the mockup's `.block .big`, `.scr`, `.brush` and `.big::after`). Inline titles use
-// [ScriptTitle] ("Your *cart*").
+// Headings in the home theme (D181): heavy Baloo 2 lines, one key word on the yellow brush with coral sparks
+// after it ([PageTitle], the home's "What's cooking *today?*"), and on the colour-block screens a big heading whose
+// handwritten Dancing Script line (tilted −3°, 1.12×) can sit on the brush, with sparks at its top corner
+// ([Heading]). The brush and the sparks are the theme package's ([BrushHighlight], [Sparks]).
 
 import 'dart:math' as math;
 
@@ -52,10 +52,10 @@ class Heading extends StatelessWidget {
   final Color color;
   final double size;
 
-  /// The three-dash doodle at the top right corner.
+  /// The sparks at the top right corner.
   final bool doodle;
 
-  /// Brush paint; mango by default (paper on a mango block).
+  /// Brush paint; the home's yellow by default.
   final Color? brushColor;
 
   /// Script colour when not on a brush (defaults to [color]).
@@ -65,7 +65,7 @@ class Heading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brush = brushColor ?? const Color(0xFFF5B544);
+    final brush = brushColor ?? FreshHighlightColors.brush;
     final base = AppText.display(color, size, height: 0.98);
     Widget line(HeadingLine l) {
       final textColor = l.brush ? BlockInk.ink : (l.script ? (scriptColor ?? color) : color);
@@ -93,8 +93,8 @@ class Heading extends StatelessWidget {
           if (doodle)
             Positioned(
               right: 0,
-              top: -20,
-              child: CustomPaint(size: const Size(30, 22), painter: _DoodlePainter(color.withValues(alpha: 0.8))),
+              top: -22,
+              child: Sparks(color: color.withValues(alpha: 0.85), scale: 0.85),
             ),
         ],
       ),
@@ -102,81 +102,36 @@ class Heading extends StatelessWidget {
   }
 }
 
-/// A title with one handwritten word after it, on one line: "Your *cart*", "My *account*".
-class ScriptTitle extends StatelessWidget {
-  const ScriptTitle({
-    super.key,
-    required this.text,
-    required this.script,
-    this.size = 20,
-    this.color,
-    this.scriptColor,
-  });
+/// A screen title in the home's style: [text] in Baloo 2 800 and the key word [brushed] on the yellow brush with
+/// coral sparks: "Shop *fresh*", "Your *cart*". One header for screen readers.
+class PageTitle extends StatelessWidget {
+  const PageTitle({super.key, required this.text, required this.brushed, this.trailing, this.size = 24, this.color});
 
   final String text;
-  final String script;
+  final String brushed;
+  final String? trailing;
   final double size;
+
+  /// Defaults to ink.
   final Color? color;
-  final Color? scriptColor;
 
   @override
-  Widget build(BuildContext context) {
-    final c = illustratedColors(context);
-    return Semantics(
-      header: true,
-      label: '$text $script',
-      excludeSemantics: true,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Flexible(
-            child: Text('$text ', style: AppText.display(color ?? c.ink, size), overflow: TextOverflow.ellipsis),
-          ),
-          Transform.rotate(
-            angle: -3 * math.pi / 180,
-            child: Text(script, style: scriptStyle(scriptColor ?? c.tealText, size)),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => HighlightTitle(
+    text: text,
+    brushed: brushed,
+    trailing: trailing,
+    style: AppText.display(color ?? illustratedColors(context).ink, size, height: 1.1),
+  );
 }
 
-/// A painted mango swipe behind its child (the mockup's `.brush`): the theme package's [BrushHighlight] in
-/// mango, upright. Kept so the Bold blocks screens read the same.
+/// A painted swipe behind its child (the mockup's `.brush`): the theme package's [BrushHighlight], upright, in the
+/// home's yellow by default.
 class BrushSwipe extends StatelessWidget {
-  const BrushSwipe({super.key, required this.child, this.color = const Color(0xFFF5B544)});
+  const BrushSwipe({super.key, required this.child, this.color = FreshHighlightColors.brush});
 
   final Widget child;
   final Color color;
 
   @override
   Widget build(BuildContext context) => BrushHighlight(color: color, child: child);
-}
-
-class _DoodlePainter extends CustomPainter {
-  const _DoodlePainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final sx = size.width / 40;
-    final sy = size.height / 30;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 3 * sx
-      ..strokeCap = StrokeCap.round;
-    for (final (a, b) in const [
-      ((6.0, 22.0), (12.0, 10.0)),
-      ((17.0, 20.0), (20.0, 6.0)),
-      ((27.0, 21.0), (33.0, 12.0)),
-    ]) {
-      canvas.drawLine(Offset(a.$1 * sx, a.$2 * sy), Offset(b.$1 * sx, b.$2 * sy), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DoodlePainter old) => old.color != color;
 }

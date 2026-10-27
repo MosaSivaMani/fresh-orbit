@@ -345,13 +345,13 @@ class ProductCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: ill.paper,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
         boxShadow: cardShadow(context),
       ),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
           onTap: onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -363,10 +363,16 @@ class ProductCard extends StatelessWidget {
                     child: Opacity(
                       opacity: soldOut ? 0.55 : 1,
                       child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(FreshLayout.cardRadius)),
                         child: ColoredBox(
                           color: tint ?? ill.tealSoft,
-                          child: ProductPhoto(url: product.imageUrl, aspectRatio: 1.4, radius: 0, transparent: true),
+                          // The 3:2 picture frame of every card (D193).
+                          child: ProductPhoto(
+                            url: product.imageUrl,
+                            aspectRatio: FreshLayout.pictureAspect,
+                            radius: 0,
+                            transparent: true,
+                          ),
                         ),
                       ),
                     ),
@@ -390,7 +396,7 @@ class ProductCard extends StatelessWidget {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                  padding: const EdgeInsets.fromLTRB(FreshLayout.cardGap, 6, FreshLayout.cardGap, FreshLayout.cardGap),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

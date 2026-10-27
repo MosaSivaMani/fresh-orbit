@@ -753,7 +753,7 @@ class CategoryBubble extends StatelessWidget {
   }
 }
 
-/// A small square-cornered filter pill (Sort, Wild caught, In stock). Selected pills turn ink.
+/// A small round filter pill (Sort, Wild caught, In stock), the home's pill shape. Selected pills turn ink.
 class FilterPill extends StatelessWidget {
   const FilterPill({super.key, required this.label, required this.onTap, this.selected = false, this.icon});
 
@@ -774,16 +774,16 @@ class FilterPill extends StatelessWidget {
       child: Material(
         color: selected ? c.ink : c.paper,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
           side: BorderSide(color: selected ? c.ink : c.line),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
           onTap: onTap,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 36),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -885,7 +885,7 @@ class CompactStepper extends StatelessWidget {
   }
 }
 
-/// A paper box with the card shadow (`.box`).
+/// A paper box with the card shadow (`.box`), the theme's [FreshCard].
 class SectionBox extends StatelessWidget {
   const SectionBox({super.key, required this.child, this.padding = const EdgeInsets.all(12), this.color});
 
@@ -894,17 +894,14 @@ class SectionBox extends StatelessWidget {
   final Color? color;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => SizedBox(
     width: double.infinity,
-    // The shadow only; the colour is a Material so list tiles and ink splashes inside paint on it.
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: color == null ? cardShadow(context) : null,
-    ),
-    child: Material(
+    // The theme's small card (radius 20, D189); its colour is a Material, so list tiles and ink splashes paint on it.
+    child: FreshCard(
       color: color ?? illustratedColors(context).paper,
-      borderRadius: BorderRadius.circular(18),
-      child: Padding(padding: padding, child: child),
+      shadow: color == null ? cardShadow(context) : const [],
+      padding: padding,
+      child: child,
     ),
   );
 }
@@ -928,7 +925,7 @@ class MenuLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+    padding: const EdgeInsets.fromLTRB(FreshLayout.gutter + 4, 14, FreshLayout.gutter, 6),
     child: Semantics(
       header: true,
       child: Text(text.toUpperCase(), style: AppText.eyebrow(illustratedColors(context).muted, size: 11)),
@@ -967,11 +964,11 @@ class SlotButton extends StatelessWidget {
       child: Material(
         color: selected ? c.ink : (enabled ? c.paper : c.sand),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
           side: BorderSide(color: selected ? c.ink : c.line, width: 1.5),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(11),
+          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
           onTap: onTap,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48, minWidth: 92),
@@ -1071,7 +1068,7 @@ class SegmentedPills<T> extends StatelessWidget {
   }
 }
 
-/// A paper card of menu rows separated by hairlines (`.menu`).
+/// A paper card of menu rows separated by hairlines (`.menu`), inside the gutters with the small-card radius.
 class MenuCard extends StatelessWidget {
   const MenuCard({super.key, required this.children});
 
@@ -1081,10 +1078,10 @@ class MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+      margin: FreshLayout.page,
       decoration: BoxDecoration(
         color: c.paper,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
         boxShadow: cardShadow(context),
       ),
       clipBehavior: Clip.antiAlias,
@@ -1240,10 +1237,10 @@ class StickyActionBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 10, FreshLayout.gutter, 12),
           child: Row(
             children: [
-              if (leading != null) ...[leading!, const SizedBox(width: 10)],
+              if (leading != null) ...[leading!, const SizedBox(width: FreshLayout.cardGap)],
               Expanded(child: action),
             ],
           ),
@@ -1288,7 +1285,7 @@ class TealActionButton extends StatelessWidget {
           disabledForegroundColor: c.muted,
           minimumSize: const Size(48, 50),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(FreshLayout.barRadius)),
         ),
         onPressed: enabled ? onPressed : null,
         child: loading

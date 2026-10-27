@@ -9,10 +9,14 @@ import '../illustrations/illustration.dart';
 import '../theme/app_theme.dart';
 import 'bold.dart';
 import 'motion.dart';
+import 'screen.dart';
 
 export '../illustrations/illustration.dart' show IllustrationSlot;
 
 FreshColors freshColors(BuildContext context) => Theme.of(context).extension<FreshColors>()!;
+
+/// Empty and error states sit inside the gutters, a section gap from the top and bottom.
+const _statePadding = EdgeInsets.symmetric(horizontal: FreshLayout.gutter, vertical: FreshLayout.sectionGap);
 
 /// Inline empty state: the slot's character in a ringed circle avatar, a title, an optional line and an
 /// optional action. The illustration is decorative here because the title says the same thing. Full-screen
@@ -38,7 +42,7 @@ class EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(FreshSpacing.s6),
+        padding: _statePadding,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
@@ -50,7 +54,7 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: FreshSpacing.s4),
               Semantics(
                 header: true,
-                child: Text(title, style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+                child: Text(title, style: AppText.display(illustratedColors(context).ink, 24), textAlign: TextAlign.center),
               ),
               if (message != null) ...[
                 const SizedBox(height: FreshSpacing.s2),
@@ -105,7 +109,7 @@ class ErrorState extends StatelessWidget {
         ],
         Text(
           title,
-          style: compact ? theme.textTheme.titleMedium : theme.textTheme.headlineSmall,
+          style: AppText.display(illustratedColors(context).ink, compact ? 17 : 24),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: FreshSpacing.s2),
@@ -128,7 +132,7 @@ class ErrorState extends StatelessWidget {
       liveRegion: true,
       container: true,
       child: Center(
-        child: SingleChildScrollView(padding: const EdgeInsets.all(FreshSpacing.s6), child: body),
+        child: SingleChildScrollView(padding: _statePadding, child: body),
       ),
     );
   }
@@ -142,7 +146,7 @@ class NotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(),
+    appBar: PageHeader(text: 'Page', brushed: 'not found', onBack: onHome),
     body: SafeArea(
       child: EmptyState(
         slot: IllustrationSlot.notFound,
@@ -195,12 +199,12 @@ class ListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) => LoadingSemantics(
     child: ListView.separated(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(FreshSpacing.s4),
+      padding: FreshLayout.list,
       itemCount: rows,
-      separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
+      separatorBuilder: (_, _) => const SizedBox(height: FreshLayout.cardGap),
       itemBuilder: (_, _) => Row(
         children: [
-          SkeletonBox(width: rowHeight, height: rowHeight),
+          SkeletonBox(width: rowHeight, height: rowHeight, radius: FreshLayout.tileRadius),
           const SizedBox(width: FreshSpacing.s3),
           const Expanded(
             child: Column(
@@ -229,14 +233,14 @@ class GridSkeleton extends StatelessWidget {
     child: GridView.builder(
       shrinkWrap: shrinkWrap,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(FreshSpacing.s4),
+      padding: FreshLayout.list,
       gridDelegate: productGridDelegate,
       itemCount: items,
       itemBuilder: (_, _) => const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: SkeletonBox(height: double.infinity, radius: AppRadius.card),
+            child: SkeletonBox(height: double.infinity, radius: FreshLayout.cardRadius),
           ),
           SizedBox(height: FreshSpacing.s2),
           SkeletonBox(height: 16),
@@ -251,8 +255,8 @@ class GridSkeleton extends StatelessWidget {
 /// Two columns on phones; more on wide screens. Tall enough for text scaling.
 const productGridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
   maxCrossAxisExtent: 240,
-  mainAxisSpacing: FreshSpacing.s3,
-  crossAxisSpacing: FreshSpacing.s3,
+  mainAxisSpacing: FreshLayout.cardGap,
+  crossAxisSpacing: FreshLayout.cardGap,
   childAspectRatio: 0.72,
 );
 
@@ -300,8 +304,8 @@ class InfoBanner extends StatelessWidget {
       container: true,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(FreshSpacing.s3),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshRadius.xl)),
+        padding: const EdgeInsets.all(FreshLayout.cardGap),
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshLayout.tileRadius)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
