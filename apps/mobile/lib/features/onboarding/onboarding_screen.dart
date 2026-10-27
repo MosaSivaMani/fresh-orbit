@@ -5,7 +5,10 @@
 // sheet with a sticker on its edge, and a drawn scene behind it. The sheet holds the title, one line, three feature
 // tiles and a wide food banner. Page dots and the Next button stay pinned at the bottom. Sizes follow the preview
 // on a tall phone and scale down on short ones; there the banner is left out. A page never scrolls: it shrinks to
-// fit above the button, and only very large system text (1.5× and up) lets it scroll (D182).
+// fit above the button, and only very large system text (1.5× and up) lets it scroll (D182). The title and the tile
+// labels stay on one line (fitted to the width), captions take two lines at most, and the three pages reserve the
+// same height for their text and tiles (the tallest page sets it), so the banner is the same size on every page
+// (D206).
 
 import 'dart:math' as math;
 
@@ -335,6 +338,68 @@ const double _bannerGutter = 16;
 const double _bannerMin = 96;
 const double _bannerMax = 150;
 
+/// The sheet's vertical rhythm, from the preview: the title starts just under the circle's overlap, 6 to the
+/// line, 10 to the tiles; in a tile 6 from the picture to the label and 1 to the caption.
+const double _sheetTopPad = _overlap + 4;
+const double _titleGap = 6;
+const double _bodyGap = 10;
+const double _labelGap = 6;
+const double _captionGap = 1;
+const double _tileGap = 8;
+
+/// Tile pictures: a 98 × 66 blob, the picture popping 14 above it.
+double _tileScale(double k) => math.max(k, 0.8);
+double _tilePictureHeight(double k) => (66 + 14) * _tileScale(k);
+
+/// The smallest share of its size a title or tile label is drawn at to stay on one line (Inter needs about 0.9 on
+/// a 360 dp phone; the wider test font needs less).
+const double _minLineFit = 0.5;
+
+TextStyle _titleStyle(Color color) => _inter(color, 22, FontWeight.w800, height: 1.15, spacing: -0.3);
+TextStyle _bodyStyle(Color color) => _inter(color, 14.5, FontWeight.w400, height: 1.4);
+TextStyle _labelStyle(Color color) => _inter(color, 13.5, FontWeight.w600, height: 1.2);
+TextStyle _captionStyle(Color color) => _inter(color, 12, FontWeight.w400, height: 1.3);
+
+/// Captions: two lines at most, at most 110 wide.
+const double _captionMaxWidth = 110;
+const int _captionLines = 2;
+
+/// Lays [text] out as it will be drawn and returns its size.
+Size _measure(String text, TextStyle style, TextScaler scaler, {double maxWidth = double.infinity, int? maxLines}) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textAlign: TextAlign.center,
+    textDirection: TextDirection.ltr,
+    textScaler: scaler,
+    maxLines: maxLines,
+  )..layout(maxWidth: maxWidth);
+  final size = painter.size;
+  painter.dispose();
+  return size;
+}
+
+/// The height [_SheetTop] takes for [page] on a sheet [width] wide: the title line, the body, the tallest tile.
+double _sheetTopHeight(_Page page, double width, double k, TextStyle base, TextScaler scaler) {
+  const color = Color(0xFF000000);
+  final textWidth = math.max(0.0, width - 2 * _textGutter);
+  final tileWidth = math.max(0.0, (textWidth - 2 * _tileGap) / 3);
+  final title = _measure(page.title, base.merge(_titleStyle(color)), scaler, maxLines: 1).height;
+  final body = _measure(page.body, base.merge(_bodyStyle(color)), scaler, maxWidth: textWidth).height;
+  var tile = 0.0;
+  for (final t in page.tiles) {
+    final label = _measure(t.label, base.merge(_labelStyle(color)), scaler, maxLines: 1).height;
+    final caption = _measure(
+      t.caption,
+      base.merge(_captionStyle(color)),
+      scaler,
+      maxWidth: math.min(tileWidth, _captionMaxWidth),
+      maxLines: _captionLines,
+    ).height;
+    tile = math.max(tile, _tilePictureHeight(k) + _labelGap + label + _captionGap + caption);
+  }
+  return _sheetTopPad + title + _titleGap + body + _bodyGap + tile;
+}
+
 /// Sizes for one page, laid out to the space the page really has: the colour block takes about 45% of the
 /// height (300–400), the circle is 212 on a 390-wide phone and shrinks with the block, and the sheet takes the
 /// rest. Everything spans the full width.
@@ -655,23 +720,30 @@ class _Sheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     final top = EntranceMotion(rise: 24, child: _SheetTop(page: page, m: m));
-    final Widget body = fixed
-        ? CustomMultiChildLayout(
-            delegate: _SheetLayout(),
-            children: [
-              // Scaled down (never narrowed) only if even the text and tiles do not fit.
-              LayoutId(id: _SheetPart.top, child: FreshFitWidth(child: top)),
-              LayoutId(id: _SheetPart.banner, child: _FoodBanner(page: page)),
-            ],
-          )
-        : Column(
-            children: [
-              top,
-              const SizedBox(height: 12),
-              SizedBox(height: _bannerMax * m.k, child: _FoodBanner(page: page)),
-              const SizedBox(height: 12),
-            ],
-          );
+    final Widget body;
+    if (fixed) {
+      // Every page reserves the height of the tallest page's text and tiles, so the banner matches on all three.
+      final base = DefaultTextStyle.of(context).style;
+      final scaler = MediaQuery.textScalerOf(context);
+      final reserve = _pages.map((p) => _sheetTopHeight(p, m.width, m.k, base, scaler)).reduce(math.max);
+      body = CustomMultiChildLayout(
+        delegate: _SheetLayout(reserve: reserve),
+        children: [
+          // Scaled down (never narrowed) only if even the text and tiles do not fit.
+          LayoutId(id: _SheetPart.top, child: FreshFitWidth(child: top)),
+          LayoutId(id: _SheetPart.banner, child: _FoodBanner(page: page)),
+        ],
+      );
+    } else {
+      body = Column(
+        children: [
+          top,
+          const SizedBox(height: 12),
+          SizedBox(height: _bannerMax * m.k, child: _FoodBanner(page: page)),
+          const SizedBox(height: 12),
+        ],
+      );
+    }
     return Container(
       width: double.infinity,
       height: fixed ? m.sheet : null,
@@ -697,10 +769,12 @@ class _Sheet extends StatelessWidget {
 
 enum _SheetPart { top, banner }
 
-/// The text and tiles at their natural height, then the banner in the room that is left (96–150, or none), with
-/// the spare room split above and below it.
+/// The text and tiles at their natural height (at least [reserve], the tallest page's), then the banner in the room
+/// that is left (96–150, or none), with the spare room split above and below it.
 class _SheetLayout extends MultiChildLayoutDelegate {
-  _SheetLayout();
+  _SheetLayout({required this.reserve});
+
+  final double reserve;
 
   static const double _gap = 12;
   static const double _bottom = 12;
@@ -712,14 +786,15 @@ class _SheetLayout extends MultiChildLayoutDelegate {
       BoxConstraints(minWidth: size.width, maxWidth: size.width, maxHeight: math.max(0.0, size.height - _bottom)),
     );
     positionChild(_SheetPart.top, Offset.zero);
-    final room = math.max(0.0, size.height - top.height - _gap - _bottom);
+    final used = math.max(top.height, reserve);
+    final room = math.max(0.0, size.height - used - _gap - _bottom);
     final banner = room >= _bannerMin ? math.min(room, _bannerMax) : 0.0;
     layoutChild(_SheetPart.banner, BoxConstraints.tightFor(width: size.width, height: banner));
-    positionChild(_SheetPart.banner, Offset(0, top.height + _gap + (room - banner) / 2));
+    positionChild(_SheetPart.banner, Offset(0, used + _gap + (room - banner) / 2));
   }
 
   @override
-  bool shouldRelayout(_SheetLayout oldDelegate) => false;
+  bool shouldRelayout(_SheetLayout oldDelegate) => oldDelegate.reserve != reserve;
 }
 
 /// Title, line and the three tiles, inside 20 dp gutters; the title starts below the circle's overlap.
@@ -733,30 +808,22 @@ class _SheetTop extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_textGutter, _overlap + 8, _textGutter, 0),
+      padding: const EdgeInsets.fromLTRB(_textGutter, _sheetTopPad, _textGutter, 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Semantics(
             header: true,
-            child: Text(
-              page.title,
-              textAlign: TextAlign.center,
-              style: _inter(c.ink, 22, FontWeight.w800, height: 1.15, spacing: -0.3),
-            ),
+            child: FreshOneLine(page.title, minFit: _minLineFit, style: _titleStyle(c.ink)),
           ),
-          const SizedBox(height: 8),
-          Text(
-            page.body,
-            textAlign: TextAlign.center,
-            style: _inter(c.muted, 14.5, FontWeight.w400, height: 1.4),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: _titleGap),
+          Text(page.body, textAlign: TextAlign.center, style: _bodyStyle(c.muted)),
+          const SizedBox(height: _bodyGap),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var i = 0; i < page.tiles.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
+                if (i > 0) const SizedBox(width: _tileGap),
                 Expanded(
                   child: _FeatureTile(
                     tile: page.tiles[i],
@@ -833,8 +900,8 @@ class _Sticker extends StatelessWidget {
   );
 }
 
-/// One feature tile: the picture popping out of a pastel blob, a spark on its corner, a bold label and a muted
-/// caption (two lines at most each), top-aligned with its neighbours. Screen readers hear "label, caption".
+/// One feature tile: the picture popping out of a pastel blob, a spark on its corner, a bold label on one line
+/// (fitted to the tile) and a muted caption (two lines at most), top-aligned with its neighbours. Screen readers hear "label, caption".
 class _FeatureTile extends StatelessWidget {
   const _FeatureTile({required this.tile, required this.scale, required this.spark, required this.sparkOnLeft});
 
@@ -852,10 +919,10 @@ class _FeatureTile extends StatelessWidget {
       _Tint.blue => dark ? c.iceSoft : const Color(0xFFDDF1F7),
       _Tint.peach => dark ? c.coralSoft : const Color(0xFFFBE6DC),
     };
-    final k = math.max(scale, 0.8);
+    final k = _tileScale(scale);
     final blobW = 98 * k;
     final blobH = 66 * k;
-    final popUp = 24 * k;
+    final popUp = 14 * k;
     return Semantics(
       key: ValueKey('tile-${tile.slot.code}'),
       container: true,
@@ -914,23 +981,17 @@ class _FeatureTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            tile.label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: _inter(c.ink, 13.5, FontWeight.w600, height: 1.2),
-          ),
-          const SizedBox(height: 2),
+          const SizedBox(height: _labelGap),
+          FreshOneLine(tile.label, minFit: _minLineFit, style: _labelStyle(c.ink)),
+          const SizedBox(height: _captionGap),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 110),
+            constraints: const BoxConstraints(maxWidth: _captionMaxWidth),
             child: Text(
               tile.caption,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: _captionLines,
               overflow: TextOverflow.ellipsis,
-              style: _inter(c.muted, 12, FontWeight.w400, height: 1.3),
+              style: _captionStyle(c.muted),
             ),
           ),
         ],

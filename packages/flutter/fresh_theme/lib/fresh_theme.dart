@@ -10,6 +10,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+export 'src/parts.dart';
 export 'src/highlights.dart';
 export 'src/layout.dart';
 export 'src/scenery.dart';
