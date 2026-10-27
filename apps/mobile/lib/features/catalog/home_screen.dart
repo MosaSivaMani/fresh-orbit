@@ -25,7 +25,6 @@ import '../../state/account_state.dart';
 import '../../state/catalog_state.dart';
 import '../../state/location_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/states.dart';
 
 /// Pincode chip for app bars: "Delivering to 600041" → change pincode.

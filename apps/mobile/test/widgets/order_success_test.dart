@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/features/checkout/order_success_screen.dart';
-import 'package:fresh_orbit_app/widgets/illustrated.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 import '../support/fixtures.dart';
 import '../support/harness.dart';

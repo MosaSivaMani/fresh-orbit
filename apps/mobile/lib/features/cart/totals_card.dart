@@ -5,9 +5,6 @@ import 'package:fresh_theme/fresh_theme.dart';
 
 import '../../api/models/cart.dart';
 import '../../core/format.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
-import '../../widgets/states.dart';
 
 class TotalsCard extends StatelessWidget {
   const TotalsCard({super.key, required this.totals, this.title = 'Bill details'});

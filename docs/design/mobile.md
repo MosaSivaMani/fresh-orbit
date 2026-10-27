@@ -28,7 +28,7 @@ flutter test           # unit, provider and widget tests; no device needed
 | Define | Required | Meaning |
 |---|---|---|
 | `API_BASE_URL` | Yes | API origin (no path). The app calls `<origin>/api/v1/…`. When it is missing, the app shows "API address not configured" and makes no calls (rule 7: missing configuration is refused, no fallback) |
-| `SUPPORT_PHONE`, `SUPPORT_EMAIL` | No | Contact rows on Help and support. The customer API does not expose the business profile's support contacts yet (see §8); without them the screen says contact details are not set up |
+
 
 No city, price, slot or policy value is written in the app.
 
@@ -173,15 +173,15 @@ Paths are under `/api/v1/`.
 
 | Gap | What the app does now |
 |---|---|
-| Product detail has no estimate or maximum chargeable for a chosen quantity | Shows the server unit price and preparation charge; after adding (or when the item is already in the cart), shows the cart line's `estimatedTotalPaise` and `maxChargeablePaise`. A `GET products/{slug}/estimate?quantity=` or fields on the detail would let it show them before adding |
+| Product detail has no estimate or maximum chargeable for a chosen quantity | Closed: the product page shows `GET /price-quote` for the chosen size, cut and quantity (§17) |
 | Cart lines lack `minOrder`, `maxOrder`, `orderStep` | The cart's quantity sheet loads the product detail on demand to get them |
 | Wishlist: docs say products, merged backend returns `{productId, addedAt}` | Both shapes are parsed; entries without product data show a link by id |
 | Orders list item shape is not documented | `OrderSummary` reads the common fields and tolerates the rest |
-| Support contacts are only in the admin business profile | Taken from `SUPPORT_PHONE` / `SUPPORT_EMAIL` defines until a public endpoint exists |
+| Support contacts are only in the admin business profile | Closed: Help and support reads `GET /business-profile` (§17); the `SUPPORT_*` defines are gone |
 | Cart and Ordering modules are not merged yet | Their models follow `docs/api/README.md`; re-check when they land |
 | Product summary has no default size, cut or limits (D88 card ADD) | The card's ADD and − / + read the product detail first (one extra call per tap) |
 | No discount percentage, no catch time, no delivery ETA in the API | The mockup's "% off", "caught 4:30 am" and "arrives in 25 min" are not shown; the slot window is shown instead |
-| No "Notify me" (back in stock) endpoint | Sold-out products show the state only |
+| No "Notify me" (back in stock) endpoint | Closed: a sold-out size offers Notify me (`POST /me/stock-alerts`, §17) |
 
 **Backend Track E (2026-10-24).** The backend now closes these gaps, either on `main` (#5) or on draft PR #6 (not merged):
 - price quote: `GET /price-quote`
@@ -192,7 +192,7 @@ Paths are under `/api/v1/`.
 - `discountBp`, `freshness`, and the ETA from serviceability `nextSlot`
 - "Notify me": `POST/GET/DELETE /me/stock-alerts`
 
-The app has not adopted them yet.
+The app now uses the price quote, the business profile and stock alerts (§17); the others are not adopted yet.
 
 ## 9. Not done or not verified
 
@@ -260,6 +260,7 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | `intl` | 0.20.3 | BSD-3-Clause | IST date and time formatting |
 | `uuid` | 4.6.0 | MIT | Idempotency keys |
 | `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF |
+| `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem; `pubspec.lock` must be refreshed with `flutter pub get` |
 | `fresh_theme` | path | Ours | Theme from design tokens |
 | `flutter_lints` (dev) | 6.0.0 | BSD-3-Clause | Lints |
 
@@ -522,3 +523,35 @@ category tap; delivery sheet; labels; stand-ins and bundled pictures.
 **API gaps (rule 4).** Banners have no badge field (the sticker shows only if one is added); the city response
 has no state name (only the city is shown); there is no catch time or "kept cold" fact from the server, so the
 card copy is fixed text and the sheet shows only server delivery terms.
+
+## 17. Every screen in the home theme (D181)
+
+Every customer screen after the home and onboarding follows the home's look. The rules:
+
+- **One grid.** 16 dp gutters (`FreshLayout.gutter`), 12 dp gaps (`cardGap`), 24 dp between sections. Lists
+  pad with `FreshLayout.list`. Small cards, tiles and section boxes use radius 20 (`cardRadius`, D189); fields
+  and option tiles 16 (`tileRadius`).
+- **Header.** Each inner screen's `Scaffold.appBar` is `PageHeader` (64 dp): a round paper back button
+  (`pageBack`; pops, else goes home), the title with its key word on the yellow brush and coral sparks
+  ("Shop *fresh*", "Your *cart*", "Almost *there*", "My *orders*", "My *account*", "Saved *fish*"), and round
+  paper action buttons with an optional coral count. Section titles inside a page use `PageTitle`.
+- **Pages stand still (D182).** `FreshScrollBehavior` on the app makes every scroll clamp; no bounce.
+- **Fit by layout (D183, D195).** Content fits through the grid and `FreshFitWidth`, never `FittedBox`.
+- **Pictures are 3:2 (D193).** Product cards and the product hero use `FreshPictureFrame` / `pictureAspect`.
+- **Parts come from `fresh_theme`.** Every reusable part lives in the package (owner rule, its README lists
+  them); screens compose them. No orbit halo, moving dot, ticker, Instrument Serif or Bricolage.
+
+**Connected flows.** Browse → product → cart → OTP sign-in → address and pincode → slot → cash on delivery →
+order detail → account all link up; no button is dead.
+
+| Screen | Server data it now uses |
+|---|---|
+| Product | `GET /price-quote` for the chosen size, cut and quantity: "Estimated ₹… for 500 g" and "You pay at most ₹… (up to …)" (`priceQuote`); hidden when the server gives no quote. A sold-out size shows **Notify me** (`notifyMe`): signed out it opens sign-in, signed in it sends `POST /me/stock-alerts` with the variant and the store from `/serviceability` (`fulfillmentLocation.id`); "Not sold in your area" stays disabled |
+| Cart | **View offers** (`viewOffers`) opens the coupons the customer may use in the pincode's city (`GET /coupons`, pincode as `X-Pincode`), each with Apply (`PUT /cart/coupon`). "Change cut ›" re-cuts a line (`PATCH /cart/items/{id}`). The shell's cart bar shows `totals.estimatedTotalPaise` |
+| Address form | A new address starts with the shopping pincode; the city and the state code the server knows for a pincode (`/serviceability` `city.name`, `city.stateCode` when sent) fill only empty fields |
+| Help and support | Call and e-mail rows (and support hours) from `GET /business-profile`; a note when it is not set up (404 `BUSINESS_PROFILE_NOT_CONFIGURED`) |
+| Order detail | Report a problem sends JSON (`POST /orders/{id}/complaints`), then each picked photo to `/complaints/{cid}/photos` (field `file`, up to 4, `image_picker`, resized to 2048 px). Proposed replacements (`substitutions`) show Accept / No thanks (`POST …/substitutions/{sid}/accept|reject`), with the server's price difference |
+| Saved fish | Reads the nested wishlist shape `{productId, addedAt, product: {…}}`; products no longer sold say so |
+
+The demo build refuses price quotes (no price engine; the page shows the unit price only), lists one sample
+coupon that it does not apply, and answers stock alerts and the business profile with sample values.

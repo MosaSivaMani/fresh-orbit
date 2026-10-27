@@ -9,12 +9,8 @@ import 'package:go_router/go_router.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../state/orders_state.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/illustrated.dart';
-import '../../widgets/motion.dart';
 import '../../widgets/states.dart';
 
 class OrderSuccessScreen extends ConsumerWidget {

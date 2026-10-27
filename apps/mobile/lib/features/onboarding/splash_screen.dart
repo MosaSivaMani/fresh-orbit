@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../state/core_providers.dart';
 import '../../state/location_state.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
 
 /// First screen: decides where to go (onboarding → pincode → home). Tokens and preferences are already
 /// loaded in main(); the session is refreshed lazily by the first authenticated request.
