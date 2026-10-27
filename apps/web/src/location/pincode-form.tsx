@@ -124,7 +124,7 @@ export function PincodeForm({ onDone, variant = "default" }: PincodeFormProps) {
             inputMode="numeric"
             autoComplete="postal-code"
             maxLength={6}
-            placeholder={hero ? "Enter pincode, e.g. 530017" : "e.g. 530017"}
+            placeholder={hero ? "Enter pincode, e.g. 533001" : "e.g. 533001"}
             className={hero ? "h-11 border-0 shadow-none" : undefined}
             startAdornment={<MapPin aria-hidden="true" className="size-4" />}
             aria-describedby={step.kind !== "idle" ? resultId : undefined}
