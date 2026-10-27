@@ -147,6 +147,44 @@ describe("CartView", () => {
     expect(screen.getByLabelText("Coupon code")).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("lists the server's offers and applies the one chosen", async () => {
+    let applied: unknown = null;
+    server.use(
+      ...cartReads(),
+      http.get(`${API}/coupons`, () =>
+        HttpResponse.json({
+          items: [
+            {
+              code: "FISH50",
+              description: "₹50 off your order",
+              discountType: "FLAT",
+              discountValue: 5000,
+              maxDiscountPaise: null,
+              minOrderPaise: 50000,
+              validTo: null,
+              firstOrderOnly: false,
+            },
+          ],
+          page: 1,
+          pageSize: 20,
+          totalCount: 1,
+        }),
+      ),
+      http.put(`${API}/cart/coupon`, async ({ request }) => {
+        applied = await request.json();
+        return HttpResponse.json(cartWithSeer);
+      }),
+    );
+    renderWithProviders(<CartView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "View offers" }));
+    const offers = await screen.findByRole("list", { name: "Available offers" });
+    expect(within(offers).getByText("Orders from ₹500.")).toBeInTheDocument();
+    await userEvent.click(within(offers).getByRole("button", { name: "Apply FISH50" }));
+
+    await waitFor(() => expect(applied).toEqual({ code: "FISH50" }));
+  });
+
   it("shows the empty-cart character state for an empty cart", async () => {
     server.use(http.get(`${API}/cart`, () => HttpResponse.json(emptyCart)));
     const { container } = renderWithProviders(<CartView />);
