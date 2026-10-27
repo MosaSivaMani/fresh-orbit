@@ -5,6 +5,7 @@ import {
   type CategoryNode,
   type HomeBanner,
   type HomeResponse,
+  type PriceQuote,
   type ProductDetail,
   type ProductListItem,
   type ProductListParams,
@@ -59,6 +60,14 @@ export function getProduct(
   return http.get<ProductDetail>(`/products/${encodeURIComponent(slug)}`, {
     query: { preparation },
   });
+}
+
+/** The server's price for a quantity before it is in the cart (`X-Pincode` decides the store). */
+export function getPriceQuote(
+  http: HttpClient,
+  params: { variantId: string; preparation?: string; quantity: number; unit: string },
+): Promise<PriceQuote> {
+  return http.get<PriceQuote>("/price-quote", { query: params });
 }
 
 export function suggest(http: HttpClient, q: string, signal?: AbortSignal): Promise<SuggestItem[]> {

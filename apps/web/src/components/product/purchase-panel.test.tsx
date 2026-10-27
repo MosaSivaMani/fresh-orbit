@@ -78,6 +78,31 @@ describe("PurchasePanel", () => {
     expect(screen.getByRole("button", { name: "Set pincode to buy" })).toBeEnabled();
   });
 
+  it("shows the server's quote for the chosen size, cut and weight before adding", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let asked: URLSearchParams | null = null;
+    server.use(
+      http.get(`${API}/price-quote`, ({ request }) => {
+        asked = new URL(request.url).searchParams;
+        return HttpResponse.json({
+          variantId: "v1",
+          preparationCode: "STEAK",
+          quantity: { value: 500, unit: "GRAM" },
+          maxChargeableQuantity: { value: 550, unit: "GRAM" },
+          estimatedTotalPaise: 66950,
+          maxChargeablePaise: 73645,
+        });
+      }),
+    );
+    renderWithProviders(<PurchasePanel product={seerFish} />);
+
+    expect(await screen.findByText("₹669.50")).toBeInTheDocument();
+    expect(screen.getByText(/at most ₹736\.45/)).toBeInTheDocument();
+    expect(asked!.get("variantId")).toBe("v1");
+    expect(asked!.get("preparation")).toBe("STEAK");
+    expect(asked!.get("quantity")).toBe("500");
+  });
+
   it("asks the server to notify a signed-in customer when a sold-out size is back", async () => {
     writeBrowserCookie(PINCODE_COOKIE, "600041");
     let created: unknown = null;

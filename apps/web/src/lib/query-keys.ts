@@ -5,6 +5,12 @@ export const queryKeys = {
   product: (slug: string, preparation: string | undefined, pincode: string | null) =>
     ["product", slug, preparation ?? null, pincode] as const,
   suggest: (q: string) => ["suggest", q] as const,
+  priceQuote: (
+    variantId: string,
+    preparation: string | undefined,
+    quantity: number,
+    pincode: string | null,
+  ) => ["price-quote", variantId, preparation ?? null, quantity, pincode] as const,
   profile: ["me"] as const,
   addresses: ["me", "addresses"] as const,
   wishlist: ["me", "wishlist"] as const,
