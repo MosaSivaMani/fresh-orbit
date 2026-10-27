@@ -253,7 +253,8 @@ describe("OrderDetailView", () => {
       http.post(`${API}/orders/o1/complaints/c1/photos`, async ({ request }) => {
         const form = await request.formData();
         const file = form.get("file");
-        photoPosts.push(file instanceof File ? file.name : "missing");
+        // jsdom and undici each have their own File class, so check the shape, not instanceof.
+        photoPosts.push(file === null || typeof file === "string" ? "missing" : file.name);
         return HttpResponse.json({ id: "c1", status: "OPEN", photos: [] }, { status: 201 });
       }),
     );
@@ -261,7 +262,10 @@ describe("OrderDetailView", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "Report a problem" }));
     const sheet = await screen.findByRole("dialog");
-    await userEvent.type(within(sheet).getByLabelText(/Details/), "The fish smelled off on arrival.");
+    await userEvent.type(
+      within(sheet).getByLabelText(/Details/),
+      "The fish smelled off on arrival.",
+    );
     const photo = new File(["x"], "fish.jpg", { type: "image/jpeg" });
     await userEvent.upload(within(sheet).getByLabelText(/Photos/), photo);
     await userEvent.click(within(sheet).getByRole("button", { name: "Send" }));

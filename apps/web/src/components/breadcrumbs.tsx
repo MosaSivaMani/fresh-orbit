@@ -28,10 +28,7 @@ export function Breadcrumbs({
           <li key={`${item.label}-${index}`} className="flex items-center gap-1">
             {index > 0 && <ChevronRight aria-hidden="true" className="size-3.5" />}
             {item.href ? (
-              <Link
-                href={item.href}
-                className="hover:text-text underline-offset-4 hover:underline"
-              >
+              <Link href={item.href} className="hover:text-text underline-offset-4 hover:underline">
                 {item.label}
               </Link>
             ) : (
