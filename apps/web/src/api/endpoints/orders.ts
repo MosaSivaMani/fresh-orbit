@@ -84,7 +84,7 @@ export function addComplaintPhoto(
   file: File,
 ): Promise<Complaint> {
   const body = new FormData();
-  body.append("file", file);
+  body.append("file", file, file.name);
   return http.post<Complaint>(
     `/orders/${encodeURIComponent(orderId)}/complaints/${encodeURIComponent(complaintId)}/photos`,
     body,
