@@ -449,7 +449,8 @@ class ProductQuery {
   final String? preparation;
   final bool? inStock;
 
-  /// relevance, price, -price, name, -newest.
+  /// relevance, price, -price, name, -newest. Relevance needs [q] (CAT-R15), so without one no sort is sent and
+  /// the server uses its default order.
   final String sort;
   final int page;
   final int pageSize;
@@ -460,7 +461,7 @@ class ProductQuery {
     if (sourceType != null) 'sourceType': sourceType,
     if (preparation != null) 'preparation': preparation,
     if (inStock != null) 'inStock': inStock,
-    'sort': sort,
+    if (sort != 'relevance' || (q?.isNotEmpty ?? false)) 'sort': sort,
     'page': page,
     'pageSize': pageSize,
   };
