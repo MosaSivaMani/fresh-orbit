@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/support/cancellation-policy" },
 };
 
+// OWNER TEXT: the store owner's final cancellation policy replaces these sections.
 export default function CancellationPolicyPage() {
   return (
     <PolicyPage
@@ -13,18 +14,15 @@ export default function CancellationPolicyPage() {
       sections={[
         {
           heading: "Cancelling your order",
-          outline:
-            "Explain until which order stage a customer can cancel from the order page, and how to ask for help after that.",
+          body: "Open your order from Your orders. While the order can still be cancelled, the page shows a Cancel button. After that, contact us from the help page.",
         },
         {
           heading: "When we cancel",
-          outline:
-            "Explain when the store may cancel an order (for example, an item becomes unavailable) and how the customer is told.",
+          body: "If we cannot fulfil your order, for example because an item is no longer available, we cancel it and let you know.",
         },
         {
-          heading: "Charges",
-          outline:
-            "State whether any cancellation charge applies. With pay on delivery, usually none.",
+          heading: "Paying for a cancelled order",
+          body: "You pay on delivery, so there is nothing to pay for an order that is cancelled before it reaches you.",
         },
       ]}
     />

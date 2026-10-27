@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/support/refund-policy" },
 };
 
+// OWNER TEXT: the store owner's final refund policy replaces these sections.
 export default function RefundPolicyPage() {
   return (
     <PolicyPage
@@ -13,18 +14,15 @@ export default function RefundPolicyPage() {
       sections={[
         {
           heading: "Reporting a problem",
-          outline:
-            "Explain how and within how long after delivery to report missing, damaged, wrong or poor-quality items, and that photos help.",
+          body: "If something is missing, damaged or not right, open the delivered order and choose Report a problem. Photos help us look into it.",
         },
         {
           heading: "Weight differences",
-          outline:
-            "Explain that weighed items are charged on actual net weight up to the maximum shown at checkout.",
+          body: "Weighed items are charged on their actual net weight after cleaning, never above the maximum shown in your cart and at checkout.",
         },
         {
-          heading: "How refunds are paid",
-          outline:
-            "Explain refund methods for orders paid on delivery (for example, UPI transfer or store credit) and the expected time.",
+          heading: "How we resolve it",
+          body: "We review every report and reply on your order page with what we can do for you.",
         },
       ]}
     />

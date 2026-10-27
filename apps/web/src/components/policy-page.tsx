@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ContentPage, OwnerPlaceholder } from "./content-page";
+import { ContentPage } from "./content-page";
 import { Highlight } from "./theme/theme-band";
 
 const policies = [
@@ -9,16 +9,17 @@ const policies = [
 ] as const;
 
 /**
- * A policy page whose wording is entirely the store owner's. Each section shows an outline of what the owner must
- * cover, inside a visible placeholder, so nothing here can be read as the store's actual terms. The first word of
- * the title sits on the brush; the side card links the other policies and help.
+ * A policy page in plain, neutral customer text. Nothing here is legally binding wording: no percentages, timelines
+ * or charges the server does not provide. OWNER TEXT: the store owner's final, approved policy wording replaces the
+ * `sections` passed by each policy page (search for "OWNER TEXT"). The first word of the title sits on the brush;
+ * the side card links the other policies and help.
  */
 export function PolicyPage({
   title,
   sections,
 }: {
   title: string;
-  sections: { heading: string; outline: string }[];
+  sections: { heading: string; body: string }[];
 }) {
   const [first = title, ...rest] = title.split(" ");
   return (
@@ -60,14 +61,10 @@ export function PolicyPage({
         </nav>
       }
     >
-      <OwnerPlaceholder>
-        This page is an outline only. The store owner must write and approve the actual policy (with
-        legal advice where needed) before launch.
-      </OwnerPlaceholder>
       {sections.map((s) => (
         <section key={s.heading} className="flex flex-col gap-2">
           <h2>{s.heading}</h2>
-          <p className="text-text-muted italic">[Placeholder] {s.outline}</p>
+          <p className="text-text-muted">{s.body}</p>
         </section>
       ))}
     </ContentPage>

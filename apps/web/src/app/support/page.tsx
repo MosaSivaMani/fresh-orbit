@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getBusinessProfile } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
 import { type PublicBusinessProfile } from "@/api/types/locations";
-import { ContentPage, OwnerPlaceholder } from "@/components/content-page";
+import { ContentPage } from "@/components/content-page";
 import { Highlight } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = {
@@ -181,12 +181,6 @@ export default async function SupportPage() {
           </Link>
         </li>
       </ul>
-      {!profile && (
-        <OwnerPlaceholder>
-          Save the store&apos;s support phone, email and hours in the admin business profile; they
-          show here from <code>GET /business-profile</code>.
-        </OwnerPlaceholder>
-      )}
     </ContentPage>
   );
 }

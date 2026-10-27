@@ -1,29 +1,9 @@
 import { type IllustrationSlot } from "@fresh/ui";
-import { TriangleAlert } from "lucide-react";
 import { type ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { Breadcrumbs } from "./breadcrumbs";
 import { Container } from "./section";
 import { ThemeBand } from "./theme/theme-band";
-
-/**
- * Marks text the store owner must write before launch. Visible on purpose so placeholder policy text can never be
- * mistaken for the real terms. Search the code for `<OwnerPlaceholder` to find every instance.
- */
-export function OwnerPlaceholder({ children }: { children?: ReactNode }) {
-  return (
-    <div
-      role="note"
-      className="border-highlight bg-highlight-subtle text-highlight-text flex gap-3 rounded-[20px] border border-dashed p-4 text-sm"
-    >
-      <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
-      <div className="flex flex-col gap-1">
-        <p className="font-semibold">Placeholder text: to be replaced by the store owner.</p>
-        {children && <p>{children}</p>}
-      </div>
-    </div>
-  );
-}
 
 /**
  * A text page (about, help, policies) in the app's look (D181): the harbour-sky band with the breadcrumbs, the

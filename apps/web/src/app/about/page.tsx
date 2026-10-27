@@ -1,7 +1,7 @@
 import { Button } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ContentPage, OwnerPlaceholder } from "@/components/content-page";
+import { ContentPage } from "@/components/content-page";
 import { Highlight } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = {
@@ -33,10 +33,11 @@ export default function AboutPage() {
         </div>
       }
     >
-      <OwnerPlaceholder>
-        Replace this page with the store&apos;s own story, sourcing partners and team. Do not make
-        claims about freshness, catch times or delivery speed that the store cannot back up.
-      </OwnerPlaceholder>
+      {/* OWNER TEXT: the store's own story, sourcing partners and team go here. */}
+      <p>
+        Fresh Orbitt sells fish and seafood from its own store. You choose how each item is cleaned
+        and cut, and we prepare it to your order and deliver it in the slot you pick.
+      </p>
       <h2>How ordering works</h2>
       <ul>
         <li>Set your delivery pincode to see what is sold near you and at what price.</li>
