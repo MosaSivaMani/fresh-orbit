@@ -29,6 +29,30 @@ touches them). All decorations are static (no animation) and excluded from seman
 | `lib/src/layout.dart` | `FreshLayout`: design width 390, gutter 16, card gap 12, section gap 24, radii (card 20, hero 24, tile 16, bar 18, menu 22, pill 99), 46 dp icon buttons, `page` padding, `contentWidth(w)`, `columnWidth(w, n, gap:)`. `FreshColumns`: N equal columns with a gap; `stretch: true` makes them as tall as the tallest (laid out twice, no intrinsic sizes). `FreshFitWidth`: shows a page at the full width and, when it is taller than the space, lays it out wider and scales it down, so it never leaves side gaps like a `FittedBox` (D182) |
 | `lib/src/highlights.dart` | `FreshHighlightColors` (brush yellow, coral, deep coral, ink, paper). `BrushHighlight` (the yellow brush behind a word, tilt in degrees), `Sparks` (three short dashes, 34 × 30 × scale), `Snowflake`, `SwooshUnderline`, `ScriptLine` (a handwritten line, tilted, with an optional swoosh; the app passes its Dancing Script family) |
 | `lib/src/scenery.dart` | `FreshScenery` canvas helpers (bird, cloud, hills, trawler, sea bands, palm) shared by the onboarding drawings and the home; `HarbourScene` (222 × 150 design box: sky, sun, hills, sea, three boats, a palm, birds); `PalmsPainter` + `ScenePalm` for soft palms along a screen edge |
+| `lib/src/page.dart` | `FreshScrollBehavior` (clamping, no bounce, D182), `FreshCircleButton` (46 dp round button with an optional badge), `FreshPageHeader` (64 dp screen header: leading, title, actions), `FreshCard` (radius 20, D189), `FreshPictureFrame` (3:2, D193) |
+
+### Every reusable UI part (owner rule, 2026-10-27)
+
+Reusable parts (buttons, chips, cards, list tiles, headers, empty and loading states, sheets, price rows,
+badges) live here and the app uses them from here; a screen never builds its own. Moved from `apps/mobile`:
+
+| File | Parts |
+|---|---|
+| `lib/src/look.dart` | The Bold blocks look: `AppFonts` (family names), `IllustratedColors` + `illustratedColors(context)`, `BlockInk`, `AppRadius`, `cardShadow(context)`, `AppText` (display, eyebrow, price, block title), `freshColors(context)` |
+| `lib/src/titles.dart` | `PageTitle` ("Your *cart*": key word on the brush with sparks), `Heading` + `HeadingLine` + `scriptStyle` (colour-block headings), `BrushSwipe` |
+| `lib/src/header.dart` | `PageHeader` (the app's screen header; `PageHeader.plain` for a product name), `PaperCircleButton`, `BackCircleButton` (the app sets `BackCircleButton.defaultBack` to its router's back), `CountPip` |
+| `lib/src/blocks.dart` | `BlockTone`, `SheetTitle`, `SheetNote`, `RoundIconButton`, `PageDots`, `FilterPill`, `SectionBox`, `SectionTitle`, `MenuLabel`, `SlotButton`, `SegmentedPills`, `MenuCard`, `MenuRow`, `ProgressSteps`, `StickyActionBar`, `TealActionButton`, `StickerSpot` |
+| `lib/src/feedback.dart` | `SkeletonBox`, `LoadingSemantics`, `ListSkeleton`, `GridSkeleton`, `productGridDelegate`, `BannerTone` + `InfoBanner`, `showInfoSnack`, `FreshBadge`, `PrimaryButton`, `ProductPhoto` |
+| `lib/src/stickers.dart` | `Sticker` + `StickerTone`, `PolaroidCard`, `ReceiptRow` + `ReceiptCard` |
+| `lib/src/motion.dart` | `EntranceMotion`, `motionAllowed(context)` |
+| `lib/src/prices.dart` | `PriceEstimateRow` (the server's estimate and "at most" for a line), `CouponTile` (code, description, condition, one action) |
+
+Still in the app, because they read app models, API errors or the bundled illustrations: `ColorBlockScreen`,
+`AvatarCircle`, `EmptyState`, `ErrorState`, `NotFoundScreen`, `AsyncValueView`, `showErrorSnack`,
+`FeatureCard`, `HelpHero`, `PriceTag`, `QuantityStepper`, `CompactStepper`, `AvailabilityBadge`,
+`OrderStatusBadge`, `ProductCard`, and the home's `FoodTabBar`, `ViewCartBar` and `CategoryBubble` (being moved
+with the home on its own branch). Moving them needs plain-value inputs (formatted strings, an image widget)
+instead of models.
 
 Font families are passed in by the app (the package bundles no fonts). Tests for these parts sit in
 `apps/mobile/test/widgets/fresh_theme_parts_test.dart`, because CI's mobile job runs only `apps/mobile`.
