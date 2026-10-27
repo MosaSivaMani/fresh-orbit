@@ -64,7 +64,7 @@ export function cancelOrder(
   );
 }
 
-/** JSON body; the API takes no photos yet (docs/design/web.md §6, gap W12). */
+/** JSON body; photos follow one by one through `addComplaintPhoto` (gap W12 closed). */
 export function raiseComplaint(
   http: HttpClient,
   orderId: string,
@@ -74,6 +74,21 @@ export function raiseComplaint(
   return http.post<Complaint>(`/orders/${encodeURIComponent(orderId)}/complaints`, body, {
     idempotencyKey,
   });
+}
+
+/** Adds one photo to a complaint (multipart field `file`); returns the complaint with its photos. */
+export function addComplaintPhoto(
+  http: HttpClient,
+  orderId: string,
+  complaintId: string,
+  file: File,
+): Promise<Complaint> {
+  const body = new FormData();
+  body.append("file", file);
+  return http.post<Complaint>(
+    `/orders/${encodeURIComponent(orderId)}/complaints/${encodeURIComponent(complaintId)}/photos`,
+    body,
+  );
 }
 
 export function listComplaints(http: HttpClient, orderId: string): Promise<Complaint[]> {

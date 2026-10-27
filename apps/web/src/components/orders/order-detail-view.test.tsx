@@ -226,4 +226,46 @@ describe("OrderDetailView", () => {
       ).not.toBeInTheDocument(),
     );
   });
+
+  it("sends the complaint, then each chosen photo to the new complaint", async () => {
+    const photoPosts: string[] = [];
+    server.use(
+      http.get(`${API}/orders/o1`, () =>
+        HttpResponse.json(
+          order({
+            status: "DELIVERED",
+            allowedActions: {
+              cancel: false,
+              raiseComplaint: true,
+              downloadInvoice: false,
+              reorder: false,
+            },
+          }),
+        ),
+      ),
+      http.get(`${API}/orders/o1/tracking`, () =>
+        HttpResponse.json(tracking({ status: "DELIVERED" })),
+      ),
+      http.get(`${API}/orders/o1/complaints`, () => HttpResponse.json([])),
+      http.post(`${API}/orders/o1/complaints`, () =>
+        HttpResponse.json({ id: "c1", status: "OPEN", photos: [] }, { status: 201 }),
+      ),
+      http.post(`${API}/orders/o1/complaints/c1/photos`, async ({ request }) => {
+        const form = await request.formData();
+        const file = form.get("file");
+        photoPosts.push(file instanceof File ? file.name : "missing");
+        return HttpResponse.json({ id: "c1", status: "OPEN", photos: [] }, { status: 201 });
+      }),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Report a problem" }));
+    const sheet = await screen.findByRole("dialog");
+    await userEvent.type(within(sheet).getByLabelText(/Details/), "The fish smelled off on arrival.");
+    const photo = new File(["x"], "fish.jpg", { type: "image/jpeg" });
+    await userEvent.upload(within(sheet).getByLabelText(/Photos/), photo);
+    await userEvent.click(within(sheet).getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(photoPosts).toEqual(["fish.jpg"]));
+  });
 });

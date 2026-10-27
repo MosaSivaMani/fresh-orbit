@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   FormField,
+  Input,
   RadioGroup,
   Select,
   Sheet,
@@ -17,7 +18,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { browserHttp } from "@/api/browser";
-import { cancelOrder, getInvoice, raiseComplaint, reorder } from "@/api/endpoints/orders";
+import {
+  addComplaintPhoto,
+  cancelOrder,
+  getInvoice,
+  raiseComplaint,
+  reorder,
+} from "@/api/endpoints/orders";
 import { type CancelReasonCode, type ComplaintKind, type OrderDetail } from "@/api/types/orders";
 import { describeError, fieldMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
@@ -112,6 +119,7 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
   const [itemId, setItemId] = useState<string>(WHOLE_ORDER);
   const [kind, setKind] = useState<ComplaintKind>("QUALITY");
   const [description, setDescription] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -126,7 +134,7 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
     if (Object.keys(local).length) return;
     setPending(true);
     try {
-      await raiseComplaint(
+      const complaint = await raiseComplaint(
         browserHttp(),
         order.id,
         {
@@ -137,6 +145,17 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
         actionKey.get(),
       );
       actionKey.done();
+      // The complaint exists now; photos go one by one, and a refused photo never undoes it.
+      let photoError: string | null = null;
+      for (const photo of photos) {
+        try {
+          await addComplaintPhoto(browserHttp(), order.id, complaint.id, photo);
+        } catch (e) {
+          photoError = describeError(e);
+          break;
+        }
+      }
+      if (photoError) toast({ title: photoError, tone: "danger" });
       void queryClient.invalidateQueries({ queryKey: queryKeys.complaints(order.id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.order(order.id) });
       toast({ title: "We have your complaint and will get back to you.", tone: "success" });
@@ -183,6 +202,14 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
             maxLength={1000}
+          />
+        </FormField>
+        <FormField label="Photos (optional)">
+          <Input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
           />
         </FormField>
         {formError && (
