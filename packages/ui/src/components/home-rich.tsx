@@ -412,7 +412,7 @@ export interface CategoryTileProps extends Omit<ComponentProps<"a">, "children">
   children?: ReactNode;
 }
 
-/** A round category picture (96 px, 120 px from `lg`) on a cream disc, with the label under it. */
+/** A round category picture (96 px, 120 px from `lg`) on a peach disc, with the label under it. */
 export function CategoryTile({
   label,
   picture,
@@ -434,7 +434,7 @@ export function CategoryTile({
       {asChild && <Slot.Slottable>{children}</Slot.Slottable>}
       <span
         aria-hidden="true"
-        className="bg-surface-sand grid size-24 place-items-center overflow-hidden rounded-full transition-transform group-hover:scale-[1.03] motion-reduce:transition-none lg:size-[120px] [&_img]:size-full [&_img]:object-cover [&_svg]:size-10"
+        className="bg-accent-coral-subtle grid size-24 place-items-center overflow-hidden rounded-full transition-transform group-hover:scale-[1.03] motion-reduce:transition-none lg:size-[120px] [&_img]:size-full [&_img]:object-cover [&_svg]:size-10"
       >
         {picture}
       </span>
@@ -462,6 +462,36 @@ export function CategoryTileRow({
         ))}
       </ul>
     </nav>
+  );
+}
+
+// ---------- WaveBand ----------
+/**
+ * A full-width pale band whose top edge is a soft wave (D188: behind the promo cards). Put a page container inside.
+ */
+export function WaveBand({ className, children, ...props }: ComponentProps<"div">) {
+  return (
+    <div className={cn("relative isolate pt-10 pb-8 lg:pt-14", className)} {...props}>
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 1600 120"
+        preserveAspectRatio="none"
+        className="absolute inset-x-0 top-0 -z-10 block h-16 w-full lg:h-24"
+      >
+        <path d="M0 70c180-40 360-50 560-30s380 40 560 20 320-50 480-40v100H0z" fill="#E4F3F8" />
+        <path
+          d="M0 92c200-26 400-30 600-14s400 28 600 12 300-28 400-24v54H0z"
+          fill="#D8EEEA"
+          opacity={0.6}
+        />
+      </svg>
+      <div
+        aria-hidden="true"
+        className="bg-ice-soft absolute inset-x-0 top-16 bottom-0 -z-10 lg:top-24"
+      />
+      {children}
+    </div>
   );
 }
 

@@ -40,7 +40,7 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
             icon={<Fish />}
             title="CLEANED"
             line="Your way"
-            detail="Whole · Steaks · Curry cut"
+            detail="Whole · Steaks · Curry Cut"
           />
           <FeatureChip
             icon={<Scale />}

@@ -20,7 +20,7 @@ export const homePromoCards: readonly HomePromo[] = [
   {
     title: "Today's Fresh Catch",
     line: "Straight from local boats",
-    action: "Shop fresh fish",
+    action: "Shop Fresh Fish",
     href: "/shop",
     picture: "/home/promo-fresh-catch.png",
     alt: "Seer fish, prawns and crabs on ice",
@@ -29,8 +29,8 @@ export const homePromoCards: readonly HomePromo[] = [
   },
   {
     title: "Cleaned Your Way",
-    line: "Whole · Steaks · Curry cut",
-    action: "Learn more",
+    line: "Whole · Steaks · Curry Cut",
+    action: "Learn More",
     href: "/support",
     picture: "/home/promo-cleaned.png",
     alt: "Fish steaks and curry-cut pieces on a banana leaf",
@@ -40,7 +40,7 @@ export const homePromoCards: readonly HomePromo[] = [
   {
     title: "Chilled & Delivered Fresh",
     line: "From our store to your door",
-    action: "See how it works",
+    action: "See How It Works",
     href: "/support/delivery-policy",
     picture: "/home/promo-delivered.png",
     alt: "Ravi waving from his scooter with a chilled delivery box",

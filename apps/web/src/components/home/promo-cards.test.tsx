@@ -13,21 +13,21 @@ describe("PromoCards", () => {
     expect(within(catchCard!).getByRole("heading", { level: 3 })).toHaveTextContent(
       "Today's Fresh Catch",
     );
-    expect(within(catchCard!).getByRole("link", { name: "Shop fresh fish" })).toHaveAttribute(
+    expect(within(catchCard!).getByRole("link", { name: "Shop Fresh Fish" })).toHaveAttribute(
       "href",
       "/shop",
     );
     expect(within(cleanedCard!).getByRole("heading", { level: 3 })).toHaveTextContent(
       "Cleaned Your Way",
     );
-    expect(within(cleanedCard!).getByRole("link", { name: "Learn more" })).toHaveAttribute(
+    expect(within(cleanedCard!).getByRole("link", { name: "Learn More" })).toHaveAttribute(
       "href",
       "/support",
     );
     expect(within(deliveredCard!).getByRole("heading", { level: 3 })).toHaveTextContent(
       "Chilled & Delivered Fresh",
     );
-    expect(within(deliveredCard!).getByRole("link", { name: "See how it works" })).toHaveAttribute(
+    expect(within(deliveredCard!).getByRole("link", { name: "See How It Works" })).toHaveAttribute(
       "href",
       "/support/delivery-policy",
     );

@@ -11,6 +11,7 @@ import {
   PillLink,
   PromoCard,
   PromoCardGrid,
+  WaveBand,
 } from "./home-rich";
 
 describe("HarbourHero", () => {
@@ -99,5 +100,18 @@ describe("PromoCard", () => {
     expect(screen.getByRole("img", { name: "Fish steaks" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Learn more" })).toHaveAttribute("href", "/support");
     await expectNoAxeViolations(container);
+  });
+});
+
+describe("WaveBand", () => {
+  it("shows its content over a hidden wave", () => {
+    const { container } = render(
+      <WaveBand>
+        <p>Promos</p>
+      </WaveBand>,
+    );
+
+    expect(screen.getByText("Promos")).toBeInTheDocument();
+    expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
   });
 });

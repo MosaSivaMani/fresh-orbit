@@ -22,7 +22,7 @@ describe("HomeHero", () => {
       "listitem",
     );
     expect(chips).toHaveLength(3);
-    expect(chips[0]).toHaveTextContent(/CLEANED.*Your way.*Whole · Steaks · Curry cut/);
+    expect(chips[0]).toHaveTextContent(/CLEANED.*Your way.*Whole · Steaks · Curry Cut/);
     expect(chips[1]).toHaveTextContent(/PAY FOR.*Net weight.*Weighed after cleaning/);
     expect(chips[2]).toHaveTextContent(/DELIVERY.*In your slot.*Pick a slot at checkout/);
   });

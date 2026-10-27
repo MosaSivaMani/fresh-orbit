@@ -183,6 +183,7 @@ export {
   PromoCard,
   PromoCardGrid,
   Trawler,
+  WaveBand,
   type CategoryTileProps,
   type CheckBarProps,
   type FeatureChipProps,

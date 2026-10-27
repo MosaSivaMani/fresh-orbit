@@ -1,5 +1,5 @@
 import { formatDayShort, formatTime } from "@fresh/core";
-import { FilterChip } from "@fresh/ui";
+import { FilterChip, WaveBand } from "@fresh/ui";
 import Link from "next/link";
 import { getHome, getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
 import { loadWithLocation, requestApi } from "@/api/server";
@@ -15,11 +15,11 @@ import { Container, Section, SectionError } from "@/components/section";
 import { settle } from "@/lib/settle";
 
 /**
- * Home after the owner's reference (D188, `docs/design/mockups/web-home-reference-owner.png`): the harbour hero with
- * Padma, the headline and three feature chips; the white pincode-check and search bar over its bottom edge; "What's
- * on your mind?" with the server's featured categories; three promo cards; then "Top picks in <city>", the
- * location's bestsellers (CAT-R24; left out when the server has none), offers, "Filter and pick" and the get-the-app
- * band. Every slot, offer, price, ranking, category and city shown is the server's.
+ * Home after the owner's reference (D188, `docs/design/mockups/web-home-reference-2026-10-28.png`): the harbour hero
+ * with Padma, the headline and three feature chips; the white pincode-check and search bar over its bottom edge;
+ * "What's on your mind?" with the server's featured categories; a pale wave band with three promo cards; then "Top
+ * picks in <city>", the location's bestsellers (CAT-R24; left out when the server has none), offers, "Filter and
+ * pick" and the get-the-app band. Every slot, offer, price, ranking, category and city shown is the server's.
  */
 export default async function HomePage() {
   const api = await requestApi();
@@ -47,15 +47,19 @@ export default async function HomePage() {
       <HomeHero nextSlot={slotText} heroBackground={null} />
       <HomeCheckBar />
 
-      <Container className="flex flex-col gap-8 pt-10 pb-4">
+      <Container className="flex flex-col gap-8 pt-10 pb-8">
         <LocationBanner pincode={api.pincode} pincodeRefused={pincodeRefused} />
 
         {home.ok && <HomeCategories categories={home.value.data.featuredCategories} />}
+      </Container>
 
-        <PromoCards />
+      <WaveBand>
+        <Container>
+          <PromoCards />
+        </Container>
+      </WaveBand>
 
-        <hr className="border-border" />
-
+      <Container className="flex flex-col gap-8 pt-8 pb-4">
         <Section
           title={city ? "Top picks in" : "Top picks"}
           script={city ?? "today"}
