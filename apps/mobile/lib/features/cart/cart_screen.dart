@@ -649,23 +649,14 @@ class _ChangeCutSheet extends ConsumerWidget {
                     for (final p in cuts)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Material(
-                          color: p.code == line.preparation?.code ? c.tealSoft : c.paper,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
-                            side: BorderSide(
-                              color: p.code == line.preparation?.code ? c.tealText : c.line,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: ListTile(
+                        child: SizedBox(
+                          height: 56,
+                          child: OptionTile(
                             key: ValueKey('cut-${p.code}'),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(FreshLayout.tileRadius)),
-                            title: Text(p.name),
-                            subtitle: Text('${preparationChargeText(p)} · ${formatYieldNote(p.yieldBp)}'),
-                            trailing: p.code == line.preparation?.code
-                                ? Icon(Icons.check_rounded, color: c.tealText)
-                                : null,
+                            title: p.name,
+                            subtitle: '${preparationChargeText(p)} · ${formatYieldNote(p.yieldBp)}',
+                            subtitleLines: 2,
+                            selected: p.code == line.preparation?.code,
                             onTap: () => Navigator.pop(context, p.code),
                           ),
                         ),

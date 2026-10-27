@@ -11,6 +11,7 @@ library;
 import 'package:flutter/material.dart';
 
 export 'src/blocks.dart';
+export 'src/choices.dart';
 export 'src/feedback.dart';
 export 'src/header.dart';
 export 'src/highlights.dart';

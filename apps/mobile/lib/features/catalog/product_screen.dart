@@ -321,9 +321,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     childAspectRatio: 2.6,
                     children: [
                       for (final p in v.preparations)
-                        _CutTile(
-                          name: p.name,
-                          detail: preparationChargeText(p),
+                        OptionTile(
+                          title: p.name,
+                          subtitle: preparationChargeText(p),
                           selected: p.code == prep,
                           onTap: p.chargePaise == null
                               ? null
@@ -479,70 +479,6 @@ class _Facts extends StatelessWidget {
         fact(Icons.content_cut_rounded, 'Cut your way'),
         fact(Icons.scale_outlined, 'Net weight'),
       ],
-    );
-  }
-}
-
-/// One cut choice: its name and the location's charge; the chosen one is teal.
-class _CutTile extends StatelessWidget {
-  const _CutTile({required this.name, required this.detail, required this.selected, required this.onTap});
-
-  final String name;
-  final String detail;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = illustratedColors(context);
-    return Semantics(
-      button: true,
-      selected: selected,
-      enabled: onTap != null,
-      label: '$name, $detail',
-      excludeSemantics: true,
-      child: Material(
-        color: selected ? c.tealSoft : c.paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
-          side: BorderSide(color: selected ? c.tealText : c.line, width: selected ? 2 : 1.5),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: FreshLayout.cardGap, vertical: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.body,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: onTap == null ? c.muted : c.ink,
-                  ),
-                ),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.body,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: c.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
