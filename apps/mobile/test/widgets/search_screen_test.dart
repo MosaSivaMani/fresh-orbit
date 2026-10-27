@@ -31,7 +31,8 @@ void main() {
 
   Future<void> search(WidgetTester tester, String text) async {
     await tester.enterText(find.byKey(const Key('searchField')), text);
-    // Past the suggestion debounce.
+    // Build the suggestions, then let their debounce pass.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
     await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -61,6 +62,8 @@ void main() {
     await pumpScreen(tester, deps, const SearchScreen());
     await tester.enterText(find.byKey(const Key('searchField')), 'a' * 80);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
 
     expect(tester.widget<TextField>(find.byKey(const Key('searchField'))).controller!.text, hasLength(searchMaxLength));
   });

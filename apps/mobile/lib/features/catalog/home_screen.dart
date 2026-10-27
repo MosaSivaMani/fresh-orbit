@@ -253,7 +253,7 @@ class _HomePage extends ConsumerWidget {
                       title: keptCold ? 'Kept cold' : 'Delivered',
                       secondLine: 'till your door',
                       titleStyle: _cardTitle,
-                      body: keptCold ? 'Fresh on ice in every order.' : 'Slots, fee and minimum order.',
+                      body: keptCold ? 'Fresh on ice in every order.' : 'Your slots and fee.',
                       action: 'See delivery',
                       // Below the title like the cleaned card's picture, so it never covers "door".
                       picture: _cardPicture(
