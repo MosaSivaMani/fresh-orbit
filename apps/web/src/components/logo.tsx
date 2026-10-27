@@ -12,8 +12,8 @@ const word: Record<LogoTone, string> = {
 
 /**
  * Wordmark: the owner's fish, crab and hen mark (D119, `docs/design/brand/`) in a white circle with an ink ring, then
- * "Fresh Orbitt" with "Orbitt" handwritten (D89). `coral` sits on the coral header, `inverse` on the dark footer. Decorative; the link around
- * it carries the name.
+ * "Fresh Orbitt" with "Orbitt" handwritten in coral (D89, D188). `default` sits on the cream header, `inverse` on the
+ * dark footer. Decorative; the link around it carries the name.
  */
 export function Logo({ tone = "default" }: { tone?: LogoTone }) {
   return (
@@ -33,7 +33,9 @@ export function Logo({ tone = "default" }: { tone?: LogoTone }) {
       </span>
       <span className={`font-display text-[1.4375rem] leading-none font-extrabold ${word[tone]}`}>
         Fresh{" "}
-        <Script tone={tone === "default" ? "accent" : "inherit"} className="text-[1.1em]">
+        <Script
+          className={tone === "default" ? "text-accent-coral-text text-[1.1em]" : "text-[1.1em]"}
+        >
           Orbitt
         </Script>
       </span>

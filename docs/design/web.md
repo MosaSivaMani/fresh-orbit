@@ -16,9 +16,9 @@ components; nothing is a separate mobile design.
 
 | Part | What it is | Data |
 |---|---|---|
-| Header (`components/header/site-header.tsx`, `header-nav.tsx`) | Coral bar at every width: logo, "Delivering to 530017 ▾" (opens the pincode picker), Offers, Help, Orders (signed in), Sign in / Account, ink Cart pill with a coral count. Phones show the link icons; the words stay as the links' names | Cart count = lines in the server's cart |
-| Home hero (`app/page.tsx`, `FoodHero`) | Coral block, headline "Fresh fish. *Cleaned your way.* At your door, in your slot." (the handwritten words on a paper brush swipe), a white pincode box (`PincodeForm variant="hero"`, asks `GET /serviceability`), the search box with suggestions, three white `PromiseCard`s, two tilted character photos at the sides from `lg` up (`ONBOARDING_CLEANED`, `ONBOARDING_DELIVERY`) | Third promise shows the server's next slot; the other two state store policy (cut choice, pay for net weight) only |
-| "What's on your *mind?*" (`CategoryRail`, `CategoryCircle`) | Round 88/110 px circles with the category picture, muted label; scrolls sideways on phones | `GET /home` `featuredCategories` |
+| Header (`components/header/site-header.tsx`, `header-nav.tsx`) | Cream bar (D188, was coral): logo with "Orbitt" in coral script, "Deliver to / Set pincode ⌄" with a coral pin (opens the pincode picker), a wide rounded search field from `md` up, Offers (coral icon), Help, Orders (signed in), Sign in / Account, dark teal Cart pill with a coral count. Phones show the link icons; the words stay as the links' names | Cart count = lines in the server's cart |
+| Home hero, check bar, categories, promo cards | Rebuilt after the owner's reference (D188): see §11 | §11 |
+| Category circles on shop and category pages (`CategoryRail`, `CategoryCircle`) | Round 88/110 px circles with the category picture, muted label; scrolls sideways on phones. The home uses its own larger row (§11) | `GET /categories` / `GET /home` `featuredCategories` |
 | "Top picks in *city*" | Picture-card grid, 1 column below 480 px, then 2/3/4 | `featuredProducts`; city from `GET /serviceability` `city.name` (rule 7: no city names in code); "Top picks *today*" without a pincode |
 | Picture card (`ShopProductCard` → `FoodCard`) | 16:11 picture, offer line on a dark gradient, name, round teal mark + freshness line, local names, price with struck MRP, ADD → − n + stepper | Offer line only from `GET /promotions` (a banner linking to the product, or on a category page a banner linking to that category); freshness = the item's availability message, else the next slot; nothing invented |
 | ADD | With one size: fetches the product, adds `minOrder` with the default cut through `POST /cart/items`; with several sizes: opens the product page. Becomes a stepper when the cart holds exactly one line of the product (bounds from the product endpoint) | Server cart |
@@ -308,3 +308,31 @@ decides an order's state.
 
 Rule 4: every amount on these pages is a server value formatted by `@fresh/core`. The stepper proposes a requested
 quantity; the server's returned cart replaces the cached one.
+
+## 11. Home after the owner's reference (D188)
+
+Reference: `docs/design/mockups/web-home-reference-2026-10-28.png` (the owner's final reference, 1556 × 1011, desktop; the same picture as `web-home-reference-owner.png`). Same look as the app (D176,
+D181): Baloo 2 800 headings, Inter body, Dancing Script lines, the yellow `#F5D04A` brush, coral sparks and script,
+teal accents on cream. The reusable parts live in `@fresh/ui` (owner rule D207: shared UI belongs in the packages):
+`packages/ui/src/components/home-rich.tsx` has the scenery (`Trawler`, `HarbourSky`, `HeroWaves`), `HarbourHero`,
+`HeroHeadline`, `FeatureChip`, `CheckBar`, `PillLink`, `CategoryTile` and `CategoryTileRow`, `WaveBand`, `PromoCard`
+and `PromoCardGrid`; it reuses the theme marks and headers from `theme.tsx` (`Sparks`, `Swoosh`, `Gulls`,
+`SectionHeader`, `SectionAction`). `apps/web/src/components/home/` only composes them with the site's data, links,
+`next/image` and the pincode and search forms (`home-hero.tsx`, `home-check-bar.tsx`, `home-categories.tsx`,
+`promo-cards.tsx`), wired in `app/page.tsx`.
+
+| Block | Desktop (`lg`, ≥ 1024 px) | Phone (390 px) | Data |
+|---|---|---|---|
+| Hero (`HomeHero`) | Full-bleed, 460 px tall. Sky gradient peach → cream; drawn sun with glow, far shore, soft water (`HarbourSky`), gulls, an orange-teal trawler on a wave at the right (`Trawler`), waves curving into the page at the bottom (`HeroWaves`, 110 px). Padma (`public/home/hero-catch.png`, 1200 px wide, transparent) sits on the bottom edge at the left, 46 % of the container wide (max 700 px). Text block from 36 % to 92 % of the container, left aligned (the handwritten line sits above its right end): "Fresh fish." (Dancing Script, up to 76 px, coral sparks), "Cleaned your way." (script on the yellow brush), "At your door, in your slot." (Baloo 2 800, up to 42 px); three feature chips (48 px teal-tint circle icon + three lines). Top right: "From today's catch / to your kitchen" in coral script, rotated −8°, with a swoosh | Text centred and stacked, chips wrap, then the handwritten line, then Padma below in a 5:4 crop (max 440 px), waves 72 px; trawler and one flock hidden | Fixed marketing copy; the delivery chip shows the server's next slot ("Next slot …") when `GET /serviceability` has one, else "Pick a slot at checkout" |
+| Background slot | `heroBackground` prop (path or URL), `null` today; when set, it covers the hero behind the text and the drawn sky is left out (waves stay) | Same | Owner picture later |
+| Check bar (`HomeCheckBar`) | White card, radius 24, 16 px padding, overlapping the hero by 56 px, max 1024 px wide: pincode field ("Enter pincode, e.g. 533001") + "Check" (`PincodeForm variant="hero"`), 1 px divider, search with suggestions | Stacked, overlaps by 40 px | `GET /serviceability` (the server decides); `/search/suggest` |
+| "What's on your *mind?*" (`HomeCategories`) | Theme `SectionHeader` (Baloo heading, "mind?" in teal script, coral sparks); "View all →" outline pill to `/shop`. Circles 120 px on a peach (`accent-coral-subtle`) disc, label under, equal columns (`auto-fit, minmax(120px, 1fr)`) | 96 px circles in a sideways scroll row inside the 16 px gutters | `GET /home` `featuredCategories` (name, slug, `imageUrl`; fish mark when no picture). No category names in code (rule 7) |
+| Promo cards (`PromoCards`) | On a full-width pale band with a soft wave on top (`WaveBand`). Three in a row, min 160 px tall, radius 16, picture on the left 44 %, title (Baloo 20 px), one line, a pill link: mint "Today's Fresh Catch" with "Shop Fresh Fish →" to `/shop` (dark pill), coral "Cleaned Your Way" / "Whole · Steaks · Curry Cut" with "Learn More →" to `/support` (white pill, coral text), sky "Chilled & Delivered Fresh" with "See How It Works →" to `/support/delivery-policy` (white pill). Pictures in `public/home/` (resized with `sips`, transparent) | One column (two from `sm`) | Fixed marketing copy |
+| After these | Location banner, "Top picks in <city>", bestsellers, offers, "Filter and pick", get the app: unchanged (§0) | Same | Server |
+
+Spacing: one container (`max-w-7xl`, 16 px gutters, 32 px from `lg`), gaps from the 8/12/16/24/32 scale. No
+horizontal page scroll at 390 px: the only sideways scroller is the category row, which sits inside the gutters.
+Accessibility: one `h1` (the headline), `h2` for categories and for the promo cards (visually hidden), `h3` per card;
+every drawing is `aria-hidden`; Padma and the promo pictures have alt text; the two search forms are named landmarks
+("Search the shop" in the header, "Search products" in the bar). The demo banner (`NEXT_PUBLIC_DEMO_MODE`) stays above
+the header.

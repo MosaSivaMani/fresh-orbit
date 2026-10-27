@@ -186,6 +186,30 @@ export {
   type HeadingSize,
   type ScriptProps,
 } from "./components/heading";
+export {
+  CategoryTile,
+  CategoryTileRow,
+  CheckBar,
+  FeatureChip,
+  HarbourHero,
+  HarbourSky,
+  HeroHeadline,
+  HeroWaves,
+  PillLink,
+  PromoCard,
+  PromoCardGrid,
+  Trawler,
+  WaveBand,
+  type CategoryTileProps,
+  type CheckBarProps,
+  type FeatureChipProps,
+  type HarbourHeroProps,
+  type HeroHeadlineProps,
+  type PillLinkProps,
+  type PillTone,
+  type PromoCardProps,
+  type PromoTone,
+} from "./components/home-rich";
 export { Input, Textarea, type InputProps } from "./components/input";
 export {
   BandWaves,
