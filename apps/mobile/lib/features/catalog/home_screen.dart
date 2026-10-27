@@ -250,10 +250,11 @@ class _HomePage extends ConsumerWidget {
                       color: HomeColors.mangoCard,
                       accent: HomeColors.tealText,
                       icon: const Snowflake(color: HomeColors.tealText, scale: 0.62),
-                      title: keptCold ? 'Kept cold' : 'Delivered',
-                      secondLine: 'till your door',
+                      // The plain words are shorter than the claim, so the card keeps its height while loading.
+                      title: keptCold ? 'Kept cold' : 'Slots',
+                      secondLine: keptCold ? 'till your door' : 'to your door',
                       titleStyle: _cardTitle,
-                      body: keptCold ? 'Fresh on ice in every order.' : 'Your slots and fee.',
+                      body: keptCold ? 'Fresh on ice in every order.' : 'Fee and minimum order.',
                       action: 'See delivery',
                       // Below the title like the cleaned card's picture, so it never covers "door".
                       picture: _cardPicture(

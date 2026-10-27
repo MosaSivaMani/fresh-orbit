@@ -567,6 +567,6 @@ Every call the app sends was checked against the server's validators and the Ren
 | Any catalogue error | `PINCODE_NOT_SERVICEABLE` or `LOCATION_REQUIRED` (a stored pincode that is no longer served, or none) shows "Choose where to deliver" with **Change pincode** (opens `/location?change=1`) beside Try again (D236) |
 | Clear cart | `DELETE /cart` answered 404 `CART_NOT_FOUND` (the cart was ordered or expired) reads as the empty cart (D237) |
 | Home header | The city line is "City, State" when `/serviceability` sends `city.stateName` (D209), else the city alone (D238) |
-| Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Delivered till your door", "Your slots and fee." (D212, D239) |
+| Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Slots to your door", "Fee and minimum order." (D212, D239) |
 | Product page | "Caught Fri, 23 Oct" from the chosen size's `freshness.caughtOn` (CAT-R25); nothing when the server sends none (D240) |
 | Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |
