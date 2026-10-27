@@ -78,6 +78,52 @@ void main() {
     }
   });
 
+  testWidgets('on the owner phone (411×891) every page shows its banner, all the same size', (tester) async {
+    const banners = ['ONBOARDING_BANNER_FRESH', 'ONBOARDING_BANNER_CLEANED', 'ONBOARDING_BANNER_DELIVERY'];
+    IllustrationAssets.debugSetAvailable(const {});
+    await _pump(tester, size: const Size(411, 891));
+
+    final heights = <double>[];
+    for (var i = 0; i < banners.length; i++) {
+      final banner = find.byKey(ValueKey('banner-${banners[i]}'));
+      expect(banner, findsOneWidget, reason: 'page ${i + 1}');
+      final height = tester.getSize(banner).height;
+      expect(height, inInclusiveRange(96, 150), reason: 'page ${i + 1}');
+      heights.add(height);
+      // The banner sits inside the sheet, above the page dots.
+      final sheet = tester.getRect(find.byKey(ValueKey('onboardingSheet-${i + 1}')));
+      expect(tester.getRect(banner).bottom, lessThanOrEqualTo(sheet.bottom + 0.01), reason: 'page ${i + 1}');
+      expect(
+        find.descendant(of: find.byType(PageView), matching: find.byType(SingleChildScrollView)),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+      if (i < banners.length - 1) await _next(tester);
+    }
+    // The three pages share one sheet layout, so the banner is the same size on all of them.
+    for (final height in heights) {
+      expect(height, moreOrLessEquals(heights.first, epsilon: 0.5), reason: '$heights');
+    }
+  });
+
+  testWidgets('tile labels and the title stay on one line', (tester) async {
+    IllustrationAssets.debugSetAvailable(const {});
+    await _pump(tester, size: const Size(411, 891));
+
+    for (var i = 0; i < _pages.length; i++) {
+      final page = _pages[i];
+      for (final (label, _) in page.tiles) {
+        final sheet = find.byKey(ValueKey('onboardingSheet-${i + 1}'));
+        final text = tester.widget<Text>(find.descendant(of: sheet, matching: find.text(label)));
+        expect(text.maxLines, 1, reason: label);
+        expect(text.softWrap, isFalse, reason: label);
+      }
+      final title = tester.widget<Text>(find.text(page.title));
+      expect(title.maxLines, 1, reason: page.title);
+      if (i < _pages.length - 1) await _next(tester);
+    }
+  });
+
   testWidgets('tiles fall back to a drawn blob and icon and the banner to a drawn scene', (tester) async {
     IllustrationAssets.debugSetAvailable(const {});
     await _pump(tester, size: _tall);
