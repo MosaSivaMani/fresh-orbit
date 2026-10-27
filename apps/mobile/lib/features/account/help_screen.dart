@@ -1,15 +1,15 @@
 // Help and support. Answers describe how the app behaves, never a number or rule the server owns (those come
-// from configuration and show on the order itself). Support contacts are business configuration: the customer
-// API has no endpoint for them yet, so they come from --dart-define and the section says so when missing.
+// from configuration and show on the order itself). Support contacts are business configuration read from the
+// public business profile (GET /business-profile); the section says so when the owner has not set them up.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
+import '../../api/models/catalog.dart';
 import '../../core/launch.dart';
+import '../../state/catalog_state.dart';
 import '../../widgets/illustrated.dart';
-
-const supportPhoneDefine = String.fromEnvironment('SUPPORT_PHONE');
-const supportEmailDefine = String.fromEnvironment('SUPPORT_EMAIL');
 
 const _faq = <(String, String)>[
   (
@@ -39,14 +39,12 @@ const _faq = <(String, String)>[
   ),
 ];
 
-class HelpScreen extends StatelessWidget {
-  const HelpScreen({super.key, this.supportPhone = supportPhoneDefine, this.supportEmail = supportEmailDefine});
-
-  final String supportPhone;
-  final String supportEmail;
+class HelpScreen extends ConsumerWidget {
+  const HelpScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(businessProfileProvider);
     return Scaffold(
       appBar: const PageHeader(text: 'Help and', brushed: 'support'),
       body: ListView(
@@ -83,24 +81,65 @@ class HelpScreen extends StatelessWidget {
             padding: FreshLayout.page,
             child: PageTitle(text: 'Contact', brushed: 'us', size: 20),
           ),
-          if (supportPhone.isEmpty && supportEmail.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(FreshLayout.gutter),
-              child: InfoBanner(text: 'Contact details are not set up in this build of the app.'),
-            ),
-          if (supportPhone.isNotEmpty)
+          const SizedBox(height: 8),
+          Padding(
+            key: const Key('helpContacts'),
+            padding: FreshLayout.page,
+            child: switch (profile) {
+              AsyncData(:final value) => _Contacts(profile: value),
+              AsyncError() => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const InfoBanner(text: 'We could not load our contact details.'),
+                  TextButton(
+                    key: const Key('retryContacts'),
+                    onPressed: () => ref.invalidate(businessProfileProvider),
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
+              _ => const SkeletonBox(height: 56),
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Call and e-mail rows from the business profile; a note when the owner has not set them up yet.
+class _Contacts extends StatelessWidget {
+  const _Contacts({required this.profile});
+
+  final BusinessProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final phone = profile.supportPhone ?? '';
+    final email = profile.supportEmail ?? '';
+    final hours = profile.supportHours;
+    if (phone.isEmpty && email.isEmpty) {
+      return const InfoBanner(text: 'Our contact details are not set up yet. Please try again later.');
+    }
+    return SectionBox(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          if (phone.isNotEmpty)
             ListTile(
+              key: const Key('callSupport'),
               leading: const Icon(Icons.call_outlined),
               title: const Text('Call us'),
-              subtitle: Text(supportPhone),
-              onTap: () => openExternal(context, telUri(supportPhone)),
+              subtitle: Text(hours == null ? phone : '$phone · $hours'),
+              onTap: () => openExternal(context, telUri(phone)),
             ),
-          if (supportEmail.isNotEmpty)
+          if (email.isNotEmpty)
             ListTile(
+              key: const Key('emailSupport'),
               leading: const Icon(Icons.mail_outline),
               title: const Text('E-mail us'),
-              subtitle: Text(supportEmail),
-              onTap: () => openExternal(context, Uri(scheme: 'mailto', path: supportEmail)),
+              subtitle: Text(email),
+              onTap: () => openExternal(context, Uri(scheme: 'mailto', path: email)),
             ),
         ],
       ),
