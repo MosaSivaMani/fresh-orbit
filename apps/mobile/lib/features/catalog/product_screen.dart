@@ -296,7 +296,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                       for (final p in v.preparations)
                         _CutTile(
                           name: p.name,
-                          detail: _chargeText(p),
+                          detail: preparationChargeText(p),
                           selected: p.code == prep,
                           onTap: p.chargePaise == null
                               ? null
@@ -405,17 +405,6 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         ),
       ),
     );
-  }
-
-  static String _chargeText(Preparation p) {
-    final c = p.chargePaise;
-    if (c == null) return 'Not available here';
-    if (c == 0) return 'Free';
-    return switch (p.chargeBasis) {
-      'PER_KG' => '+${formatRupees(c)}/kg',
-      'PER_ITEM' => '+${formatRupees(c)}/piece',
-      _ => '+${formatRupees(c)}',
-    };
   }
 }
 

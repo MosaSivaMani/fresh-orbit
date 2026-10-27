@@ -11,9 +11,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/api_error.dart';
 import '../../api/models/cart.dart';
+import '../../api/models/catalog.dart';
 import '../../api/models/locations.dart';
 import '../../core/format.dart';
 import '../../state/cart_state.dart';
+import '../../state/catalog_state.dart';
 import '../../state/checkout_state.dart';
 import '../../state/location_state.dart';
 import '../../state/session.dart';
@@ -22,6 +24,7 @@ import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import 'totals_card.dart';
 
@@ -37,7 +40,9 @@ class CartScreen extends ConsumerWidget {
       return Scaffold(backgroundColor: BlockTone.coral.background(c), body: const _EmptyCart());
     }
     return Scaffold(
+      appBar: const PageHeader(text: 'Your', brushed: 'cart', back: false),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: RefreshIndicator(
           onRefresh: () => ref.read(cartProvider.notifier).reload(),
@@ -122,26 +127,21 @@ class _CartBody extends ConsumerWidget {
     final totals = cart.totals;
     final pincode = cart.pincode ?? ref.watch(pincodeProvider);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+      padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const ScriptTitle(text: 'Your', script: 'cart', size: 21),
-              Text(
-                [
-                  '${cart.lineCount} ${cart.lineCount == 1 ? 'item' : 'items'}',
-                  if (pincode != null) 'delivering to $pincode',
-                ].join(' · '),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: c.muted),
-              ),
-            ],
+          padding: const EdgeInsets.only(bottom: FreshLayout.cardGap),
+          child: Text(
+            [
+              '${cart.lineCount} ${cart.lineCount == 1 ? 'item' : 'items'}',
+              if (pincode != null) 'delivering to $pincode',
+            ].join(' · '),
+            key: const Key('cartSummary'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.muted),
           ),
         ),
         SectionBox(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: FreshLayout.cardGap, vertical: 4),
           child: Column(
             children: [
               for (var i = 0; i < cart.lines.length; i++) ...[
@@ -151,19 +151,19 @@ class _CartBody extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: FreshLayout.cardGap),
         const _CouponStrip(),
-        if (pincode != null) ...[const SizedBox(height: 8), _CartSlots(pincode: pincode)],
-        const SizedBox(height: 8),
+        if (pincode != null) ...[const SizedBox(height: FreshLayout.cardGap), _CartSlots(pincode: pincode)],
+        const SizedBox(height: FreshLayout.cardGap),
         for (final b in cart.checkoutBlockers)
           Padding(
-            padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
+            padding: const EdgeInsets.only(bottom: FreshLayout.cardGap),
             child: InfoBanner(tone: BannerTone.danger, text: b.message.isEmpty ? humanizeCode(b.code) : b.message),
           ),
         if (totals != null) ...[ShortfallBanners(totals: totals), TotalsCard(totals: totals)],
         for (final m in cart.messages)
           Padding(
-            padding: const EdgeInsets.only(top: FreshSpacing.s2),
+            padding: const EdgeInsets.only(top: FreshLayout.cardGap),
             child: InfoBanner(text: m),
           ),
       ],
@@ -200,6 +200,17 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
 
   Future<void> _step({required bool up}) => _run(() => ref.read(cartProvider.notifier).stepLine(widget.line, up: up));
 
+  /// The cuts the server sells for this line's size at this pincode; the server re-prices the line.
+  Future<void> _changeCut() async {
+    final code = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _ChangeCutSheet(line: widget.line),
+    );
+    if (code == null || code == widget.line.preparation?.code) return;
+    await _run(() => ref.read(cartProvider.notifier).changePreparation(widget.line.id, code));
+  }
+
   @override
   Widget build(BuildContext context) {
     final line = widget.line;
@@ -215,26 +226,54 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: tints[widget.index % tints.length],
-                  borderRadius: BorderRadius.circular(12),
+              Semantics(
+                button: true,
+                label: 'Open ${line.productName}',
+                excludeSemantics: true,
+                child: InkWell(
+                  key: ValueKey('cartLinePhoto-${line.id}'),
+                  borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                  onTap: () => context.push('/product/${line.productSlug}'),
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: tints[widget.index % tints.length],
+                      borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: ProductPhoto(url: line.imageUrl, radius: 0, transparent: true),
+                  ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: ProductPhoto(url: line.imageUrl, radius: 0, transparent: true),
               ),
-              const SizedBox(width: 9),
+              const SizedBox(width: FreshLayout.cardGap),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(line.productName, style: AppText.display(c.ink, 14)),
+                    Text(line.productName, style: AppText.display(c.ink, 15)),
                     Text(
                       [line.variantName, if (line.preparation != null) line.preparation!.name].join(' · '),
                       style: muted,
                     ),
+                    if (line.preparation != null)
+                      InkWell(
+                        key: ValueKey('changeCut-${line.id}'),
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: _pending ? null : _changeCut,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(
+                            'Change cut ›',
+                            style: TextStyle(
+                              fontFamily: AppFonts.body,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: c.tealDeep,
+                            ),
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 2),
                     PriceTag(
                       paise: line.estimatedLineTotalPaise,
@@ -270,14 +309,14 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
             ],
           ),
           if (line.availability != null && line.availability!.status != 'IN_STOCK') ...[
-            const SizedBox(height: FreshSpacing.s2),
+            const SizedBox(height: 8),
             InfoBanner(
               tone: line.availability!.canAdd ? BannerTone.warning : BannerTone.danger,
               text: line.availability!.message ?? humanizeCode(line.availability!.status),
             ),
           ],
           for (final issue in line.issues) ...[
-            const SizedBox(height: FreshSpacing.s2),
+            const SizedBox(height: 8),
             InfoBanner(tone: BannerTone.danger, text: issue.message.isEmpty ? humanizeCode(issue.code) : issue.message),
           ],
         ],
@@ -303,7 +342,7 @@ class _CartSlots extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionTitle('Delivery slot'),
+          const PageTitle(text: 'Delivery', brushed: 'slot', size: 18),
           const SizedBox(height: 8),
           if (open.isEmpty)
             Text(
@@ -314,7 +353,7 @@ class _CartSlots extends ConsumerWidget {
             Row(
               children: [
                 for (var i = 0; i < open.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
+                  if (i > 0) const SizedBox(width: 8),
                   Expanded(child: _slotButton(ref, open[i], chosen)),
                 ],
               ],
@@ -391,10 +430,10 @@ class _CouponStripState extends ConsumerState<_CouponStrip> {
     final bold = AppText.display(c.ink, 13.5);
     final small = TextStyle(fontFamily: AppFonts.body, fontSize: 12, color: c.ink);
     Widget strip(Widget child) => Container(
-      padding: const EdgeInsets.fromLTRB(11, 8, 6, 8),
+      padding: const EdgeInsets.fromLTRB(FreshLayout.cardGap, 8, 6, 8),
       decoration: BoxDecoration(
         color: c.mangoSoft,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
         border: Border.all(color: c.mango, width: 1.5),
       ),
       child: Row(
@@ -407,7 +446,7 @@ class _CouponStripState extends ConsumerState<_CouponStrip> {
     );
     if (!signedIn) {
       return InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
         onTap: () => context.push(Uri(path: '/login', queryParameters: {'from': '/cart'}).toString()),
         child: strip(Text('Sign in to apply a coupon', style: bold)),
       );
@@ -465,6 +504,83 @@ class _CouponStripState extends ConsumerState<_CouponStrip> {
           const SizedBox(width: 6),
           TextButton(onPressed: _busy ? null : _apply, child: const Text('Apply')),
         ],
+      ),
+    );
+  }
+}
+
+/// The cuts of a cart line's size at the current pincode, from the product endpoint, each with the server's
+/// charge. Picking one returns its code; the cart sends it and shows the server's re-priced line.
+class _ChangeCutSheet extends ConsumerWidget {
+  const _ChangeCutSheet({required this.line});
+
+  final CartLine line;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = illustratedColors(context);
+    final provider = productDetailProvider(ProductRequest(line.productSlug));
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
+        child: Column(
+          key: const Key('changeCutSheet'),
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const PageTitle(text: 'Change your', brushed: 'cut', size: 22),
+            const SizedBox(height: 4),
+            Text(line.productName, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.muted)),
+            const SizedBox(height: FreshLayout.cardGap),
+            AsyncValueView<ProductDetail>(
+              value: ref.watch(provider),
+              onRetry: () => ref.invalidate(provider),
+              loading: const Padding(
+                padding: EdgeInsets.all(FreshLayout.sectionGap),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              data: (detail) {
+                final variant = detail.variants.where((v) => v.id == line.variantId).firstOrNull;
+                final cuts = [...?variant?.preparations.where((p) => p.chargePaise != null)];
+                if (cuts.isEmpty) {
+                  return Text(
+                    'No other cut is sold for this size here.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: c.muted),
+                  );
+                }
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final p in cuts)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: p.code == line.preparation?.code ? c.tealSoft : c.paper,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                            side: BorderSide(
+                              color: p.code == line.preparation?.code ? c.tealText : c.line,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: ListTile(
+                            key: ValueKey('cut-${p.code}'),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(FreshLayout.tileRadius)),
+                            title: Text(p.name),
+                            subtitle: Text('${preparationChargeText(p)} · ${formatYieldNote(p.yieldBp)}'),
+                            trailing: p.code == line.preparation?.code
+                                ? Icon(Icons.check_rounded, color: c.tealText)
+                                : null,
+                            onTap: () => Navigator.pop(context, p.code),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

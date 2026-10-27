@@ -274,6 +274,19 @@ class ProductPhoto extends StatelessWidget {
   }
 }
 
+/// A cut's charge at the pincode, as the server gives it: "Free", "+₹40/kg", or "Not available here" when the
+/// server has no charge for it (not offered at this location).
+String preparationChargeText(Preparation p) {
+  final c = p.chargePaise;
+  if (c == null) return 'Not available here';
+  if (c == 0) return 'Free';
+  return switch (p.chargeBasis) {
+    'PER_KG' => '+${formatRupees(c)}/kg',
+    'PER_ITEM' => '+${formatRupees(c)}/piece',
+    _ => '+${formatRupees(c)}',
+  };
+}
+
 /// What the picture-edge button of a [ProductCard] shows.
 sealed class CardCartControl {
   const CardCartControl();

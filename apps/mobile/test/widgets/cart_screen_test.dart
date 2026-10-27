@@ -68,6 +68,27 @@ void main() {
     expect(find.byKey(const Key('checkoutButton')), findsNothing);
   });
 
+  testWidgets('change cut: lists the server cuts for the line size and sends the chosen one', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.cart.current = cart();
+    deps.catalog.onProduct = (_, _) async => productDetail();
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('pageHeader')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('changeCut-line1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('changeCutSheet')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cut-WHOLE')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cut-STEAK')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('cut-FILLET')));
+    await tester.pumpAndSettle();
+
+    expect(deps.cart.calls, contains('changePreparation'));
+    expect(find.byKey(const Key('changeCutSheet')), findsNothing);
+  });
+
   testWidgets('coupon: applied by the server, refusal shown at the field', (tester) async {
     final deps = TestDeps(pincode: '600041', signedIn: true);
     deps.cart.current = cart();

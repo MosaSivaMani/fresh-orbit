@@ -50,6 +50,10 @@ class CartController extends AsyncNotifier<Cart> {
 
   Future<Cart> remove(String lineId) => _write((r) => r.remove(lineId));
 
+  /// Changes a line's cut; the server re-prices the line and returns the cart.
+  Future<Cart> changePreparation(String lineId, String preparationCode) =>
+      _write((r) => r.changePreparation(lineId, preparationCode));
+
   Future<Cart> clear() => _write((r) => r.clear());
 
   Future<Cart> applyCoupon(String code) => _write((r) => r.applyCoupon(code));
