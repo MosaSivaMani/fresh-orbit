@@ -15,6 +15,7 @@ import { PurchasePanel } from "@/components/product/purchase-panel";
 import { WishlistButton } from "@/components/product/wishlist-button";
 import { GetTheApp } from "@/components/get-the-app";
 import { Container, Section } from "@/components/section";
+import { Sparks } from "@/components/theme/marks";
 import { productJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { settle } from "@/lib/settle";
 import { sourceTypeLabels } from "@/lib/status-maps";
@@ -119,6 +120,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
                   <Script tone="accent">{product.localNames[0]}</Script>
                 </>
               )}
+              <Sparks className="text-accent-coral ml-1 w-7 -translate-y-4" />
             </Heading>
             {product.localNames.length > 1 && (
               <p className="text-text-muted">
@@ -131,16 +133,22 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           </div>
 
           <ul className="grid grid-cols-3 gap-2" aria-label="About this product">
-            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
-              <Fish aria-hidden="true" className="text-accent-text size-[18px]" />
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1.5 rounded-[20px] px-2 py-3 text-center text-xs font-bold">
+              <span className="bg-teal-soft text-accent-text grid size-9 place-items-center rounded-full">
+                <Fish aria-hidden="true" className="size-[18px]" />
+              </span>
               {sourceTypeLabels[product.sourceType] ?? product.sourceType}
             </li>
-            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
-              <MapPin aria-hidden="true" className="text-accent-text size-[18px]" />
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1.5 rounded-[20px] px-2 py-3 text-center text-xs font-bold">
+              <span className="bg-teal-soft text-accent-text grid size-9 place-items-center rounded-full">
+                <MapPin aria-hidden="true" className="size-[18px]" />
+              </span>
               {product.sourceRegion ?? product.category.name}
             </li>
-            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1 rounded-[14px] px-2 py-2.5 text-center text-xs font-bold">
-              <Clock aria-hidden="true" className="text-accent-text size-[18px]" />
+            <li className="bg-surface-paper shadow-soft-sm grid justify-items-center gap-1.5 rounded-[20px] px-2 py-3 text-center text-xs font-bold">
+              <span className="bg-teal-soft text-accent-text grid size-9 place-items-center rounded-full">
+                <Clock aria-hidden="true" className="size-[18px]" />
+              </span>
               {area?.nextSlot
                 ? `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)}`
                 : "Pick a slot at checkout"}
@@ -154,7 +162,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
           </div>
 
           {area?.serviceable && area.serviceArea && (
-            <div className="bg-surface-sand flex gap-3 rounded-[18px] p-4 text-sm">
+            <div className="bg-surface-sand flex gap-3 rounded-[20px] p-4 text-sm">
               <Truck aria-hidden="true" className="text-accent-text mt-0.5 size-5 shrink-0" />
               <div className="flex flex-col gap-1">
                 <p className="text-text font-semibold">

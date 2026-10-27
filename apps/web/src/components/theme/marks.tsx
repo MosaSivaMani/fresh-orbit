@@ -1,7 +1,7 @@
 // The app's highlight marks for every inner page of the website (D181, D188): sparks beside a highlighted word, a
 // swoosh under a handwritten line, a few gulls and the waves that curve a page band into the page. Drawn for the web
 // in our own shapes. Every mark is decorative: aria-hidden, no text, no focus, no motion.
-import { cn } from "@fresh/ui";
+import { cx } from "@/lib/cx";
 
 type MarkProps = { className?: string };
 
@@ -12,7 +12,7 @@ export function Sparks({ className }: MarkProps) {
       aria-hidden="true"
       focusable="false"
       viewBox="0 0 34 30"
-      className={cn("inline-block shrink-0", className)}
+      className={cx("inline-block shrink-0", className)}
       fill="none"
       stroke="currentColor"
       strokeWidth={3.6}
@@ -31,7 +31,7 @@ export function Swoosh({ className }: MarkProps) {
       focusable="false"
       viewBox="0 0 140 9"
       preserveAspectRatio="none"
-      className={cn("block", className)}
+      className={cx("block", className)}
       fill="none"
       stroke="currentColor"
       strokeWidth={2.2}
@@ -49,7 +49,7 @@ export function Gulls({ className }: MarkProps) {
       aria-hidden="true"
       focusable="false"
       viewBox="0 0 120 50"
-      className={cn("block", className)}
+      className={cx("block", className)}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -75,7 +75,7 @@ export function BandWaves({ className }: MarkProps) {
       focusable="false"
       viewBox="0 0 1600 80"
       preserveAspectRatio="none"
-      className={cn(
+      className={cx(
         "pointer-events-none absolute inset-x-0 bottom-0 block h-10 w-full sm:h-14",
         className,
       )}

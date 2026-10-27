@@ -11,8 +11,6 @@ import {
   AvatarCircle,
   BillBox,
   type BillRow,
-  PageBand,
-  Script,
   Skeleton,
   StatusBadge,
   StatusSteps,
@@ -27,6 +25,7 @@ import { type OrderAmounts, type OrderDetail } from "@/api/types/orders";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Container } from "@/components/section";
 import { LoadError } from "@/components/states";
+import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 import { asApiError } from "@/lib/errors";
 import { orderSlot, orderSteps } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";
@@ -108,16 +107,16 @@ function Items({ order }: { order: OrderDetail }) {
 
 function Band({ order, aside }: { order?: OrderDetail; aside?: ReactNode }) {
   return (
-    <PageBand
+    <ThemeBand
       eyebrow={order ? `Placed ${formatDateTime(order.placedAt)}` : undefined}
       title={
         order ? (
           <>
-            Order <Script>{order.orderNumber}</Script>
+            Order <Highlight>{order.orderNumber}</Highlight>
           </>
         ) : (
           <>
-            Your <Script>order</Script>
+            Your <Highlight>order</Highlight>
           </>
         )
       }
@@ -126,7 +125,7 @@ function Band({ order, aside }: { order?: OrderDetail; aside?: ReactNode }) {
   );
 }
 
-/** Order tracking (D95): status steps, delivery code when sent, rider, items, the bill and the allowed actions. */
+/** Order tracking (D181): status steps, delivery code when sent, rider, items, the bill and the allowed actions. */
 export function OrderDetailView({ orderId }: { orderId: string }) {
   const order = useQuery({
     queryKey: queryKeys.order(orderId),

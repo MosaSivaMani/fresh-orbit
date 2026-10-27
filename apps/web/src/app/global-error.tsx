@@ -3,7 +3,7 @@
 import { Button, CharacterState } from "@fresh/ui";
 import "./globals.css";
 
-/** Last-resort boundary when the root layout itself fails; renders its own html/body (D95 character state). */
+/** Last-resort boundary when the root layout itself fails; renders its own html/body (D181 character state on the harbour sky). */
 export default function GlobalError({
   error,
   reset,
@@ -13,7 +13,7 @@ export default function GlobalError({
 }) {
   return (
     <html lang="en-IN">
-      <body className="flex min-h-dvh items-center justify-center p-6">
+      <body className="fo-sky flex min-h-dvh items-center justify-center p-6">
         <div role="alert" className="max-w-md">
           <CharacterState
             slot="ERROR_GENERIC"

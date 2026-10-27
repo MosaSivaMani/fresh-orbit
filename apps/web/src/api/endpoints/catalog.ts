@@ -13,6 +13,7 @@ import {
 import { type Page } from "../types/common";
 import {
   type DeliverySlotsResponse,
+  type PublicBusinessProfile,
   type PublicCity,
   type ServiceabilityResponse,
 } from "../types/locations";
@@ -82,6 +83,11 @@ export function getServiceability(
 
 export function getCities(http: HttpClient): Promise<PublicCity[]> {
   return http.get<PublicCity[]>("/cities");
+}
+
+/** The store's public contact details for the help page (gap W7). */
+export function getBusinessProfile(http: HttpClient): Promise<PublicBusinessProfile> {
+  return http.get<PublicBusinessProfile>("/business-profile");
 }
 
 /** Slots for a pincode (query wins over the header, docs/api §1.4). */

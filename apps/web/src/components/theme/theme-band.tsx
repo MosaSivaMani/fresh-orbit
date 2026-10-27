@@ -1,5 +1,6 @@
-import { AvatarCircle, Brush, type IllustrationSlot, cn } from "@fresh/ui";
+import { AvatarCircle, Brush, type IllustrationSlot } from "@fresh/ui";
 import { type ComponentProps, type ReactNode } from "react";
+import { cx } from "@/lib/cx";
 import { BandWaves, Gulls, Sparks, Swoosh } from "./marks";
 
 /**
@@ -7,7 +8,22 @@ import { BandWaves, Gulls, Sparks, Swoosh } from "./marks";
  * word stays real ink text, so it reads in every theme.
  */
 export function Highlight({ className, ...props }: ComponentProps<"span">) {
-  return <Brush className={cn("[--fo-brush-colour:#F5D04A]", className)} {...props} />;
+  return <Brush className={cx("[--fo-brush-colour:#F5D04A]", className)} {...props} />;
+}
+
+/**
+ * The harbour sky behind a whole-page state (not found, error): gulls at the top, waves at the foot, the content
+ * centred between them.
+ */
+export function SkyPanel({ className, children, ...props }: ComponentProps<"div">) {
+  return (
+    <div className={cx("fo-sky relative isolate overflow-hidden pb-10", className)} {...props}>
+      <Gulls className="text-outline-ink/40 absolute top-6 right-[8%] w-24 sm:w-32" />
+      <Gulls className="text-outline-ink/30 absolute top-16 left-[6%] hidden w-20 sm:block" />
+      <div className="relative mx-auto w-full max-w-3xl px-4">{children}</div>
+      <BandWaves />
+    </div>
+  );
 }
 
 export interface ThemeBandProps extends Omit<ComponentProps<"section">, "title"> {
@@ -45,7 +61,7 @@ export function ThemeBand({
 }: ThemeBandProps) {
   const Heading = headingLevel === 1 ? "h1" : "h2";
   return (
-    <section className={cn("fo-sky relative isolate overflow-hidden", className)} {...props}>
+    <section className={cx("fo-sky relative isolate overflow-hidden", className)} {...props}>
       <Gulls className="text-outline-ink/40 absolute top-4 right-[6%] w-20 sm:top-6 sm:w-28" />
       <div className="relative mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-x-6 gap-y-4 px-4 pt-6 pb-14 sm:pt-8 sm:pb-20 lg:px-8">
         <div className="grid min-w-0 flex-1 gap-2">

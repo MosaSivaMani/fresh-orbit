@@ -1,14 +1,18 @@
 import { Button, CharacterState, Script } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Container } from "@/components/section";
+import { Sparks } from "@/components/theme/marks";
+import { Highlight, SkyPanel } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = { title: "Page not found", robots: { index: false } };
 
-/** 404 (D95): the NOT_FOUND character in its ringed circle, a heading with a handwritten word, and two ways on. */
+/**
+ * 404 (D181): the harbour sky, the NOT_FOUND character in its ringed circle, a heading with the handwritten words on
+ * the yellow brush and sparks, and three ways on.
+ */
 export default function NotFound() {
   return (
-    <Container>
+    <SkyPanel>
       <CharacterState
         slot="NOT_FOUND"
         avatarSize="md"
@@ -16,7 +20,11 @@ export default function NotFound() {
         className="py-14 sm:py-20"
         title={
           <>
-            This page <Script tone="accent">swam away</Script>
+            This page{" "}
+            <Highlight>
+              <Script>swam away</Script>
+            </Highlight>
+            <Sparks className="text-accent-coral ml-1 w-8 -translate-y-4" />
           </>
         }
         description="The page you are looking for does not exist or is no longer available."
@@ -28,9 +36,12 @@ export default function NotFound() {
             <Button asChild size="lg" variant="outline">
               <Link href="/">Go home</Link>
             </Button>
+            <Button asChild size="lg" variant="ghost">
+              <Link href="/support">Get help</Link>
+            </Button>
           </>
         }
       />
-    </Container>
+    </SkyPanel>
   );
 }

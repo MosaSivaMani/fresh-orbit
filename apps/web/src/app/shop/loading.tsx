@@ -7,7 +7,7 @@ export default function Loading() {
       <span className="sr-only" role="status">
         Loading products
       </span>
-      <div className="bg-block-coral h-44 w-full" aria-hidden="true" />
+      <div className="fo-sky h-52 w-full" aria-hidden="true" />
       <Container className="py-8">
         <ProductGridSkeleton />
       </Container>

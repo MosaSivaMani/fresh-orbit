@@ -1,5 +1,5 @@
 import { isApiError } from "@fresh/core";
-import { FilterChip, PageBand } from "@fresh/ui";
+import { FilterChip } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,6 +10,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageSearch } from "@/components/header/page-search";
 import { Container } from "@/components/section";
 import { ProductListing } from "@/components/shop/product-listing";
+import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 import { parseShopFilters } from "@/lib/shop-params";
 import { settle } from "@/lib/settle";
 
@@ -45,7 +46,7 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
   const filters = parseShopFilters(searchParams, detail.slug);
   return (
     <>
-      <PageBand
+      <ThemeBand
         eyebrow={
           <Breadcrumbs
             tone="band"
@@ -59,11 +60,11 @@ export default async function CategoryPage(props: PageProps<"/shop/[category]">)
             ]}
           />
         }
-        title={detail.name}
+        title={<Highlight>{detail.name}</Highlight>}
         description={detail.description ?? undefined}
       >
         <PageSearch />
-      </PageBand>
+      </ThemeBand>
       <Container className="flex flex-col gap-5 py-6 sm:py-8">
         {detail.children.length > 0 && (
           <ul className="flex flex-wrap gap-2" aria-label="Sub-categories">
