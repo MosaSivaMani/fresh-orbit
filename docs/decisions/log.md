@@ -204,3 +204,8 @@ Manager rulings on engineers' open questions. A ruling here wins over older text
 | D198 | 2026-10-24 | Preparation method for staff | Staff without catalog.manage pick from all preparation methods; the server refuses one the variant does not offer (PR #17). |
 | D199 | 2026-10-24 | Dashboard sales today | Dashboard "Sales today" shows orderValuePaise; delivered revenue is the sub-line (PR #17). |
 | D200 | 2026-10-24 | City lookup is staff-readable | The City policy button and city pickers no longer need locations.manage; the cities lookup is readable by any staff (PR #17). |
+| D201 | 2026-10-27 | Committed sample pictures | A sample image key `sample/<path>` is backed by `backend/data/sample/images/<path>` when that file exists, else the drawn placeholder; the validator checks every file maps to a key and is under 400 KB (PR #19). |
+| D202 | 2026-10-27 | WebP made on CI | WebP copies of sample pictures are made on the CI runner (workflow sample-images.yml, Pillow) and committed, never on the Mac (PR #19). |
+| D203 | 2026-10-27 | Nine sample categories | New sample categories Marinated, Fish Eggs and Ready to Eat (sort 70/80/90), active and empty, so the tree matches the owner's 9-category reference (D188) (PR #19). |
+| D204 | 2026-10-27 | Picture use | category_squid is unused (no squid category in the reference); the seer-steaks picture is the WELCOME100 banner, the prawns picture the prawn-week banner (PR #19). |
+| D205 | 2026-10-27 | Demo media fallback | The demo media fallback (D160) serves the committed sample picture for a missing /media/sample/... file before drawing a placeholder (PR #19). |

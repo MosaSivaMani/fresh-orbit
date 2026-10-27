@@ -6,15 +6,18 @@ using SkiaSharp;
 namespace FreshOrbit.Hosting;
 
 /// <summary>
-/// Demo only (<see cref="DemoSetup.UseFreshOrbitDemoMedia"/>): the sample placeholder drawing for an image key whose
-/// file is gone. Sizes follow the key: banners 1600×600, categories 1200×800, product renditions (<c>…/640.webp</c>)
-/// square at the nearest rendition width, anything else 640×640. Each size and format is rendered once.
+/// Demo only (<see cref="DemoSetup.UseFreshOrbitDemoMedia"/>): for an image key whose file is gone, the sample set's
+/// committed picture for that key (<see cref="SampleImageFiles"/>, read once) when there is one, else the sample
+/// placeholder drawing. Drawing sizes follow the key: banners 1600×600, categories 1200×800, product renditions
+/// (<c>…/640.webp</c>) square at the nearest rendition width, anything else 640×640. Each size and format is rendered once.
 /// </summary>
-internal sealed class DemoMediaPlaceholders
+internal sealed class DemoMediaPlaceholders(string? sampleDirectory)
 {
     private static readonly int[] RenditionWidths = [320, 640, 1280];
 
     private readonly ConcurrentDictionary<(PlaceholderShape Shape, int Width, int Height, SKEncodedImageFormat Format), byte[]> _rendered = new();
+
+    private readonly ConcurrentDictionary<string, byte[]> _files = new(StringComparer.Ordinal);
 
     public static bool TryGetFormat(string key, out SKEncodedImageFormat format, out string contentType)
     {
@@ -62,6 +65,12 @@ internal sealed class DemoMediaPlaceholders
 
     public byte[] For(string key, SKEncodedImageFormat format)
     {
+        if (SampleImageFiles.Find(sampleDirectory, key) is { } file
+            && string.Equals(Path.GetExtension(file), Path.GetExtension(key), StringComparison.OrdinalIgnoreCase))
+        {
+            return _files.GetOrAdd(file, File.ReadAllBytes);
+        }
+
         var (width, height) = SizeFor(key);
         var shape = SamplePlaceholderRenderer.ShapeFor(key);
         return _rendered.GetOrAdd((shape, width, height, format), static k => SamplePlaceholderRenderer.Render(k.Width, k.Height, k.Shape, k.Format));

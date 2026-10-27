@@ -38,6 +38,9 @@ public static class DemoSetup
 {
     public const string EnvironmentName = "Demo";
 
+    /// <summary>The sample set's directory; the demo image sets it (infra/docker/api-demo.Dockerfile).</summary>
+    public const string SampleDataPathKey = "Seeding:SampleDataPath";
+
     public static bool IsDemo(this IHostEnvironment environment)
     {
         ArgumentNullException.ThrowIfNull(environment);
@@ -74,7 +77,8 @@ public static class DemoSetup
 
     /// <summary>
     /// Demo only: an image under <c>/media/*</c> that is not on disk (the free host's disk is emptied by every
-    /// restart, while the database keeps the image keys) is answered with the sample placeholder drawing in the
+    /// restart, while the database keeps the image keys) is answered with the sample set's committed picture for the
+    /// key when there is one, else with the sample placeholder drawing in the
     /// requested format, rendered once per size and kept in memory; nothing is written to disk. Call right after
     /// <c>UseFreshOrbitMedia()</c>, so files that exist are still served from disk. Does nothing elsewhere.
     /// </summary>
@@ -86,7 +90,9 @@ public static class DemoSetup
             return app;
         }
 
-        var placeholders = new DemoMediaPlaceholders();
+        // The sample set's directory (Seeding:SampleDataPath, set in the demo image) holds the committed pictures.
+        var sampleDirectory = app.ApplicationServices.GetRequiredService<IConfiguration>()[SampleDataPathKey];
+        var placeholders = new DemoMediaPlaceholders(sampleDirectory);
         return app.Use(async (context, next) =>
         {
             var request = context.Request;
