@@ -250,9 +250,9 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
               : const EmptyState(slot: IllustrationSlot.notFound, title: 'Address not found'),
         );
       } else {
-        return Scaffold(
-          appBar: const PageHeader(text: 'Edit', brushed: 'address'),
-          body: const ListSkeleton(rows: 4),
+        return const Scaffold(
+          appBar: PageHeader(text: 'Edit', brushed: 'address'),
+          body: ListSkeleton(rows: 4),
         );
       }
     }
