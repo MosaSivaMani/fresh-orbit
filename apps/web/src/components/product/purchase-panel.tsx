@@ -15,6 +15,7 @@ import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
+import { NotifyMe } from "./notify-me";
 
 function chargeText(p: Preparation): string {
   if (p.chargePaise === null) return "Not offered at your store";
@@ -241,6 +242,10 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
             The estimated and maximum price for your weight are shown as soon as it is in your cart.
           </p>
         )
+      )}
+
+      {pincode && availability?.status === "OUT_OF_STOCK" && (
+        <NotifyMe variantId={variant.id} pincode={pincode} returnTo={`/products/${initial.slug}`} />
       )}
 
       {error && (

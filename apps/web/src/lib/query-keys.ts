@@ -8,6 +8,7 @@ export const queryKeys = {
   profile: ["me"] as const,
   addresses: ["me", "addresses"] as const,
   wishlist: ["me", "wishlist"] as const,
+  stockAlerts: ["me", "stock-alerts"] as const,
   notifications: (page: number) => ["me", "notifications", page] as const,
   preferences: ["me", "preferences"] as const,
   orders: (page: number) => ["orders", page] as const,

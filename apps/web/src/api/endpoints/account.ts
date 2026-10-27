@@ -5,6 +5,7 @@ import {
   type PreferenceItem,
   type PreferencesResponse,
   type Profile,
+  type StockAlert,
   type UpdateProfileRequest,
   type VisibleCoupon,
   type WishlistItem,
@@ -71,6 +72,24 @@ export function addToWishlist(http: HttpClient, productId: string): Promise<void
 
 export function removeFromWishlist(http: HttpClient, productId: string): Promise<void> {
   return http.delete<void>(`/me/wishlist/${encodeURIComponent(productId)}`);
+}
+
+/** The customer's "notify me when back in stock" alerts. */
+export function listStockAlerts(http: HttpClient): Promise<StockAlert[]> {
+  return http.get<StockAlert[]>("/me/stock-alerts");
+}
+
+/** Asks to be told when a sold-out size is back at the store that serves the pincode. */
+export function createStockAlert(
+  http: HttpClient,
+  variantId: string,
+  fulfillmentLocationId: string,
+): Promise<StockAlert> {
+  return http.post<StockAlert>("/me/stock-alerts", { variantId, fulfillmentLocationId });
+}
+
+export function deleteStockAlert(http: HttpClient, alertId: string): Promise<void> {
+  return http.delete<void>(`/me/stock-alerts/${encodeURIComponent(alertId)}`);
 }
 
 export function listNotifications(

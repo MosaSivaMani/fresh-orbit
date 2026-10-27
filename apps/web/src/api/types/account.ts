@@ -12,6 +12,9 @@ export type UpdateProfileRequest = Partial<Schema<"UpdateProfileRequest">>;
 /** `GET /me/wishlist`: id, date and a priced product summary per item (gap W5 closed). */
 export type WishlistItem = Schema<"WishlistItemResponse">;
 
+/** `GET/POST /me/stock-alerts`: one alert per size and store. */
+export type StockAlert = Schema<"StockAlertResponse">;
+
 export type InboxItem = Schema<"InboxItem">;
 
 export type InboxResponse = Schema<"InboxResponse">;
