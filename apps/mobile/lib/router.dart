@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/format.dart';
@@ -162,10 +163,14 @@ class AppShell extends ConsumerWidget {
         children: [
           const SizedBox(height: 8),
           if (showCartBar)
-            ViewCartBar(
+            FreshCartBar(
               count: cartCount,
               amount: formatRupees(cart.totals!.subtotalPaise),
-              thumbnails: [for (final line in cart.lines.take(2)) line.imageUrl],
+              // Only lines that have a picture; none leaves the space out (no empty circles).
+              thumbnails: [
+                for (final line in cart.lines)
+                  if (line.imageUrl case final url? when url.isNotEmpty) url,
+              ].take(2).toList(),
               onTap: () => shell.goBranch(2),
             ),
           FoodTabBar(

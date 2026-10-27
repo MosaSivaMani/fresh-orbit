@@ -7,6 +7,7 @@ import 'package:fresh_orbit_app/widgets/bold.dart';
 import 'package:fresh_orbit_app/widgets/commerce.dart';
 import 'package:fresh_orbit_app/widgets/heading.dart';
 import 'package:fresh_orbit_app/widgets/illustrated.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -192,10 +193,10 @@ void main() {
     });
   });
 
-  testWidgets('ViewCartBar shows the count and the given amount, and opens the cart', (tester) async {
+  testWidgets('the cart bar shows the count and the given amount, and opens the cart', (tester) async {
     final handle = tester.ensureSemantics();
     var opened = 0;
-    await _pump(tester, ViewCartBar(count: 2, amount: '₹708.50', onTap: () => opened++));
+    await _pump(tester, FreshCartBar(count: 2, amount: '₹708.50', onTap: () => opened++));
 
     expect(find.text('2 ITEMS ADDED'), findsOneWidget);
     expect(find.text('₹708.50'), findsOneWidget);
@@ -203,6 +204,14 @@ void main() {
     await tester.tap(find.byKey(const Key('viewCartBar')));
     expect(opened, 1);
     handle.dispose();
+  });
+
+  testWidgets('the cart bar shows no picture circles when no line has a picture', (tester) async {
+    await _pump(tester, FreshCartBar(count: 2, amount: '₹708.50', onTap: () {}));
+
+    expect(find.byKey(const ValueKey('cartThumb-0')), findsNothing);
+    expect(find.byType(Image), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   group('ProductCard', () {

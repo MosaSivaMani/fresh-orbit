@@ -5,12 +5,17 @@
 // row, which starts on the gutter and lets the second card peek. The harbour, the palms and the sparks are drawn
 // with the theme package's scenery and are not read by screen readers.
 //
-// The page fits one screen (D182): it is laid out at the screen width and scaled down to the space above the
+// The page fits one screen (D182, D209): it is laid out at the screen width and scaled down to the space above the
 // cart bar and the menu (both live in the shell, so they never cover it). Only at a system text scale of 1.5 or
-// more does it scroll, with clamping physics (no bounce).
+// more does it scroll, with clamping physics (no bounce). A page shorter than the screen gives the room left to
+// the offer pictures, so no dead gap is left above the cart bar. The chip, cards, category tiles and offer cards
+// are the theme package's parts (D207); categories and offers without a server picture show the owner's bundled
+// pictures (D208).
 //
 // Every business value comes from the server (rule 4): the pincode and city (serviceability), the first name
 // (profile), the next slot, the categories and their pictures, the offers, and the cart in the shell.
+
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,16 +121,26 @@ class HomeScreen extends ConsumerWidget {
                 return SingleChildScrollView(
                   key: const Key('homeScroll'),
                   physics: const ClampingScrollPhysics(),
-                  child: SizedBox(width: box.maxWidth, child: _HomePage(data: data)),
+                  child: SizedBox(width: box.maxWidth, child: _HomePage(data: data, minHeight: 0)),
                 );
               }
               // Full width always: a page taller than the screen is laid out wider and scaled down, never
-              // narrowed with side gaps (D182).
+              // narrowed with side gaps (D182). A shorter page gives the room left to the specials, so no dead
+              // gap is left above the cart bar (D209).
               return Align(
                 alignment: Alignment.topCenter,
                 child: FreshFitWidth(
                   key: const Key('homeFit'),
-                  child: SizedBox(width: double.infinity, child: _HomePage(data: data)),
+                  child: SizedBox(
+                    width: double.infinity,
+                    // Laid out wider to be scaled down, the page fills the screen height at that scale too.
+                    child: LayoutBuilder(
+                      builder: (context, page) => _HomePage(
+                        data: data,
+                        minHeight: box.maxWidth > 0 ? box.maxHeight * page.maxWidth / box.maxWidth : box.maxHeight,
+                      ),
+                    ),
+                  ),
                 ),
               );
             },
@@ -137,9 +152,12 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomePage extends ConsumerWidget {
-  const _HomePage({required this.data});
+  const _HomePage({required this.data, required this.minHeight});
 
   final HomeData data;
+
+  /// The height the page fills; the specials take what the blocks above leave (0: natural height).
+  final double minHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -165,91 +183,96 @@ class _HomePage extends ConsumerWidget {
         ),
         // The harbour in the top-right corner (preview x 168–390, y 56–206).
         const Positioned(top: 12, right: 0, child: HarbourScene(key: Key('homeHarbour'))),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: FreshLayout.page,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _DeliveryHeader(service: service),
-                  Text(
-                    name == null || name.isEmpty ? hello : '$hello, $name',
-                    key: const Key('homeGreeting'),
-                    style: _inter(c.muted, 15, FontWeight.w500),
+        FreshGrowTail(
+          minHeight: minHeight,
+          head: Padding(
+            padding: FreshLayout.page,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _DeliveryHeader(service: service),
+                Text(
+                  name == null || name.isEmpty ? hello : '$hello, $name',
+                  key: const Key('homeGreeting'),
+                  style: _inter(c.muted, 15, FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                _Heading(color: c.ink),
+                const SizedBox(height: 4),
+                const Padding(
+                  padding: EdgeInsets.only(left: 1),
+                  child: ScriptLine(
+                    text: 'From our coast to your kitchen',
+                    fontFamily: AppFonts.script,
+                    fontFamilyFallback: FreshFonts.sansFallback,
+                    color: FreshHighlightColors.coralDeep,
+                    fontSize: 19,
+                    swooshSize: Size(140, 9),
+                    swooshWidth: 2.2,
                   ),
-                  const SizedBox(height: 2),
-                  _Heading(color: c.ink),
-                  const SizedBox(height: 4),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 1),
-                    child: ScriptLine(
-                      text: 'From our coast to your kitchen',
-                      fontFamily: AppFonts.script,
-                      fontFamilyFallback: FreshFonts.sansFallback,
-                      color: FreshHighlightColors.coralDeep,
-                      fontSize: 19,
-                      swooshSize: Size(140, 9),
-                      swooshWidth: 2.2,
-                    ),
+                ),
+                const SizedBox(height: 10),
+                if (data.locationRequired) ...[
+                  const InfoBanner(
+                    text: 'Set your pincode to see prices and availability.',
+                    tone: BannerTone.warning,
                   ),
                   const SizedBox(height: 10),
-                  if (data.locationRequired) ...[
-                    const InfoBanner(
-                      text: 'Set your pincode to see prices and availability.',
-                      tone: BannerTone.warning,
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                  _HeroCard(nextSlot: service?.nextSlot),
-                  const SizedBox(height: FreshLayout.cardGap),
-                  FreshColumns(
-                    stretch: true,
-                    children: [
-                      _SmallCard(
-                        key: const Key('homeCardCleaned'),
-                        color: HomeColors.coralCard,
-                        accent: HomeColors.coralText,
-                        icon: const _KnifeIcon(),
-                        title: 'Cleaned',
-                        brushed: 'your way',
-                        body: 'Pick your cut, we prepare it.',
-                        action: 'Choose cut',
-                        picture: const _CardPicture.cleaned(),
-                        onTap: () => context.go('/shop'),
-                      ),
-                      _SmallCard(
-                        key: const Key('homeCardCold'),
-                        color: HomeColors.mangoCard,
-                        accent: HomeColors.tealText,
-                        icon: const Snowflake(color: HomeColors.tealText, scale: 0.62),
-                        title: 'Kept cold',
-                        secondLine: 'till your door',
-                        body: 'Fresh on ice in every order.',
-                        action: 'See delivery',
-                        picture: const _CardPicture.rider(),
-                        onTap: () => _showDelivery(context, service),
-                      ),
-                    ],
-                  ),
-                  if (data.featuredCategories.isNotEmpty) ...[
-                    const SizedBox(height: FreshLayout.cardGap),
-                    _CategoryRow(categories: data.featuredCategories),
-                  ],
                 ],
-              ),
+                _HeroCard(nextSlot: service?.nextSlot),
+                const SizedBox(height: FreshLayout.cardGap),
+                FreshColumns(
+                  stretch: true,
+                  children: [
+                    FreshFeatureCard(
+                      key: const Key('homeCardCleaned'),
+                      color: HomeColors.coralCard,
+                      accent: HomeColors.coralText,
+                      icon: const _KnifeIcon(),
+                      title: 'Cleaned',
+                      brushed: 'your way',
+                      titleStyle: _cardTitle,
+                      body: 'Pick your cut, we prepare it.',
+                      action: 'Choose cut',
+                      picture: _cardPicture(
+                        IllustrationSlot.homeCardCleaned,
+                        IllustrationSlot.onboardingBannerCleaned,
+                        _cleanedPicture,
+                      ),
+                      pictureSize: const Size.square(_cleanedPicture),
+                      onTap: () => context.go('/shop'),
+                    ),
+                    FreshFeatureCard(
+                      key: const Key('homeCardCold'),
+                      color: HomeColors.mangoCard,
+                      accent: HomeColors.tealText,
+                      icon: const Snowflake(color: HomeColors.tealText, scale: 0.62),
+                      title: 'Kept cold',
+                      secondLine: 'till your door',
+                      titleStyle: _cardTitle,
+                      body: 'Fresh on ice in every order.',
+                      action: 'See delivery',
+                      // Below the title like the cleaned card's picture, so it never covers "door".
+                      picture: _cardPicture(
+                        IllustrationSlot.homeCardRider,
+                        IllustrationSlot.onboardingTileColdBox,
+                        _riderPicture,
+                      ),
+                      pictureSize: const Size.square(_riderPicture),
+                      pictureBottom: 22,
+                      onTap: () => _showDelivery(context, service),
+                    ),
+                  ],
+                ),
+                if (data.featuredCategories.isNotEmpty) ...[
+                  const SizedBox(height: FreshLayout.cardGap),
+                  _CategoryRow(categories: data.featuredCategories),
+                ],
+              ],
             ),
-            if (data.banners.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Padding(padding: FreshLayout.page, child: _SpecialsHeader(color: c.ink)),
-              const SizedBox(height: FreshLayout.cardGap),
-              _SpecialsRow(banners: data.banners),
-            ],
-            const SizedBox(height: 4),
-          ],
+          ),
+          tail: data.banners.isEmpty ? const SizedBox(height: 4) : _Specials(banners: data.banners, color: c.ink),
         ),
       ],
     );
@@ -552,7 +575,13 @@ class _HeroCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (slot != null) ...[
-                              _Chip(key: const Key('homeNextSlot'), text: '$slot ›'),
+                              // Fitted to the width, never cut: the whole time window always shows.
+                              FreshChip(
+                                key: const Key('homeNextSlot'),
+                                icon: Icons.schedule_rounded,
+                                color: HomeColors.chip,
+                                text: '$slot ›',
+                              ),
                               const SizedBox(height: 12),
                             ],
                             Text('Today’s catch', style: title),
@@ -574,7 +603,7 @@ class _HeroCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            const _Pill(text: 'Shop fresh catch →', color: FreshHighlightColors.ink, size: 12.5),
+                            const FreshPill(text: 'Shop fresh catch →', color: FreshHighlightColors.ink, size: 12.5),
                           ],
                         ),
                       ),
@@ -590,229 +619,22 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-/// The yellow next-slot chip with a clock.
-class _Chip extends StatelessWidget {
-  const _Chip({super.key, required this.text});
+/// The small cards' title: Baloo 800, 16.5.
+final TextStyle _cardTitle = AppText.display(FreshHighlightColors.ink, 16.5, height: 1.02);
 
-  final String text;
+/// The small cards' pictures, square, on the lower right under the title.
+const double _cleanedPicture = 84;
+const double _riderPicture = 90;
 
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: HomeColors.chip,
-      borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.schedule_rounded, size: 13, color: FreshHighlightColors.ink),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _inter(FreshHighlightColors.ink, 11.5, FontWeight.w700),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// A paper pill with a soft shadow ("Shop fresh catch →").
-class _Pill extends StatelessWidget {
-  const _Pill({required this.text, required this.color, required this.size, this.padding});
-
-  final String text;
-  final Color color;
-  final double size;
-  final EdgeInsets? padding;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: padding ?? const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-    decoration: BoxDecoration(
-      color: BlockInk.paper,
-      borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
-      boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 6, offset: Offset(0, 2))],
-    ),
-    child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: _inter(color, size, FontWeight.w700)),
-  );
-}
-
-/// One of the two equal cards: an icon and a Baloo title (the second line on the brush or plain), a short line,
-/// a pill with coloured text at the bottom and a picture popping out on the right.
-class _SmallCard extends StatelessWidget {
-  const _SmallCard({
-    super.key,
-    required this.color,
-    required this.accent,
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.action,
-    required this.picture,
-    required this.onTap,
-    this.brushed,
-    this.secondLine,
-  });
-
-  final Color color;
-  final Color accent;
-  final Widget icon;
-  final String title;
-
-  /// The second title line, on the yellow brush.
-  final String? brushed;
-
-  /// The second title line, plain.
-  final String? secondLine;
-  final String body;
-  final String action;
-  final _CardPicture picture;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = AppText.display(FreshHighlightColors.ink, 16.5, height: 1.02);
-    final second = brushed ?? secondLine;
-    // The pill: 5 + 5 padding around one line of 11.5 text.
-    final pillHeight = 10 + MediaQuery.textScalerOf(context).scale(11.5) * 1.3;
-    return Semantics(
-      button: true,
-      label: '$title ${second ?? ''}. $body $action'.replaceAll('  ', ' '),
-      excludeSemantics: true,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: Material(
-              color: color,
-              borderRadius: BorderRadius.circular(FreshLayout.cardRadius),
-              child: InkWell(borderRadius: BorderRadius.circular(FreshLayout.cardRadius), onTap: onTap),
-            ),
-          ),
-          picture,
-          if (brushed != null)
-            const Positioned(
-              right: 58,
-              top: 6,
-              child: Sparks(color: FreshHighlightColors.brush, degrees: -10, scale: 0.6),
-            ),
-          IgnorePointer(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 122),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(padding: const EdgeInsets.only(top: 1), child: icon),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(title, style: style),
-                              if (brushed != null)
-                                BrushHighlight(
-                                  degrees: -2,
-                                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                                  child: Text(brushed!, style: style),
-                                )
-                              else if (secondLine != null)
-                                Text(secondLine!, style: style),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: 88,
-                      child: Text(body, style: _inter(FreshHighlightColors.ink, 11.5, FontWeight.w400, height: 1.3)),
-                    ),
-                    // Room for the pill pinned at the bottom.
-                    SizedBox(height: 8 + pillHeight),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 10,
-            child: IgnorePointer(
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: _Pill(
-                  text: '$action →',
-                  color: accent,
-                  size: 11.5,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The picture popping out of a small card: the home slot's PNG when bundled, else an onboarding stand-in, else
-/// the drawn placeholder; never a broken image.
-class _CardPicture extends StatelessWidget {
-  const _CardPicture.cleaned()
-    : slot = IllustrationSlot.homeCardCleaned,
-      standIn = IllustrationSlot.onboardingBannerCleaned,
-      width = 84,
-      height = 84,
-      top = null,
-      bottom = 26,
-      right = -6;
-
-  const _CardPicture.rider()
-    : slot = IllustrationSlot.homeCardRider,
-      standIn = IllustrationSlot.onboardingTileColdBox,
-      width = 100,
-      height = 100,
-      top = -16,
-      bottom = null,
-      right = -6;
-
-  final IllustrationSlot slot;
-  final IllustrationSlot standIn;
-  final double width;
-  final double height;
-  final double? top;
-  final double? bottom;
-  final double right;
-
-  @override
-  Widget build(BuildContext context) => Positioned(
-    right: right,
-    top: top,
-    bottom: bottom,
-    child: IgnorePointer(
-      child: Illustration(
-        key: ValueKey('homePicture-${slot.code}'),
-        slot: slot,
-        size: width,
-        height: height,
-        excludeFromSemantics: true,
-        fallback: Illustration(slot: standIn, size: width, height: height, excludeFromSemantics: true),
-      ),
-    ),
-  );
-}
+/// A small card's picture: the home slot's PNG when bundled, else an onboarding stand-in, else the drawn
+/// placeholder; never a broken image.
+Widget _cardPicture(IllustrationSlot slot, IllustrationSlot standIn, double size) => Illustration(
+  key: ValueKey('homePicture-${slot.code}'),
+  slot: slot,
+  size: size,
+  excludeFromSemantics: true,
+  fallback: Illustration(slot: standIn, size: size, excludeFromSemantics: true),
+);
 
 /// The knife icon of the "Cleaned your way" card (the preview's drawn blade).
 class _KnifeIcon extends StatelessWidget {
@@ -852,7 +674,8 @@ class _KnifePainter extends CustomPainter {
   bool shouldRepaint(_KnifePainter old) => false;
 }
 
-/// Six equal columns: the first five featured categories (server order) and "More".
+/// Six equal columns: the first five featured categories (server order) and "More". A category's picture is the
+/// server's; with none (the demo fixtures) the owner's bundled picture for its slug (D208), else its first letter.
 class _CategoryRow extends StatelessWidget {
   const _CategoryRow({required this.categories});
 
@@ -860,6 +683,7 @@ class _CategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = illustratedColors(context);
     final shown = categories.take(5).toList();
     return FreshColumns(
       key: const Key('homeCategories'),
@@ -867,21 +691,24 @@ class _CategoryRow extends StatelessWidget {
       children: [
         for (var i = 0; i < 5; i++)
           if (i < shown.length)
-            _CategoryCircle(
+            FreshCategoryTile(
               key: ValueKey('homeCategory-${shown[i].slug}'),
               label: shown[i].name,
-              imageUrl: shown[i].imageUrl,
+              picture: _categoryPicture(shown[i]),
               tint: HomeColors.categoryTints[i % HomeColors.categoryTints.length],
-              onTap: () =>
-                  context.go(Uri(path: '/shop', queryParameters: {'category': shown[i].slug}).toString()),
+              labelColor: c.ink,
+              shadow: c.softShadow,
+              onTap: () => context.go(Uri(path: '/shop', queryParameters: {'category': shown[i].slug}).toString()),
             )
           else
             const SizedBox.shrink(),
-        _CategoryCircle(
+        FreshCategoryTile(
           key: const Key('homeCategoryMore'),
           label: 'More',
           tint: BlockInk.paper,
           icon: Icons.grid_view_rounded,
+          labelColor: c.ink,
+          shadow: c.softShadow,
           onTap: () => context.go('/shop'),
         ),
       ],
@@ -889,72 +716,14 @@ class _CategoryRow extends StatelessWidget {
   }
 }
 
-class _CategoryCircle extends StatelessWidget {
-  const _CategoryCircle({
-    super.key,
-    required this.label,
-    required this.tint,
-    required this.onTap,
-    this.imageUrl,
-    this.icon,
-  });
-
-  final String label;
-  final Color tint;
-  final VoidCallback onTap;
-  final String? imageUrl;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = illustratedColors(context);
-    final initial = Center(
-      child: icon != null
-          ? Icon(icon, size: 22, color: FreshHighlightColors.ink)
-          : Text(
-              label.isEmpty ? '' : label.characters.first.toUpperCase(),
-              style: AppText.display(FreshHighlightColors.ink, 19, height: 1),
-            ),
-    );
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: tint,
-                shape: BoxShape.circle,
-                border: Border.all(color: BlockInk.paper, width: 2),
-                boxShadow: [BoxShadow(color: c.softShadow, blurRadius: 6, offset: const Offset(0, 2))],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: imageUrl == null
-                  ? initial
-                  : Image.network(
-                      imageUrl!,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, _, _) => initial,
-                    ),
-            ),
-            const SizedBox(height: 5),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(label, maxLines: 1, style: _inter(c.ink, 12.5, FontWeight.w600)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+/// The server's picture of [category]; else the bundled one for its slug; else (or when it fails) its letter.
+Widget _categoryPicture(Category category) {
+  final initial = FreshCategoryTile.initial(category.name);
+  final path = BundledPictures.category(category.slug);
+  final bundled = path == null ? initial : BundledPicture(path: path, fallback: initial);
+  final url = category.imageUrl;
+  if (url == null || url.isEmpty) return bundled;
+  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
 
 /// "Today's special" with the brush on "special" and a coral spark, and "See all →".
@@ -1019,21 +788,75 @@ class _SpecialsHeader extends StatelessWidget {
   }
 }
 
+/// "Today's special" and the offers under it. Given a height (the room the blocks above leave, D209) the cards'
+/// pictures grow into it, up to the 3:2 frame (D193), so no dead gap is left above the cart bar; with no height
+/// (very large text, scrolling) they keep their smallest size.
+class _Specials extends StatelessWidget {
+  const _Specials({required this.banners, required this.color});
+
+  final List<HomeBanner> banners;
+  final Color color;
+
+  static const double _top = 10;
+  static const double _bottom = 4;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final header = Padding(padding: FreshLayout.page, child: _SpecialsHeader(color: color));
+      if (!box.maxHeight.isFinite) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: _top),
+            header,
+            const SizedBox(height: FreshLayout.cardGap),
+            _SpecialsRow(banners: banners, room: null),
+            const SizedBox(height: _bottom),
+          ],
+        );
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: _top),
+          header,
+          const SizedBox(height: FreshLayout.cardGap),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, row) => Align(
+                alignment: Alignment.topCenter,
+                child: _SpecialsRow(banners: banners, room: math.max(0.0, row.maxHeight - _bottom)),
+              ),
+            ),
+          ),
+          const SizedBox(height: _bottom),
+        ],
+      );
+    },
+  );
+}
+
 /// The offers (server banners) in a row that starts on the gutter; 200 wide so the second card peeks.
 class _SpecialsRow extends StatelessWidget {
-  const _SpecialsRow({required this.banners});
+  const _SpecialsRow({required this.banners, required this.room});
 
   final List<HomeBanner> banners;
 
-  static const double width = 200;
-  static const double imageHeight = 54;
+  /// The height the row may take; null keeps the smallest picture.
+  final double? room;
 
   @override
   Widget build(BuildContext context) {
-    final ts = MediaQuery.textScalerOf(context);
-    final height = imageHeight + 4 + ts.scale(13) * 1.25 + ts.scale(11) * 1.3 + 8;
+    final c = illustratedColors(context);
+    final text = FreshSpecialCard.textHeight(MediaQuery.textScalerOf(context));
+    const largest = FreshSpecialCard.defaultWidth * 2 / 3;
+    final picture = room == null
+        ? FreshSpecialCard.minPictureHeight
+        : (room! - text).clamp(FreshSpecialCard.minPictureHeight, largest).toDouble();
     return SizedBox(
-      height: height,
+      height: picture + text,
       child: ListView.separated(
         key: const Key('homeSpecials'),
         scrollDirection: Axis.horizontal,
@@ -1042,109 +865,36 @@ class _SpecialsRow extends StatelessWidget {
         padding: FreshLayout.page,
         itemCount: banners.length,
         separatorBuilder: (_, _) => const SizedBox(width: FreshLayout.cardGap),
-        itemBuilder: (context, i) => _OfferCard(banner: banners[i], tint: HomeColors.offerTints[i % 2]),
+        itemBuilder: (context, i) {
+          final banner = banners[i];
+          final route = banner.route;
+          final tint = HomeColors.offerTints[i % 2];
+          return FreshSpecialCard(
+            title: banner.title,
+            subtitle: banner.subtitle,
+            badge: banner.badge,
+            tint: tint,
+            pictureHeight: picture,
+            picture: _specialPicture(banner, i, tint),
+            onTap: route == null ? null : () => context.push(route),
+            paper: c.paper,
+            ink: c.ink,
+            muted: c.muted,
+            chevronBackground: c.sand,
+            shadow: c.softShadow,
+          );
+        },
       ),
     );
   }
 }
 
-class _OfferCard extends StatelessWidget {
-  const _OfferCard({required this.banner, required this.tint});
-
-  final HomeBanner banner;
-  final Color tint;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = illustratedColors(context);
-    final route = banner.route;
-    final soft = ColoredBox(color: tint);
-    return Semantics(
-      button: route != null,
-      label: [banner.title, ?banner.subtitle, ?banner.badge].join(', '),
-      excludeSemantics: true,
-      child: Container(
-        width: _SpecialsRow.width,
-        decoration: BoxDecoration(
-          color: c.paper,
-          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
-          boxShadow: [BoxShadow(color: c.softShadow, blurRadius: 10, offset: const Offset(0, 2))],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: route == null ? null : () => context.push(route),
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: _SpecialsRow.imageHeight,
-                    child: banner.imageUrl == null
-                        ? soft
-                        : Image.network(
-                            banner.imageUrl!,
-                            fit: BoxFit.cover,
-                            excludeFromSemantics: true,
-                            errorBuilder: (_, _, _) => soft,
-                          ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 4, 34, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          banner.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: _inter(c.ink, 13, FontWeight.w700, height: 1.25),
-                        ),
-                        if (banner.subtitle != null)
-                          Text(
-                            banner.subtitle!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: _inter(c.muted, 11, FontWeight.w400, height: 1.3),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (banner.badge != null)
-                Positioned(
-                  left: 8,
-                  top: 7,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: HomeColors.chip,
-                      borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
-                      border: Border.all(color: FreshHighlightColors.ink, width: 1.8),
-                    ),
-                    child: Text(
-                      banner.badge!,
-                      style: _inter(FreshHighlightColors.ink, 10.5, FontWeight.w800, height: 1.6),
-                    ),
-                  ),
-                ),
-              if (route != null)
-                Positioned(
-                  right: 8,
-                  bottom: 9,
-                  child: Container(
-                    width: 22,
-                    height: 22,
-                    decoration: BoxDecoration(color: c.sand, shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.chevron_right_rounded, size: 16, color: c.ink),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+/// The server's offer picture; else (the demo fixtures, or when it fails) the owner's bundled offer picture
+/// (D208); else the soft tint.
+Widget _specialPicture(HomeBanner banner, int index, Color tint) {
+  final soft = ColoredBox(color: tint);
+  final bundled = BundledPicture(path: BundledPictures.special(banner.linkSlug, index), fallback: soft);
+  final url = banner.imageUrl;
+  if (url == null || url.isEmpty) return bundled;
+  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
