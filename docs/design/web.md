@@ -64,7 +64,7 @@ Behaviour added in the same PR (QA findings):
 | Checkout | The place-order `Idempotency-Key` is dropped when the address, slot, payment method, substitution choice or note changes, so a retry never reuses a key with a new body | `POST /orders` |
 | Header | "Offers" shows only when the server has a banner for the pincode (`/#offers` exists only then) | `GET /promotions` |
 | Cart offers | "View offers" lists the coupons for the visitor's pincode; without a pincode it asks for one (the server returns nothing without it) | `GET /coupons?pincode=` |
-| Address form | Pincode first; a full pincode fills an empty city (serviceability) and state code (cities list) | `GET /serviceability`, `GET /cities` |
+| Address form | Pincode first; a full pincode fills an empty city and state code from the server (`city.name`, `city.stateCode`, LOC-R19) | `GET /serviceability` |
 | Product | Sold-out size: "Notify me when it is back" (guests sign in first), "Stop alert" when set; the quote line under the options | `/me/stock-alerts`, `GET /price-quote` |
 | Cart | "View offers": the customer's coupons with the server's description, minimum order and end date, each with Apply | `GET /coupons`, `PUT /cart/coupon` |
 | Wishlist, help | Product cards; contact card | `GET /me/wishlist`, `GET /business-profile` |

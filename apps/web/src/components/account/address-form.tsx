@@ -3,7 +3,7 @@
 import { Button, Checkbox, FormField, Input, RadioGroup } from "@fresh/ui";
 import { type FormEvent, useState } from "react";
 import { browserHttp } from "@/api/browser";
-import { getCities, getServiceability } from "@/api/endpoints/catalog";
+import { getServiceability } from "@/api/endpoints/catalog";
 import { type Address, type AddressInput, type AddressLabel } from "@/api/types/checkout";
 import { isValidPincode } from "@/lib/cookies";
 import { asApiError, describeError } from "@/lib/errors";
@@ -75,19 +75,17 @@ export function AddressForm({
    */
   async function prefillFromPincode(pincode: string) {
     try {
-      const http = browserHttp();
-      const area = await getServiceability(http, pincode);
+      // The server names the city and its state with the pincode (LOC-R19).
+      const area = await getServiceability(browserHttp(), pincode);
       const city = area.city;
       if (!city) return;
-      const cities = await getCities(http).catch(() => []);
-      const stateCode = cities.find((c) => c.id === city.id || c.code === city.code)?.stateCode;
       setInput((current) =>
         current.pincode !== pincode
           ? current
           : {
               ...current,
               cityName: current.cityName.trim() ? current.cityName : city.name,
-              stateCode: current.stateCode.trim() ? current.stateCode : (stateCode ?? ""),
+              stateCode: current.stateCode.trim() ? current.stateCode : city.stateCode,
             },
       );
     } catch {

@@ -18,12 +18,16 @@ describe("AddressForm", () => {
         return HttpResponse.json({
           pincode: "530017",
           serviceable: true,
-          city: { id: cityId, code: "VSKP", name: "Sample City", timeZone: "Asia/Kolkata" },
+          city: {
+            id: cityId,
+            code: "VSKP",
+            name: "Sample City",
+            timeZone: "Asia/Kolkata",
+            stateCode: "AP",
+            stateName: "Sample State",
+          },
         });
       }),
-      http.get(`${API}/cities`, () =>
-        HttpResponse.json([{ id: cityId, code: "VSKP", name: "Sample City", stateCode: "AP" }]),
-      ),
     );
     renderWithProviders(<AddressForm onSubmit={vi.fn()} />);
 
