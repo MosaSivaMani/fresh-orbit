@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 
 export 'src/highlights.dart';
 export 'src/layout.dart';
+export 'src/page.dart';
 export 'src/scenery.dart';
 
 part 'src/tokens.g.dart';

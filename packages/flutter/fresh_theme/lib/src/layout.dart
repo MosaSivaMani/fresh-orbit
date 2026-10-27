@@ -29,11 +29,23 @@ abstract final class FreshLayout {
   static const double navRadius = 22;
   static const double pillRadius = 99;
 
-  /// Round icon buttons in headers (search, wishlist).
+  /// Round icon buttons in headers (search, wishlist, back).
   static const double iconButton = 46;
+
+  /// Height of a screen header row ([FreshPageHeader]), below the status bar.
+  static const double headerHeight = 64;
+
+  /// The shape of every illustration frame in cards and banners (D193): 3 wide, 2 high.
+  static const double pictureAspect = 3 / 2;
+
+  /// Scrolling pages stand still at their ends (D182): no bounce on any platform.
+  static const ScrollPhysics physics = ClampingScrollPhysics();
 
   /// Horizontal page padding.
   static const EdgeInsets page = EdgeInsets.symmetric(horizontal: gutter);
+
+  /// Padding of a scrolling list or page body: the gutters, a card gap on top and a section gap at the end.
+  static const EdgeInsets list = EdgeInsets.fromLTRB(gutter, cardGap, gutter, sectionGap);
 
   /// The width between the gutters of a screen [screenWidth] wide.
   static double contentWidth(double screenWidth) => math.max(0, screenWidth - 2 * gutter);
