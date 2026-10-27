@@ -10,7 +10,8 @@
   "aspects": {
     "1:1": "Square 1:1 image, subject centred, full body or three-quarter view",
     "4:3": "Landscape 4:3 image, subject slightly off centre with room on one side",
-    "2:1": "Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above"
+    "2:1": "Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above",
+    "3:2": "Wide 3:2 image, the subject on the right half with the left third kept empty"
   },
   "characters": {
     "FISHMONGER": {
@@ -632,6 +633,41 @@
       "background": "TRANSPARENT",
       "status": "PLACEHOLDER",
       "prompt": "A sea-teal insulated cold box with crushed ice and fresh fish showing at the top, standing beside a parked coral-orange electric scooter at the doorstep of a simple Indian home with a teal door, a plain stone step and a potted tulsi plant, no rider, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "HOME_HERO_CATCH",
+      "file": "assets/home_hero_catch.svg",
+      "placeholder": "assets/home_hero_catch.svg",
+      "alt": "Padma holds a large fresh seer fish above a pile of ice with prawns and crabs.",
+      "character": "FISHMONGER",
+      "scene": "Padma, half-body from the waist up, turned slightly to the left, smiling at the viewer, holding a large fresh silver seer fish across her body with both gloved hands; in front of her, at the bottom of the picture, a low pile of crushed ice with tiger prawns, two red mud crabs, a few small silver fish, half a lemon and a banana leaf",
+      "aspect": "3:2",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Padma, half-body from the waist up, turned slightly to the left, smiling at the viewer, holding a large fresh silver seer fish across her body with both gloved hands; in front of her, at the bottom of the picture, a low pile of crushed ice with tiger prawns, two red mud crabs, a few small silver fish, half a lemon and a banana leaf. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 3:2 image, the subject on the right half with the left third kept empty. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "HOME_CARD_CLEANED",
+      "file": "assets/home_card_cleaned.svg",
+      "placeholder": "assets/home_card_cleaned.svg",
+      "alt": "Raw seer fish steaks and curry-cut pieces on a round wooden board.",
+      "scene": "Two thick raw seer fish steaks and a few curry-cut pieces on a small round wooden board with a banana leaf, a lemon wedge and two curry leaves, seen from the front and slightly above, no knife, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Two thick raw seer fish steaks and a few curry-cut pieces on a small round wooden board with a banana leaf, a lemon wedge and two curry leaves, seen from the front and slightly above, no knife, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "HOME_CARD_RIDER",
+      "file": "assets/home_card_rider.svg",
+      "placeholder": "assets/home_card_rider.svg",
+      "alt": "Ravi rides his coral scooter and waves, his ice-blue cold backpack on his back.",
+      "character": "RIDER",
+      "scene": "Ravi riding his electric scooter to the right, side view, waving with his left hand, the ice-blue cold backpack clearly visible, the whole scooter in the picture",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Ravi riding his electric scooter to the right, side view, waving with his left hand, the ice-blue cold backpack clearly visible, the whole scooter in the picture. Ravi, the delivery rider: A man, about 26, with a short beard and moustache and a cheerful smile; a sea-teal helmet with a clear visor; a teal rain jacket with silver reflective stripes; an ice-blue insulated backpack with a white snowflake mark; dark cargo trousers and white sneakers; rides a coral-orange electric scooter; same face and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
     }
   ]
 }

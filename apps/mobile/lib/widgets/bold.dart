@@ -385,8 +385,9 @@ class FoodTab {
   final int? badge;
 }
 
-/// Indian food-app bottom bar: icon over label; the active tab has a teal notch on top, a teal-soft pill
-/// behind its icon and a bold deep-teal label; the cart shows its line count on a coral pip.
+/// The floating bottom menu (D176, home preview `.nav`): a rounded paper bar 58 tall, [FreshLayout.gutter] from
+/// both screen edges, icon over label; the active tab has a pale teal pill behind its icon and a teal label; the
+/// cart shows its line count on a coral pip. The space around the bar is the page colour.
 class FoodTabBar extends StatelessWidget {
   const FoodTabBar({super.key, required this.tabs, required this.currentIndex, required this.onSelected});
 
@@ -397,23 +398,29 @@ class FoodTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: c.paper,
-        border: Border(top: BorderSide(color: c.line)),
-        boxShadow: [BoxShadow(color: c.softShadow.withValues(alpha: 0.3), blurRadius: 18, offset: const Offset(0, -6))],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-          child: Row(
-            children: [
-              for (var i = 0; i < tabs.length; i++)
-                Expanded(
-                  child: _FoodTabItem(tab: tabs[i], active: i == currentIndex, onTap: () => onSelected(i)),
-                ),
-            ],
+    final inset = MediaQuery.paddingOf(context).bottom;
+    // The bar floats over the home indicator area the way the preview's does, never closer than 8 to the edge.
+    final bottom = inset > 28 ? inset - 20 : 8.0;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, bottom),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: c.paper,
+          borderRadius: BorderRadius.circular(FreshLayout.navRadius),
+          boxShadow: [BoxShadow(color: c.softShadow, blurRadius: 16, offset: const Offset(0, 4))],
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 58),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Row(
+              children: [
+                for (var i = 0; i < tabs.length; i++)
+                  Expanded(
+                    child: _FoodTabItem(tab: tabs[i], active: i == currentIndex, onTap: () => onSelected(i)),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -431,7 +438,7 @@ class _FoodTabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    final color = active ? c.tealDeep : c.muted;
+    final color = active ? c.tealText : c.muted;
     final badge = tab.badge ?? 0;
     final label = badge > 0 ? '${tab.label}, $badge ${badge == 1 ? 'item' : 'items'}' : tab.label;
     return Semantics(
@@ -441,23 +448,16 @@ class _FoodTabItem extends StatelessWidget {
       label: label,
       excludeSemantics: true,
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
+          constraints: const BoxConstraints(minHeight: 50),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 34,
-                height: 3.5,
-                decoration: BoxDecoration(
-                  color: active ? c.tealText : Colors.transparent,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(4)),
-                ),
-              ),
-              const SizedBox(height: 5),
               SizedBox(
-                width: 52,
+                width: 48,
                 height: 28,
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -465,22 +465,22 @@ class _FoodTabItem extends StatelessWidget {
                   children: [
                     if (active)
                       Container(
-                        width: 44,
+                        width: 48,
                         height: 28,
-                        decoration: BoxDecoration(color: c.tealSoft, borderRadius: BorderRadius.circular(999)),
+                        decoration: BoxDecoration(color: c.tealSoft, borderRadius: BorderRadius.circular(14)),
                       ),
                     Icon(tab.icon, size: 22, color: color),
                     if (badge > 0)
                       Positioned(
                         top: -4,
-                        right: 4,
+                        right: 2,
                         child: Container(
                           constraints: const BoxConstraints(minWidth: 18),
                           height: 18,
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           decoration: BoxDecoration(
                             color: c.coral,
-                            borderRadius: BorderRadius.circular(999),
+                            borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
                             border: Border.all(color: c.paper, width: 2),
                           ),
                           alignment: Alignment.center,
@@ -499,15 +499,15 @@ class _FoodTabItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 tab.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: AppFonts.body,
-                  fontSize: 10.5,
-                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 11,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w600,
                   color: color,
                 ),
               ),
@@ -519,10 +519,17 @@ class _FoodTabItem extends StatelessWidget {
   }
 }
 
-/// The floating teal bar above the tabs while the cart has lines: "2 ITEMS ADDED", the server's amount and
-/// "View cart".
+/// The floating dark-teal cart bar above the menu while the cart has lines (D176, home preview `.cart`): 52 tall,
+/// [FreshLayout.gutter] from both edges, "2 ITEMS ADDED", the server's amount, up to two line pictures and
+/// "View cart". It shows only what it is given (rule 4).
 class ViewCartBar extends StatelessWidget {
-  const ViewCartBar({super.key, required this.count, required this.amount, required this.onTap});
+  const ViewCartBar({
+    super.key,
+    required this.count,
+    required this.amount,
+    required this.onTap,
+    this.thumbnails = const [],
+  });
 
   final int count;
 
@@ -530,56 +537,143 @@ class ViewCartBar extends StatelessWidget {
   final String amount;
   final VoidCallback onTap;
 
+  /// Picture URLs of the first cart lines (null for a line without one); at most two are shown.
+  final List<String?> thumbnails;
+
+  /// The bar's colour (`#0C4A43`), the same in light and dark.
+  static const Color background = Color(0xFF0C4A43);
+  static const Color _caption = Color(0xFFBFE3E0);
+
   @override
   Widget build(BuildContext context) {
-    final c = illustratedColors(context);
     final items = '$count ${count == 1 ? 'item' : 'items'}';
+    final thumbs = thumbnails.take(2).toList();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+      padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, 8),
       child: Semantics(
         button: true,
         label: '$items added, $amount. View cart',
         excludeSemantics: true,
         child: Material(
           key: const Key('viewCartBar'),
-          color: c.tealText,
-          borderRadius: BorderRadius.circular(16),
+          color: background,
+          borderRadius: BorderRadius.circular(FreshLayout.barRadius),
           elevation: 6,
-          shadowColor: c.tealText.withValues(alpha: 0.5),
+          shadowColor: background.withValues(alpha: 0.6),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(FreshLayout.barRadius),
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 12, 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$items added'.toUpperCase(),
-                          style: AppText.eyebrow(c.onTeal.withValues(alpha: 0.85), size: 10.5),
-                        ),
-                        Text(amount, style: AppText.price(c.onTeal, size: 16)),
-                      ],
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$items added'.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.eyebrow(_caption, size: 10.5).copyWith(letterSpacing: 0.84, height: 1.15),
+                          ),
+                          Text(
+                            amount,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontFamily: AppFonts.body,
+                              fontFamilyFallback: FreshFonts.sansFallback,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 17,
+                              height: 1.15,
+                              color: BlockInk.paper,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text(
-                    'View cart',
-                    style: TextStyle(
-                      fontFamily: AppFonts.body,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13.5,
-                      color: c.onTeal,
+                    if (thumbs.isNotEmpty) ...[
+                      _Thumbs(urls: thumbs),
+                      const SizedBox(width: 10),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.only(left: 12),
+                      decoration: BoxDecoration(
+                        border: Border(left: BorderSide(color: BlockInk.paper.withValues(alpha: 0.3))),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'View cart',
+                            style: TextStyle(
+                              fontFamily: AppFonts.body,
+                              fontFamilyFallback: FreshFonts.sansFallback,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: BlockInk.paper,
+                            ),
+                          ),
+                          Icon(Icons.chevron_right_rounded, color: BlockInk.paper, size: 20),
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(Icons.chevron_right_rounded, color: c.onTeal, size: 20),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Up to two overlapping round line pictures with a paper ring; a soft circle when a line has no picture or it
+/// fails to load.
+class _Thumbs extends StatelessWidget {
+  const _Thumbs({required this.urls});
+
+  final List<String?> urls;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 32.0;
+    const soft = Color(0xFFFBE6DC);
+    const blank = ColoredBox(color: soft);
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: size + (urls.length - 1) * (size - 8),
+        height: size,
+        child: Stack(
+          children: [
+            for (var i = 0; i < urls.length; i++)
+              Positioned(
+                left: i * (size - 8),
+                child: Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: soft,
+                    border: Border.all(color: BlockInk.paper, width: 2),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: urls[i] == null
+                      ? blank
+                      : Image.network(
+                          urls[i]!,
+                          fit: BoxFit.cover,
+                          excludeFromSemantics: true,
+                          errorBuilder: (_, _, _) => blank,
+                        ),
+                ),
+              ),
+          ],
         ),
       ),
     );

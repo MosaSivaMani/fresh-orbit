@@ -201,8 +201,8 @@ export function OrdersListPage() {
               placeholder="Status"
               value=""
               options={statusOptions(ORDER_STATUS).filter((o) => !statuses.includes(o.value))}
-              // `GET /admin/orders` takes one status code (gap G14): choosing a status replaces the filter.
-              onValueChange={(v) => list.set({ status: [v] })}
+              // `GET /admin/orders` takes several status codes (G14): each choice adds one.
+              onValueChange={(v) => list.set({ status: [...statuses, v] })}
             />
           </div>
           <div className="w-44">
@@ -297,7 +297,7 @@ function StartPreparingMany({
       loading={start.isPending}
       onClick={() =>
         start.mutate(
-          orders.map((o) => o.id),
+          orders.map((o) => ({ id: o.id, version: o.version })),
           {
             onSuccess: (count) => {
               notifySaved(`Started preparing ${count} ${count === 1 ? "order" : "orders"}`);

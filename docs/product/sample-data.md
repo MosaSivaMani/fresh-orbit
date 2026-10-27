@@ -14,7 +14,7 @@ for demos, manual testing and screenshots. It is not reference data, never loade
 |---|---|---|---|
 | `sample-set.json` | — | Set name, time-anchor rule, key rule, load order | — |
 | `locations.json` | Locations | 1 city `VISAKHAPATNAM` (AP, `Asia/Kolkata`); 1 location `VSKP-MVP` with cold storage and a placeholder FSSAI number; 7-day operating hours; 1 closure 10 days ahead; 3 service areas (Central, North, South-West) with 20 pincodes and different fee / free-delivery / minimum-order values | `POST /admin/cities`, `/fulfillment-locations`, `PUT …/operating-hours`, `POST …/closures`, `/service-areas`, `…/pincodes` |
-| `catalog.json` | Catalog | 8 categories (6 top-level: Fish, Prawns & Shrimp, Crabs, Shellfish, Fillets & Steaks, Ready to Cook; Fish has Sea Fish and Freshwater Fish children); 26 products, 28 variants (22 KG, 2 PIECE, 4 PACK), 67 variant preparations with yields ; every variant states `serves` and 21 a `piecesMin`/`piecesMax` range per serving basis (CAT-R21, demo values) | `POST /admin/categories`, `/products`, `…/variants` (`ProductRequest`, `VariantRequest`) |
+| `catalog.json` | Catalog | 11 categories (9 top-level, as on the owner's website reference D188: Fish, Prawns & Shrimp, Crabs, Shellfish, Fillets & Steaks, Ready to Cook, Marinated, Fish Eggs, Ready to Eat; Fish has Sea Fish and Freshwater Fish children; Marinated, Fish Eggs and Ready to Eat have no products yet); 26 products, 28 variants (22 KG, 2 PIECE, 4 PACK), 67 variant preparations with yields ; every variant states `serves` and 21 a `piecesMin`/`piecesMax` range per serving basis (CAT-R21, demo values) | `POST /admin/categories`, `/products`, `…/variants` (`ProductRequest`, `VariantRequest`) |
 | `pricing.json` | Pricing | 4 tax rules (placeholder rates, "confirm with CA"); 28 prices and 67 preparation charges for `VSKP-MVP` | `POST /admin/pricing/tax-rules`; `POST /admin/pricing/prices/bulk` (the `bulk` object is that request body) |
 | `inventory.json` | Inventory | 28 stock items with low-stock thresholds; 29 receipts (batches with total cost, best-before, receipt temperature); 2 cold-chain readings | `POST /admin/inventory/stock-items`, `/receipts`, `/cold-chain` |
 | `delivery.json` | Delivery | 21 slot templates (3 per day × 7 days: 07–09, 11–13, 17–19); 3 riders | `POST /admin/delivery/slot-templates`, `/riders` |
@@ -23,6 +23,7 @@ for demos, manual testing and screenshots. It is not reference data, never loade
 | `settings.json` | Settings | Business profile (trade name Fresh Orbit, fake GSTIN, fake support phone and email, `Asia/Kolkata`), loaded only when no profile exists | `PUT /admin/settings/business-profile` (`SaveBusinessProfileRequest`) |
 | `identity.json` | Identity | 2 staff: `sample.admin@freshorbit.example` (ADMIN), `sample.finance@freshorbit.example` (FINANCE); no passwords | `POST /admin/staff` (`CreateStaffRequest` without `temporaryPassword`) |
 | `images.json` | Catalog / Promotions | One placeholder image description per product, category and banner | `POST …/products/{id}/images` (rendered, not downloaded) |
+| `images/` | Catalog / Promotions | Real pictures (WebP): `categories/fish`, `prawns-shrimp`, `crabs`, `shellfish` (512²) and `banners/welcome`, `prawn-week` (1200×600), made from the owner's pictures in `docs/design/characters/generated` by `tools/make_images.py` on the CI runner (workflow `sample-images.yml`) | Stored as the file of image key `sample/<path>` (`SampleImageFiles`); a key without a file is drawn |
 
 Product list (scientific names and local names are drafts for the owner to verify):
 
@@ -87,7 +88,7 @@ One `ISampleDataLoader` per module (`Order` values leave gaps for later modules)
 | 5 | `SettingsSampleDataLoader` | `settings.json` | — | `settings.business_profile` only when no row exists (never replaces a real profile); invoices need its GSTIN (ORD-R52) |
 | 10 | `LocationsSampleDataLoader` | `locations.json` | reference data | `locations.cities`, `fulfillment_locations`, `service_areas`, `pincodes`, `location_closures` (operating hours cascade with the location). City and location stay **DRAFT** |
 | 20 | `IdentitySampleDataLoader` | `identity.json`, phones from `customers.json` | roles, permissions; locations | `identity.users` (staff and customer users), `identity.staff_members` (roles and location access cascade). Customer users are created through the same path as the first OTP verify (user ACTIVE, `phone_verified_at = T0`, `ICustomerAccountDirectory` creates the customer row) |
-| 30 | `CatalogSampleDataLoader` | `catalog.json`, `images.json` | preparation methods | `catalog.categories`, `products`, `product_variants`, `product_images` (variant preparations cascade). Renders each placeholder image (SkiaSharp, already the Catalog image library), uploads through `IFileStorage`, then publishes products with `targetStatus: ACTIVE` |
+| 30 | `CatalogSampleDataLoader` | `catalog.json`, `images.json` | preparation methods | `catalog.categories`, `products`, `product_variants`, `product_images` (variant preparations cascade). Stores the committed picture of a category or banner key (`images/<path>` for `sample/<path>`) or else renders the placeholder (SkiaSharp, already the Catalog image library), uploads through `IFileStorage`, then publishes products with `targetStatus: ACTIVE` |
 | 40 | `PricingSampleDataLoader` | `pricing.json` | locations, catalog, tax categories | `pricing.tax_rules` first (a price is refused without a tax rule, PRC-R9), then the `bulk` body through the bulk-price service: `variant_prices`, `preparation_charges` |
 | 50 | `InventorySampleDataLoader` | `inventory.json` | locations, catalog, storage units | `inventory.stock_items`, `batches`, `stock_movements` (RECEIPT), `cold_chain_logs` (including the out-of-range log the warm sardine receipt writes) |
 | 60 | `DeliverySampleDataLoader` | `delivery.json` | locations | `delivery.slot_templates`, `riders` |
@@ -180,13 +181,19 @@ Rows created **after** loading that point at sample rows block the purge:
 - business profile: GSTIN passes the same format and check-character rule as `Settings.Domain` `Gstins.IsValid`,
   FSSAI null or 14 digits, fake support phone and reserved-domain email, `onlyWhenMissing` true.
 
-Last run: `OK: 11 files; 1 city, 1 location, 3 service areas, 20 pincodes; 8 categories, 26 products, 28 variants;
+Last run: `OK: 11 files; 1 city, 1 location, 3 service areas, 20 pincodes; 11 categories, 26 products, 28 variants;
 28 prices, 67 preparation charges, 4 tax rules; 28 stock items, 29 batches; 21 slot templates, 3 riders; 2 coupons,
 2 banners; 3 customers, 2 staff; business profile yes.` A mutated copy (wrong unit flag, PIECE yield 6800, unknown
 category, price above the cap, missing charge row, duplicate pincode, broken banner link) produced exactly those 7
 errors; a GSTIN with a changed check character or state code 40 is refused.
 
 CI: the backend job in `.github/workflows/ci.yml` runs the validator (step "Validate sample data").
+The validator also checks every committed picture under `images/`: it must be the file of a category or banner key in
+`images.json` and stay under 400 KB.
+
+**Demo (D160).** The demo's disk is emptied by every restart. A missing `/media/sample/...` file is answered with the
+committed picture from `Seeding:SampleDataPath` (`/app/data/sample` in the demo image) when one exists for the key,
+else with the placeholder drawing (`UseFreshOrbitDemoMedia`).
 
 ## 7. Decisions (manager, 2026-10-24)
 

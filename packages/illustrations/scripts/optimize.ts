@@ -1,4 +1,4 @@
-// Fixes FINAL JPEG or PNG images that break a rule (over 600 KB, or not the slot's 1:1, 4:3 or 2:1 shape):
+// Fixes FINAL JPEG or PNG images that break a rule (over 600 KB, or not the slot's 1:1, 4:3, 2:1 or 3:2 shape):
 //   - crops to the slot's aspect, keeping the most interesting part of the picture;
 //   - scales the longest side down to 1536 px (never up);
 //   - encodes WebP (transparency kept), lowering quality until the file is at most 600 KB;

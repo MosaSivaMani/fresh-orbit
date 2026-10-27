@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useContext, useState } from "react";
+import { type ReactNode, createContext, useContext, useMemo, useState } from "react";
 import { useStaffLocations } from "../api/locations";
 import { type Id } from "../api/types/common";
 
@@ -44,19 +44,22 @@ export function LocationScopeProvider({ children }: { children: ReactNode }) {
   const allowed = chosen !== null && locations.some((l) => l.id === chosen);
   const locationId = allowed ? chosen : allLocations ? null : (locations[0]?.id ?? null);
 
-  const value: LocationScope = {
-    locationId,
-    setLocationId: (id) => {
-      setChosen(id);
-      save(id);
-    },
-    locations,
-    allLocations,
-    nameOf: (id) => {
-      if (!id) return "All locations";
-      return locations.find((l) => l.id === id)?.name ?? `Location ${id.slice(-6)}`;
-    },
-  };
+  const value = useMemo<LocationScope>(
+    () => ({
+      locationId,
+      setLocationId: (id) => {
+        setChosen(id);
+        save(id);
+      },
+      locations,
+      allLocations,
+      nameOf: (id) => {
+        if (!id) return "All locations";
+        return locations.find((l) => l.id === id)?.name ?? `Location ${id.slice(-6)}`;
+      },
+    }),
+    [locationId, locations, allLocations],
+  );
   return <LocationScopeContext.Provider value={value}>{children}</LocationScopeContext.Provider>;
 }
 

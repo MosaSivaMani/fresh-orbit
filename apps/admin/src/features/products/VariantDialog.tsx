@@ -20,6 +20,9 @@ const schema = z.object({
   minOrder: wholeOrEmpty,
   maxOrder: wholeOrEmpty,
   orderStep: wholeOrEmpty,
+  piecesMin: wholeOrEmpty,
+  piecesMax: wholeOrEmpty,
+  serves: wholeOrEmpty,
   isActive: z.boolean(),
   defaultIndex: z.string(),
   preparations: z
@@ -46,9 +49,17 @@ const FIELDS = [
   "minOrder",
   "maxOrder",
   "orderStep",
+  "piecesMin",
+  "piecesMax",
+  "serves",
   "isActive",
   "preparations",
 ] as const;
+
+/** The serving basis of CAT-R21 per sell unit. */
+const BASIS_WORDS = { KG: "per kg net", PIECE: "per piece", PACK: "per pack" } as const;
+
+const textOf = (n: number | null | undefined) => (n == null ? "" : String(n));
 
 function toValues(variant: AdminVariant | null): VariantValues {
   const defaultIndex = variant ? variant.preparations.findIndex((p) => p.isDefault) : 0;
@@ -61,6 +72,9 @@ function toValues(variant: AdminVariant | null): VariantValues {
     minOrder: variant ? String(variant.minOrder) : "",
     maxOrder: variant ? String(variant.maxOrder) : "",
     orderStep: variant ? String(variant.orderStep) : "",
+    piecesMin: textOf(variant?.piecesMin),
+    piecesMax: textOf(variant?.piecesMax),
+    serves: textOf(variant?.serves),
     isActive: variant?.isActive ?? true,
     defaultIndex: String(Math.max(0, defaultIndex)),
     preparations: variant?.preparations.map((p) => ({
@@ -82,6 +96,10 @@ function toRequest(values: VariantValues): VariantRequest {
     minOrder: intOrNull(values.minOrder),
     maxOrder: intOrNull(values.maxOrder),
     orderStep: intOrNull(values.orderStep),
+    // CAT-R21: a PIECE variant states no pieces range; the server checks the bounds.
+    piecesMin: values.sellUnit === "PIECE" ? null : intOrNull(values.piecesMin),
+    piecesMax: values.sellUnit === "PIECE" ? null : intOrNull(values.piecesMax),
+    serves: intOrNull(values.serves),
     isActive: values.isActive,
     preparations: values.preparations.map((p, i) => ({
       code: p.code,
@@ -113,6 +131,7 @@ export function VariantDialog({
   const preps = useFieldArray({ control: form.control, name: "preparations" });
   const sellUnit = useWatch({ control: form.control, name: "sellUnit" });
   const unitWord = sellUnit === "KG" ? "grams" : sellUnit === "PIECE" ? "pieces" : "packs";
+  const basisWord = BASIS_WORDS[sellUnit];
 
   const aliases = Object.fromEntries(
     preps.fields.flatMap((_, i) => [
@@ -224,6 +243,38 @@ export function VariantDialog({
               hint={sellUnit === "KG" ? "Empty = server default (250)." : undefined}
             />
           </div>
+          <fieldset className="flex flex-col gap-3">
+            <legend className="mb-1 text-sm font-semibold">Serving facts</legend>
+            <p className="text-text-muted text-xs">
+              What customers see on the product card, {basisWord}. Leave empty when not known; give
+              both piece counts or neither.
+            </p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {sellUnit !== "PIECE" && (
+                <>
+                  <TextField
+                    form={form}
+                    name="piecesMin"
+                    label={`Fewest pieces (${basisWord})`}
+                    inputMode="numeric"
+                  />
+                  <TextField
+                    form={form}
+                    name="piecesMax"
+                    label={`Most pieces (${basisWord})`}
+                    inputMode="numeric"
+                  />
+                </>
+              )}
+              <TextField
+                form={form}
+                name="serves"
+                label={`Serves (${basisWord})`}
+                inputMode="numeric"
+                hint="People, 1 to 100."
+              />
+            </div>
+          </fieldset>
           <SwitchField
             form={form}
             name="isActive"

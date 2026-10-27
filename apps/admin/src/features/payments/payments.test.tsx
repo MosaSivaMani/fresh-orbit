@@ -115,8 +115,20 @@ describe("cash settlements", () => {
     let body: unknown = null;
     server.use(
       http.get(`${API}/admin/cash-settlements`, () => HttpResponse.json(page([]))),
-      // Staff with cash.settle only: the rider list is refused, so the form asks for the rider id.
-      http.get(`${API}/admin/delivery/riders`, () => problem(403, "FORBIDDEN")),
+      // Staff with cash.settle only read the rider lookup (G7).
+      http.get(`${API}/admin/delivery/riders/lookup`, () =>
+        HttpResponse.json(
+          page([
+            {
+              id: RIDER_ID,
+              fulfillmentLocationId: LOCATION_A,
+              fullName: "Ravi",
+              phoneLast4: "4321",
+              isActive: true,
+            },
+          ]),
+        ),
+      ),
       http.post(`${API}/admin/cash-settlements`, async ({ request }) => {
         keys.push(request.headers.get("Idempotency-Key"));
         body = await request.json();
@@ -131,7 +143,8 @@ describe("cash settlements", () => {
 
     await user.click(await screen.findByRole("button", { name: "Record settlement" }));
     const dialog = await screen.findByRole("dialog");
-    await user.type(within(dialog).getByLabelText(/Rider/), RIDER_ID);
+    await user.click(within(dialog).getByRole("combobox", { name: /Rider/ }));
+    await user.click(await screen.findByRole("option", { name: "Ravi · ••4321" }));
     const date = within(dialog).getByLabelText(/^Date/);
     await user.clear(date);
     await user.type(date, "2026-10-23");
@@ -152,7 +165,8 @@ describe("cash settlements", () => {
   it("shows SETTLEMENT_EXISTS at the date field", async () => {
     server.use(
       http.get(`${API}/admin/cash-settlements`, () => HttpResponse.json(page([]))),
-      http.get(`${API}/admin/delivery/riders`, () => problem(403, "FORBIDDEN")),
+      // A refused rider lookup falls back to typing the rider id.
+      http.get(`${API}/admin/delivery/riders/lookup`, () => problem(403, "FORBIDDEN")),
       http.post(`${API}/admin/cash-settlements`, () => problem(409, "SETTLEMENT_EXISTS")),
     );
     const { user } = renderApp({ path: "/cash-settlements", permissions: ["cash.settle"] });

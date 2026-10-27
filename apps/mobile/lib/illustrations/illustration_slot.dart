@@ -47,7 +47,13 @@ enum IllustrationSlot {
   onboardingTileCashUpi('ONBOARDING_TILE_CASH_UPI', 'Rupee notes beside a phone with a green tick'),
   onboardingBannerFresh('ONBOARDING_BANNER_FRESH', 'Prawns, a whole seer fish and a red crab on crushed ice'),
   onboardingBannerCleaned('ONBOARDING_BANNER_CLEANED', 'Fish steaks, curry cut and a fillet on a board with a knife'),
-  onboardingBannerDelivery('ONBOARDING_BANNER_DELIVERY', 'A teal cold box of fish beside a coral scooter at a door');
+  onboardingBannerDelivery('ONBOARDING_BANNER_DELIVERY', 'A teal cold box of fish beside a coral scooter at a door'),
+
+  // Home (D176): the hero picture (3:2) and the two small cards' pictures (1:1), transparent PNGs. Until they are
+  // bundled the home shows onboarding pictures as stand-ins.
+  homeHeroCatch('HOME_HERO_CATCH', 'Padma holding a large fresh seer fish above ice, prawns and crabs'),
+  homeCardCleaned('HOME_CARD_CLEANED', 'Raw seer fish steaks and curry-cut pieces on a round wooden board'),
+  homeCardRider('HOME_CARD_RIDER', 'Ravi riding his coral scooter with the ice-blue cold backpack');
 
   const IllustrationSlot(this.code, this.semanticLabel);
 

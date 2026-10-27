@@ -12,7 +12,7 @@ import {
 } from "@fresh/ui";
 import { useState } from "react";
 import { useParams } from "react-router";
-import { useProduct } from "../../api/catalog";
+import { usePreparationMethods, useProduct } from "../../api/catalog";
 import { useChargeSchedule, useEndPrice, usePriceSchedule, usePrices } from "../../api/pricing";
 import { type Id } from "../../api/types/common";
 import { type ChargePeriod, type PricePeriod } from "../../api/types/pricing";
@@ -206,7 +206,10 @@ function ChargesSection({
   const can = useCan();
   const canReadCatalog = can("catalog.manage");
   const product = useProduct(productId ?? "", canReadCatalog && productId !== undefined);
-  const known = product.data?.variants.find((v) => v.id === variantId)?.preparations ?? [];
+  // Without the catalogue permission every preparation method is offered (G3); the server keeps the variant's own.
+  const methods = usePreparationMethods(!canReadCatalog);
+  const own = product.data?.variants.find((v) => v.id === variantId)?.preparations;
+  const known: { code: string; name: string }[] = (canReadCatalog ? own : methods.data) ?? [];
   const [typed, setTyped] = useState("");
   const [picked, setPicked] = useState("");
   const code = (known.length > 0 ? picked : typed).trim().toUpperCase();

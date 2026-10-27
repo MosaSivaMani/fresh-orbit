@@ -2,7 +2,6 @@
 // OpenAPI document.
 
 import type { Schema } from "./common";
-import type { Rider } from "./delivery";
 
 export type PaymentMethod = Schema<"PaymentsPaymentMethod">;
 export type PaymentStatus = Schema<"PaymentStatus">;
@@ -55,8 +54,8 @@ export type CashSettlement = Schema<"CashSettlementResponse">;
 
 export type PaymentIssue = Schema<"PaymentIssueResponse">;
 
-/** Rider row from `GET /admin/delivery/riders` (Delivery; used only for the settlement picker). */
-export type RiderOption = Rider;
+/** Rider row from `GET /admin/delivery/riders/lookup` (G7; readable with `cash.settle`), for the settlement picker. */
+export type RiderOption = Schema<"RiderLookupItem">;
 
 export type CreateRefundRequest = Schema<"CreateRefundRequest">;
 

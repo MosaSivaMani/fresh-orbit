@@ -87,21 +87,39 @@ class Category {
   final List<Category> children;
 }
 
-/// Home banner (Promotions, not served yet: the list is empty until then). Kept loose on purpose.
+/// Home banner (Promotions `HomeBanner`). Kept loose on purpose. `linkType` is CATEGORY, PRODUCT or COUPON;
+/// `linkSlug` is the category or product slug (D172), null for a coupon or a missing target. The API has no
+/// badge yet; the app shows one only when the server sends it.
 class HomeBanner {
-  const HomeBanner({required this.title, this.subtitle, this.imageUrl, this.badge});
+  const HomeBanner({required this.title, this.subtitle, this.imageUrl, this.badge, this.linkType, this.linkSlug});
 
   factory HomeBanner.fromJson(Json j) => HomeBanner(
     title: optString(j, 'title') ?? '',
     subtitle: optString(j, 'subtitle') ?? optString(j, 'description'),
     imageUrl: optString(j, 'imageUrl'),
     badge: optString(j, 'badge'),
+    linkType: optString(j, 'linkType'),
+    linkSlug: optString(j, 'linkSlug'),
   );
 
   final String title;
   final String? subtitle;
   final String? imageUrl;
   final String? badge;
+  final String? linkType;
+  final String? linkSlug;
+
+  /// Where a tap goes: `/shop?category=<slug>` or `/product/<slug>`; null when the banner links nowhere the app
+  /// can open.
+  String? get route {
+    final slug = linkSlug;
+    if (slug == null || slug.isEmpty) return null;
+    return switch (linkType) {
+      'CATEGORY' => Uri(path: '/shop', queryParameters: {'category': slug}).toString(),
+      'PRODUCT' => '/product/${Uri.encodeComponent(slug)}',
+      _ => null,
+    };
+  }
 }
 
 class HomeData {

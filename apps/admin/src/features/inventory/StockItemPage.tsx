@@ -151,7 +151,7 @@ function StockItemView({ item, refetch }: { item: StockItem; refetch: () => unkn
           <DetailList
             columns={3}
             items={[
-              { label: "Variant", value: <VariantRef variantId={item.variantId} /> },
+              { label: "Variant", value: <VariantRef item={item} /> },
               { label: "Location", value: scope.nameOf(item.fulfillmentLocationId) },
               { label: "Stock unit", value: item.stockUnit === "GRAM" ? "Grams" : "Pieces" },
               { label: "On hand", value: qty(item.onHand) },

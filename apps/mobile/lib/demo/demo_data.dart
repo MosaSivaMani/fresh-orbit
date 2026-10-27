@@ -117,8 +117,20 @@ const demoCategories = <Json>[
 
 Json demoHome({required bool empty}) => {
   'banners': [
-    {'title': 'Weekend seer fish', 'subtitle': 'Steaks cut the way you like them.', 'badge': 'Offer'},
-    {'title': 'Prawns for biryani', 'subtitle': 'Cleaned and deveined, ready to cook.', 'badge': 'New'},
+    {
+      'title': 'Weekend seer fish',
+      'subtitle': 'Steaks cut the way you like them.',
+      'badge': 'Offer',
+      'linkType': 'CATEGORY',
+      'linkSlug': 'fish',
+    },
+    {
+      'title': 'Prawns for biryani',
+      'subtitle': 'Cleaned and deveined, ready to cook.',
+      'badge': 'New',
+      'linkType': 'CATEGORY',
+      'linkSlug': 'prawns',
+    },
   ],
   'featuredCategories': demoCategories,
   'featuredProducts': empty ? <Json>[] : demoProducts(),

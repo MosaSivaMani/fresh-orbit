@@ -53,7 +53,7 @@ export function StockListPage() {
           className="text-accent-text hover:underline"
           aria-label={`Open stock item ${row.original.variantId}`}
         >
-          <VariantRef variantId={row.original.variantId} />
+          <VariantRef item={row.original} />
         </Link>
       ),
     },

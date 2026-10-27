@@ -10,7 +10,7 @@ import {
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { useComplaints } from "../../api/orders";
-import { type ComplaintSummary } from "../../api/types/orders";
+import { type ComplaintSummary, complaintItemLabel } from "../../api/types/orders";
 import { useLocationScope } from "../../app/location-scope";
 import { PageHeader, tableError } from "../../components/page";
 import { useListParams } from "../../lib/list-params";
@@ -55,7 +55,7 @@ export function ComplaintsListPage() {
         id: "item",
         header: "Item",
         enableSorting: false,
-        cell: ({ row }) => (row.original.orderItemId ? "One item" : "Whole order"),
+        cell: ({ row }) => complaintItemLabel(row.original),
       },
       {
         id: "status",

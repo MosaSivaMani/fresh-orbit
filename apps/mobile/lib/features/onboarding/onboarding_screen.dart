@@ -19,12 +19,11 @@ import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/heading.dart';
 import '../../widgets/motion.dart';
 import 'onboarding_art.dart';
 
 // Preview colours that stay the same in light and dark (like the stickers and the avatar rings).
-const _brushYellow = Color(0xFFF5D04A);
+const _brushYellow = FreshHighlightColors.brush;
 const _coral = Color(0xFFF07A5A);
 const _teal = Color(0xFF0B7D70);
 const _snowBlue = Color(0xFF3FA7C9);
@@ -245,13 +244,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   _OnboardingPage(page: _pages[i], step: i + 1, steps: _pages.length, onSkip: _finish),
             ),
           ),
-          // Thumb zone: the dots and the big ink button never scroll away.
+          // Thumb zone: the dots and the big ink button never scroll away. Dots 12 above the 54 dp button, 12 below
+          // it plus the safe area, 16 dp gutters.
           ColoredBox(
             color: c.paper,
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -320,27 +320,50 @@ class _Dots extends StatelessWidget {
   }
 }
 
-/// System text scale from which a page scrolls instead of shrinking to fit.
+/// System text scale from which a page scrolls instead of being laid out to the screen (D182).
 const double _scrollTextScale = 1.5;
 
-/// Sizes for one page, from the preview's 390 × 873 design scaled to the space the page really has.
+/// The sheet's top radius, and how far the circle reaches down into the sheet.
+const double _sheetRadius = 28;
+const double _overlap = 28;
+
+/// Side gutters: 20 for the text and the tiles, 16 for the banner (and the button).
+const double _textGutter = 20;
+const double _bannerGutter = 16;
+
+/// The food banner's smallest and largest height; with less room than the smallest it is left out.
+const double _bannerMin = 96;
+const double _bannerMax = 150;
+
+/// Sizes for one page, laid out to the space the page really has: the colour block takes about 45% of the
+/// height (300–400), the circle is 212 on a 390-wide phone and shrinks with the block, and the sheet takes the
+/// rest. Everything spans the full width.
 class _Metrics {
-  _Metrics(double width, double height)
-    : scale = math.min(1.0, math.min(width / 390, height / 776)).clamp(0.62, 1.0),
-      showBanner = height >= 600,
-      compact = height < 600 || width < 370;
+  _Metrics({required this.width, required this.height, required this.topInset})
+    : block = math.min((height * 0.45).clamp(300.0, 400.0), height * 0.62);
 
-  /// 1 on the preview's phone; smaller on short or narrow ones.
-  final double scale;
-  final bool showBanner;
-  final bool compact;
+  final double width;
+  final double height;
+  final double topInset;
+  final double block;
 
-  double get avatar => 252 * scale;
-  double get overlap => 41 * scale;
-  double get avatarRight => 20 * scale;
-  double get heading => compact ? 36.0 : 44 * math.max(scale, 0.86);
-  double get tagline => 23 * math.max(scale, 0.86);
-  double get bannerHeight => 150 * scale;
+  /// 1 on a 390-wide phone, smaller on narrower ones.
+  double get k => math.min(1.0, width / 390);
+  double get avatar => math.min(width * 0.56, (212 * block / 330).clamp(150.0, 212.0));
+  double get circleCenter => width * 0.62;
+  double get circleLeft => circleCenter - avatar / 2;
+  double get circleTop => block + _overlap - avatar;
+  double get heading => math.max(34.0, 40 * width / 390);
+  double get headingHeight => 2 * heading * 1.04 + 2;
+
+  /// The eyebrow and Skip row (Skip keeps a 48 dp target).
+  static const double topRow = 48;
+  double get headingTop => topInset + topRow + 8;
+  double get taglineTop => headingTop + headingHeight + 8;
+  double get taglineHeight => 56 * k;
+  double get taglineWidth => math.max(96.0, circleLeft - _textGutter - 4);
+  double get sceneTop => taglineTop + taglineHeight;
+  double get sheet => math.max(0.0, height - block);
 }
 
 class _OnboardingPage extends StatelessWidget {
@@ -354,32 +377,113 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, box) {
-      final m = _Metrics(box.maxWidth, box.maxHeight);
-      final content = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _Block(page: page, step: step, steps: steps, onSkip: onSkip, m: m),
-          _Sheet(page: page, m: m),
-        ],
+      final m = _Metrics(
+        width: box.maxWidth,
+        height: box.maxHeight,
+        topInset: math.max(MediaQuery.paddingOf(context).top, 24.0),
       );
-      // Only very large system text may scroll; otherwise the page stands still and shrinks to fit (owner, D182).
+      // Only very large system text may scroll; otherwise the page is laid out to the screen and stands still
+      // (owner, D182).
       if (MediaQuery.textScalerOf(context).scale(10) / 10 >= _scrollTextScale) {
-        return SingleChildScrollView(physics: const ClampingScrollPhysics(), child: content);
+        return SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: _PageBody(page: page, step: step, steps: steps, onSkip: onSkip, m: m, fixed: false),
+        );
       }
-      return ClipRect(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.topCenter,
-          child: SizedBox(width: box.maxWidth, child: content),
-        ),
+      return SizedBox(
+        height: box.maxHeight,
+        child: _PageBody(page: page, step: step, steps: steps, onSkip: onSkip, m: m, fixed: true),
       );
     },
   );
 }
 
-/// The colour block: Skip, eyebrow, heading with sparks, tagline, the drawn scene and room for the circle.
+/// The block and the sheet in one column, the block colour running on under the sheet's rounded top, and the
+/// circle, sticker and spark on top of both.
+class _PageBody extends StatelessWidget {
+  const _PageBody({
+    required this.page,
+    required this.step,
+    required this.steps,
+    required this.onSkip,
+    required this.m,
+    required this.fixed,
+  });
+
+  final _Page page;
+  final int step;
+  final int steps;
+  final VoidCallback onSkip;
+  final _Metrics m;
+
+  /// True: the sheet takes exactly the rest of the height. False (very large text): natural height, scrolling.
+  final bool fixed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    final stickerTop = m.circleTop + m.avatar * 0.64;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: page.tone.overlay(c),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // The block colour continues behind the sheet's rounded corners, so the sheet's top is a clean curve.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: m.block + _sheetRadius,
+            child: ColoredBox(color: page.tone.background(c)),
+          ),
+          Column(
+            children: [
+              _Block(
+                key: ValueKey('onboardingBlock-$step'),
+                page: page,
+                step: step,
+                steps: steps,
+                onSkip: onSkip,
+                m: m,
+              ),
+              _Sheet(key: ValueKey('onboardingSheet-$step'), page: page, m: m, fixed: fixed),
+            ],
+          ),
+          Positioned(
+            left: m.circleLeft,
+            top: m.circleTop,
+            child: EntranceMotion(child: _RingedAvatar(slot: page.slot, size: m.avatar)),
+          ),
+          // The sticker sits on the circle's lower-left edge, over the apron and the catch, never over a face.
+          Positioned(
+            left: math.max(8.0, m.circleLeft - 34),
+            top: stickerTop,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: math.max(120.0, m.avatar * 0.9)),
+              child: _Sticker(key: const Key('onboardingSticker'), label: page.sticker, color: page.stickerColor),
+            ),
+          ),
+          Positioned(
+            left: math.max(0.0, m.circleLeft - 44),
+            top: stickerTop - 24,
+            child: const Sparks(color: _brushYellow, degrees: 200, scale: 0.7),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The colour block: the eyebrow and Skip, the heading with sparks, the tagline and the drawn scene.
 class _Block extends StatelessWidget {
-  const _Block({required this.page, required this.step, required this.steps, required this.onSkip, required this.m});
+  const _Block({
+    super.key,
+    required this.page,
+    required this.step,
+    required this.steps,
+    required this.onSkip,
+    required this.m,
+  });
 
   final _Page page;
   final int step;
@@ -395,75 +499,72 @@ class _Block extends StatelessWidget {
     // Paper text on coral and teal, ink on mango; sparks cream, yellow on teal.
     final taglineColor = page.tone == BlockTone.mango ? BlockInk.ink : (teal ? fg : BlockInk.paper);
     final sparkColor = teal ? _brushYellow : BlockInk.paper;
-    final top = math.max(MediaQuery.paddingOf(context).top, 24.0);
-    final k = m.scale;
-    // The circle starts 10 above the tagline row and its bottom sits [overlap] into the sheet.
-    final reserved = m.avatar - m.overlap - 10 * k;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: page.tone.overlay(c),
-      child: ColoredBox(
-        color: page.tone.background(c),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: ExcludeSemantics(
-                child: CustomPaint(
-                  painter: BlockScenePainter(scene: page.scene, dark: page.dark, soft: page.soft, scale: k),
+    return SizedBox(
+      height: m.block,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ExcludeSemantics(
+              child: CustomPaint(
+                painter: BlockScenePainter(
+                  scene: page.scene,
+                  dark: page.dark,
+                  soft: page.soft,
+                  scale: m.k,
+                  circleLeft: m.circleLeft,
+                  circleCenter: m.circleCenter,
+                  sceneTop: m.sceneTop,
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, top, 8, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      key: const Key('onboardingSkip'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: fg,
-                        textStyle: _inter(fg, 17, FontWeight.w700),
-                      ),
-                      onPressed: onSkip,
-                      child: const Text('Skip'),
-                    ),
+          ),
+          Positioned(
+            left: _textGutter,
+            right: 8,
+            top: m.topInset,
+            height: _Metrics.topRow,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Step $step of $steps'.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _inter(fg.withValues(alpha: 0.78), 12.5, FontWeight.w700, spacing: 1.5),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 2, right: 12),
-                    child: Text(
-                      'Step $step of $steps'.toUpperCase(),
-                      style: _inter(fg.withValues(alpha: 0.78), 12.5, FontWeight.w700, spacing: 1.5),
-                    ),
+                ),
+                TextButton(
+                  key: const Key('onboardingSkip'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: fg,
+                    textStyle: _inter(fg, 17, FontWeight.w700),
                   ),
-                  SizedBox(height: 6 * k),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 48),
-                    child: _BigHeading(lines: page.heading, color: fg, size: m.heading, spark: sparkColor),
-                  ),
-                  SizedBox(height: 6 * k),
-                  SizedBox(
-                    height: reserved,
-                    width: double.infinity,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          left: 4,
-                          top: 0,
-                          width: 180 * math.max(k, 0.8),
-                          height: math.min(reserved, 84.0),
-                          child: _Tagline(text: page.tagline, color: taglineColor, size: m.tagline),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                  onPressed: onSkip,
+                  child: const Text('Skip'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            left: _textGutter,
+            right: 48,
+            top: m.headingTop,
+            height: m.headingHeight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.topLeft,
+              child: _BigHeading(lines: page.heading, color: fg, size: m.heading, spark: sparkColor),
+            ),
+          ),
+          Positioned(
+            left: _textGutter,
+            top: m.taglineTop,
+            width: m.taglineWidth,
+            height: m.taglineHeight,
+            child: _Tagline(text: page.tagline, color: taglineColor, size: 23 * math.max(m.k, 0.86)),
+          ),
+        ],
       ),
     );
   }
@@ -492,22 +593,19 @@ class _BigHeading extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Text(first, style: style),
-              Positioned(right: -40, top: -18, child: Spark(color: spark, scale: 1.1)),
+              Text(first, maxLines: 1, style: style),
+              Positioned(right: -36, top: -14, child: Sparks(color: spark)),
             ],
           ),
           const SizedBox(height: 2),
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Transform.rotate(
-                angle: -1.5 * math.pi / 180,
-                child: BrushSwipe(
-                  color: _brushYellow,
-                  child: Text(second, style: style.copyWith(color: BlockInk.ink)),
-                ),
+              BrushHighlight(
+                degrees: -1.5,
+                child: Text(second, maxLines: 1, style: style.copyWith(color: BlockInk.ink)),
               ),
-              Positioned(right: -38, top: 12, child: Spark(color: spark, degrees: 40, scale: 0.9)),
+              Positioned(right: -34, top: 10, child: Sparks(color: spark, degrees: 40, scale: 0.85)),
             ],
           ),
         ],
@@ -530,27 +628,103 @@ class _Tagline extends StatelessWidget {
     child: FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.topLeft,
-      child: Transform.rotate(
-        angle: -6 * math.pi / 180,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text, style: scriptStyle(color, size / 1.12).copyWith(height: 1.12)),
-            const SizedBox(height: 2),
-            ExcludeSemantics(
-              child: CustomPaint(size: const Size(92, 12), painter: SwooshPainter(color)),
-            ),
-          ],
-        ),
+      child: ScriptLine(
+        text: text,
+        fontFamily: AppFonts.script,
+        fontFamilyFallback: FreshFonts.sansFallback,
+        color: color,
+        fontSize: size,
+        height: 1.12,
+        degrees: -6,
+        rotationAlignment: Alignment.center,
+        swooshGap: 2,
       ),
     ),
   );
 }
 
-/// The paper sheet with the circle, sticker and sparks reaching up out of it; then title, line, tiles, banner.
+/// The paper sheet (28 radius top): title, line and tiles, then the food banner in the room that is left.
 class _Sheet extends StatelessWidget {
-  const _Sheet({required this.page, required this.m});
+  const _Sheet({super.key, required this.page, required this.m, required this.fixed});
+
+  final _Page page;
+  final _Metrics m;
+  final bool fixed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    final top = EntranceMotion(rise: 24, child: _SheetTop(page: page, m: m));
+    final Widget body = fixed
+        ? CustomMultiChildLayout(
+            delegate: _SheetLayout(),
+            children: [
+              // Scaled down (never narrowed) only if even the text and tiles do not fit.
+              LayoutId(id: _SheetPart.top, child: FreshFitWidth(child: top)),
+              LayoutId(id: _SheetPart.banner, child: _FoodBanner(page: page)),
+            ],
+          )
+        : Column(
+            children: [
+              top,
+              const SizedBox(height: 12),
+              SizedBox(height: _bannerMax * m.k, child: _FoodBanner(page: page)),
+              const SizedBox(height: 12),
+            ],
+          );
+    return Container(
+      width: double.infinity,
+      height: fixed ? m.sheet : null,
+      decoration: BoxDecoration(
+        color: c.paper,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(_sheetRadius)),
+      ),
+      child: Stack(
+        children: [
+          const Positioned(
+            left: 0,
+            right: 0,
+            top: 5,
+            height: 40,
+            child: ExcludeSemantics(child: CustomPaint(painter: SheetBirdsPainter(_sheetBird))),
+          ),
+          body,
+        ],
+      ),
+    );
+  }
+}
+
+enum _SheetPart { top, banner }
+
+/// The text and tiles at their natural height, then the banner in the room that is left (96–150, or none), with
+/// the spare room split above and below it.
+class _SheetLayout extends MultiChildLayoutDelegate {
+  _SheetLayout();
+
+  static const double _gap = 12;
+  static const double _bottom = 12;
+
+  @override
+  void performLayout(Size size) {
+    final top = layoutChild(
+      _SheetPart.top,
+      BoxConstraints(minWidth: size.width, maxWidth: size.width, maxHeight: math.max(0.0, size.height - _bottom)),
+    );
+    positionChild(_SheetPart.top, Offset.zero);
+    final room = math.max(0.0, size.height - top.height - _gap - _bottom);
+    final banner = room >= _bannerMin ? math.min(room, _bannerMax) : 0.0;
+    layoutChild(_SheetPart.banner, BoxConstraints.tightFor(width: size.width, height: banner));
+    positionChild(_SheetPart.banner, Offset(0, top.height + _gap + (room - banner) / 2));
+  }
+
+  @override
+  bool shouldRelayout(_SheetLayout oldDelegate) => false;
+}
+
+/// Title, line and the three tiles, inside 20 dp gutters; the title starts below the circle's overlap.
+class _SheetTop extends StatelessWidget {
+  const _SheetTop({required this.page, required this.m});
 
   final _Page page;
   final _Metrics m;
@@ -558,102 +732,48 @@ class _Sheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    final k = m.scale;
-    final width = MediaQuery.sizeOf(context).width;
-    final rise = m.avatar - m.overlap;
-    final avatarLeft = width - m.avatarRight - m.avatar;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: c.paper,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          ),
-          padding: EdgeInsets.only(top: m.overlap - 2 * k, bottom: 8),
-          child: EntranceMotion(
-            rise: 24,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Semantics(
-                    header: true,
-                    child: Text(
-                      page.title,
-                      textAlign: TextAlign.center,
-                      style: _inter(c.ink, 25, FontWeight.w800, height: 1.1, spacing: -0.375),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    page.body,
-                    textAlign: TextAlign.center,
-                    style: _inter(c.muted, 14.5, FontWeight.w400, height: 1.42),
-                  ),
-                ),
-                SizedBox(height: 12 * k),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var i = 0; i < page.tiles.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 6),
-                        Expanded(
-                          child: _FeatureTile(
-                            tile: page.tiles[i],
-                            scale: k,
-                            spark: switch (i) {
-                              0 => const Spark(color: _coral, degrees: -20, scale: 0.8),
-                              1 => const Snowflake(color: _snowBlue),
-                              _ => Spark(color: page.rightSpark, degrees: 30, scale: 0.8),
-                            },
-                            sparkOnLeft: i == 0,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (m.showBanner) ...[
-                  SizedBox(height: 4 * k),
-                  _FoodBanner(page: page, height: m.bannerHeight),
-                ],
-              ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_textGutter, _overlap + 8, _textGutter, 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(
+              page.title,
+              textAlign: TextAlign.center,
+              style: _inter(c.ink, 22, FontWeight.w800, height: 1.15, spacing: -0.3),
             ),
           ),
-        ),
-        const Positioned(
-          left: 0,
-          right: 0,
-          top: 5,
-          height: 40,
-          child: ExcludeSemantics(child: CustomPaint(painter: SheetBirdsPainter(_sheetBird))),
-        ),
-        Positioned(
-          top: -rise,
-          right: m.avatarRight,
-          child: EntranceMotion(child: _RingedAvatar(slot: page.slot, size: m.avatar)),
-        ),
-        Positioned(
-          top: -rise + 44 * k,
-          left: math.max(4.0, avatarLeft - 26 * k),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: math.max(120.0, width - avatarLeft)),
-            child: _Sticker(label: page.sticker, color: page.stickerColor),
+          const SizedBox(height: 8),
+          Text(
+            page.body,
+            textAlign: TextAlign.center,
+            style: _inter(c.muted, 14.5, FontWeight.w400, height: 1.4),
           ),
-        ),
-        Positioned(
-          top: -rise + 80 * k,
-          left: math.max(0.0, avatarLeft - 42 * k),
-          child: const Spark(color: _brushYellow, degrees: 200, scale: 0.85),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < page.tiles.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _FeatureTile(
+                    tile: page.tiles[i],
+                    scale: m.k,
+                    spark: switch (i) {
+                      0 => const Sparks(color: _coral, degrees: -20, scale: 0.8),
+                      1 => const Snowflake(color: _snowBlue),
+                      _ => Sparks(color: page.rightSpark, degrees: 30, scale: 0.8),
+                    },
+                    sparkOnLeft: i == 0,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -685,9 +805,9 @@ class _RingedAvatar extends StatelessWidget {
   );
 }
 
-/// The sticker on the circle's edge: Inter 800 on colour, ink outline, an ink drop shadow, tilted −8°.
+/// The sticker on the circle's lower-left edge: Inter 800 on colour, ink outline, an ink drop shadow, tilted −8°.
 class _Sticker extends StatelessWidget {
-  const _Sticker({required this.label, required this.color});
+  const _Sticker({super.key, required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -696,7 +816,7 @@ class _Sticker extends StatelessWidget {
   Widget build(BuildContext context) => Transform.rotate(
     angle: -8 * math.pi / 180,
     child: Container(
-      padding: const EdgeInsets.fromLTRB(15, 5, 15, 5),
+      padding: const EdgeInsets.fromLTRB(14, 4, 14, 4),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(FreshRadius.full),
@@ -714,7 +834,7 @@ class _Sticker extends StatelessWidget {
 }
 
 /// One feature tile: the picture popping out of a pastel blob, a spark on its corner, a bold label and a muted
-/// caption. Screen readers hear "label, caption".
+/// caption (two lines at most each), top-aligned with its neighbours. Screen readers hear "label, caption".
 class _FeatureTile extends StatelessWidget {
   const _FeatureTile({required this.tile, required this.scale, required this.spark, required this.sparkOnLeft});
 
@@ -794,18 +914,22 @@ class _FeatureTile extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             tile.label,
             textAlign: TextAlign.center,
-            style: _inter(c.ink, 13.5, FontWeight.w700, height: 1.2),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: _inter(c.ink, 13.5, FontWeight.w600, height: 1.2),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 2),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 110),
             child: Text(
               tile.caption,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: _inter(c.muted, 12, FontWeight.w400, height: 1.3),
             ),
           ),
@@ -815,19 +939,45 @@ class _FeatureTile extends StatelessWidget {
   }
 }
 
-/// The full-width food banner: the picture on two teal waves, the handwritten line on the right with a coral
-/// underline, and a coral arrow pointing at the food. Read as one line.
+/// The food banner inside 16 dp gutters, radius 20, as tall as the room it is given (left out under 96).
 class _FoodBanner extends StatelessWidget {
-  const _FoodBanner({required this.page, required this.height});
+  const _FoodBanner({required this.page});
 
   final _Page page;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      if (!box.maxHeight.isFinite || box.maxHeight < _bannerMin) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: _bannerGutter),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: _BannerArt(
+            page: page,
+            width: math.max(0.0, box.maxWidth - 2 * _bannerGutter),
+            height: math.min(box.maxHeight, _bannerMax),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// The banner itself: the picture on two teal waves, the handwritten line on the right with a coral underline,
+/// and a coral arrow pointing at the food. Read as one line.
+class _BannerArt extends StatelessWidget {
+  const _BannerArt({required this.page, required this.width, required this.height});
+
+  final _Page page;
+  final double width;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final k = height / 150;
+    final k = height / _bannerMax;
     final foodHeight = 126 * k;
     return Semantics(
       key: ValueKey('banner-${page.banner.code}'),
@@ -836,7 +986,7 @@ class _FoodBanner extends StatelessWidget {
       excludeSemantics: true,
       child: SizedBox(
         height: height,
-        width: double.infinity,
+        width: width,
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
@@ -866,33 +1016,34 @@ class _FoodBanner extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: MediaQuery.sizeOf(context).width * 236 / 390,
-              top: 36 * k,
-              child: CustomPaint(size: Size.square(40 * k), painter: const ArrowDoodlePainter(_coral)),
+              left: width * 0.58,
+              top: 30 * k,
+              child: CustomPaint(size: Size.square(36 * k), painter: const ArrowDoodlePainter(_coral)),
             ),
             Positioned(
-              right: 14,
-              top: 26 * k,
-              width: MediaQuery.sizeOf(context).width * 0.4,
-              height: height - 30 * k,
+              right: 12,
+              top: 20 * k,
+              width: width * 0.4,
+              height: height - 26 * k,
               child: Align(
                 alignment: Alignment.topRight,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.topRight,
-                  child: Transform.rotate(
-                    angle: -8 * math.pi / 180,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(page.bannerLine, style: scriptStyle(c.ink, 22 / 1.12).copyWith(height: 1.08)),
-                        const Padding(
-                          padding: EdgeInsets.only(left: 24),
-                          child: CustomPaint(size: Size(110, 8), painter: SwooshPainter(_coral, width: 2.4)),
-                        ),
-                      ],
-                    ),
+                  child: ScriptLine(
+                    text: page.bannerLine,
+                    fontFamily: AppFonts.script,
+                    fontFamilyFallback: FreshFonts.sansFallback,
+                    color: c.ink,
+                    fontSize: 22,
+                    height: 1.08,
+                    degrees: -8,
+                    rotationAlignment: Alignment.center,
+                    swooshColor: _coral,
+                    swooshSize: const Size(110, 8),
+                    swooshWidth: 2.4,
+                    swooshIndent: 24,
+                    swooshGap: 0,
                   ),
                 ),
               ),
