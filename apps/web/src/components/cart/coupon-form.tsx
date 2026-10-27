@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDate, formatRupees } from "@fresh/core";
-import { Button, CouponStrip, FormField, Input, Skeleton } from "@fresh/ui";
+import { Button, CouponStrip, FormField, Input, OfferRow, Skeleton } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { TicketPercent } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import { useSession } from "@/auth/use-session";
 import { useApplyCoupon, useRemoveCoupon } from "@/cart/use-cart";
 import { describeError, fieldMessage, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
+import { useLocation } from "@/location/location-context";
 
 const ticket = <TicketPercent />;
 
@@ -27,10 +28,15 @@ function CouponOffers({
   onApply: (code: string) => void;
   applying: string | null;
 }) {
+  const { pincode } = useLocation();
   const coupons = useQuery({
-    queryKey: queryKeys.coupons,
-    queryFn: () => listCoupons(browserHttp()),
+    queryKey: queryKeys.coupons(pincode),
+    queryFn: () => listCoupons(browserHttp(), pincode!),
+    enabled: pincode !== null,
   });
+  if (!pincode) {
+    return <p className="text-text-muted text-sm">Set your pincode to see the offers near you.</p>;
+  }
   if (coupons.isPending) return <Skeleton className="h-16 rounded-[16px]" />;
   if (coupons.isError) {
     return (
@@ -45,30 +51,30 @@ function CouponOffers({
   return (
     <ul aria-label="Available offers" className="flex flex-col gap-2">
       {coupons.data.map((c) => (
-        <li
+        <OfferRow
           key={c.code}
-          className="bg-surface-paper border-border flex items-center justify-between gap-3 rounded-[16px] border p-3 text-sm"
-        >
-          <div className="min-w-0">
-            <p className="text-text font-bold tracking-[0.04em]">{c.code}</p>
-            {c.description && <p className="text-text-muted">{c.description}</p>}
-            <p className="text-text-muted text-xs">
-              {c.minOrderPaise > 0 && `Orders from ${formatRupees(c.minOrderPaise)}. `}
-              {c.firstOrderOnly && "First order only. "}
-              {c.validTo && `Valid until ${formatDate(c.validTo)}.`}
-            </p>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            loading={applying === c.code}
-            disabled={applying !== null}
-            onClick={() => onApply(c.code)}
-            aria-label={`Apply ${c.code}`}
-          >
-            Apply
-          </Button>
-        </li>
+          code={c.code}
+          description={c.description}
+          terms={[
+            c.minOrderPaise > 0 && `Orders from ${formatRupees(c.minOrderPaise)}.`,
+            c.firstOrderOnly && "First order only.",
+            c.validTo && `Valid until ${formatDate(c.validTo)}.`,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          action={
+            <Button
+              size="sm"
+              variant="outline"
+              loading={applying === c.code}
+              disabled={applying !== null}
+              onClick={() => onApply(c.code)}
+              aria-label={`Apply ${c.code}`}
+            >
+              Apply
+            </Button>
+          }
+        />
       ))}
     </ul>
   );

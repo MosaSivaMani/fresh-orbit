@@ -22,6 +22,6 @@ export const queryKeys = {
   tracking: (orderId: string) => ["order", orderId, "tracking"] as const,
   complaints: (orderId: string) => ["order", orderId, "complaints"] as const,
   slots: (pincode: string) => ["slots", pincode] as const,
-  coupons: ["coupons"] as const,
+  coupons: (pincode: string | null) => ["coupons", pincode] as const,
   promotions: (pincode: string | null) => ["promotions", pincode] as const,
 };

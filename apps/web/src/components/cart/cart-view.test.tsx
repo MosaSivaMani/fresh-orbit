@@ -6,6 +6,7 @@ import { cartWithSeer, emptyCart, problem, seerFish, seerLine } from "../../../t
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
+import { PINCODE_COOKIE, writeBrowserCookie } from "@/lib/cookies";
 import { CartView, checkoutHref } from "./cart-view";
 
 const slots = {
@@ -147,12 +148,15 @@ describe("CartView", () => {
     expect(screen.getByLabelText("Coupon code")).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("lists the server's offers and applies the one chosen", async () => {
+  it("lists the server's offers for the pincode and applies the one chosen", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
     let applied: unknown = null;
+    let askedPincode: string | null = null;
     server.use(
       ...cartReads(),
-      http.get(`${API}/coupons`, () =>
-        HttpResponse.json({
+      http.get(`${API}/coupons`, ({ request }) => {
+        askedPincode = new URL(request.url).searchParams.get("pincode");
+        return HttpResponse.json({
           items: [
             {
               code: "FISH50",
@@ -168,8 +172,8 @@ describe("CartView", () => {
           page: 1,
           pageSize: 20,
           totalCount: 1,
-        }),
-      ),
+        });
+      }),
       http.put(`${API}/cart/coupon`, async ({ request }) => {
         applied = await request.json();
         return HttpResponse.json(cartWithSeer);
@@ -183,6 +187,7 @@ describe("CartView", () => {
     await userEvent.click(within(offers).getByRole("button", { name: "Apply FISH50" }));
 
     await waitFor(() => expect(applied).toEqual({ code: "FISH50" }));
+    expect(askedPincode).toBe("600041");
   });
 
   it("shows the empty-cart character state for an empty cart", async () => {
