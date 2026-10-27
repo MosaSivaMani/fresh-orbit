@@ -92,7 +92,11 @@ describe("CategoryTile", () => {
 
 describe("PromoCard", () => {
   it("shows the title as a heading, the line, the picture and the action", async () => {
-    const action = <PillLink tone="coral" href="/support">Learn more</PillLink>;
+    const action = (
+      <PillLink tone="coral" href="/support">
+        Learn more
+      </PillLink>
+    );
     const picture = <img src="/c.png" alt="Fish steaks" />;
     const { container } = render(
       <PromoCardGrid>
