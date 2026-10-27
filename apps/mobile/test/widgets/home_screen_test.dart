@@ -263,10 +263,77 @@ void main() {
     expect(find.byKey(const ValueKey('illustration-image-ONBOARDING_FRESH')), findsNothing);
     expect(find.byKey(const ValueKey('illustration-image-HOME_CARD_RIDER')), findsOneWidget);
     expect(find.byKey(const ValueKey('illustration-image-ONBOARDING_TILE_COLD_BOX')), findsNothing);
-    // Ravi pops 16 above the top of the mango card.
+    // Ravi sits under the title, like the cleaned card's picture: he never covers "door".
     final card = tester.getRect(find.byKey(const Key('homeCardCold')));
     final rider = tester.getRect(find.byKey(const ValueKey('homePicture-HOME_CARD_RIDER')));
-    expect(card.top - rider.top, moreOrLessEquals(16 * _scale(tester), epsilon: 0.5));
+    final title = tester.getRect(find.text('till your door'));
+    expect(rider.top, greaterThanOrEqualTo(title.bottom - 0.5));
+    expect(rider.top, greaterThan(card.top));
+  });
+
+  testWidgets('categories and offers show the bundled owner pictures when the server sends none', (tester) async {
+    IllustrationAssets.debugSetAvailable(const {
+      'assets/illustrations/category_fish.webp',
+      'assets/illustrations/category_prawns.webp',
+      'assets/illustrations/category_crabs.webp',
+      'assets/illustrations/category_shellfish.webp',
+      'assets/illustrations/sample_banner_seer_steaks.webp',
+      'assets/illustrations/sample_banner_prawns.webp',
+    });
+    await _pump(tester);
+
+    for (final picture in ['fish', 'prawns', 'crabs', 'shellfish']) {
+      expect(
+        find.byKey(ValueKey('bundled-picture-assets/illustrations/category_$picture.webp')),
+        findsWidgets,
+        reason: picture,
+      );
+    }
+    expect(
+      find.byKey(const ValueKey('bundled-picture-assets/illustrations/sample_banner_seer_steaks.webp')),
+      findsWidgets,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('category names keep one size and wrap to two lines at most', (tester) async {
+    final home = HomeData.fromJson({
+      'banners': <Object?>[],
+      'featuredCategories': [
+        {'id': 'f', 'slug': 'fish', 'name': 'Fish', 'imageUrl': null},
+        {'id': 's', 'slug': 'shellfish', 'name': 'Squid and shellfish', 'imageUrl': null},
+      ],
+      'featuredProducts': <Object?>[],
+      'locationRequired': false,
+    });
+    await _pump(tester, home: home);
+
+    final short = tester.widget<Text>(find.text('Fish'));
+    final long = tester.widget<Text>(find.text('Squid and shellfish'));
+    expect(long.style?.fontSize, short.style?.fontSize);
+    expect(long.maxLines, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the next-slot chip shows the whole time window', (tester) async {
+    await _pump(tester, size: const Size(360, 740));
+
+    final chip = find.byKey(const Key('homeNextSlot'));
+    final text = tester.widget<Text>(find.descendant(of: chip, matching: find.textContaining('Next slot')));
+    expect(text.overflow, isNot(TextOverflow.ellipsis));
+    expect(text.data, endsWith('›'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the page fills the screen: no dead gap under the offers', (tester) async {
+    await _pump(tester);
+
+    final fit = tester.getRect(find.byKey(const Key('homeFit')));
+    expect(fit.bottom, moreOrLessEquals(844, epsilon: 1));
+    final specials = tester.getRect(find.byKey(const Key('homeSpecials')));
+    // The offer row ends near the bottom (only the small end gap is left), not halfway up the screen.
+    expect(fit.bottom - specials.bottom, lessThan(80));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('with no pictures at all it draws placeholders, never a broken image', (tester) async {

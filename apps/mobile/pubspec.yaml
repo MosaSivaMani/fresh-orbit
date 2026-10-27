@@ -18,6 +18,7 @@ dependencies:
   fresh_theme:
     path: ../../packages/flutter/fresh_theme
   go_router: 18.1.1
+  image_picker: 1.1.2
   intl: 0.20.3
   shared_preferences: 2.5.6
   uuid: 4.6.0

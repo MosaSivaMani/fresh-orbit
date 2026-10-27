@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
-import '../theme/app_theme.dart';
 import 'cast_painter.dart';
 import 'illustration_slot.dart';
 
@@ -233,3 +233,69 @@ class IllustrationPlaceholder extends StatelessWidget {
   IllustrationSlot.homeCardCleaned => (CastMember.chanduva, CastBackdrop.coral, Icons.restaurant_rounded, false),
   IllustrationSlot.homeCardRider => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
 };
+
+/// The owner's category and offer pictures bundled in the app (D194, D220), used when the server sends no
+/// picture (the demo fixtures send none). Matched by slug words; anything else gets no picture rather than a
+/// wrong one.
+abstract final class BundledPictures {
+  static const String _dir = 'assets/illustrations';
+
+  /// The category picture for [slug], or null.
+  static String? category(String slug) {
+    final s = slug.toLowerCase();
+    if (s.contains('prawn') || s.contains('shrimp')) return '$_dir/category_prawns.webp';
+    if (s.contains('crab')) return '$_dir/category_crabs.webp';
+    if (s.contains('shellfish') || s.contains('squid') || s.contains('lobster') || s.contains('mussel')) {
+      return '$_dir/category_shellfish.webp';
+    }
+    if (s.contains('fish')) return '$_dir/category_fish.webp';
+    return null;
+  }
+
+  /// The offer picture for an offer linking to [linkSlug]: prawns for a prawn offer, else the seer steaks; an
+  /// offer with no link takes them in turn by its [index].
+  static String special(String? linkSlug, int index) {
+    final s = linkSlug?.toLowerCase();
+    if (s != null && (s.contains('prawn') || s.contains('shrimp'))) return '$_dir/sample_banner_prawns.webp';
+    if (s != null) return '$_dir/sample_banner_seer_steaks.webp';
+    return index.isEven ? '$_dir/sample_banner_seer_steaks.webp' : '$_dir/sample_banner_prawns.webp';
+  }
+}
+
+/// A bundled picture at [path] that fills its box (cropped), shown only when the app bundle holds it; otherwise,
+/// or when it fails to load, [fallback]. Never a broken image.
+class BundledPicture extends StatefulWidget {
+  const BundledPicture({super.key, required this.path, required this.fallback, this.fit = BoxFit.cover});
+
+  final String path;
+  final Widget fallback;
+  final BoxFit fit;
+
+  @override
+  State<BundledPicture> createState() => _BundledPictureState();
+}
+
+class _BundledPictureState extends State<BundledPicture> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    IllustrationAssets.ensureLoaded(DefaultAssetBundle.of(context));
+  }
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<Set<String>?>(
+    valueListenable: IllustrationAssets.available,
+    builder: (context, assets, _) {
+      if (assets == null || !assets.contains(widget.path)) return widget.fallback;
+      return Image.asset(
+        widget.path,
+        key: ValueKey('bundled-picture-${widget.path}'),
+        fit: widget.fit,
+        width: double.infinity,
+        height: double.infinity,
+        excludeFromSemantics: true,
+        errorBuilder: (_, _, _) => widget.fallback,
+      );
+    },
+  );
+}

@@ -1,6 +1,6 @@
 // Rich home parts after the owner's website reference (D188), in the app's look (D176, D181): drawn harbour scenery
-// (sparks, swoosh, gulls, trawler, sky, waves), the harbour hero with its headline and feature chips, the white
-// check bar, section headers with a handwritten word and sparks, pill links, round category tiles and promo cards.
+// (trawler, sky, waves; the sparks, swoosh and gulls come from the theme marks), the harbour hero with its headline
+// and feature chips, the white check bar, pill links, round category tiles and promo cards.
 //
 // Our own shapes, written for the web after the app's scenery (not copied). Drawings are decorative (aria-hidden).
 // Nothing here computes a business value (CLAUDE.md rule 4): labels, pictures, links and slot lines are passed in.
@@ -8,78 +8,11 @@ import { Slot } from "radix-ui";
 import { Children, type ComponentProps, type ReactNode, createElement } from "react";
 import { cn, focusRing } from "../lib/cn";
 import { Brush, Script } from "./heading";
+import { Gulls, Sparks, Swoosh } from "./theme";
 
 type ArtProps = { className?: string };
 
 // ---------- Scenery ----------
-
-/** Three short fanned dashes, the highlight mark next to a heading or a big word. Colour = currentColor. */
-export function Sparks({ className }: ArtProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 40 30"
-      className={cn("inline-block shrink-0", className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={3.2}
-      strokeLinecap="round"
-    >
-      <path d="M5 24 12 12M17 21 20 5M27 22 35 13" />
-    </svg>
-  );
-}
-
-/** A loose brush swoosh under a handwritten line. Colour = currentColor. */
-export function Swoosh({ className }: ArtProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 220 28"
-      preserveAspectRatio="none"
-      className={cn("block", className)}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-    >
-      <path d="M6 22C60 10 130 6 214 4" strokeWidth={4.5} />
-      <path d="M40 24C90 16 140 13 190 12" strokeWidth={2} opacity={0.55} />
-    </svg>
-  );
-}
-
-/** A gull: two soft arcs. */
-function Gull({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
-  return (
-    <path
-      d={`M${x} ${y}q${7 * s} ${-7 * s} ${14 * s} ${-1 * s}q${7 * s} ${-6 * s} ${14 * s} ${1 * s}`}
-    />
-  );
-}
-
-/** A small flock of gulls. Colour = currentColor. */
-export function Birds({ className }: ArtProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 200 90"
-      className={cn("block", className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2.6}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <Gull x={8} y={60} s={1.2} />
-      <Gull x={62} y={30} />
-      <Gull x={118} y={52} s={0.8} />
-      <Gull x={160} y={18} s={1.1} />
-    </svg>
-  );
-}
 
 /** An orange-teal fishing trawler riding a wave: hull, cabin with windows, wheelhouse, mast, flag and rigging. */
 export function Trawler({ className }: ArtProps) {
@@ -363,8 +296,8 @@ export function HarbourHero({
         <HarbourSky className="-z-10" />
       )}
 
-      <Birds className="text-outline-ink/45 absolute top-6 left-[46%] hidden w-28 md:block" />
-      <Birds className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
+      <Gulls className="text-outline-ink/45 absolute top-6 left-[46%] hidden w-28 md:block" />
+      <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
       <Trawler className="absolute right-[1%] bottom-6 hidden w-[200px] md:block lg:bottom-10 lg:w-[230px]" />
 
       <div className="relative mx-auto flex h-full max-w-7xl flex-col items-center px-4 pt-8 lg:block lg:px-8 lg:pt-10">
@@ -466,55 +399,6 @@ export function PillLink({
       )}
       {...props}
     />
-  );
-}
-
-// ---------- SectionHeader ----------
-export interface SectionHeaderProps extends Omit<ComponentProps<"div">, "title"> {
-  /** Id of the heading, for the section's `aria-labelledby`. */
-  headingId?: string;
-  /** Baloo words ("What's on your"). */
-  title: ReactNode;
-  /** The handwritten coral word after them ("mind?"). */
-  script?: ReactNode;
-  /** h2 by default. */
-  level?: 2 | 3;
-  /** Right side, normally a `PillLink`. */
-  action?: ReactNode;
-}
-
-/** A section title with a handwritten coral word and a sparks mark, and an optional action on the right. */
-export function SectionHeader({
-  headingId,
-  title,
-  script,
-  level = 2,
-  action,
-  className,
-  ...props
-}: SectionHeaderProps) {
-  return (
-    <div className={cn("flex items-center justify-between gap-4", className)} {...props}>
-      {createElement(
-        `h${level}`,
-        {
-          id: headingId,
-          className:
-            "font-display text-text flex items-start gap-1 text-[1.75rem] leading-tight font-extrabold sm:text-[2rem]",
-        },
-        <span key="words">
-          {title}
-          {script && (
-            <>
-              {" "}
-              <Script className="text-accent-coral-text">{script}</Script>
-            </>
-          )}
-        </span>,
-        <Sparks key="sparks" className="text-accent-coral mt-1 w-8" />,
-      )}
-      {action}
-    </div>
   );
 }
 

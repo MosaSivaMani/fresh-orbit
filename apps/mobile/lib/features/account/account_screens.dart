@@ -14,10 +14,7 @@ import '../../demo/demo_app.dart';
 import '../../demo/demo_backend.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
-import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
 import 'settings_screen.dart';
 
@@ -32,31 +29,31 @@ class AccountScreen extends ConsumerWidget {
     final unread = signedIn ? ref.watch(inboxProvider).value?.unreadCount ?? 0 : 0;
     final language = ref.watch(languageProvider);
     return Scaffold(
+      appBar: PageHeader(
+        text: 'My',
+        brushed: 'account',
+        back: false,
+        actions: [
+          PaperCircleButton(
+            key: const Key('accountSettings'),
+            icon: Icons.settings_outlined,
+            label: 'Settings',
+            onTap: () => context.go('/account/settings'),
+          ),
+        ],
+      ),
       body: SafeArea(
+        top: false,
         child: ListView(
-          padding: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.only(bottom: FreshLayout.sectionGap),
           children: [
             if (demoMode) const DemoPanel(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 6, 8, 4),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: ScriptTitle(text: 'My', script: 'account', size: 22),
-                  ),
-                  RoundIconButton(
-                    icon: Icons.settings_outlined,
-                    tooltip: 'Settings',
-                    onPressed: () => context.go('/account/settings'),
-                  ),
-                ],
-              ),
-            ),
             _ProfileCard(signedIn: signedIn, profile: profile),
             if (signedIn)
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, FreshLayout.cardGap, FreshLayout.gutter, 0),
+                child: FreshColumns(
+                  stretch: true,
                   children: [
                     _QuickTile(
                       icon: Icons.receipt_long_outlined,
@@ -64,14 +61,12 @@ class AccountScreen extends ConsumerWidget {
                       tint: c.tealSoft,
                       onTap: () => context.go('/orders'),
                     ),
-                    const SizedBox(width: 8),
                     _QuickTile(
                       icon: Icons.favorite_border_rounded,
                       label: 'Saved',
                       tint: c.coralSoft,
                       onTap: () => context.push('/wishlist'),
                     ),
-                    const SizedBox(width: 8),
                     _QuickTile(
                       icon: Icons.location_on_outlined,
                       label: 'Addresses',
@@ -81,7 +76,7 @@ class AccountScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-            const SizedBox(height: 10),
+            const SizedBox(height: FreshLayout.cardGap),
             MenuCard(
               children: [
                 if (signedIn)
@@ -135,8 +130,8 @@ class _ProfileCard extends StatelessWidget {
     final name = profile?.fullName;
     final initial = name == null || name.trim().isEmpty ? null : name.trim()[0].toUpperCase();
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-      padding: const EdgeInsets.all(16),
+      margin: FreshLayout.page,
+      padding: const EdgeInsets.all(FreshLayout.gutter),
       decoration: BoxDecoration(color: c.mango, borderRadius: BorderRadius.circular(AppRadius.hero)),
       child: signedIn
           ? Row(
@@ -243,25 +238,16 @@ class _QuickTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    return Expanded(
-      child: Semantics(
-        button: true,
-        label: label,
-        excludeSemantics: true,
-        child: Container(
-          decoration: BoxDecoration(
-            color: c.paper,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: cardShadow(context),
-          ),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: onTap,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                child: Column(
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: FreshCard(
+        color: c.paper,
+        shadow: cardShadow(context),
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(vertical: FreshLayout.cardGap, horizontal: 4),
+        child: Column(
                   children: [
                     Container(
                       width: 34,
@@ -281,10 +267,6 @@ class _QuickTile extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -381,7 +363,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final profile = ref.watch(profileProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: const PageHeader(text: 'Your', brushed: 'profile'),
       body: AsyncValueView<Profile?>(
         value: profile,
         onRetry: () => ref.invalidate(profileProvider),
@@ -389,7 +371,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           if (p == null) return const EmptyState(slot: IllustrationSlot.loginOtp, title: 'Sign in to see your profile');
           _fill(p);
           return ListView(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
+            padding: FreshLayout.list,
             children: [
               if (p.phone != null)
                 ListTile(
@@ -445,15 +427,18 @@ class NotificationsScreen extends ConsumerWidget {
       backgroundColor: empty ? BlockTone.ice.background(illustratedColors(context)) : null,
       appBar: empty
           ? null
-          : AppBar(
-              title: const ScriptTitle(text: 'Your', script: 'alerts'),
+          : PageHeader(
+              text: 'Your',
+              brushed: 'alerts',
               actions: [
                 if ((inbox.value?.unreadCount ?? 0) > 0)
-                  TextButton(
-                    onPressed: () => ref.read(inboxProvider.notifier).markAllRead().catchError((Object e) {
+                  PaperCircleButton(
+                    key: const Key('markAllRead'),
+                    icon: Icons.done_all_rounded,
+                    label: 'Mark all read',
+                    onTap: () => ref.read(inboxProvider.notifier).markAllRead().catchError((Object e) {
                       if (context.mounted) showErrorSnack(context, e);
                     }),
-                    child: const Text('Mark all read'),
                   ),
               ],
             ),
@@ -465,11 +450,14 @@ class NotificationsScreen extends ConsumerWidget {
           data: (page) => page.items.isEmpty
               ? _NoNotifications(onBack: context.canPop() ? () => context.pop() : null)
               : ListView.separated(
+                  padding: FreshLayout.list,
                   itemCount: page.items.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
                     final m = page.items[i];
-                    return ListTile(
+                    return SectionBox(
+                      padding: EdgeInsets.zero,
+                      child: ListTile(
                       leading: Icon(m.isRead ? Icons.mark_email_read_outlined : Icons.mark_email_unread_outlined),
                       title: Text(
                         m.title ?? m.body,
@@ -484,6 +472,7 @@ class NotificationsScreen extends ConsumerWidget {
                           : () => ref.read(inboxProvider.notifier).markRead(m.messageId).catchError((Object e) {
                               if (context.mounted) showErrorSnack(context, e);
                             }),
+                      ),
                     );
                   },
                 ),
@@ -500,13 +489,14 @@ class PreferencesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(preferencesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification preferences')),
+      appBar: const PageHeader(text: 'Message', brushed: 'choices'),
       body: AsyncValueView<List<NotificationPreference>>(
         value: prefs,
         onRetry: () => ref.invalidate(preferencesProvider),
         data: (list) => list.isEmpty
             ? const EmptyState(slot: IllustrationSlot.emptyNotifications, title: 'No preferences to set')
             : ListView(
+                padding: FreshLayout.list,
                 children: [
                   for (final p in list)
                     SwitchListTile(

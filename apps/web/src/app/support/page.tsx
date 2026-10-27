@@ -1,6 +1,11 @@
+import { Highlight } from "@fresh/ui";
+import { Clock, Mail, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ContentPage, OwnerPlaceholder } from "@/components/content-page";
+import { getBusinessProfile } from "@/api/endpoints/catalog";
+import { publicHttp } from "@/api/server";
+import { type PublicBusinessProfile } from "@/api/types/locations";
+import { ContentPage } from "@/components/content-page";
 
 export const metadata: Metadata = {
   title: "Help and FAQ",
@@ -58,15 +63,92 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
 ];
 
-export default function SupportPage() {
+/** The store's contact details, cached like the footer's cities; null when the API is unavailable. */
+async function loadProfile(): Promise<PublicBusinessProfile | null> {
+  try {
+    return await getBusinessProfile(publicHttp(300));
+  } catch (error) {
+    console.warn(
+      "Help: business profile unavailable.",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
+
+/** Phone, email and hours exactly as the store saved them (`GET /business-profile`, gap W7). */
+function ContactCard({ profile }: { profile: PublicBusinessProfile | null }) {
+  return (
+    <section
+      aria-labelledby="contact-heading"
+      className="bg-teal-soft flex flex-col gap-3 rounded-[20px] p-5 text-sm"
+    >
+      <h2 id="contact-heading" className="font-display text-text text-lg font-extrabold">
+        Contact us
+      </h2>
+      {profile ? (
+        <ul className="text-text flex flex-col gap-2">
+          <li className="flex items-center gap-2">
+            <Phone aria-hidden="true" className="text-accent-text size-4 shrink-0" />
+            <a
+              href={`tel:${profile.supportPhone.replace(/\s+/g, "")}`}
+              className="font-semibold underline-offset-4 hover:underline"
+            >
+              {profile.supportPhone}
+            </a>
+          </li>
+          <li className="flex items-center gap-2">
+            <Mail aria-hidden="true" className="text-accent-text size-4 shrink-0" />
+            <a
+              href={`mailto:${profile.supportEmail}`}
+              className="font-semibold break-all underline-offset-4 hover:underline"
+            >
+              {profile.supportEmail}
+            </a>
+          </li>
+          {profile.supportHours && (
+            <li className="flex items-center gap-2">
+              <Clock aria-hidden="true" className="text-accent-text size-4 shrink-0" />
+              {profile.supportHours}
+            </li>
+          )}
+        </ul>
+      ) : (
+        <p className="text-text-muted">
+          Our contact details could not be loaded. For an order, open it from{" "}
+          <Link
+            href="/account/orders"
+            className="text-accent-text font-semibold underline-offset-4 hover:underline"
+          >
+            your orders
+          </Link>{" "}
+          and choose Report a problem.
+        </p>
+      )}
+    </section>
+  );
+}
+
+export default async function SupportPage() {
+  const profile = await loadProfile();
   return (
     <ContentPage
-      title="Help and FAQ"
+      title={
+        <>
+          Help and <Highlight>FAQ</Highlight>
+        </>
+      }
+      intro="Answers about ordering, weights, slots, payment, cancellation and refunds."
       breadcrumbs={[{ href: "/", label: "Home" }, { label: "Help and FAQ" }]}
+      picture={{ slot: "ONBOARDING_DELIVERY", focus: "45% 25%" }}
+      aside={<ContactCard profile={profile} />}
     >
       <div className="flex flex-col gap-3">
         {FAQ.map((item) => (
-          <details key={item.q} className="border-border bg-surface group rounded-xl border p-4">
+          <details
+            key={item.q}
+            className="border-border bg-surface group rounded-[20px] border p-4 open:shadow-[0_6px_18px_rgb(10_38_48/0.08)]"
+          >
             <summary className="text-text cursor-pointer font-semibold">{item.q}</summary>
             <div className="text-text-muted mt-2">{item.a}</div>
           </details>
@@ -99,11 +181,6 @@ export default function SupportPage() {
           </Link>
         </li>
       </ul>
-      <h2>Contact us</h2>
-      <OwnerPlaceholder>
-        Add the store&apos;s support phone number, WhatsApp, email and hours here. There is no
-        public business-profile endpoint yet, so this is static text.
-      </OwnerPlaceholder>
     </ContentPage>
   );
 }

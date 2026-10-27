@@ -207,6 +207,7 @@ class OrderDetail {
     this.couponCode,
     this.payment,
     required this.allowedActions,
+    this.substitutions = const [],
   });
 
   factory OrderDetail.fromJson(Json j) {
@@ -232,6 +233,7 @@ class OrderDetail {
       couponCode: optString(j, 'couponCode'),
       payment: payment == null ? null : OrderPayment.fromJson(payment),
       allowedActions: actions == null ? AllowedActions.none : AllowedActions.fromJson(actions),
+      substitutions: listOrEmpty(j, 'substitutions', OrderSubstitution.fromJson),
     );
   }
 
@@ -254,6 +256,45 @@ class OrderDetail {
   final String? couponCode;
   final OrderPayment? payment;
   final AllowedActions allowedActions;
+
+  /// Replacements the store proposed for short items; PROPOSED ones wait for the customer's answer.
+  final List<OrderSubstitution> substitutions;
+}
+
+/// A replacement proposed for a short item (`substitutions[]` of the order detail). The price difference is the
+/// server's; the app only shows it.
+class OrderSubstitution {
+  const OrderSubstitution({
+    required this.id,
+    required this.orderItemId,
+    required this.proposedName,
+    required this.proposedQuantity,
+    required this.priceDifferencePaise,
+    required this.status,
+    required this.expiresAt,
+  });
+
+  factory OrderSubstitution.fromJson(Json j) => OrderSubstitution(
+    id: reqString(j, 'id'),
+    orderItemId: reqString(j, 'orderItemId'),
+    proposedName: reqString(j, 'proposedName'),
+    proposedQuantity: reqQuantity(j, 'proposedQuantity'),
+    priceDifferencePaise: optInt(j, 'priceDifferencePaise') ?? 0,
+    status: reqString(j, 'status'),
+    expiresAt: reqInstant(j, 'expiresAt'),
+  );
+
+  final String id;
+  final String orderItemId;
+  final String proposedName;
+  final Quantity proposedQuantity;
+  final int priceDifferencePaise;
+
+  /// PROPOSED, ACCEPTED, REJECTED or EXPIRED.
+  final String status;
+  final DateTime expiresAt;
+
+  bool get awaitsAnswer => status == 'PROPOSED';
 }
 
 class TimelineEntry {

@@ -64,7 +64,7 @@ export function cancelOrder(
   );
 }
 
-/** JSON body; the API takes no photos yet (docs/design/web.md §6, gap W12). */
+/** JSON body; photos follow one by one through `addComplaintPhoto` (gap W12 closed). */
 export function raiseComplaint(
   http: HttpClient,
   orderId: string,
@@ -76,12 +76,39 @@ export function raiseComplaint(
   });
 }
 
+/** Adds one photo to a complaint (multipart field `file`); returns the complaint with its photos. */
+export function addComplaintPhoto(
+  http: HttpClient,
+  orderId: string,
+  complaintId: string,
+  file: File,
+): Promise<Complaint> {
+  const body = new FormData();
+  body.append("file", file, file.name);
+  return http.post<Complaint>(
+    `/orders/${encodeURIComponent(orderId)}/complaints/${encodeURIComponent(complaintId)}/photos`,
+    body,
+  );
+}
+
 export function listComplaints(http: HttpClient, orderId: string): Promise<Complaint[]> {
   return http.get<Complaint[]>(`/orders/${encodeURIComponent(orderId)}/complaints`);
 }
 
 export function getInvoice(http: HttpClient, orderId: string): Promise<InvoiceResponse> {
   return http.get<InvoiceResponse>(`/orders/${encodeURIComponent(orderId)}/invoice`);
+}
+
+/** Accepts or rejects a substitution the store proposed; returns the re-priced order. */
+export function answerSubstitution(
+  http: HttpClient,
+  orderId: string,
+  substitutionId: string,
+  answer: "accept" | "reject",
+): Promise<OrderDetail> {
+  return http.post<OrderDetail>(
+    `/orders/${encodeURIComponent(orderId)}/substitutions/${encodeURIComponent(substitutionId)}/${answer}`,
+  );
 }
 
 /** Adds the order's sellable lines to the cart; returns the priced cart. */

@@ -1,4 +1,4 @@
-import { CategoryTile, CategoryTileRow, PillLink, SectionHeader } from "@fresh/ui";
+import { CategoryTile, CategoryTileRow, SectionAction, SectionHeader } from "@fresh/ui";
 import { ArrowRight, Fish } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,7 @@ export interface HomeCategory {
 }
 
 /**
- * "What's on your mind?" (D188, shared `SectionHeader`, `PillLink` and `CategoryTile`): one round picture per
+ * "What's on your mind?" (D188, shared `SectionHeader`, `SectionAction` and `CategoryTile`): one round picture per
  * category the server features (names and pictures are data; rule 7). A category without a picture shows the fish
  * mark.
  */
@@ -19,16 +19,16 @@ export function HomeCategories({ categories }: { categories: HomeCategory[] }) {
   return (
     <section aria-labelledby="home-categories-heading" className="flex flex-col gap-6">
       <SectionHeader
-        headingId="home-categories-heading"
+        id="home-categories-heading"
         title="What's on your"
         script="mind?"
         action={
-          <PillLink asChild>
+          <SectionAction asChild>
             <Link href="/shop">
               View all
               <ArrowRight aria-hidden="true" />
             </Link>
-          </PillLink>
+          </SectionAction>
         }
       />
       <CategoryTileRow label="Categories">

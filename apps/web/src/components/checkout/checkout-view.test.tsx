@@ -143,4 +143,34 @@ describe("CheckoutView", () => {
     expect(keys).toHaveLength(2);
     expect(keys[1]).toBe(keys[0]);
   });
+
+  it("takes a new Idempotency-Key when the payment method changes before a retry", async () => {
+    const keys: (string | null)[] = [];
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cartWithSeer)),
+      http.get(`${API}/me/addresses`, () => HttpResponse.json([homeAddress])),
+      http.get(`${API}/delivery-slots`, () => HttpResponse.json(slots)),
+      http.post(`${API}/checkout/preview`, () => HttpResponse.json(preview(66950))),
+      http.post(`${API}/orders`, ({ request }) => {
+        keys.push(request.headers.get("Idempotency-Key"));
+        if (keys.length === 1) return HttpResponse.error();
+        return HttpResponse.json(placedOrder, { status: 201 });
+      }),
+    );
+    renderWithProviders(<CheckoutView />, { session: signedIn });
+
+    const times = await screen.findByRole("radiogroup", { name: "Delivery time" });
+    await userEvent.click(within(times).getAllByRole("radio")[0]!);
+    await userEvent.click(await screen.findByRole("button", { name: /Place order · / }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: "UPI on delivery" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Place order · / })).toBeEnabled(),
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Place order · / }));
+    await waitFor(() => expect(routerMock.push).toHaveBeenCalledWith("/orders/o1/success"));
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
+  });
 });

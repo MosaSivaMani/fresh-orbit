@@ -9,8 +9,11 @@ export type Profile = Coded<Schema<"ProfileResponse">, { status: "ACTIVE" | "DEL
 /** `PATCH /me`: null leaves a field unchanged (CUS-R2). */
 export type UpdateProfileRequest = Partial<Schema<"UpdateProfileRequest">>;
 
-/** `GET /me/wishlist` returns ids and dates only (gap W5 in docs/design/web.md). */
+/** `GET /me/wishlist`: id, date and a priced product summary per item (gap W5 closed). */
 export type WishlistItem = Schema<"WishlistItemResponse">;
+
+/** `GET/POST /me/stock-alerts`: one alert per size and store. */
+export type StockAlert = Schema<"StockAlertResponse">;
 
 export type InboxItem = Schema<"InboxItem">;
 

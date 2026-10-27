@@ -295,3 +295,83 @@ class ScriptLine extends StatelessWidget {
     return Transform.rotate(angle: degrees * math.pi / 180, alignment: rotationAlignment, child: line);
   }
 }
+
+/// A heading with one key word on the yellow brush and sparks after it, the way the home writes "What's cooking
+/// *today?*" (D181): [text] in [style], then [brushed] on a [BrushHighlight] in [brushInk], then [trailing].
+/// The words wrap onto a second line when the width is short (fit by layout, never by shrinking, D183, D195).
+/// Screen readers hear one header with the words joined.
+class HighlightTitle extends StatelessWidget {
+  const HighlightTitle({
+    super.key,
+    required this.text,
+    required this.brushed,
+    required this.style,
+    this.trailing,
+    this.sparkColor = FreshHighlightColors.coral,
+    this.sparks = true,
+    this.brushColor = FreshHighlightColors.brush,
+    this.brushInk = FreshHighlightColors.ink,
+    this.header = true,
+  });
+
+  /// The words before the brush (may be empty).
+  final String text;
+
+  /// The key word on the brush.
+  final String brushed;
+
+  /// Words after the brush.
+  final String? trailing;
+  final TextStyle style;
+  final Color sparkColor;
+  final bool sparks;
+  final Color brushColor;
+  final Color brushInk;
+  final bool header;
+
+  /// The words as screen readers hear them.
+  String get label => [text, brushed, ?trailing].where((w) => w.isNotEmpty).join(' ');
+
+  @override
+  Widget build(BuildContext context) {
+    final size = style.fontSize ?? 20;
+    // The home's sparks are 0.68 × at a 20 dp heading and 1 × at 32 dp.
+    final spark = (size / 30).clamp(0.5, 1.0);
+    final sparkWidth = Sparks.designSize.width * spark;
+    final word = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        BrushHighlight(
+          color: brushColor,
+          degrees: -2,
+          padding: EdgeInsets.symmetric(horizontal: size * 0.16),
+          child: Text(brushed, style: style.copyWith(color: brushInk)),
+        ),
+        if (sparks)
+          Positioned(
+            right: -sparkWidth - 2,
+            top: -Sparks.designSize.height * spark * 0.55,
+            child: Sparks(color: sparkColor, scale: spark),
+          ),
+      ],
+    );
+    return Semantics(
+      header: header,
+      label: label,
+      excludeSemantics: true,
+      child: Padding(
+        // Room for the sparks above and after the brushed word.
+        padding: EdgeInsets.only(top: sparks ? size * 0.3 : 0, right: sparks ? sparkWidth + 2 : 0),
+        child: Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: size * 0.22,
+          children: [
+            if (text.isNotEmpty) Text(text, style: style),
+            word,
+            if (trailing != null && trailing!.isNotEmpty) Text(trailing!, style: style),
+          ],
+        ),
+      ),
+    );
+  }
+}

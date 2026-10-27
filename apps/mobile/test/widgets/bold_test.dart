@@ -5,8 +5,7 @@ import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:fresh_orbit_app/widgets/bold.dart';
 import 'package:fresh_orbit_app/widgets/commerce.dart';
-import 'package:fresh_orbit_app/widgets/heading.dart';
-import 'package:fresh_orbit_app/widgets/illustrated.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 Future<void> _pump(
   WidgetTester tester,
@@ -147,12 +146,15 @@ void main() {
       );
     });
 
-    testWidgets('ScriptTitle reads as one header', (tester) async {
+    testWidgets('PageTitle reads as one header, the key word on the brush with sparks', (tester) async {
       final handle = tester.ensureSemantics();
-      await _pump(tester, const ScriptTitle(text: 'Your', script: 'cart'));
+      await _pump(tester, const PageTitle(text: 'Your', brushed: 'cart'));
 
       expect(find.bySemanticsLabel('Your cart'), findsOneWidget);
-      expect(tester.widget<Text>(find.text('cart')).style!.fontFamily, AppFonts.script);
+      expect(find.ancestor(of: find.text('cart'), matching: find.byType(BrushHighlight)), findsOneWidget);
+      expect(find.ancestor(of: find.text('Your'), matching: find.byType(BrushHighlight)), findsNothing);
+      expect(find.byType(Sparks), findsOneWidget);
+      expect(tester.widget<Text>(find.text('cart')).style!.fontFamily, AppFonts.display);
       handle.dispose();
     });
   });
@@ -192,10 +194,10 @@ void main() {
     });
   });
 
-  testWidgets('ViewCartBar shows the count and the given amount, and opens the cart', (tester) async {
+  testWidgets('the cart bar shows the count and the given amount, and opens the cart', (tester) async {
     final handle = tester.ensureSemantics();
     var opened = 0;
-    await _pump(tester, ViewCartBar(count: 2, amount: '₹708.50', onTap: () => opened++));
+    await _pump(tester, FreshCartBar(count: 2, amount: '₹708.50', onTap: () => opened++));
 
     expect(find.text('2 ITEMS ADDED'), findsOneWidget);
     expect(find.text('₹708.50'), findsOneWidget);
@@ -203,6 +205,14 @@ void main() {
     await tester.tap(find.byKey(const Key('viewCartBar')));
     expect(opened, 1);
     handle.dispose();
+  });
+
+  testWidgets('the cart bar shows no picture circles when no line has a picture', (tester) async {
+    await _pump(tester, FreshCartBar(count: 2, amount: '₹708.50', onTap: () {}));
+
+    expect(find.byKey(const ValueKey('cartThumb-0')), findsNothing);
+    expect(find.byType(Image), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   group('ProductCard', () {

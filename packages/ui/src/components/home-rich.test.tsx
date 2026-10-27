@@ -11,7 +11,6 @@ import {
   PillLink,
   PromoCard,
   PromoCardGrid,
-  SectionHeader,
 } from "./home-rich";
 
 describe("HarbourHero", () => {
@@ -61,16 +60,6 @@ describe("CheckBar", () => {
 
     expect(screen.getByText("Pincode")).toBeInTheDocument();
     expect(screen.getByText("Search")).toBeInTheDocument();
-  });
-});
-
-describe("SectionHeader", () => {
-  it("names the heading with the handwritten word and shows the action", () => {
-    const action = <PillLink href="/shop">View all</PillLink>;
-    render(<SectionHeader headingId="cats" title="On your" script="mind?" action={action} />);
-
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("On your mind?");
-    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/shop");
   });
 });
 

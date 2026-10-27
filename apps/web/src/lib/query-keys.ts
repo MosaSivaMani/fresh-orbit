@@ -5,9 +5,16 @@ export const queryKeys = {
   product: (slug: string, preparation: string | undefined, pincode: string | null) =>
     ["product", slug, preparation ?? null, pincode] as const,
   suggest: (q: string) => ["suggest", q] as const,
+  priceQuote: (
+    variantId: string,
+    preparation: string | undefined,
+    quantity: number,
+    pincode: string | null,
+  ) => ["price-quote", variantId, preparation ?? null, quantity, pincode] as const,
   profile: ["me"] as const,
   addresses: ["me", "addresses"] as const,
   wishlist: ["me", "wishlist"] as const,
+  stockAlerts: ["me", "stock-alerts"] as const,
   notifications: (page: number) => ["me", "notifications", page] as const,
   preferences: ["me", "preferences"] as const,
   orders: (page: number) => ["orders", page] as const,
@@ -15,5 +22,6 @@ export const queryKeys = {
   tracking: (orderId: string) => ["order", orderId, "tracking"] as const,
   complaints: (orderId: string) => ["order", orderId, "complaints"] as const,
   slots: (pincode: string) => ["slots", pincode] as const,
-  coupons: ["coupons"] as const,
+  coupons: (pincode: string | null) => ["coupons", pincode] as const,
+  promotions: (pincode: string | null) => ["promotions", pincode] as const,
 };

@@ -1,5 +1,7 @@
 // My orders (paged), order detail, tracking, and order actions shown from the server's `allowedActions`.
 
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
@@ -74,23 +76,37 @@ class OrderActions {
     _refresh(orderId);
   }
 
-  Future<void> raiseComplaint(
+  /// Raises the complaint (JSON), then uploads each photo to it, one request per photo. Returns the complaint.
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
+    List<ComplaintPhotoUpload> photos = const [],
   }) async {
-    await _ref
-        .read(orderRepositoryProvider)
-        .raiseComplaint(
-          orderId,
-          orderItemId: orderItemId,
-          kind: kind,
-          description: description,
-          idempotencyKey: idempotencyKey,
-        );
-    _ref.invalidate(orderComplaintsProvider(orderId));
+    final repo = _ref.read(orderRepositoryProvider);
+    final complaint = await repo.raiseComplaint(
+      orderId,
+      orderItemId: orderItemId,
+      kind: kind,
+      description: description,
+      idempotencyKey: idempotencyKey,
+    );
+    try {
+      for (final p in photos) {
+        await repo.addComplaintPhoto(orderId, complaint.id, bytes: p.bytes, fileName: p.fileName);
+      }
+    } finally {
+      _ref.invalidate(orderComplaintsProvider(orderId));
+      _refresh(orderId);
+    }
+    return complaint;
+  }
+
+  /// Accepts or rejects a proposed substitution; the server answers with the updated order.
+  Future<void> answerSubstitution(String orderId, String substitutionId, {required bool accept}) async {
+    await _ref.read(orderRepositoryProvider).answerSubstitution(orderId, substitutionId, accept: accept);
     _refresh(orderId);
   }
 
@@ -107,4 +123,12 @@ class OrderActions {
   }
 
   static String newKey() => newIdempotencyKey();
+}
+
+/// A photo picked for a complaint, sent after the complaint is created.
+class ComplaintPhotoUpload {
+  const ComplaintPhotoUpload({required this.bytes, required this.fileName});
+
+  final Uint8List bytes;
+  final String fileName;
 }

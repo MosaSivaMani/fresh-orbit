@@ -1,19 +1,61 @@
 "use client";
 
-import { formatDate } from "@fresh/core";
-import { Button, Skeleton, toast } from "@fresh/ui";
+import { formatDate, formatRupees } from "@fresh/core";
+import { Button, CompactProductCard, Skeleton, toast } from "@fresh/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { browserHttp } from "@/api/browser";
 import { listWishlist, removeFromWishlist } from "@/api/endpoints/account";
+import { type WishlistItem } from "@/api/types/account";
+import { ProductImage } from "@/components/catalog/product-card";
 import { EmptyPage, LoadError } from "@/components/states";
 import { describeError } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 /**
- * Saved products. The API returns product ids and dates only, so each row is a dated placeholder until the wishlist
- * carries product details (docs/design/web.md §6, gap W5).
+ * One saved product on the shared `CompactProductCard` (D207): picture, name, the server's price for the visitor's
+ * pincode, and a link to the product.
  */
+function SavedCard({ item }: { item: WishlistItem }) {
+  const product = item.product;
+  if (!product) {
+    // The product is no longer listed; the row stays removable.
+    return (
+      <div className="bg-surface-paper border-border text-text-muted flex min-h-28 flex-col justify-center gap-1 rounded-[20px] border p-4 text-sm">
+        <p className="text-text font-semibold">No longer available</p>
+        <p>Saved on {formatDate(item.addedAt)}.</p>
+      </div>
+    );
+  }
+  return (
+    <CompactProductCard
+      href={`/products/${product.slug}`}
+      linkAs={Link}
+      picture={<ProductImage src={product.imageUrl} alt="" sizes="96px" className="size-full" />}
+      name={product.name}
+      price={
+        product.price ? (
+          <>
+            <span className="font-bold tabular-nums">
+              {formatRupees(product.price.unitPricePaise)}
+            </span>{" "}
+            / {product.price.perUnit}
+            {product.price.compareAtPaise != null && (
+              <span className="text-text-muted ml-2 tabular-nums line-through">
+                {formatRupees(product.price.compareAtPaise)}
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-text-muted">Set your pincode to see the price</span>
+        )
+      }
+      note={product.isAvailable ? undefined : "Sold out for now"}
+    />
+  );
+}
+
+/** Saved products as cards from the server's wishlist (product summary per item, gap W5 closed). */
 export function WishlistView() {
   const queryClient = useQueryClient();
   const wishlist = useQuery({
@@ -55,15 +97,14 @@ export function WishlistView() {
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {wishlist.data.map((item) => (
         <li key={item.productId} className="flex flex-col gap-2">
-          <div className="border-border bg-surface text-text-muted rounded-xl border p-4 text-sm">
-            Saved on {formatDate(item.addedAt)}. Product details will appear here soon.
-          </div>
+          <SavedCard item={item} />
           <Button
             variant="ghost"
             size="sm"
             className="self-start"
             loading={remove.isPending && remove.variables === item.productId}
             onClick={() => remove.mutate(item.productId)}
+            aria-label={`Remove ${item.product?.name ?? "saved item"}`}
           >
             Remove
           </Button>

@@ -49,6 +49,7 @@ Future<GoRouter> pumpScreen(
   TestDeps deps,
   Widget screen, {
   List<String> otherPaths = const [],
+  List<Override> overrides = const [],
 }) async {
   // Phone width, tall enough that lazy lists build their content without scrolling in most tests.
   tester.view.devicePixelRatio = 3;
@@ -75,7 +76,7 @@ Future<GoRouter> pumpScreen(
   );
   await tester.pumpWidget(
     ProviderScope(
-      overrides: deps.overrides,
+      overrides: [...deps.overrides, ...overrides],
       retry: (_, _) => null,
       child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
     ),

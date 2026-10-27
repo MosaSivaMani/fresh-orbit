@@ -1,11 +1,11 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { cartWithSeer, emptyCart, problem, seerFish } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
-import { renderWithProviders } from "../../../test/render";
+import { renderWithProviders, signedIn } from "../../../test/render";
 import { PINCODE_COOKIE, writeBrowserCookie } from "@/lib/cookies";
 import { PurchasePanel } from "./purchase-panel";
 
@@ -76,5 +76,68 @@ describe("PurchasePanel", () => {
     );
     expect(await screen.findByText("Set your pincode to see the price.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Set pincode to buy" })).toBeEnabled();
+  });
+
+  it("shows the server's quote for the chosen size, cut and weight before adding", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let asked: URLSearchParams | null = null;
+    server.use(
+      http.get(`${API}/price-quote`, ({ request }) => {
+        asked = new URL(request.url).searchParams;
+        return HttpResponse.json({
+          variantId: "v1",
+          preparationCode: "STEAK",
+          quantity: { value: 500, unit: "GRAM" },
+          maxChargeableQuantity: { value: 550, unit: "GRAM" },
+          estimatedTotalPaise: 66950,
+          maxChargeablePaise: 73645,
+        });
+      }),
+    );
+    renderWithProviders(<PurchasePanel product={seerFish} />);
+
+    expect(await screen.findByText("₹669.50")).toBeInTheDocument();
+    expect(screen.getByText(/at most ₹736\.45/)).toBeInTheDocument();
+    expect(asked!.get("variantId")).toBe("v1");
+    expect(asked!.get("preparation")).toBe("STEAK");
+    expect(asked!.get("quantity")).toBe("500");
+  });
+
+  it("asks the server to notify a signed-in customer when a sold-out size is back", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let created: unknown = null;
+    server.use(
+      http.get(`${API}/me/stock-alerts`, () => HttpResponse.json([])),
+      http.get(`${API}/serviceability`, () =>
+        HttpResponse.json({
+          pincode: "600041",
+          serviceable: true,
+          fulfillmentLocation: { id: "loc1", code: "L1", name: "Store", hasColdStorage: true },
+        }),
+      ),
+      http.post(`${API}/me/stock-alerts`, async ({ request }) => {
+        created = await request.json();
+        return HttpResponse.json(
+          { id: "a1", variantId: "v1", fulfillmentLocationId: "loc1", createdAt: "2026-10-23" },
+          { status: 201 },
+        );
+      }),
+    );
+    const soldOut = {
+      ...seerFish,
+      variants: seerFish.variants.map((v) => ({
+        ...v,
+        availability: { status: "OUT_OF_STOCK", maxOrderableNow: null, message: null },
+      })),
+    } as typeof seerFish;
+    renderWithProviders(<PurchasePanel product={soldOut} />, { session: signedIn });
+
+    const notify = await screen.findByRole("button", { name: "Notify me when it is back" });
+    await waitFor(() => expect(notify).toBeEnabled());
+    await userEvent.click(notify);
+
+    await waitFor(() =>
+      expect(created).toEqual({ variantId: "v1", fulfillmentLocationId: "loc1" }),
+    );
   });
 });

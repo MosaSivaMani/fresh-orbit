@@ -1,4 +1,5 @@
-// Loading skeletons, illustrated empty and error states, and an AsyncValue view that uses them.
+// Illustrated empty and error states and an AsyncValue view that uses them. They stay in the app because they
+// show the app's illustrations and read its API errors; loading skeletons and banners live in `fresh_theme`.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,13 +7,12 @@ import 'package:fresh_theme/fresh_theme.dart';
 
 import '../api/api_error.dart';
 import '../illustrations/illustration.dart';
-import '../theme/app_theme.dart';
 import 'bold.dart';
-import 'motion.dart';
 
 export '../illustrations/illustration.dart' show IllustrationSlot;
 
-FreshColors freshColors(BuildContext context) => Theme.of(context).extension<FreshColors>()!;
+/// Empty and error states sit inside the gutters, a section gap from the top and bottom.
+const _statePadding = EdgeInsets.symmetric(horizontal: FreshLayout.gutter, vertical: FreshLayout.sectionGap);
 
 /// Inline empty state: the slot's character in a ringed circle avatar, a title, an optional line and an
 /// optional action. The illustration is decorative here because the title says the same thing. Full-screen
@@ -38,7 +38,7 @@ class EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(FreshSpacing.s6),
+        padding: _statePadding,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Column(
@@ -50,7 +50,7 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: FreshSpacing.s4),
               Semantics(
                 header: true,
-                child: Text(title, style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
+                child: Text(title, style: AppText.display(illustratedColors(context).ink, 24), textAlign: TextAlign.center),
               ),
               if (message != null) ...[
                 const SizedBox(height: FreshSpacing.s2),
@@ -105,7 +105,7 @@ class ErrorState extends StatelessWidget {
         ],
         Text(
           title,
-          style: compact ? theme.textTheme.titleMedium : theme.textTheme.headlineSmall,
+          style: AppText.display(illustratedColors(context).ink, compact ? 17 : 24),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: FreshSpacing.s2),
@@ -128,7 +128,7 @@ class ErrorState extends StatelessWidget {
       liveRegion: true,
       container: true,
       child: Center(
-        child: SingleChildScrollView(padding: const EdgeInsets.all(FreshSpacing.s6), child: body),
+        child: SingleChildScrollView(padding: _statePadding, child: body),
       ),
     );
   }
@@ -142,7 +142,7 @@ class NotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(),
+    appBar: PageHeader(text: 'Page', brushed: 'not found', onBack: onHome),
     body: SafeArea(
       child: EmptyState(
         slot: IllustrationSlot.notFound,
@@ -153,108 +153,6 @@ class NotFoundScreen extends StatelessWidget {
     ),
   );
 }
-
-/// Grey placeholder block. Hidden from screen readers; the container announces "Loading".
-class SkeletonBox extends StatelessWidget {
-  const SkeletonBox({super.key, this.width, required this.height, this.radius = 12});
-
-  final double? width;
-  final double height;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: width,
-    height: height,
-    decoration: BoxDecoration(color: freshColors(context).muted, borderRadius: BorderRadius.circular(radius)),
-  );
-}
-
-class LoadingSemantics extends StatelessWidget {
-  const LoadingSemantics({super.key, required this.child, this.label = 'Loading'});
-
-  final Widget child;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: label,
-    liveRegion: true,
-    container: true,
-    child: ExcludeSemantics(child: child),
-  );
-}
-
-class ListSkeleton extends StatelessWidget {
-  const ListSkeleton({super.key, this.rows = 6, this.rowHeight = 72});
-
-  final int rows;
-  final double rowHeight;
-
-  @override
-  Widget build(BuildContext context) => LoadingSemantics(
-    child: ListView.separated(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(FreshSpacing.s4),
-      itemCount: rows,
-      separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
-      itemBuilder: (_, _) => Row(
-        children: [
-          SkeletonBox(width: rowHeight, height: rowHeight),
-          const SizedBox(width: FreshSpacing.s3),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SkeletonBox(height: 16),
-                SizedBox(height: FreshSpacing.s2),
-                SkeletonBox(width: 120, height: 14),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class GridSkeleton extends StatelessWidget {
-  const GridSkeleton({super.key, this.items = 6, this.shrinkWrap = false});
-
-  final int items;
-  final bool shrinkWrap;
-
-  @override
-  Widget build(BuildContext context) => LoadingSemantics(
-    child: GridView.builder(
-      shrinkWrap: shrinkWrap,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(FreshSpacing.s4),
-      gridDelegate: productGridDelegate,
-      itemCount: items,
-      itemBuilder: (_, _) => const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: SkeletonBox(height: double.infinity, radius: AppRadius.card),
-          ),
-          SizedBox(height: FreshSpacing.s2),
-          SkeletonBox(height: 16),
-          SizedBox(height: FreshSpacing.s1),
-          SkeletonBox(width: 80, height: 14),
-        ],
-      ),
-    ),
-  );
-}
-
-/// Two columns on phones; more on wide screens. Tall enough for text scaling.
-const productGridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
-  maxCrossAxisExtent: 240,
-  mainAxisSpacing: FreshSpacing.s3,
-  crossAxisSpacing: FreshSpacing.s3,
-  childAspectRatio: 0.72,
-);
 
 /// Renders an AsyncValue with the standard loading, error (with retry) and data states. While refreshing with
 /// data present, the data stays on screen.
@@ -275,64 +173,10 @@ class AsyncValueView<T> extends StatelessWidget {
   }
 }
 
-/// Inline banner for blockers, availability notes and server messages. Tone is shown with an icon and text,
-/// never colour alone.
-enum BannerTone { info, warning, danger, success }
-
-class InfoBanner extends StatelessWidget {
-  const InfoBanner({super.key, required this.text, this.tone = BannerTone.info, this.title});
-
-  final String text;
-  final String? title;
-  final BannerTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = freshColors(context);
-    final (bg, fg, icon) = switch (tone) {
-      BannerTone.info => (c.infoSubtle, c.infoText, Icons.info_outline),
-      BannerTone.warning => (c.warningSubtle, c.warningText, Icons.warning_amber_outlined),
-      BannerTone.danger => (c.dangerSubtle, c.dangerText, Icons.error_outline),
-      BannerTone.success => (c.successSubtle, c.successText, Icons.check_circle_outline),
-    };
-    final theme = Theme.of(context);
-    return Semantics(
-      container: true,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(FreshSpacing.s3),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(FreshRadius.xl)),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: fg, size: 20),
-            const SizedBox(width: FreshSpacing.s2),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (title != null) Text(title!, style: theme.textTheme.titleSmall?.copyWith(color: fg)),
-                  Text(text, style: theme.textTheme.bodyMedium?.copyWith(color: fg)),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// Shows an ApiError (or any error) as a snack bar with the server's sentence.
 void showErrorSnack(BuildContext context, Object error) {
   final e = ApiError.from(error);
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(e.message)));
-}
-
-void showInfoSnack(BuildContext context, String text) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(text)));
 }

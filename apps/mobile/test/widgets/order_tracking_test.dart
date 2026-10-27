@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/models/orders.dart';
+import 'package:fresh_orbit_app/core/photo_picker.dart';
 import 'package:fresh_orbit_app/features/orders/order_tracking_screen.dart';
+import 'package:fresh_orbit_app/state/orders_state.dart';
 
 import '../support/fixtures.dart';
 import '../support/harness.dart';
@@ -48,6 +52,83 @@ void main() {
 
     expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_DELIVERED')), findsOneWidget);
     expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_ON_THE_WAY')), findsNothing);
+  });
+
+  testWidgets('a proposed substitution can be accepted; the server answer replaces the order', (tester) async {
+    final deps = TestDeps(pincode: '600041', signedIn: true);
+    Map<String, Object?> withSubstitution(String status) => {
+      ...orderJson(status: 'PREPARING'),
+      'substitutions': [
+        {
+          'id': 's1',
+          'orderItemId': 'oi1',
+          'proposedName': 'King Fish (Surmai)',
+          'proposedQuantity': {'value': 500, 'unit': 'GRAM'},
+          'priceDifferencePaise': -5000,
+          'status': status,
+          'expiresAt': '2026-10-24T09:00:00Z',
+          'respondedAt': null,
+          'newOrderItemId': null,
+        },
+      ],
+    };
+    var answered = false;
+    deps.orders.onOrder = (_) async => OrderDetail.fromJson(withSubstitution(answered ? 'ACCEPTED' : 'PROPOSED'));
+    deps.orders.onTracking = (_) async => tracking('PREPARING');
+    deps.orders.onAnswer = (_, _) {
+      answered = true;
+      return OrderDetail.fromJson(withSubstitution('ACCEPTED'));
+    };
+
+    await pumpScreen(tester, deps, const OrderTrackingScreen(orderId: 'o1'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('substitution-s1')), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('acceptSubstitution-s1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('acceptSubstitution-s1')));
+    await tester.pumpAndSettle();
+
+    expect(deps.orders.answers, ['accept:s1']);
+    expect(find.byKey(const ValueKey('acceptSubstitution-s1')), findsNothing);
+  });
+
+  testWidgets('report a problem sends the complaint, then each picked photo to it', (tester) async {
+    final deps = TestDeps(pincode: '600041', signedIn: true);
+    deps.orders.onOrder = (_) async => order(
+      status: 'DELIVERED',
+      allowedActions: {'cancel': false, 'raiseComplaint': true, 'downloadInvoice': false, 'reorder': false},
+    );
+    deps.orders.onTracking = (_) async => tracking('DELIVERED');
+    await pumpScreen(
+      tester,
+      deps,
+      const OrderTrackingScreen(orderId: 'o1'),
+      overrides: [
+        photoPickerProvider.overrideWithValue(() async => ComplaintPhotoUpload(bytes: utf8.encode('not a picture'), fileName: 'fish.png')),
+      ],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Report a problem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Report a problem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Seer Fish (Vanjaram)').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'The fish was not fresh.');
+    await tester.tap(find.byKey(const Key('addComplaintPhoto')));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Remove photo 1'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Send'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+
+    expect(deps.orders.complaintCalls, ['raise:QUALITY', 'photo:c1:fish.png']);
   });
 
   testWidgets('cancel uses the reason and an Idempotency-Key when the server allows it', (tester) async {

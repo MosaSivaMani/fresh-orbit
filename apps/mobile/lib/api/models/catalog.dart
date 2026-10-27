@@ -307,6 +307,60 @@ class ProductDetail {
   final bool locationRequired;
 }
 
+/// One line priced by the server before it is added (GET /price-quote, CART-R24): the estimate for the chosen
+/// size, cut and quantity and the most it can cost after weighing. The app shows these values, never its own.
+class PriceQuote {
+  const PriceQuote({
+    required this.quantity,
+    this.maxChargeableQuantity,
+    required this.estimatedTotalPaise,
+    this.maxChargeablePaise,
+    this.availabilityStatus,
+    this.availabilityMessage,
+    this.weightNote,
+  });
+
+  factory PriceQuote.fromJson(Json j) {
+    final availability = asJsonOrNull(j['availability'], 'availability');
+    return PriceQuote(
+      quantity: reqQuantity(j, 'quantity'),
+      maxChargeableQuantity: optQuantity(j, 'maxChargeableQuantity'),
+      estimatedTotalPaise: reqInt(j, 'estimatedTotalPaise'),
+      maxChargeablePaise: optInt(j, 'maxChargeablePaise'),
+      availabilityStatus: availability == null ? null : optString(availability, 'status'),
+      availabilityMessage: availability == null ? null : optString(availability, 'message'),
+      weightNote: optString(j, 'weightNote'),
+    );
+  }
+
+  final Quantity quantity;
+  final Quantity? maxChargeableQuantity;
+  final int estimatedTotalPaise;
+  final int? maxChargeablePaise;
+  final String? availabilityStatus;
+  final String? availabilityMessage;
+  final String? weightNote;
+}
+
+/// The business's public profile (GET /business-profile): who runs the shop and how to reach support.
+class BusinessProfile {
+  const BusinessProfile({this.tradeName, this.legalName, this.supportPhone, this.supportEmail, this.supportHours});
+
+  factory BusinessProfile.fromJson(Json j) => BusinessProfile(
+    tradeName: optString(j, 'tradeName'),
+    legalName: optString(j, 'legalName'),
+    supportPhone: optString(j, 'supportPhone'),
+    supportEmail: optString(j, 'supportEmail'),
+    supportHours: optString(j, 'supportHours'),
+  );
+
+  final String? tradeName;
+  final String? legalName;
+  final String? supportPhone;
+  final String? supportEmail;
+  final String? supportHours;
+}
+
 class SearchSuggestion {
   const SearchSuggestion({required this.name, this.matchedLocalName, required this.slug, this.imageUrl});
 

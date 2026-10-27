@@ -98,6 +98,12 @@ abstract class CatalogRepository {
   Future<Paged<ProductSummary>> products(ProductQuery query);
   Future<ProductDetail> product(String slug, {String? preparation});
   Future<List<SearchSuggestion>> suggest(String q);
+
+  /// One line priced by the server for the current pincode (X-Pincode), before it is added.
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity});
+
+  /// Legal name and support contacts.
+  Future<BusinessProfile> businessProfile();
 }
 
 class HttpCatalogRepository implements CatalogRepository {
@@ -125,6 +131,25 @@ class HttpCatalogRepository implements CatalogRepository {
   @override
   Future<List<SearchSuggestion>> suggest(String q) async =>
       parseArray(await _api.get('search/suggest', query: {'q': q}), SearchSuggestion.fromJson);
+
+  @override
+  Future<PriceQuote> priceQuote({required String variantId, String? preparation, required Quantity quantity}) async =>
+      parseObject(
+        await _api.get(
+          'price-quote',
+          query: {
+            'variantId': variantId,
+            'preparation': ?preparation,
+            'quantity': quantity.value,
+            'unit': quantity.unit,
+          },
+        ),
+        PriceQuote.fromJson,
+      );
+
+  @override
+  Future<BusinessProfile> businessProfile() async =>
+      parseObject(await _api.get('business-profile'), BusinessProfile.fromJson);
 }
 
 // ---------------------------------------------------------------- cart
@@ -139,6 +164,9 @@ abstract class CartRepository {
   Future<Cart> setLocation(String pincode, {bool force = false});
   Future<Cart> applyCoupon(String code);
   Future<Cart> removeCoupon();
+
+  /// Coupons the signed-in customer may use in the pincode's city (X-Pincode; none without it).
+  Future<List<VisibleCoupon>> coupons();
 }
 
 class HttpCartRepository implements CartRepository {
@@ -179,6 +207,10 @@ class HttpCartRepository implements CartRepository {
 
   @override
   Future<Cart> removeCoupon() async => _cart(await _api.delete('cart/coupon'));
+
+  @override
+  Future<List<VisibleCoupon>> coupons() async =>
+      parseObject(await _api.get('coupons'), (Json j) => Paged.fromJson(j, VisibleCoupon.fromJson)).items;
 }
 
 // ---------------------------------------------------------------- checkout and orders
@@ -193,15 +225,28 @@ abstract class OrderRepository {
   Future<OrderTracking> tracking(String orderId);
   Future<OrderDetail> cancel(String orderId, {required String reasonCode, required String idempotencyKey});
   Future<Cart> reorder(String orderId);
-  Future<void> raiseComplaint(
+
+  /// `POST /orders/{id}/complaints` (JSON) with `Idempotency-Key`; returns the created complaint.
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
   });
+
+  /// `POST /orders/{id}/complaints/{cid}/photos`: one photo per request, multipart field `file`.
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  });
   Future<List<Complaint>> complaints(String orderId);
   Future<InvoiceLink> invoice(String orderId);
+
+  /// `POST /orders/{id}/substitutions/{sid}/accept` or `/reject`; returns the updated order.
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept});
 }
 
 class HttpOrderRepository implements OrderRepository {
@@ -248,20 +293,40 @@ class HttpOrderRepository implements OrderRepository {
       parseObject(await _api.post('orders/${_seg(orderId)}/reorder'), Cart.fromJson);
 
   @override
-  Future<void> raiseComplaint(
+  Future<Complaint> raiseComplaint(
     String orderId, {
     String? orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
-  }) async {
-    // Multipart per docs/api §4.8. Photo upload (up to 4 images) is not wired yet: needs an image picker.
+  }) async => parseObject(
     await _api.post(
       'orders/${_seg(orderId)}/complaints',
-      body: _multipart({'orderItemId': orderItemId, 'kind': kind, 'description': description}),
+      body: {'orderItemId': ?orderItemId, 'kind': kind, 'description': description},
       headers: {'Idempotency-Key': idempotencyKey},
+    ),
+    Complaint.fromJson,
+  );
+
+  @override
+  Future<void> addComplaintPhoto(
+    String orderId,
+    String complaintId, {
+    required List<int> bytes,
+    required String fileName,
+  }) async {
+    await _api.post(
+      'orders/${_seg(orderId)}/complaints/${_seg(complaintId)}/photos',
+      body: FormData.fromMap({'file': MultipartFile.fromBytes(bytes, filename: fileName)}),
     );
   }
+
+  @override
+  Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept}) async =>
+      parseObject(
+        await _api.post('orders/${_seg(orderId)}/substitutions/${_seg(substitutionId)}/${accept ? 'accept' : 'reject'}'),
+        OrderDetail.fromJson,
+      );
 
   @override
   Future<List<Complaint>> complaints(String orderId) async =>
@@ -270,11 +335,6 @@ class HttpOrderRepository implements OrderRepository {
   @override
   Future<InvoiceLink> invoice(String orderId) async =>
       parseObject(await _api.get('orders/${_seg(orderId)}/invoice'), InvoiceLink.fromJson);
-
-  static FormData _multipart(Map<String, String?> fields) => FormData.fromMap({
-    for (final e in fields.entries)
-      if (e.value != null) e.key: e.value!,
-  });
 }
 
 // ---------------------------------------------------------------- account
@@ -302,6 +362,9 @@ abstract class AccountRepository {
 
   Future<void> registerDeviceToken({required String pushToken, required String platform});
   Future<void> unregisterDeviceToken(String pushToken);
+
+  /// Asks to be told when a sold-out size is back at the store (201 new, 200 already asked).
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId});
 }
 
 class HttpAccountRepository implements AccountRepository {
@@ -408,5 +471,10 @@ class HttpAccountRepository implements AccountRepository {
   @override
   Future<void> unregisterDeviceToken(String pushToken) async {
     await _api.delete('me/device-tokens/${_seg(pushToken)}');
+  }
+
+  @override
+  Future<void> addStockAlert({required String variantId, required String fulfillmentLocationId}) async {
+    await _api.post('me/stock-alerts', body: {'variantId': variantId, 'fulfillmentLocationId': fulfillmentLocationId});
   }
 }

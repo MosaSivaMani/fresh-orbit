@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/format.dart';
@@ -41,6 +42,14 @@ final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier<bool>(ref.read(sessionProvider).signedIn);
   ref.listen(sessionProvider, (_, next) => sessionChanges.value = next.signedIn);
   ref.onDispose(sessionChanges.dispose);
+  // The header's back button: pop when a page is below, else home (a screen opened from a link).
+  BackCircleButton.defaultBack = (context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
+  };
 
   return GoRouter(
     initialLocation: '/splash',
@@ -144,7 +153,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it
 /// while the cart has lines. Both sit in the bottom bar slot, so they take their own space and never cover a
-/// screen's content. The cart bar's amount is the server cart's subtotal, only formatted.
+/// screen's content. The cart bar's amount is the server cart's estimated total, only formatted.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
@@ -162,10 +171,14 @@ class AppShell extends ConsumerWidget {
         children: [
           const SizedBox(height: 8),
           if (showCartBar)
-            ViewCartBar(
+            FreshCartBar(
               count: cartCount,
-              amount: formatRupees(cart.totals!.subtotalPaise),
-              thumbnails: [for (final line in cart.lines.take(2)) line.imageUrl],
+              amount: formatRupees(cart.totals!.estimatedTotalPaise),
+              // Only lines that have a picture; none leaves the space out (no empty circles).
+              thumbnails: [
+                for (final line in cart.lines)
+                  if (line.imageUrl case final url? when url.isNotEmpty) url,
+              ].take(2).toList(),
               onTap: () => shell.goBranch(2),
             ),
           FoodTabBar(
