@@ -1,7 +1,7 @@
+import { Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import { CartView } from "@/components/cart/cart-view";
 import { Container } from "@/components/section";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = { title: "Your cart", robots: { index: false } };
 

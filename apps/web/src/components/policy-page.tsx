@@ -1,6 +1,6 @@
+import { Highlight } from "@fresh/ui";
 import Link from "next/link";
 import { ContentPage } from "./content-page";
-import { Highlight } from "./theme/theme-band";
 
 const policies = [
   { href: "/support/delivery-policy", label: "Delivery policy" },

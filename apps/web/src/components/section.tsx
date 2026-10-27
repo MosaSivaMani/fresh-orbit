@@ -1,8 +1,7 @@
-import { Heading, Script } from "@fresh/ui";
+import { SectionAction, SectionHeader } from "@fresh/ui";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { type ComponentProps, type ReactNode } from "react";
-import { Sparks } from "./theme/marks";
 
 export function Container({ children, className, ...rest }: ComponentProps<"div">) {
   return (
@@ -37,30 +36,22 @@ export function Section({
   }-heading`;
   return (
     <section aria-labelledby={headingId} id={id} className="flex scroll-mt-24 flex-col gap-5">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <Heading id={headingId} level={2} size="section" className="text-text">
-            {title}
-            {script && (
-              <>
-                {" "}
-                <Script tone="accent">{script}</Script>
-              </>
-            )}
-            <Sparks className="text-accent-coral ml-1 w-6 -translate-y-3 sm:w-7" />
-          </Heading>
-          {description && <p className="text-text-muted">{description}</p>}
-        </div>
-        {action && (
-          <Link
-            href={action.href}
-            className="border-primary text-primary hover:bg-primary hover:text-on-primary inline-flex shrink-0 items-center gap-1 rounded-full border-[1.5px] px-4 py-1.5 text-sm font-bold"
-          >
-            {action.label}
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
-        )}
-      </div>
+      <SectionHeader
+        id={headingId}
+        title={title}
+        script={script}
+        description={description}
+        action={
+          action && (
+            <SectionAction asChild>
+              <Link href={action.href}>
+                {action.label}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </SectionAction>
+          )
+        }
+      />
       {children}
     </section>
   );

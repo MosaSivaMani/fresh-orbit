@@ -1,5 +1,14 @@
 import { formatDayShort, formatRupees, formatTime, isApiError } from "@fresh/core";
-import { Heading, Script, Sticker, Tabs, TabsContent, TabsList, TabsTrigger } from "@fresh/ui";
+import {
+  Heading,
+  Script,
+  Sparks,
+  Sticker,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@fresh/ui";
 import { Clock, Fish, MapPin, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -15,7 +24,6 @@ import { PurchasePanel } from "@/components/product/purchase-panel";
 import { WishlistButton } from "@/components/product/wishlist-button";
 import { GetTheApp } from "@/components/get-the-app";
 import { Container, Section } from "@/components/section";
-import { Sparks } from "@/components/theme/marks";
 import { productJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { settle } from "@/lib/settle";
 import { sourceTypeLabels } from "@/lib/status-maps";

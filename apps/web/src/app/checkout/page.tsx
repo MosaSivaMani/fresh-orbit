@@ -1,8 +1,8 @@
+import { Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { Container } from "@/components/section";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
 

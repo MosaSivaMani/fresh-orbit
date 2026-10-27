@@ -34,21 +34,26 @@ photos in development and behind Caddy.
 
 ### 0.1 Inner pages in the app theme (D181, D188; PR #22)
 
-Every page except the home (PR #20) uses the same look as the app and the owner's home reference. Code:
-`src/components/theme/` (`marks.tsx`, `theme-band.tsx`).
+Every page except the home (PR #20) uses the same look as the app and the owner's home reference. The parts are
+shared (owner rule D207): `packages/ui/src/components/theme.tsx`, exported from `@fresh/ui`, with `.fo-sky` in
+`packages/ui/styles.css`. The website keeps only thin wrappers (`Section`, `ContentPage`) that pass its `Link` and
+breadcrumbs in.
 
 | Part | What it is |
 |---|---|
-| `ThemeBand` (replaces `PageBand` on the web) | The home hero's peach-to-cream harbour sky (`.fo-sky` in `globals.css`), shorter: breadcrumbs, a Baloo 2 800 heading with the key word in a `Highlight` (the yellow `#F5D04A` brush), coral `Sparks` after it, an optional coral Dancing Script line with a `Swoosh`, a description, `Gulls`, an optional owner picture in a ringed circle from `sm` up, and `BandWaves` curving into the page. Shop, category, search, cart, checkout, sign-in, account and order pages |
+| `ThemeBand` (replaces `PageBand` on the web) | The home hero's peach-to-cream harbour sky (`.fo-sky`), shorter: breadcrumbs, a Baloo 2 800 heading with the key word in a `Highlight` (the yellow `#F5D04A` brush), coral `Sparks` after it, an optional coral Dancing Script line with a `Swoosh`, a description, `Gulls`, an optional owner picture in a ringed circle from `sm` up, and `BandWaves` curving into the page. Shop, category, search, cart, checkout, sign-in, account and order pages |
 | `Highlight` | `Brush` from `@fresh/ui` in the home's yellow; the word stays ink text |
 | `SkyPanel` | The same sky behind a whole-page state: 404, route error (global error uses `.fo-sky` on the body) |
-| `Section` heading | Coral sparks after the teal script word; the action is an outlined dark-teal "View all →" pill (as on the reference) |
-| `ContentPage` | About, help and the three policies: band, then the text on a paper card (radius 24) with a side card from `lg` (contact, other policies, "Ready to order?") |
+| `SectionHeader`, `SectionAction` | Section title row: coral sparks after the teal script word; the action is an outlined dark-teal "View all →" pill (as on the reference). The web `Section` wraps them |
+| `TextPageShell` (web `ContentPage`) | About, help and the three policies: band, then the text on a paper card (radius 24) with a side card from `lg` (contact, other policies, "Ready to order?") |
+| `CompactProductCard` | Small horizontal product card (radius 20) for saved items: picture, name, the server's price line, a coral note |
+| `OfferRow` | One coupon in the cart's "View offers" list: code, description, terms, Apply |
 | Cards | Small cards radius 20 (D189): wishlist cards, FAQ items, product facts, delivery box, substitutions, offers |
 | Pictures | Owner pictures (FINAL slots) in the band circle: shop and about `ONBOARDING_FRESH`, cart `ONBOARDING_CLEANED`, checkout and help `ONBOARDING_DELIVERY`; empty states keep their EMPTY_* pictures |
 
-The marks are our own shapes and are decorative (`aria-hidden`, no motion). Server Components use `cx`, never `cn`
-(client bundle). The home's `scenery.tsx` (PR #20) has its own copies; one shared set is a follow-up.
+The marks (`Sparks`, `Swoosh`, `Gulls`, `BandWaves`) are our own shapes and are decorative (`aria-hidden`, no
+motion). Web Server Components use `cx`, never `cn` (client bundle); they render the shared parts as client
+components. The home's `scenery.tsx` (PR #20) has its own copies; one shared set is a follow-up.
 
 Behaviour added in the same PR (QA findings):
 
@@ -58,6 +63,7 @@ Behaviour added in the same PR (QA findings):
 | Report a problem | Optional photos, sent one by one after the complaint is created; a refused photo shows the server's message and never undoes the complaint | `POST /orders/{id}/complaints/{cid}/photos` (multipart `file`) |
 | Checkout | The place-order `Idempotency-Key` is dropped when the address, slot, payment method, substitution choice or note changes, so a retry never reuses a key with a new body | `POST /orders` |
 | Header | "Offers" shows only when the server has a banner for the pincode (`/#offers` exists only then) | `GET /promotions` |
+| Cart offers | "View offers" lists the coupons for the visitor's pincode; without a pincode it asks for one (the server returns nothing without it) | `GET /coupons?pincode=` |
 | Address form | Pincode first; a full pincode fills an empty city (serviceability) and state code (cities list) | `GET /serviceability`, `GET /cities` |
 | Product | Sold-out size: "Notify me when it is back" (guests sign in first), "Stop alert" when set; the quote line under the options | `/me/stock-alerts`, `GET /price-quote` |
 | Cart | "View offers": the customer's coupons with the server's description, minimum order and end date, each with Apply | `GET /coupons`, `PUT /cart/coupon` |

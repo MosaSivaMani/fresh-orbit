@@ -1,8 +1,6 @@
-import { Button, CharacterState, Script } from "@fresh/ui";
+import { Button, CharacterState, Highlight, Script, SkyPanel, Sparks } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Sparks } from "@/components/theme/marks";
-import { Highlight, SkyPanel } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = { title: "Page not found", robots: { index: false } };
 

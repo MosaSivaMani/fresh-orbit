@@ -1,3 +1,4 @@
+import { Highlight } from "@fresh/ui";
 import { Clock, Mail, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -5,7 +6,6 @@ import { getBusinessProfile } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
 import { type PublicBusinessProfile } from "@/api/types/locations";
 import { ContentPage } from "@/components/content-page";
-import { Highlight } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = {
   title: "Help and FAQ",

@@ -1,8 +1,7 @@
-import { Button } from "@fresh/ui";
+import { Button, Highlight } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContentPage } from "@/components/content-page";
-import { Highlight } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = {
   title: "About us",

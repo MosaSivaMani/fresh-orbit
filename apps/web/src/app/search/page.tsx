@@ -1,4 +1,4 @@
-import { FilterChip } from "@fresh/ui";
+import { FilterChip, Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCategories } from "@/api/endpoints/catalog";
@@ -7,7 +7,6 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { PageSearch } from "@/components/header/page-search";
 import { Container } from "@/components/section";
 import { ProductListing } from "@/components/shop/product-listing";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 import { parseShopFilters } from "@/lib/shop-params";
 import { settle } from "@/lib/settle";
 

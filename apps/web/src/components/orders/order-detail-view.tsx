@@ -11,10 +11,12 @@ import {
   AvatarCircle,
   BillBox,
   type BillRow,
+  Highlight,
   Skeleton,
   StatusBadge,
   StatusSteps,
   StepCard,
+  ThemeBand,
 } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { KeyRound, Phone } from "lucide-react";
@@ -25,7 +27,6 @@ import { type OrderAmounts, type OrderDetail } from "@/api/types/orders";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Container } from "@/components/section";
 import { LoadError } from "@/components/states";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 import { asApiError } from "@/lib/errors";
 import { orderSlot, orderSteps } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";

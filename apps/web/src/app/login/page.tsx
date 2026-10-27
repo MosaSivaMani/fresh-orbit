@@ -1,8 +1,7 @@
-import { AvatarCircle } from "@fresh/ui";
+import { AvatarCircle, Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 import { Container } from "@/components/section";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 

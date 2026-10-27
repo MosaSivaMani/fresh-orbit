@@ -1,10 +1,9 @@
 "use client";
 
-import { Button, CharacterState } from "@fresh/ui";
+import { Button, CharacterState, SkyPanel } from "@fresh/ui";
 import { RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { SkyPanel } from "@/components/theme/theme-band";
 
 /**
  * Route error boundary (D181): the harbour sky, the ERROR_GENERIC character, a calm message, the reference for

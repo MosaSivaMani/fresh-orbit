@@ -1,9 +1,9 @@
+import { Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import { type ReactNode } from "react";
 import { AccountNav } from "@/components/account/account-nav";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { Container } from "@/components/section";
-import { Highlight, ThemeBand } from "@/components/theme/theme-band";
 
 export const metadata: Metadata = {
   title: { template: "%s · Account · Fresh Orbitt", default: "Account" },
