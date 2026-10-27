@@ -277,7 +277,11 @@ quantity; the server's returned cart replaces the cached one.
 
 Reference: `docs/design/mockups/web-home-reference-owner.png` (1556 × 1011, desktop). Same look as the app (D176,
 D181): Baloo 2 800 headings, Inter body, Dancing Script lines, the yellow `#F5D04A` brush, coral sparks and script,
-teal accents on cream. Code: `apps/web/src/components/home/` (`home-hero.tsx`, `scenery.tsx`, `home-check-bar.tsx`,
+teal accents on cream. The reusable parts live in `@fresh/ui` (`packages/ui/src/components/home-rich.tsx`, owner
+rule: shared UI belongs in the packages): scenery (`Sparks`, `Swoosh`, `Birds`, `Trawler`, `HarbourSky`,
+`HeroWaves`), `HarbourHero`, `HeroHeadline`, `FeatureChip`, `CheckBar`, `SectionHeader`, `PillLink`, `CategoryTile`
+and `CategoryTileRow`, `PromoCard` and `PromoCardGrid`. `apps/web/src/components/home/` only composes them with the
+site's data, links, `next/image` and the pincode and search forms (`home-hero.tsx`, `home-check-bar.tsx`,
 `home-categories.tsx`, `promo-cards.tsx`), wired in `app/page.tsx`.
 
 | Block | Desktop (`lg`, ≥ 1024 px) | Phone (390 px) | Data |
