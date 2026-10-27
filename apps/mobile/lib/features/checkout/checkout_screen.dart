@@ -18,7 +18,7 @@ import '../../state/location_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import '../cart/totals_card.dart';
 
@@ -88,11 +88,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final preview = state.preview;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const ScriptTitle(text: 'Check', script: 'out'),
-      ),
+      appBar: const PageHeader(text: 'Almost', brushed: 'there'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+        padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
         children: [
           _Step(
             number: 1,
@@ -242,15 +240,40 @@ class _Step extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: SectionBox(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [SectionTitle('$number. $title'), const SizedBox(height: 6), child],
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: FreshLayout.cardGap),
+      child: SectionBox(
+        padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 14, FreshLayout.gutter, FreshLayout.gutter),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Semantics(
+              header: true,
+              label: 'Step $number, $title',
+              excludeSemantics: true,
+              child: Row(
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(color: FreshHighlightColors.brush, shape: BoxShape.circle),
+                    child: Text('$number', style: AppText.display(FreshHighlightColors.ink, 14, height: 1)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(title, style: AppText.display(c.ink, 17))),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            child,
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// The left part of the pay bar: the chosen way to pay.
@@ -349,8 +372,8 @@ class _SlotPickerState extends ConsumerState<_SlotPicker> {
             ),
             const SizedBox(height: FreshSpacing.s2),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 for (final s in daySlots)
                   SlotButton(
