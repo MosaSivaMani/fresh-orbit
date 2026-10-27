@@ -16,10 +16,11 @@ import {
 
 describe("HarbourHero", () => {
   it("shows the headline, features, tagline and picture; drawings are hidden", async () => {
+    const heading = <HeroHeadline id="hero" script="Fresh fish." brush="Cleaned." line="Door." />;
     const { container } = render(
       <HarbourHero
         aria-labelledby="hero"
-        heading={<HeroHeadline id="hero" script="Fresh fish." brush="Cleaned." line="At door." />}
+        heading={heading}
         featuresLabel="Why us"
         features={
           <>
@@ -33,7 +34,7 @@ describe("HarbourHero", () => {
     );
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Fresh fish. Cleaned. At door.",
+      "Fresh fish. Cleaned. Door.",
     );
     const features = screen.getByRole("list", { name: "Why us" });
     expect(within(features).getAllByRole("listitem")).toHaveLength(2);
@@ -65,16 +66,10 @@ describe("CheckBar", () => {
 
 describe("SectionHeader", () => {
   it("names the heading with the handwritten word and shows the action", () => {
-    render(
-      <SectionHeader
-        headingId="cats"
-        title="What's on your"
-        script="mind?"
-        action={<PillLink href="/shop">View all</PillLink>}
-      />,
-    );
+    const action = <PillLink href="/shop">View all</PillLink>;
+    render(<SectionHeader headingId="cats" title="On your" script="mind?" action={action} />);
 
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("What's on your mind?");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("On your mind?");
     expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/shop");
   });
 });
@@ -97,20 +92,17 @@ describe("CategoryTile", () => {
 
 describe("PromoCard", () => {
   it("shows the title as a heading, the line, the picture and the action", async () => {
+    const action = <PillLink tone="coral" href="/support">Learn more</PillLink>;
+    const picture = <img src="/c.png" alt="Fish steaks" />;
     const { container } = render(
       <PromoCardGrid>
-        <PromoCard
-          title="Cleaned Your Way"
-          line="Whole · Steaks"
-          picture={<img src="/c.png" alt="Fish steaks" />}
-          action={<PillLink tone="coral" href="/support">Learn more</PillLink>}
-        />
+        <PromoCard title="Cleaned Your Way" line="Whole" picture={picture} action={action} />
       </PromoCardGrid>,
     );
 
     expect(screen.getAllByRole("listitem")).toHaveLength(1);
     expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent("Cleaned Your Way");
-    expect(screen.getByText("Whole · Steaks")).toBeInTheDocument();
+    expect(screen.getByText("Whole")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Fish steaks" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Learn more" })).toHaveAttribute("href", "/support");
     await expectNoAxeViolations(container);
