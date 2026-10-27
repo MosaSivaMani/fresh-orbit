@@ -3,6 +3,7 @@
 // order success. Settings (theme, language) work signed out. Checkout and account pages that need a customer redirect to login and come back.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -154,45 +155,87 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it
 /// while the cart has lines. Both sit in the bottom bar slot, so they take their own space and never cover a
 /// screen's content. The cart bar's amount is the server cart's estimated total, only formatted.
-class AppShell extends ConsumerWidget {
+///
+/// Android back (D234): a page inside a tab goes back within the tab; the first page of any other tab goes to
+/// Home; on Home the first back shows "Press back again to exit" and only a second back within two seconds
+/// closes the app.
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  static const exitWindow = Duration(seconds: 2);
+
+  DateTime? _backAt;
+
+  void _onBack(bool didPop, Object? _) {
+    if (didPop) return;
+    final shell = widget.shell;
+    if (shell.currentIndex != 0) {
+      shell.goBranch(0);
+      return;
+    }
+    final now = DateTime.now();
+    if (_backAt != null && now.difference(_backAt!) < exitWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+    _backAt = now;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          key: ValueKey('pressBackToExit'),
+          content: Text('Press back again to exit'),
+          duration: exitWindow,
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = widget.shell;
     final cart = ref.watch(cartProvider).value;
     final cartCount = cart?.lineCount ?? 0;
     final showCartBar = shell.currentIndex <= 1 && cart != null && !cart.isEmpty && cart.totals != null;
-    return Scaffold(
-      body: shell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          if (showCartBar)
-            FreshCartBar(
-              count: cartCount,
-              amount: formatRupees(cart.totals!.estimatedTotalPaise),
-              // Only lines that have a picture; none leaves the space out (no empty circles).
-              thumbnails: [
-                for (final line in cart.lines)
-                  if (line.imageUrl case final url? when url.isNotEmpty) url,
-              ].take(2).toList(),
-              onTap: () => shell.goBranch(2),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onBack,
+      child: Scaffold(
+        body: shell,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            if (showCartBar)
+              FreshCartBar(
+                count: cartCount,
+                amount: formatRupees(cart.totals!.estimatedTotalPaise),
+                // Only lines that have a picture; none leaves the space out (no empty circles).
+                thumbnails: [
+                  for (final line in cart.lines)
+                    if (line.imageUrl case final url? when url.isNotEmpty) url,
+                ].take(2).toList(),
+                onTap: () => shell.goBranch(2),
+              ),
+            FoodTabBar(
+              currentIndex: shell.currentIndex,
+              onSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+              tabs: [
+                const FoodTab('Home', Icons.home_outlined),
+                const FoodTab('Shop', Icons.grid_view_rounded),
+                FoodTab('Cart', Icons.shopping_cart_outlined, badge: cartCount),
+                const FoodTab('Orders', Icons.receipt_long_outlined),
+                const FoodTab('Account', Icons.person_outline_rounded),
+              ],
             ),
-          FoodTabBar(
-            currentIndex: shell.currentIndex,
-            onSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
-            tabs: [
-              const FoodTab('Home', Icons.home_outlined),
-              const FoodTab('Shop', Icons.grid_view_rounded),
-              FoodTab('Cart', Icons.shopping_cart_outlined, badge: cartCount),
-              const FoodTab('Orders', Icons.receipt_long_outlined),
-              const FoodTab('Account', Icons.person_outline_rounded),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
