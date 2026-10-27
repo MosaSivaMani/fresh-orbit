@@ -62,23 +62,43 @@ function defaultLink(
   );
 }
 
+// Bold blocks (D88): on the teal sidebar the links are paper text and the current page is a paper pill; in the
+// phone drawer (a paper sheet) they are ink text and the current page is a teal pill.
+const navTones = {
+  block: {
+    label: "text-on-block-teal/70",
+    link: "text-on-block-teal/85 hover:bg-on-block-teal/10 hover:text-on-block-teal",
+    active:
+      "bg-surface-paper text-text shadow-sticker-sm hover:bg-surface-paper hover:text-text font-bold",
+  },
+  paper: {
+    label: "text-text-muted",
+    link: "text-text-muted hover:bg-muted hover:text-text",
+    active:
+      "bg-block-teal text-on-block-teal hover:bg-block-teal hover:text-on-block-teal font-bold",
+  },
+} as const;
+
 function NavList({
   sections,
   collapsed,
   renderLink,
   onNavigate,
+  tone,
 }: {
   sections: readonly NavSection[];
   collapsed: boolean;
   renderLink: NonNullable<AppShellProps["renderLink"]>;
   onNavigate?: () => void;
+  tone: keyof typeof navTones;
 }) {
+  const look = navTones[tone];
   return (
     <div className="flex flex-col gap-5">
       {sections.map((section) => (
         <div key={section.id} className="flex flex-col gap-1">
           {section.label && !collapsed && (
-            <p className="text-text-muted px-3 pb-1 text-xs font-semibold tracking-wide uppercase">
+            <p className={cn("px-3 pb-1 text-xs font-bold tracking-[0.1em] uppercase", look.label)}>
               {section.label}
             </p>
           )}
@@ -87,10 +107,10 @@ function NavList({
               <li key={item.id}>
                 {renderLink(item, {
                   className: cn(
-                    "group text-text-muted flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors duration-150",
-                    "hover:bg-muted hover:text-text [&_svg]:size-5 [&_svg]:shrink-0",
-                    item.active &&
-                      "bg-accent-subtle text-accent-text hover:bg-accent-subtle hover:text-accent-text font-semibold",
+                    "group flex h-10 items-center gap-3 rounded-full px-3 text-sm font-semibold transition-colors duration-150",
+                    "[&_svg]:size-5 [&_svg]:shrink-0",
+                    look.link,
+                    item.active && look.active,
                     collapsed && "justify-center px-0",
                     focusRing,
                   ),
@@ -118,7 +138,7 @@ function NavList({
 
 /**
  * Admin layout: collapsible sidebar on desktop, drawer on mobile, sticky top bar, skip link and a single
- * <main> landmark.
+ * <main> landmark. Bold blocks look (D88): a teal block sidebar beside a warm canvas page.
  */
 export function AppShell({
   brand,
@@ -149,7 +169,7 @@ export function AppShell({
   return (
     <div
       className={cn(
-        "bg-background text-text flex",
+        "bg-canvas text-text flex",
         embedded ? "h-full min-h-0" : "min-h-dvh",
         className,
       )}
@@ -165,24 +185,32 @@ export function AppShell({
         id={sidebarId}
         aria-label="Main navigation"
         className={cn(
-          "border-border bg-surface hidden shrink-0 flex-col border-r transition-[width] duration-200 md:flex",
+          "bg-block-teal text-on-block-teal hidden shrink-0 flex-col transition-[width] duration-200 md:flex",
           embedded ? "h-full" : "sticky top-0 h-dvh",
           collapsed ? "w-16" : "w-64",
         )}
       >
         <div
           className={cn(
-            "border-border flex h-16 items-center border-b px-4",
+            "border-on-block-teal/15 flex h-16 items-center border-b px-4",
             collapsed && "justify-center px-0",
           )}
         >
           {collapsed ? (brandCollapsed ?? brand) : brand}
         </div>
         <nav aria-label="Main" className="flex-1 overflow-y-auto p-2">
-          <NavList sections={navigation} collapsed={collapsed} renderLink={renderLink} />
+          <NavList
+            sections={navigation}
+            collapsed={collapsed}
+            renderLink={renderLink}
+            tone="block"
+          />
         </nav>
-        <div className={cn("border-border border-t p-2", collapsed && "flex justify-center")}>
+        <div
+          className={cn("border-on-block-teal/15 border-t p-2", collapsed && "flex justify-center")}
+        >
           <IconButton
+            className="text-on-block-teal hover:bg-on-block-teal/10 hover:text-on-block-teal"
             label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!collapsed}
             aria-controls={sidebarId}
@@ -199,7 +227,7 @@ export function AppShell({
       </aside>
 
       <div className={cn("flex min-w-0 flex-1 flex-col", embedded && "overflow-y-auto")}>
-        <header className="border-border bg-surface/95 supports-[backdrop-filter]:bg-surface/85 sticky top-0 z-[1100] flex h-16 items-center gap-3 border-b px-4 backdrop-blur">
+        <header className="border-outline-ink/10 bg-canvas/95 supports-[backdrop-filter]:bg-canvas/85 sticky top-0 z-[1100] flex h-16 items-center gap-3 border-b px-4 backdrop-blur">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <IconButton
               className="md:hidden"
@@ -215,6 +243,7 @@ export function AppShell({
                   collapsed={false}
                   renderLink={renderLink}
                   onNavigate={() => setMobileOpen(false)}
+                  tone="paper"
                 />
               </nav>
             </SheetContent>

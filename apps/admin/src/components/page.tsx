@@ -1,5 +1,12 @@
 import { isApiError } from "@fresh/core";
-import { Button, EmptyState, Skeleton } from "@fresh/ui";
+import {
+  Button,
+  EmptyState,
+  PageHeader as UiPageHeader,
+  type PageHeaderProps,
+  Skeleton,
+  backLinkClass,
+} from "@fresh/ui";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { type ReactNode } from "react";
 import { Link } from "react-router";
@@ -7,44 +14,24 @@ import { useCan } from "../app/services";
 import { type PermissionRequirement } from "../auth/permissions";
 import { IllustratedState, LoadError } from "./states";
 
+/** The shared page header (`@fresh/ui`) with a router back link. */
 export function PageHeader({
-  title,
-  description,
-  actions,
   backTo,
   backLabel = "Back",
-  meta,
-}: {
-  title: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-  backTo?: string;
-  backLabel?: string;
-  /** Badges next to the title (status). */
-  meta?: ReactNode;
-}) {
+  ...props
+}: Omit<PageHeaderProps, "back"> & { backTo?: string; backLabel?: string }) {
   return (
-    <div className="mb-6 flex flex-col gap-3">
-      {backTo && (
-        <Link
-          to={backTo}
-          className="text-text-muted hover:text-text inline-flex w-fit items-center gap-1 text-sm"
-        >
-          <ArrowLeft aria-hidden="true" className="size-4" />
-          {backLabel}
-        </Link>
-      )}
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="flex min-w-0 flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-display text-2xl leading-8 font-semibold">{title}</h1>
-            {meta}
-          </div>
-          {description && <p className="text-text-muted text-sm">{description}</p>}
-        </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-      </div>
-    </div>
+    <UiPageHeader
+      {...props}
+      back={
+        backTo ? (
+          <Link to={backTo} className={backLinkClass}>
+            <ArrowLeft aria-hidden="true" />
+            {backLabel}
+          </Link>
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -162,51 +149,5 @@ export function LocationRequired({ action = "see this page" }: { action?: string
   );
 }
 
-/** Two-column label/value list for detail pages. */
-export function DetailList({
-  items,
-  columns = 2,
-}: {
-  items: readonly { label: string; value: ReactNode }[];
-  columns?: 1 | 2 | 3;
-}) {
-  const grid = columns === 3 ? "sm:grid-cols-3" : columns === 2 ? "sm:grid-cols-2" : "";
-  return (
-    <dl className={`grid grid-cols-1 gap-x-6 gap-y-3 ${grid}`}>
-      {items.map((item) => (
-        <div key={item.label} className="flex min-w-0 flex-col gap-0.5">
-          <dt className="text-text-muted text-xs font-medium tracking-wide uppercase">
-            {item.label}
-          </dt>
-          <dd className="text-sm break-words">{item.value ?? "—"}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-/** Small "Section" wrapper used inside pages. */
-export function Section({
-  title,
-  actions,
-  children,
-  description,
-}: {
-  title: ReactNode;
-  actions?: ReactNode;
-  description?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className="border-border bg-surface flex flex-col gap-4 rounded-lg border p-5 shadow-xs">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex flex-col gap-0.5">
-          <h2 className="font-display text-lg leading-7 font-semibold">{title}</h2>
-          {description && <p className="text-text-muted text-sm">{description}</p>}
-        </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-      </div>
-      {children}
-    </section>
-  );
-}
+/** Label / value list for detail pages and the page's section card, both from `@fresh/ui`. */
+export { DetailList, SectionCard as Section } from "@fresh/ui";
