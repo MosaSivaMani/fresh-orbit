@@ -84,6 +84,18 @@ export function getInvoice(http: HttpClient, orderId: string): Promise<InvoiceRe
   return http.get<InvoiceResponse>(`/orders/${encodeURIComponent(orderId)}/invoice`);
 }
 
+/** Accepts or rejects a substitution the store proposed; returns the re-priced order. */
+export function answerSubstitution(
+  http: HttpClient,
+  orderId: string,
+  substitutionId: string,
+  answer: "accept" | "reject",
+): Promise<OrderDetail> {
+  return http.post<OrderDetail>(
+    `/orders/${encodeURIComponent(orderId)}/substitutions/${encodeURIComponent(substitutionId)}/${answer}`,
+  );
+}
+
 /** Adds the order's sellable lines to the cart; returns the priced cart. */
 export function reorder(http: HttpClient, orderId: string): Promise<Cart> {
   return http.post<Cart>(`/orders/${encodeURIComponent(orderId)}/reorder`);

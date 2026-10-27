@@ -31,6 +31,7 @@ import { orderSlot, orderSteps } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";
 import { complaintStatusMap, orderStatusMap, paymentMethodLabels } from "@/lib/status-maps";
 import { OrderActions } from "./order-actions";
+import { SubstitutionsCard } from "./substitutions-card";
 
 const ITEM_STATUS_TEXT: Record<string, string> = {
   SHORT_SUPPLIED: "Short supplied",
@@ -255,6 +256,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
 
             <OrderActions order={o} />
 
+            <SubstitutionsCard order={o} />
             <StepCard title="Items">
               <Items order={o} />
             </StepCard>

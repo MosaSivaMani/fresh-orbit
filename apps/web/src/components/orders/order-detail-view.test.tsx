@@ -185,4 +185,45 @@ describe("OrderDetailView", () => {
     expect(cancel!.key).toBeTruthy();
     expect(screen.queryByText("4821")).not.toBeInTheDocument();
   });
+
+  it("lists a proposed substitution and accepts it through the server", async () => {
+    const proposed = {
+      id: "s1",
+      orderItemId: "i1",
+      proposedName: "Seer fish steaks",
+      proposedQuantity: { value: 500, unit: "GRAM" },
+      priceDifferencePaise: 4000,
+      status: "PROPOSED",
+      expiresAt: "2026-10-23T07:30:00Z",
+      respondedAt: null,
+      newOrderItemId: null,
+    };
+    let accepted = false;
+    server.use(
+      http.get(`${API}/orders/o1`, () => HttpResponse.json(order({ substitutions: [proposed] }))),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+      http.post(`${API}/orders/o1/substitutions/s1/accept`, () => {
+        accepted = true;
+        return HttpResponse.json(
+          order({
+            substitutions: [
+              { ...proposed, status: "ACCEPTED", respondedAt: "2026-10-23T06:00:00Z" },
+            ],
+          }),
+        );
+      }),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const card = await screen.findByRole("region", { name: "Substitutions" });
+    expect(within(card).getByRole("button", { name: "Reject Seer fish steaks" })).toBeEnabled();
+    await userEvent.click(within(card).getByRole("button", { name: "Accept Seer fish steaks" }));
+
+    await waitFor(() => expect(accepted).toBe(true));
+    await waitFor(() =>
+      expect(
+        within(card).queryByRole("button", { name: "Accept Seer fish steaks" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
 });
