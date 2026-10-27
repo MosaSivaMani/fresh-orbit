@@ -11,7 +11,10 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 class AddressesScreen extends ConsumerWidget {
@@ -40,7 +43,7 @@ class AddressesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Addresses')),
+      appBar: const PageHeader(text: 'Your', brushed: 'addresses'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/account/addresses/new'),
         icon: const Icon(Icons.add),
@@ -56,20 +59,21 @@ class AddressesScreen extends ConsumerWidget {
                 message: 'Add an address to choose it quickly at checkout.',
               )
             : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(FreshSpacing.s4, FreshSpacing.s4, FreshSpacing.s4, 96),
+                padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, 96),
                 itemCount: list.length,
-                separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
+                separatorBuilder: (_, _) => const SizedBox(height: FreshLayout.cardGap),
                 itemBuilder: (context, i) {
                   final a = list[i];
-                  return Card(
+                  return SectionBox(
+                    key: ValueKey('address-${a.id}'),
                     child: Padding(
-                      padding: const EdgeInsets.all(FreshSpacing.s3),
+                      padding: const EdgeInsets.all(4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Text(humanizeCode(a.label), style: Theme.of(context).textTheme.titleSmall),
+                              Text(humanizeCode(a.label), style: AppText.display(illustratedColors(context).ink, 17)),
                               const SizedBox(width: FreshSpacing.s2),
                               if (a.isDefault) const FreshBadge(label: 'Default', tone: BannerTone.success),
                               if (a.isServiceable == false)
@@ -240,25 +244,25 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
         _loaded = true;
       } else if (list.hasError || (list.hasValue && match == null)) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit address')),
+          appBar: const PageHeader(text: 'Edit', brushed: 'address'),
           body: list.hasError
               ? ErrorState(error: list.error!, onRetry: () => ref.invalidate(addressesProvider))
               : const EmptyState(slot: IllustrationSlot.notFound, title: 'Address not found'),
         );
       } else {
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit address')),
+          appBar: const PageHeader(text: 'Edit', brushed: 'address'),
           body: const ListSkeleton(rows: 4),
         );
       }
     }
     return Scaffold(
-      appBar: AppBar(title: Text(id == null ? 'Add address' : 'Edit address')),
+      appBar: PageHeader(text: id == null ? 'New' : 'Edit', brushed: 'address'),
       body: Form(
         key: _form,
         child: AutofillGroup(
           child: ListView(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
+            padding: FreshLayout.list,
             children: [
               Wrap(
                 spacing: FreshSpacing.s2,

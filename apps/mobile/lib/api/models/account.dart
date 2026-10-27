@@ -161,10 +161,37 @@ class AddressInput {
 class WishlistEntry {
   const WishlistEntry({required this.productId, this.product});
 
+  /// `GET /me/wishlist` items are `{ productId, addedAt, product: { slug, name, imageUrl, price, isAvailable } }`
+  /// (product null when it is no longer on the storefront). A flat product summary is read too.
   factory WishlistEntry.fromJson(Json j) {
+    final productId = optString(j, 'productId') ?? reqString(j, 'id');
+    final nested = asJsonOrNull(j['product'], 'product');
+    if (nested != null) {
+      final price = asJsonOrNull(nested['price'], 'price');
+      final available = optBool(nested, 'isAvailable') ?? false;
+      return WishlistEntry(
+        productId: productId,
+        product: ProductSummary.fromJson({
+          'id': productId,
+          'slug': nested['slug'],
+          'name': nested['name'],
+          'imageUrl': nested['imageUrl'],
+          'fromPrice': price,
+          // The server's flags as availability codes: sold and in stock, not sold at this location, or sold out.
+          'availability': {
+            'status': available
+                ? 'IN_STOCK'
+                : price == null
+                ? 'NOT_SOLD_HERE'
+                : 'OUT_OF_STOCK',
+            'message': null,
+          },
+        }),
+      );
+    }
     final hasProduct = j['slug'] is String && j['name'] is String;
     return WishlistEntry(
-      productId: optString(j, 'productId') ?? reqString(j, 'id'),
+      productId: productId,
       product: hasProduct ? ProductSummary.fromJson({...j, 'id': optString(j, 'id') ?? j['productId']}) : null,
     );
   }

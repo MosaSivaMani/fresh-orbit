@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 import '../../core/launch.dart';
+import '../../widgets/bold.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 const supportPhoneDefine = String.fromEnvironment('SUPPORT_PHONE');
@@ -48,35 +51,45 @@ class HelpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Help and support')),
+      appBar: const PageHeader(text: 'Help and', brushed: 'support'),
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: FreshSpacing.s2),
+        padding: const EdgeInsets.only(bottom: FreshLayout.sectionGap),
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(FreshSpacing.s4, 0, FreshSpacing.s4, FreshSpacing.s4),
+            padding: EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
             child: HelpHero(message: 'Find a quick answer below, or contact our team.'),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-            child: Semantics(header: true, child: Text('Questions', style: theme.textTheme.titleLarge)),
+          const Padding(
+            padding: FreshLayout.page,
+            child: PageTitle(text: 'Quick', brushed: 'answers', size: 20),
           ),
-          for (final (q, a) in _faq)
-            ExpansionTile(
-              title: Text(q),
-              childrenPadding: const EdgeInsets.fromLTRB(FreshSpacing.s4, 0, FreshSpacing.s4, FreshSpacing.s3),
-              expandedAlignment: Alignment.centerLeft,
-              children: [Text(a)],
-            ),
-          const Divider(height: FreshSpacing.s6),
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: FreshSpacing.s4),
-            child: Semantics(header: true, child: Text('Contact us', style: theme.textTheme.titleLarge)),
+            padding: FreshLayout.page,
+            child: SectionBox(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (final (q, a) in _faq)
+                    ExpansionTile(
+                      title: Text(q),
+                      childrenPadding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, 12),
+                      expandedAlignment: Alignment.centerLeft,
+                      children: [Text(a)],
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: FreshLayout.sectionGap),
+          const Padding(
+            padding: FreshLayout.page,
+            child: PageTitle(text: 'Contact', brushed: 'us', size: 20),
           ),
           if (supportPhone.isEmpty && supportEmail.isEmpty)
             const Padding(
-              padding: EdgeInsets.all(FreshSpacing.s4),
+              padding: EdgeInsets.all(FreshLayout.gutter),
               child: InfoBanner(text: 'Contact details are not set up in this build of the app.'),
             ),
           if (supportPhone.isNotEmpty)

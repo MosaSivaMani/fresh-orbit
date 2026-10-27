@@ -10,6 +10,7 @@ import '../../state/account_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/heading.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import 'product_grid.dart';
 
@@ -40,9 +41,7 @@ class WishlistScreen extends ConsumerWidget {
       );
     }
     return Scaffold(
-      appBar: AppBar(
-        title: const ScriptTitle(text: 'Saved', script: 'fish'),
-      ),
+      appBar: const PageHeader(text: 'Saved', brushed: 'fish'),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(wishlistProvider.future),
         child: AsyncValueView<List<WishlistEntry>>(
@@ -64,7 +63,7 @@ class WishlistScreen extends ConsumerWidget {
               slivers: [
                 if (withProduct.isNotEmpty)
                   SliverPadding(
-                    padding: const EdgeInsets.all(FreshSpacing.s4),
+                    padding: FreshLayout.list,
                     sliver: SliverGrid.builder(
                       gridDelegate: productGridDelegate,
                       itemCount: withProduct.length,
@@ -73,15 +72,17 @@ class WishlistScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                // The Customers module currently returns product ids only; show them with a remove action
-                // until the wishlist endpoint returns product summaries (docs/api §4.2).
-                SliverList.list(
+                // The server sends no product for an entry that is no longer on the storefront; it can be removed.
+                SliverPadding(
+                  padding: FreshLayout.page,
+                  sliver: SliverList.list(
                   children: [
                     for (final e in idsOnly)
                       ListTile(
+                        key: ValueKey('wishlistGone-${e.productId}'),
                         leading: const Icon(Icons.favorite),
-                        title: const Text('Saved product'),
-                        subtitle: const Text('Details will appear when the catalog returns them.'),
+                        title: const Text('No longer sold'),
+                        subtitle: const Text('This fish is not on the shop right now.'),
                         trailing: IconButton(
                           tooltip: 'Remove from wishlist',
                           icon: const Icon(Icons.delete_outline),
@@ -92,6 +93,7 @@ class WishlistScreen extends ConsumerWidget {
                         ),
                       ),
                   ],
+                  ),
                 ),
               ],
             );

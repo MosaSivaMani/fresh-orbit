@@ -2,11 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/models/catalog.dart';
 import '../../state/catalog_state.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 import 'product_grid.dart';
 
@@ -39,19 +42,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final showResults = _submitted != null && _submitted == _typed.trim();
+    final c = illustratedColors(context);
+    final pill = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(FreshLayout.pillRadius),
+      borderSide: BorderSide(color: c.line, width: 1.5),
+    );
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 0,
+      appBar: FreshPageHeader(
+        key: const Key('pageHeader'),
+        leading: const BackCircleButton(),
         title: TextField(
+          key: const Key('searchField'),
           controller: _field,
           autofocus: widget.initialQuery == null,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
             hintText: 'Search fish, prawns, crabs…',
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            filled: false,
+            isDense: true,
+            prefixIcon: Icon(Icons.search_rounded, color: c.muted),
+            border: pill,
+            enabledBorder: pill,
+            focusedBorder: pill.copyWith(borderSide: BorderSide(color: c.ink, width: 2)),
+            fillColor: c.paper,
             suffixIcon: _typed.isEmpty
                 ? null
                 : IconButton(
@@ -103,6 +115,7 @@ class _Suggestions extends ConsumerWidget {
       onRetry: () => ref.invalidate(searchSuggestionsProvider(query)),
       loading: const ListSkeleton(rows: 4, rowHeight: 48),
       data: (items) => ListView(
+        padding: FreshLayout.list,
         children: [
           ListTile(
             leading: const Icon(Icons.search),
@@ -111,7 +124,7 @@ class _Suggestions extends ConsumerWidget {
           ),
           for (final s in items)
             ListTile(
-              leading: SizedBox(width: 48, child: ProductPhoto(url: s.imageUrl, radius: 6)),
+              leading: SizedBox(width: 48, child: ProductPhoto(url: s.imageUrl, radius: 12)),
               title: Text(s.name),
               subtitle: s.matchedLocalName == null ? null : Text('Also called ${s.matchedLocalName}'),
               onTap: () => context.push('/product/${s.slug}'),
