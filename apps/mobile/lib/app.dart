@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 import 'router.dart';
 import 'state/core_providers.dart';
@@ -43,6 +44,7 @@ class FreshOrbitApp extends ConsumerWidget {
     if (ref.watch(apiBaseUrlProvider).isEmpty) {
       return MaterialApp(
         title: 'Fresh Orbitt',
+        scrollBehavior: const FreshScrollBehavior(),
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         home: const Scaffold(
@@ -59,6 +61,8 @@ class FreshOrbitApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Fresh Orbitt',
       debugShowCheckedModeBanner: false,
+      // Pages stand still at their ends on every platform (D182).
+      scrollBehavior: const FreshScrollBehavior(),
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ref.watch(themeModeProvider),

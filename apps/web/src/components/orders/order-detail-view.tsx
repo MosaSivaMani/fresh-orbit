@@ -11,12 +11,12 @@ import {
   AvatarCircle,
   BillBox,
   type BillRow,
-  PageBand,
-  Script,
+  Highlight,
   Skeleton,
   StatusBadge,
   StatusSteps,
   StepCard,
+  ThemeBand,
 } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import { KeyRound, Phone } from "lucide-react";
@@ -32,6 +32,7 @@ import { orderSlot, orderSteps } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";
 import { complaintStatusMap, orderStatusMap, paymentMethodLabels } from "@/lib/status-maps";
 import { OrderActions } from "./order-actions";
+import { SubstitutionsCard } from "./substitutions-card";
 
 const ITEM_STATUS_TEXT: Record<string, string> = {
   SHORT_SUPPLIED: "Short supplied",
@@ -108,16 +109,16 @@ function Items({ order }: { order: OrderDetail }) {
 
 function Band({ order, aside }: { order?: OrderDetail; aside?: ReactNode }) {
   return (
-    <PageBand
+    <ThemeBand
       eyebrow={order ? `Placed ${formatDateTime(order.placedAt)}` : undefined}
       title={
         order ? (
           <>
-            Order <Script>{order.orderNumber}</Script>
+            Order <Highlight>{order.orderNumber}</Highlight>
           </>
         ) : (
           <>
-            Your <Script>order</Script>
+            Your <Highlight>order</Highlight>
           </>
         )
       }
@@ -126,7 +127,7 @@ function Band({ order, aside }: { order?: OrderDetail; aside?: ReactNode }) {
   );
 }
 
-/** Order tracking (D95): status steps, delivery code when sent, rider, items, the bill and the allowed actions. */
+/** Order tracking (D181): status steps, delivery code when sent, rider, items, the bill and the allowed actions. */
 export function OrderDetailView({ orderId }: { orderId: string }) {
   const order = useQuery({
     queryKey: queryKeys.order(orderId),
@@ -256,6 +257,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
 
             <OrderActions order={o} />
 
+            <SubstitutionsCard order={o} />
             <StepCard title="Items">
               <Items order={o} />
             </StepCard>

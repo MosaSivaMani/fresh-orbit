@@ -5,6 +5,7 @@ import {
   type PreferenceItem,
   type PreferencesResponse,
   type Profile,
+  type StockAlert,
   type UpdateProfileRequest,
   type VisibleCoupon,
   type WishlistItem,
@@ -73,6 +74,24 @@ export function removeFromWishlist(http: HttpClient, productId: string): Promise
   return http.delete<void>(`/me/wishlist/${encodeURIComponent(productId)}`);
 }
 
+/** The customer's "notify me when back in stock" alerts. */
+export function listStockAlerts(http: HttpClient): Promise<StockAlert[]> {
+  return http.get<StockAlert[]>("/me/stock-alerts");
+}
+
+/** Asks to be told when a sold-out size is back at the store that serves the pincode. */
+export function createStockAlert(
+  http: HttpClient,
+  variantId: string,
+  fulfillmentLocationId: string,
+): Promise<StockAlert> {
+  return http.post<StockAlert>("/me/stock-alerts", { variantId, fulfillmentLocationId });
+}
+
+export function deleteStockAlert(http: HttpClient, alertId: string): Promise<void> {
+  return http.delete<void>(`/me/stock-alerts/${encodeURIComponent(alertId)}`);
+}
+
 export function listNotifications(
   http: HttpClient,
   params: { unreadOnly?: boolean; page?: number } = {},
@@ -102,7 +121,11 @@ export function replacePreferences(
   return http.put<PreferencesResponse>("/me/notification-preferences", { preferences });
 }
 
-/** Coupons the signed-in customer can use at their city; one page holds them all. */
-export function listCoupons(http: HttpClient): Promise<VisibleCoupon[]> {
-  return http.get<Page<VisibleCoupon>>("/coupons").then((data) => data.items);
+/**
+ * Coupons the signed-in customer can use at the city of `pincode`; one page holds them all. The pincode is sent as
+ * `?pincode=`: without it the server answers an empty list.
+ */
+export function listCoupons(http: HttpClient, pincode: string): Promise<VisibleCoupon[]> {
+  const page = http.get<Page<VisibleCoupon>>("/coupons", { query: { pincode } });
+  return page.then((data) => data.items);
 }

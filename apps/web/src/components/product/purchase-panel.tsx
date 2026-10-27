@@ -7,7 +7,7 @@ import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { browserHttp } from "@/api/browser";
-import { getProduct } from "@/api/endpoints/catalog";
+import { getPriceQuote, getProduct } from "@/api/endpoints/catalog";
 import { type Preparation, type ProductDetail, type Variant } from "@/api/types/catalog";
 import { useAddToCart, useCart } from "@/cart/use-cart";
 import { describeError, fieldMessage, hasCode } from "@/lib/errors";
@@ -15,6 +15,7 @@ import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
+import { NotifyMe } from "./notify-me";
 
 function chargeText(p: Preparation): string {
   if (p.chargePaise === null) return "Not offered at your store";
@@ -32,6 +33,57 @@ function chargeText(p: Preparation): string {
 
 function defaultPreparation(variant: Variant | undefined): string | undefined {
   return (variant?.preparations.find((p) => p.isDefault) ?? variant?.preparations[0])?.code;
+}
+
+/**
+ * The server's quote for the chosen size, cut and weight before it is in the cart (`GET /price-quote`): the
+ * estimate and, for weighed items, the most it can cost. Shown as sent; while it loads or if it fails, the panel
+ * says the amounts appear in the cart.
+ */
+function QuoteLine({
+  variantId,
+  preparation,
+  quantity,
+  unit,
+  pincode,
+}: {
+  variantId: string;
+  preparation: string | undefined;
+  quantity: number;
+  unit: string;
+  pincode: string;
+}) {
+  const quote = useQuery({
+    queryKey: queryKeys.priceQuote(variantId, preparation, quantity, pincode),
+    queryFn: () =>
+      getPriceQuote(browserHttp(), {
+        variantId,
+        quantity,
+        unit,
+        ...(preparation ? { preparation } : {}),
+      }),
+    placeholderData: (previous) => previous,
+    staleTime: 30_000,
+  });
+  if (!quote.data) {
+    return (
+      <p className="text-text-muted text-xs">
+        The estimated and maximum price for your weight are shown as soon as it is in your cart.
+      </p>
+    );
+  }
+  const q = quote.data;
+  const most = `; at most ${formatRupees(q.maxChargeablePaise)} if packed up to ${formatQuantity(q.maxChargeableQuantity)}`;
+  return (
+    <p className="text-text-muted text-sm" aria-live="polite">
+      Estimated{" "}
+      <span className="text-text font-bold tabular-nums">
+        {formatRupees(q.estimatedTotalPaise)}
+      </span>{" "}
+      for {formatQuantity(q.quantity)}
+      {q.maxChargeablePaise !== q.estimatedTotalPaise && most}.
+    </p>
+  );
 }
 
 export interface PurchasePanelProps {
@@ -236,11 +288,20 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
         </div>
       ) : (
         priced &&
-        !unavailable && (
-          <p className="text-text-muted text-xs">
-            The estimated and maximum price for your weight are shown as soon as it is in your cart.
-          </p>
+        !unavailable &&
+        pincode && (
+          <QuoteLine
+            variantId={variant.id}
+            preparation={preparation}
+            quantity={quantity}
+            unit={variant.minOrder.unit}
+            pincode={pincode}
+          />
         )
+      )}
+
+      {pincode && availability?.status === "OUT_OF_STOCK" && (
+        <NotifyMe variantId={variant.id} pincode={pincode} returnTo={`/products/${initial.slug}`} />
       )}
 
       {error && (

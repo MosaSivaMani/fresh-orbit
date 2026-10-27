@@ -5,6 +5,7 @@ import {
   type CategoryNode,
   type HomeBanner,
   type HomeResponse,
+  type PriceQuote,
   type ProductDetail,
   type ProductListItem,
   type ProductListParams,
@@ -13,6 +14,7 @@ import {
 import { type Page } from "../types/common";
 import {
   type DeliverySlotsResponse,
+  type PublicBusinessProfile,
   type PublicCity,
   type ServiceabilityResponse,
 } from "../types/locations";
@@ -60,6 +62,14 @@ export function getProduct(
   });
 }
 
+/** The server's price for a quantity before it is in the cart (`X-Pincode` decides the store). */
+export function getPriceQuote(
+  http: HttpClient,
+  params: { variantId: string; preparation?: string; quantity: number; unit: string },
+): Promise<PriceQuote> {
+  return http.get<PriceQuote>("/price-quote", { query: params });
+}
+
 export function suggest(http: HttpClient, q: string, signal?: AbortSignal): Promise<SuggestItem[]> {
   return http.get<SuggestItem[]>("/search/suggest", {
     query: { q },
@@ -82,6 +92,11 @@ export function getServiceability(
 
 export function getCities(http: HttpClient): Promise<PublicCity[]> {
   return http.get<PublicCity[]>("/cities");
+}
+
+/** The store's public contact details for the help page (gap W7). */
+export function getBusinessProfile(http: HttpClient): Promise<PublicBusinessProfile> {
+  return http.get<PublicBusinessProfile>("/business-profile");
 }
 
 /** Slots for a pincode (query wins over the header, docs/api §1.4). */

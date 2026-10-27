@@ -16,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPinPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { addAddress, listAddresses } from "@/api/endpoints/account";
 import { previewCheckout, placeOrder } from "@/api/endpoints/orders";
@@ -128,6 +128,12 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
     list[0] ??
     null;
   const addressId = address ? address.addressId : null;
+
+  // A new address, slot, payment method, substitution choice or note is a new order body: a retry must not reuse
+  // the old key (the server would answer IDEMPOTENCY_KEY_REUSED), so the next Place order takes a fresh one.
+  useEffect(() => {
+    placeKey.current = null;
+  }, [addressId, slotId, paymentMethod, substitution, notes]);
 
   const previewKey = ["checkout-preview", addressId, slotId, paymentMethod, substitution] as const;
   const preview = useQuery({

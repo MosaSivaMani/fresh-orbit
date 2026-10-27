@@ -1,4 +1,4 @@
-import { PageBand, Script } from "@fresh/ui";
+import { Highlight, ThemeBand } from "@fresh/ui";
 import type { Metadata } from "next";
 import { getCategories } from "@/api/endpoints/catalog";
 import { publicHttp, requestApi } from "@/api/server";
@@ -26,19 +26,21 @@ export default async function ShopPage(props: PageProps<"/shop">) {
   const filters = parseShopFilters(searchParams);
   return (
     <>
-      <PageBand
+      <ThemeBand
         eyebrow={
           <Breadcrumbs tone="band" items={[{ href: "/", label: "Home" }, { label: "Shop" }]} />
         }
         title={
           <>
-            All <Script>seafood</Script>
+            All <Highlight>seafood</Highlight>
           </>
         }
+        script="From today's catch to your kitchen"
         description="Fish, prawns, crabs and shellfish, cleaned and cut the way you choose."
+        picture={{ slot: "ONBOARDING_FRESH", focus: "50% 35%" }}
       >
         <PageSearch />
-      </PageBand>
+      </ThemeBand>
       <Container className="py-6 sm:py-8">
         <ProductListing
           api={api}

@@ -113,5 +113,48 @@ void main() {
     expect(find.byKey(const Key('addToCart')), findsNothing);
   });
 
+  testWidgets('the estimate for the chosen quantity is the server quote, re-asked when the quantity changes', (
+    tester,
+  ) async {
+    deps.catalog.onQuote = (variantId, prep, quantity) async => PriceQuote.fromJson({
+      'quantity': {'value': quantity.value, 'unit': quantity.unit},
+      'maxChargeableQuantity': {'value': quantity.value + 50, 'unit': quantity.unit},
+      'estimatedTotalPaise': quantity.value == 500 ? 67000 : 100500,
+      'maxChargeablePaise': quantity.value == 500 ? 73700 : 110500,
+      'availability': {'status': 'IN_STOCK', 'message': null},
+    });
+    await pump(tester);
+
+    expect(find.byKey(const Key('priceQuote')), findsOneWidget);
+    expect(find.textContaining('Estimated ₹670 for 500 g'), findsOneWidget);
+
+    final increase = find.byTooltip('Increase quantity of Seer Fish');
+    await tester.ensureVisible(increase);
+    await tester.tap(increase);
+    await tester.pumpAndSettle();
+
+    expect(deps.catalog.quotes.map((q) => q.split(':').last), containsAllInOrder(['500', '750']));
+    expect(find.textContaining('Estimated ₹1,005 for 750 g'), findsOneWidget);
+  });
+
+  testWidgets('a sold-out size offers Notify me, which asks the server for a back-in-stock alert', (tester) async {
+    deps = TestDeps(pincode: '600041', signedIn: true);
+    deps.location.onServiceability = (_) async => serviceable();
+    final json = productDetailJson();
+    final variant = Map<String, Object?>.from((json['variants']! as List).first as Map);
+    variant['availability'] = {'status': 'OUT_OF_STOCK', 'maxOrderableNow': null, 'message': null};
+    deps.catalog.onProduct = (_, _) async => ProductDetail.fromJson({
+      ...json,
+      'variants': [variant],
+    });
+    await pump(tester);
+
+    expect(find.byKey(const Key('addToCart')), findsNothing);
+    await tester.tap(find.byKey(const Key('notifyMe')));
+    await tester.pumpAndSettle();
+
+    expect(deps.account.stockAlerts, ['v1@l1']);
+  });
+
   test('fixture cart parses', () => expect(cart().lines.single, isA<CartLine>()));
 }

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/models/account.dart';
@@ -11,9 +12,6 @@ import '../../app.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/bold.dart';
-import '../../widgets/heading.dart';
 import '../../widgets/states.dart';
 
 const languageNames = {'en': 'EN', 'te': 'తెలుగు', 'hi': 'हिं'};
@@ -29,27 +27,12 @@ class SettingsScreen extends ConsumerWidget {
     final language = ref.watch(languageProvider);
     final mode = ref.watch(themeModeProvider);
     return Scaffold(
+      appBar: const PageHeader(text: 'App', brushed: 'settings'),
       body: SafeArea(
+        top: false,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-              child: Row(
-                children: [
-                  if (context.canPop())
-                    RoundIconButton(icon: Icons.arrow_back_rounded, tooltip: 'Back', onPressed: () => context.pop())
-                  else
-                    const SizedBox(width: 48),
-                  const Expanded(
-                    child: Center(
-                      child: ScriptTitle(text: 'App', script: 'settings'),
-                    ),
-                  ),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
             const MenuLabel('Notifications'),
             if (!signedIn)
               MenuCard(
@@ -67,7 +50,7 @@ class SettingsScreen extends ConsumerWidget {
                 value: ref.watch(preferencesProvider),
                 onRetry: () => ref.invalidate(preferencesProvider),
                 loading: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   child: LoadingSemantics(child: SkeletonBox(height: 120, radius: 18)),
                 ),
                 data: (list) => MenuCard(

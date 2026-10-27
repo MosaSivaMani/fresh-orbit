@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/features/checkout/checkout_screen.dart';
-import 'package:fresh_orbit_app/widgets/bold.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 
 import '../support/fakes.dart';
 import '../support/fixtures.dart';

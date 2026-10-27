@@ -188,6 +188,25 @@ export {
 } from "./components/heading";
 export { Input, Textarea, type InputProps } from "./components/input";
 export {
+  BandWaves,
+  CompactProductCard,
+  Gulls,
+  Highlight,
+  OfferRow,
+  SectionAction,
+  SectionHeader,
+  SkyPanel,
+  Sparks,
+  Swoosh,
+  TextPageShell,
+  ThemeBand,
+  type CompactProductCardProps,
+  type OfferRowProps,
+  type SectionHeaderProps,
+  type TextPageShellProps,
+  type ThemeBandProps,
+} from "./components/theme";
+export {
   Dialog,
   DialogClose,
   DialogContent,

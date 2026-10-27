@@ -2,10 +2,9 @@
 // cart. Variant and preparation choice (with yield note and the location's preparation charge),
 // quantity stepper bounded by the server's min / max / step / maxOrderableNow, and add to cart.
 //
-// Prices: the screen shows the server's unit price and preparation charge. The estimated line price and the
-// maximum chargeable amount come from the server's priced cart line after adding (and are shown here when the
-// same variant and preparation is already in the cart). The product endpoint has no per-quantity estimate,
-// so the app does not invent one (docs/api §5: a missing value is a missing API field).
+// Prices: the screen shows the server's unit price and preparation charge, and for the chosen size, cut and
+// quantity the server's estimate and maximum (GET /price-quote); the app computes none of them. A sold-out
+// size offers "Notify me", a back-in-stock alert at the store that serves the pincode (POST /me/stock-alerts).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,11 +19,11 @@ import '../../core/format.dart';
 import '../../state/account_state.dart';
 import '../../state/cart_state.dart';
 import '../../state/catalog_state.dart';
+import '../../state/core_providers.dart';
+import '../../state/location_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/illustrated.dart';
 import '../../widgets/states.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
@@ -46,6 +45,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   bool _adding = false;
   String? _quantityError;
   ProductDetail? _last;
+  bool _notifying = false;
+
+  /// Sizes the customer asked to hear about in this visit.
+  final Set<String> _alerted = {};
 
   Variant _variant(ProductDetail d) => d.variants.firstWhere((v) => v.id == _variantId, orElse: () => d.variants.first);
 
@@ -107,6 +110,32 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     }
   }
 
+  Future<void> _notify(ProductDetail d, Variant v) async {
+    if (!ref.read(sessionProvider).signedIn) {
+      await context.push(Uri(path: '/login', queryParameters: {'from': '/product/${d.slug}'}).toString());
+      return;
+    }
+    setState(() => _notifying = true);
+    try {
+      final locationId = (await ref.read(currentServiceabilityProvider.future))?.locationId;
+      if (!mounted) return;
+      if (locationId == null) {
+        await context.push('/location?change=1');
+        return;
+      }
+      await ref.read(accountRepositoryProvider).addStockAlert(variantId: v.id, fulfillmentLocationId: locationId);
+      if (!mounted) return;
+      setState(() => _alerted.add(v.id));
+      showInfoSnack(context, 'We will tell you when it is back.');
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      if (e.code == 'STOCK_AVAILABLE') ref.invalidate(productDetailProvider(ProductRequest(widget.slug, _requestedPrep)));
+      showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _notifying = false);
+    }
+  }
+
   Future<void> _toggleWishlist(ProductDetail d) async {
     if (!ref.read(sessionProvider).signedIn) {
       await context.push(Uri(path: '/login', queryParameters: {'from': '/product/${d.slug}'}).toString());
@@ -128,16 +157,16 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
     if (detail == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: const PageHeader.plain(''),
         body: async.hasError
             ? ErrorState(error: async.error!, onRetry: () => ref.invalidate(provider))
             : const LoadingSemantics(
                 child: Padding(
-                  padding: EdgeInsets.all(FreshSpacing.s4),
+                  padding: FreshLayout.list,
                   child: Column(
                     children: [
-                      SkeletonBox(height: 280, radius: AppRadius.card),
-                      SizedBox(height: FreshSpacing.s4),
+                      FreshPictureFrame(child: SkeletonBox(height: double.infinity, radius: FreshLayout.heroRadius)),
+                      SizedBox(height: FreshLayout.sectionGap),
                       SkeletonBox(height: 24),
                       SizedBox(height: FreshSpacing.s2),
                       SkeletonBox(height: 20, width: 160),
@@ -149,7 +178,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     }
     if (detail.variants.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(detail.name)),
+        appBar: PageHeader.plain(detail.name),
         body: const EmptyState(slot: IllustrationSlot.outOfStock, title: 'Not available right now'),
       );
     }
@@ -175,51 +204,47 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         : Sticker(label: humanizeCode(detail.sourceType!), tone: StickerTone.mango, tilt: -0.011);
 
     return Scaffold(
+      appBar: PageHeader.plain(
+        '',
+        actions: [
+          PaperCircleButton(
+            key: const Key('productSave'),
+            icon: wished ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            label: wished ? 'Remove from saved' : 'Save for later',
+            onTap: () => _toggleWishlist(detail),
+          ),
+          PaperCircleButton(
+            key: const Key('productCart'),
+            icon: Icons.shopping_cart_outlined,
+            label: 'Open cart',
+            onTap: () => context.go('/cart'),
+          ),
+        ],
+      ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Hero: the picture on teal-soft with round back and save buttons and a sticker.
-          Container(
-            height: 250,
-            decoration: BoxDecoration(
+          // Hero: the picture in the 3:2 frame on teal-soft inside the gutters, with a sticker (D193).
+          Padding(
+            padding: FreshLayout.page,
+            child: FreshPictureFrame(
+              key: const Key('productHero'),
               color: c.tealSoft,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.sheet)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                Positioned.fill(child: _Gallery(images: detail.images)),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Row(
-                      children: [
-                        if (context.canPop())
-                          RoundIconButton(
-                            icon: Icons.arrow_back_rounded,
-                            tooltip: 'Back',
-                            onPressed: () => context.pop(),
-                          ),
-                        const Spacer(),
-                        RoundIconButton(
-                          icon: wished ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          tooltip: wished ? 'Remove from saved' : 'Save for later',
-                          onPressed: () => _toggleWishlist(detail),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (heroSticker != null) Positioned(left: 16, bottom: 14, child: heroSticker),
-              ],
+              borderRadius: BorderRadius.circular(FreshLayout.heroRadius),
+              child: Stack(
+                children: [
+                  Positioned.fill(child: _Gallery(images: detail.images)),
+                  if (heroSticker != null) Positioned(left: 14, bottom: 12, child: heroSticker),
+                ],
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+            padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 14, FreshLayout.gutter, FreshLayout.sectionGap),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Semantics(header: true, child: Text(detail.name, style: AppText.display(c.ink, 25, height: 1))),
+                Semantics(header: true, child: Text(detail.name, style: AppText.display(c.ink, 26, height: 1.05))),
                 if (detail.localNames.isNotEmpty)
                   Text(
                     'Also called ${detail.localNames.join(', ')}',
@@ -257,15 +282,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   const SizedBox(height: FreshSpacing.s3),
                   _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: FreshLayout.cardGap),
                 const _Facts(),
                 if (detail.variants.length > 1) ...[
-                  const SizedBox(height: 14),
-                  const SectionTitle('Size'),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: FreshLayout.sectionGap),
+                  const PageTitle(text: 'Pick a', brushed: 'size', size: 19),
+                  const SizedBox(height: 8),
                   Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       for (final option in detail.variants)
                         ChoiceChip(
@@ -284,21 +309,21 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   Text(v.name, style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
                 ],
                 if (v.preparations.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  const SectionTitle('Choose your cut'),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: FreshLayout.sectionGap),
+                  const PageTitle(text: 'Choose your', brushed: 'cut', size: 19),
+                  const SizedBox(height: 8),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 7,
-                    crossAxisSpacing: 7,
+                    mainAxisSpacing: FreshLayout.cardGap,
+                    crossAxisSpacing: FreshLayout.cardGap,
                     childAspectRatio: 2.6,
                     children: [
                       for (final p in v.preparations)
-                        _CutTile(
-                          name: p.name,
-                          detail: _chargeText(p),
+                        OptionTile(
+                          title: p.name,
+                          subtitle: preparationChargeText(p),
                           selected: p.code == prep,
                           onTap: p.chargePaise == null
                               ? null
@@ -328,12 +353,19 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, in steps of ${formatQuantity(v.orderStep)} (net weight).',
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                 ),
+                if (!locationRequired && (v.availability?.canAdd ?? true)) ...[
+                  const SizedBox(height: 10),
+                  _Estimate(request: PriceQuoteRequest(variantId: v.id, preparation: prep, quantity: qty)),
+                ],
                 if (detail.netWeightNote.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                    decoration: BoxDecoration(color: c.coralSoft, borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: FreshLayout.cardGap, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: c.coralSoft,
+                      borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                    ),
                     child: Text(
                       detail.netWeightNote,
                       style: theme.textTheme.bodySmall?.copyWith(color: c.coralText, fontWeight: FontWeight.w600),
@@ -401,20 +433,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
           adding: _adding,
           onAdd: () => _add(detail, v, prep, qty),
           onSetPincode: () => context.push('/location?change=1'),
+          notifying: _notifying,
+          notified: _alerted.contains(v.id),
+          onNotify: () => _notify(detail, v),
         ),
       ),
     );
-  }
-
-  static String _chargeText(Preparation p) {
-    final c = p.chargePaise;
-    if (c == null) return 'Not available here';
-    if (c == 0) return 'Free';
-    return switch (p.chargeBasis) {
-      'PER_KG' => '+${formatRupees(c)}/kg',
-      'PER_ITEM' => '+${formatRupees(c)}/piece',
-      _ => '+${formatRupees(c)}',
-    };
   }
 }
 
@@ -425,16 +449,12 @@ class _Facts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    Widget fact(IconData icon, String text) => Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: c.paper,
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: cardShadow(context),
-        ),
-        child: Column(
+    Widget fact(IconData icon, String text) => FreshCard(
+      color: c.paper,
+      shadow: cardShadow(context),
+      radius: FreshLayout.tileRadius,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Column(
           children: [
             Icon(icon, size: 17, color: c.tealText),
             const SizedBox(height: 2),
@@ -451,78 +471,14 @@ class _Facts extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
-    return Row(
+    return FreshColumns(
+      stretch: true,
       children: [
         fact(Icons.ac_unit_rounded, 'Kept cold'),
         fact(Icons.content_cut_rounded, 'Cut your way'),
         fact(Icons.scale_outlined, 'Net weight'),
       ],
-    );
-  }
-}
-
-/// One cut choice: its name and the location's charge; the chosen one is teal.
-class _CutTile extends StatelessWidget {
-  const _CutTile({required this.name, required this.detail, required this.selected, required this.onTap});
-
-  final String name;
-  final String detail;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = illustratedColors(context);
-    return Semantics(
-      button: true,
-      selected: selected,
-      enabled: onTap != null,
-      label: '$name, $detail',
-      excludeSemantics: true,
-      child: Material(
-        color: selected ? c.tealSoft : c.paper,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(13),
-          side: BorderSide(color: selected ? c.tealText : c.line, width: selected ? 2 : 1.5),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(13),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.body,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: onTap == null ? c.muted : c.ink,
-                  ),
-                ),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: AppFonts.body,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: c.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -534,6 +490,9 @@ class _AddAction extends StatelessWidget {
     required this.adding,
     required this.onAdd,
     required this.onSetPincode,
+    required this.notifying,
+    required this.notified,
+    required this.onNotify,
   });
 
   final Variant variant;
@@ -541,15 +500,23 @@ class _AddAction extends StatelessWidget {
   final bool adding;
   final VoidCallback onAdd;
   final VoidCallback onSetPincode;
+  final bool notifying;
+  final bool notified;
+  final VoidCallback onNotify;
 
   @override
   Widget build(BuildContext context) {
     if (locationRequired) return TealActionButton(label: 'Set pincode to buy', onPressed: onSetPincode);
     final availability = variant.availability;
     if (availability != null && !availability.canAdd) {
+      if (availability.status == 'NOT_SOLD_HERE') {
+        return const TealActionButton(label: 'Not sold in your area', onPressed: null);
+      }
       return TealActionButton(
-        label: availability.status == 'NOT_SOLD_HERE' ? 'Not sold in your area' : 'Sold out',
-        onPressed: null,
+        key: const Key('notifyMe'),
+        label: notified ? 'We will tell you' : 'Notify me',
+        loading: notifying,
+        onPressed: notified ? null : onNotify,
       );
     }
     return TealActionButton(key: const Key('addToCart'), label: 'Add to cart', loading: adding, onPressed: onAdd);
@@ -572,14 +539,19 @@ class _GalleryState extends State<_Gallery> {
   Widget build(BuildContext context) {
     final images = widget.images;
     if (images.length <= 1) {
-      return ProductImageView(url: images.firstOrNull?.url, alt: images.firstOrNull?.altText, aspectRatio: 1.6);
+      return ProductImageView(
+        url: images.firstOrNull?.url,
+        alt: images.firstOrNull?.altText,
+        aspectRatio: FreshLayout.pictureAspect,
+      );
     }
     return Semantics(
       label: 'Image ${_index + 1} of ${images.length}',
       child: PageView.builder(
         itemCount: images.length,
         onPageChanged: (i) => setState(() => _index = i),
-        itemBuilder: (_, i) => ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: 1.6),
+        itemBuilder: (_, i) =>
+            ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: FreshLayout.pictureAspect),
       ),
     );
   }
@@ -645,5 +617,32 @@ class _SoldOutCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// The server's estimate for the chosen size, cut and quantity (GET /price-quote). Hidden when the server
+/// gives none (no price at this store, or the quote is refused); the cart prices the line again when added.
+class _Estimate extends ConsumerWidget {
+  const _Estimate({required this.request});
+
+  final PriceQuoteRequest request;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quote = ref.watch(priceQuoteProvider(request));
+    return switch (quote) {
+      AsyncData(:final value) => PriceEstimateRow(
+        key: const Key('priceQuote'),
+        estimate: 'Estimated ${formatRupees(value.estimatedTotalPaise)} for ${formatQuantity(value.quantity)}',
+        atMost: value.maxChargeablePaise == null
+            ? null
+            : value.maxChargeableQuantity == null
+            ? 'You pay at most ${formatRupees(value.maxChargeablePaise!)}.'
+            : 'You pay at most ${formatRupees(value.maxChargeablePaise!)} '
+                  '(up to ${formatQuantity(value.maxChargeableQuantity!)}).',
+      ),
+      AsyncError() => const SizedBox.shrink(),
+      _ => const SkeletonBox(height: 48),
+    };
   }
 }

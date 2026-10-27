@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../api/models/orders.dart';
@@ -10,11 +11,8 @@ import '../../core/format.dart';
 import '../../illustrations/illustration_slot.dart';
 import '../../state/orders_state.dart';
 import '../../state/session.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
-import '../../widgets/heading.dart';
-import '../../widgets/illustrated.dart';
 import '../../widgets/states.dart';
 
 class OrdersScreen extends ConsumerWidget {
@@ -73,7 +71,9 @@ class OrdersScreen extends ConsumerWidget {
       );
     }
     return Scaffold(
+      appBar: const PageHeader(text: 'My', brushed: 'orders', back: false),
       body: SafeArea(
+        top: false,
         bottom: false,
         child: RefreshIndicator(
           onRefresh: () => ref.refresh(ordersProvider.future),
@@ -90,17 +90,11 @@ class OrdersScreen extends ConsumerWidget {
                 return false;
               },
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
-                itemCount: orders.items.length + (orders.loadingMore ? 1 : 0) + 1,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, i) {
-                  if (i == 0) {
-                    return const Padding(
-                      padding: EdgeInsets.fromLTRB(4, 0, 4, 0),
-                      child: ScriptTitle(text: 'My', script: 'orders', size: 21),
-                    );
-                  }
-                  final index = i - 1;
+                key: const Key('ordersList'),
+                padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
+                itemCount: orders.items.length + (orders.loadingMore ? 1 : 0),
+                separatorBuilder: (_, _) => const SizedBox(height: FreshLayout.cardGap),
+                itemBuilder: (context, index) {
                   if (index == orders.items.length) {
                     return const Center(child: CircularProgressIndicator(semanticsLabel: 'Loading more'));
                   }
@@ -125,16 +119,12 @@ class _OrderCard extends StatelessWidget {
     final c = illustratedColors(context);
     final muted = Theme.of(context).textTheme.bodySmall?.copyWith(color: c.muted);
     final o = order;
-    return Material(
+    return FreshCard(
+      key: ValueKey('order-${o.id}'),
       color: c.paper,
-      borderRadius: BorderRadius.circular(18),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.go('/orders/${o.id}'),
-        child: Container(
-          decoration: BoxDecoration(boxShadow: cardShadow(context)),
-          padding: const EdgeInsets.all(12),
-          child: Row(
+      shadow: cardShadow(context),
+      onTap: () => context.go('/orders/${o.id}'),
+      child: Row(
             children: [
               AvatarCircle(slot: slotForOrderStatus(o.status), size: 52),
               const SizedBox(width: 12),
@@ -158,8 +148,6 @@ class _OrderCard extends StatelessWidget {
               Icon(Icons.chevron_right_rounded, color: c.muted),
             ],
           ),
-        ),
-      ),
     );
   }
 }

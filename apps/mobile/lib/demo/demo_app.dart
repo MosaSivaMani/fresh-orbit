@@ -15,7 +15,6 @@ import '../state/catalog_state.dart';
 import '../state/core_providers.dart';
 import '../state/location_state.dart';
 import '../state/orders_state.dart';
-import '../widgets/illustrated.dart';
 import 'demo_backend.dart';
 import 'demo_data.dart';
 

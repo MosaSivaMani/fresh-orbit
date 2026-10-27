@@ -1,5 +1,8 @@
 // Addresses (docs/api §4.2): list with default, add, edit (If-Match), delete, make default. Field errors from
-// the server's Problem Details are shown at the fields.
+// the server's Problem Details are shown at the fields. A new address starts from the shopping pincode, and the
+// city and state the server knows for a pincode fill the empty fields.
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,7 +14,8 @@ import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
-import '../../widgets/commerce.dart';
+import '../../state/core_providers.dart';
+import '../../state/location_state.dart';
 import '../../widgets/states.dart';
 
 class AddressesScreen extends ConsumerWidget {
@@ -40,7 +44,7 @@ class AddressesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Addresses')),
+      appBar: const PageHeader(text: 'Your', brushed: 'addresses'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/account/addresses/new'),
         icon: const Icon(Icons.add),
@@ -56,20 +60,21 @@ class AddressesScreen extends ConsumerWidget {
                 message: 'Add an address to choose it quickly at checkout.',
               )
             : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(FreshSpacing.s4, FreshSpacing.s4, FreshSpacing.s4, 96),
+                padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, 96),
                 itemCount: list.length,
-                separatorBuilder: (_, _) => const SizedBox(height: FreshSpacing.s3),
+                separatorBuilder: (_, _) => const SizedBox(height: FreshLayout.cardGap),
                 itemBuilder: (context, i) {
                   final a = list[i];
-                  return Card(
+                  return SectionBox(
+                    key: ValueKey('address-${a.id}'),
                     child: Padding(
-                      padding: const EdgeInsets.all(FreshSpacing.s3),
+                      padding: const EdgeInsets.all(4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Text(humanizeCode(a.label), style: Theme.of(context).textTheme.titleSmall),
+                              Text(humanizeCode(a.label), style: AppText.display(illustratedColors(context).ink, 17)),
                               const SizedBox(width: FreshSpacing.s2),
                               if (a.isDefault) const FreshBadge(label: 'Default', tone: BannerTone.success),
                               if (a.isServiceable == false)
@@ -164,6 +169,26 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
 
   String? _opt(String f) => _c[f]!.text.trim().isEmpty ? null : _c[f]!.text.trim();
 
+  String? _prefilledFor;
+
+  /// Fills the city and state the server knows for [pincode] (GET /serviceability), only into empty fields;
+  /// the customer can still change them. A failed check fills nothing.
+  Future<void> _prefill(String pincode) async {
+    if (_prefilledFor == pincode || !isPincodeShape(pincode)) return;
+    _prefilledFor = pincode;
+    try {
+      final s = await ref.read(locationRepositoryProvider).serviceability(pincode);
+      if (!mounted || !s.serviceable) return;
+      final city = _c['cityName']!;
+      final state = _c['stateCode']!;
+      if (city.text.trim().isEmpty && s.cityName != null) city.text = s.cityName!;
+      final code = s.cityStateCode;
+      if (state.text.trim().isEmpty && code != null && code.length == 2) state.text = code;
+    } catch (_) {
+      // The fields stay for the customer to fill.
+    }
+  }
+
   Future<void> _save() async {
     setState(() => _serverErrors = {});
     if (!_form.currentState!.validate()) return;
@@ -211,6 +236,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     String? Function(String)? check,
     String? prefix,
     Iterable<String>? autofill,
+    ValueChanged<String>? onChanged,
   }) => Padding(
     padding: const EdgeInsets.only(bottom: FreshSpacing.s3),
     child: TextFormField(
@@ -218,6 +244,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       keyboardType: keyboard,
       inputFormatters: formatters,
       autofillHints: autofill,
+      onChanged: onChanged,
       decoration: InputDecoration(labelText: required ? label : '$label (optional)', prefixText: prefix),
       validator: (v) {
         final value = (v ?? '').trim();
@@ -240,25 +267,34 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
         _loaded = true;
       } else if (list.hasError || (list.hasValue && match == null)) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit address')),
+          appBar: const PageHeader(text: 'Edit', brushed: 'address'),
           body: list.hasError
               ? ErrorState(error: list.error!, onRetry: () => ref.invalidate(addressesProvider))
               : const EmptyState(slot: IllustrationSlot.notFound, title: 'Address not found'),
         );
       } else {
-        return Scaffold(
-          appBar: AppBar(title: const Text('Edit address')),
-          body: const ListSkeleton(rows: 4),
+        return const Scaffold(
+          appBar: PageHeader(text: 'Edit', brushed: 'address'),
+          body: ListSkeleton(rows: 4),
         );
       }
     }
+    if (id == null && !_loaded) {
+      // A new address starts from the pincode the customer shops with.
+      _loaded = true;
+      final pincode = ref.read(pincodeProvider);
+      if (pincode != null) {
+        _c['pincode']!.text = pincode;
+        unawaited(_prefill(pincode));
+      }
+    }
     return Scaffold(
-      appBar: AppBar(title: Text(id == null ? 'Add address' : 'Edit address')),
+      appBar: PageHeader(text: id == null ? 'New' : 'Edit', brushed: 'address'),
       body: Form(
         key: _form,
         child: AutofillGroup(
           child: ListView(
-            padding: const EdgeInsets.all(FreshSpacing.s4),
+            padding: FreshLayout.list,
             children: [
               Wrap(
                 spacing: FreshSpacing.s2,
@@ -303,6 +339,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
                 check: (v) => isPincodeShape(v) ? null : 'Enter a 6-digit pincode.',
                 autofill: const [AutofillHints.postalCode],
+                onChanged: (v) => unawaited(_prefill(v.trim())),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,

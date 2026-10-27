@@ -123,3 +123,13 @@
     pointer-events: none;
   }
 }
+
+/*
+ * The warm harbour sky behind the website's page bands and whole-page states (D181, D188): the home hero's
+ * peach-to-cream, shorter. `ThemeBand` and `SkyPanel` end it in the page colour with their waves.
+ */
+@layer components {
+  .fo-sky {
+    background-image: linear-gradient(180deg, #fbd9b8 0%, #fde9d3 48%, #fff8ef 100%);
+  }
+}
