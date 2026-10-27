@@ -24,7 +24,9 @@ import '../../state/session.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
+import '../../widgets/heading.dart';
 import '../../widgets/illustrated.dart';
+import '../../widgets/screen.dart';
 import '../../widgets/states.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
@@ -128,16 +130,16 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
     if (detail == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: const PageHeader.plain(''),
         body: async.hasError
             ? ErrorState(error: async.error!, onRetry: () => ref.invalidate(provider))
             : const LoadingSemantics(
                 child: Padding(
-                  padding: EdgeInsets.all(FreshSpacing.s4),
+                  padding: FreshLayout.list,
                   child: Column(
                     children: [
-                      SkeletonBox(height: 280, radius: AppRadius.card),
-                      SizedBox(height: FreshSpacing.s4),
+                      FreshPictureFrame(child: SkeletonBox(height: double.infinity, radius: FreshLayout.heroRadius)),
+                      SizedBox(height: FreshLayout.sectionGap),
                       SkeletonBox(height: 24),
                       SizedBox(height: FreshSpacing.s2),
                       SkeletonBox(height: 20, width: 160),
@@ -149,7 +151,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     }
     if (detail.variants.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(detail.name)),
+        appBar: PageHeader.plain(detail.name),
         body: const EmptyState(slot: IllustrationSlot.outOfStock, title: 'Not available right now'),
       );
     }
@@ -175,51 +177,47 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         : Sticker(label: humanizeCode(detail.sourceType!), tone: StickerTone.mango, tilt: -0.011);
 
     return Scaffold(
+      appBar: PageHeader.plain(
+        '',
+        actions: [
+          PaperCircleButton(
+            key: const Key('productSave'),
+            icon: wished ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            label: wished ? 'Remove from saved' : 'Save for later',
+            onTap: () => _toggleWishlist(detail),
+          ),
+          PaperCircleButton(
+            key: const Key('productCart'),
+            icon: Icons.shopping_cart_outlined,
+            label: 'Open cart',
+            onTap: () => context.go('/cart'),
+          ),
+        ],
+      ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Hero: the picture on teal-soft with round back and save buttons and a sticker.
-          Container(
-            height: 250,
-            decoration: BoxDecoration(
+          // Hero: the picture in the 3:2 frame on teal-soft inside the gutters, with a sticker (D193).
+          Padding(
+            padding: FreshLayout.page,
+            child: FreshPictureFrame(
+              key: const Key('productHero'),
               color: c.tealSoft,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.sheet)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                Positioned.fill(child: _Gallery(images: detail.images)),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Row(
-                      children: [
-                        if (context.canPop())
-                          RoundIconButton(
-                            icon: Icons.arrow_back_rounded,
-                            tooltip: 'Back',
-                            onPressed: () => context.pop(),
-                          ),
-                        const Spacer(),
-                        RoundIconButton(
-                          icon: wished ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          tooltip: wished ? 'Remove from saved' : 'Save for later',
-                          onPressed: () => _toggleWishlist(detail),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (heroSticker != null) Positioned(left: 16, bottom: 14, child: heroSticker),
-              ],
+              borderRadius: BorderRadius.circular(FreshLayout.heroRadius),
+              child: Stack(
+                children: [
+                  Positioned.fill(child: _Gallery(images: detail.images)),
+                  if (heroSticker != null) Positioned(left: 14, bottom: 12, child: heroSticker),
+                ],
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
+            padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 14, FreshLayout.gutter, FreshLayout.sectionGap),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Semantics(header: true, child: Text(detail.name, style: AppText.display(c.ink, 25, height: 1))),
+                Semantics(header: true, child: Text(detail.name, style: AppText.display(c.ink, 26, height: 1.05))),
                 if (detail.localNames.isNotEmpty)
                   Text(
                     'Also called ${detail.localNames.join(', ')}',
@@ -257,15 +255,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   const SizedBox(height: FreshSpacing.s3),
                   _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: FreshLayout.cardGap),
                 const _Facts(),
                 if (detail.variants.length > 1) ...[
-                  const SizedBox(height: 14),
-                  const SectionTitle('Size'),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: FreshLayout.sectionGap),
+                  const PageTitle(text: 'Pick a', brushed: 'size', size: 19),
+                  const SizedBox(height: 8),
                   Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       for (final option in detail.variants)
                         ChoiceChip(
@@ -284,15 +282,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   Text(v.name, style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
                 ],
                 if (v.preparations.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  const SectionTitle('Choose your cut'),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: FreshLayout.sectionGap),
+                  const PageTitle(text: 'Choose your', brushed: 'cut', size: 19),
+                  const SizedBox(height: 8),
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 7,
-                    crossAxisSpacing: 7,
+                    mainAxisSpacing: FreshLayout.cardGap,
+                    crossAxisSpacing: FreshLayout.cardGap,
                     childAspectRatio: 2.6,
                     children: [
                       for (final p in v.preparations)
@@ -332,8 +330,11 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                    decoration: BoxDecoration(color: c.coralSoft, borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(horizontal: FreshLayout.cardGap, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: c.coralSoft,
+                      borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
+                    ),
                     child: Text(
                       detail.netWeightNote,
                       style: theme.textTheme.bodySmall?.copyWith(color: c.coralText, fontWeight: FontWeight.w600),
@@ -425,16 +426,12 @@ class _Facts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    Widget fact(IconData icon, String text) => Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          color: c.paper,
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: cardShadow(context),
-        ),
-        child: Column(
+    Widget fact(IconData icon, String text) => FreshCard(
+      color: c.paper,
+      shadow: cardShadow(context),
+      radius: FreshLayout.tileRadius,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: Column(
           children: [
             Icon(icon, size: 17, color: c.tealText),
             const SizedBox(height: 2),
@@ -451,9 +448,9 @@ class _Facts extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
-    return Row(
+    return FreshColumns(
+      stretch: true,
       children: [
         fact(Icons.ac_unit_rounded, 'Kept cold'),
         fact(Icons.content_cut_rounded, 'Cut your way'),
@@ -484,14 +481,14 @@ class _CutTile extends StatelessWidget {
       child: Material(
         color: selected ? c.tealSoft : c.paper,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
           side: BorderSide(color: selected ? c.tealText : c.line, width: selected ? 2 : 1.5),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: FreshLayout.cardGap, vertical: 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -572,14 +569,19 @@ class _GalleryState extends State<_Gallery> {
   Widget build(BuildContext context) {
     final images = widget.images;
     if (images.length <= 1) {
-      return ProductImageView(url: images.firstOrNull?.url, alt: images.firstOrNull?.altText, aspectRatio: 1.6);
+      return ProductImageView(
+        url: images.firstOrNull?.url,
+        alt: images.firstOrNull?.altText,
+        aspectRatio: FreshLayout.pictureAspect,
+      );
     }
     return Semantics(
       label: 'Image ${_index + 1} of ${images.length}',
       child: PageView.builder(
         itemCount: images.length,
         onPageChanged: (i) => setState(() => _index = i),
-        itemBuilder: (_, i) => ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: 1.6),
+        itemBuilder: (_, i) =>
+            ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: FreshLayout.pictureAspect),
       ),
     );
   }

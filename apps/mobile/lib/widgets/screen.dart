@@ -130,7 +130,9 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
-    final Widget title = plain != null
+    final Widget title = plain != null && plain!.isEmpty
+        ? const SizedBox.shrink()
+        : plain != null
         ? Semantics(
             header: true,
             child: Text(
