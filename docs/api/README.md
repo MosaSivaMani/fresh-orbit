@@ -454,9 +454,12 @@ wait (429 `OTP_RESEND_TOO_SOON`) applies to a retry.
   "accessToken": "eyJhbGciOiJSUzI1NiIs...", "accessTokenExpiresAt": "2026-10-23T05:45:00Z", "refreshToken": "rt_9f8e7d6c5b4a39281706f5e4d3c2b1a0",
   "refreshTokenExpiresAt": "2026-11-22T05:30:00Z",
   "user": { "id": "0192b5a1-0000-7aaa-8bbb-111122223333", "phone": "+919876543210", "fullName": null, "isNewCustomer": true },
-  "cart": { "id": "0192b5a1-1111-7ccc-8ddd-444455556666", "mergedLineCount": 2 }
+  "cart": { "id": "0192b5a1-1111-7ccc-8ddd-444455556666", "mergedLineCount": 2, "droppedLineCount": 0 }
 }
 ```
+`cart` is the customer's ACTIVE cart after the guest cart named by `guestCartToken` was merged into it (CART-R27);
+read it priced with `GET /cart`. `null` when no token was sent, the token names no ACTIVE guest cart, or the merge
+failed (the login still succeeds and the merge is retried in the background).
 Errors: `OTP_INVALID`, `OTP_EXPIRED`, `OTP_TOO_MANY_ATTEMPTS`, `ACCOUNT_DISABLED`.
 Implementation note: `cart` is `null` for now; Cart merges the guest cart asynchronously on the `CustomerSignedIn`
 event (which carries the guest token), so the client re-reads the cart after login.
@@ -504,7 +507,8 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 ```json
 {
   "pincode": "600041", "serviceable": true, "reasonCode": null,
-  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai", "timeZone": "Asia/Kolkata" },
+  "city": { "id": "0192b400-0001-7000-8000-000000000001", "code": "CHENNAI", "name": "Chennai", "timeZone": "Asia/Kolkata",
+    "stateCode": "TN", "stateName": "Tamil Nadu" },
   "fulfillmentLocation": { "id": "0192b400-0002-7000-8000-000000000002", "code": "CHN-TVM", "name": "Thiruvanmiyur Store", "hasColdStorage": true },
   "serviceArea": {
     "id": "0192b400-0003-7000-8000-000000000003", "name": "Adyar - Thiruvanmiyur", "deliveryFeePaise": 3900, "freeDeliveryAbovePaise": 49900,
@@ -516,12 +520,15 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 ```
 Not served → 200 `{ "pincode": "600123", "serviceable": false, "reasonCode": "PINCODE_NOT_SERVICEABLE", ... null }`.
 
+`city.stateCode` and `city.stateName` prefill the address form's state (LOC-R19); `stateName` is configured on the
+city (admin `stateName`) and is `null` when not configured, never derived from the code.
+
 `nextSlot` is the delivery ETA: the earliest bookable slot, `date` in the location's time zone (`city.timeZone`),
 `cutoffAt` the last moment to order for it; null when no slot is bookable (LOC-R18).
 
 Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
 CART-R31); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
-Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14).
+Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14), and `badge`, an optional short label the admin set ("NEW", "20% OFF"; null when none; shown as given, PROMO-R29).
 
 ### 4.4 Catalog and search (public)
 
@@ -717,7 +724,7 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
 
 | Method | Path | Auth | Notes | Purpose |
 |---|---|---|---|---|
-| GET | `/api/v1/coupons` | customer | LOC optional | Coupons visible to the customer (code, description, min order, validTo) |
+| GET | `/api/v1/coupons` | customer | LOC optional | Coupons visible to the customer (code, description, min order, validTo). Without `?pincode=` / `X-Pincode` only all-city coupons are listed: send the pincode (PROMO-R30) |
 | PUT/DELETE | `/api/v1/cart/coupon` | customer | | See §4.6 |
 
 ### 4.8 Checkout and orders (customer)
@@ -895,7 +902,7 @@ An attempt expires `Payments:OnlineAttemptMinutes` (default 15) after creation u
 | DELETE | `/api/v1/admin/products/{id}/images/{imageId}` | catalog.manage | IM | Remove image |
 | GET | `/api/v1/admin/preparation-methods` | any staff (§3) | | Reference list |
 | GET | `/api/v1/admin/catalog/variants` | any staff (§3) | | Variant search (G3): `q` (part of product name, variant name or SKU, ≤ 100 chars), `id` (repeatable, ≤ 100: resolve known ids), `activeOnly`; paged. Items `{ variantId, productId, productName, variantName, sku, sellUnit, stockUnit, productStatus, isActive }`, by product name then SKU |
-| GET/POST/PUT | `/api/v1/admin/promotions[/{id}]` | catalog.manage | IM on PUT | Home banners (Promotions module; `/home` returns `banners: []` until it ships) |
+| GET/POST/PUT | `/api/v1/admin/promotions[/{id}]` | catalog.manage | IM on PUT | Home banners (Promotions module; `/home` returns `banners: []` until it ships). Optional `badge` (at most 20 characters, PROMO-R29) |
 
 ### 4.12 Admin pricing
 
@@ -1156,7 +1163,7 @@ attemptedAt }], version }`. The delivery code is never shown to staff; the custo
 | GET | `/api/v1/admin/cities` | locations.manage | | All cities with status; `status` (repeatable codes, e.g. `?status=DRAFT`; unknown code 422 on `status`) |
 | GET | `/api/v1/admin/cities/lookup` | any staff (§3) | | City lookup (G2): `status` (repeatable codes); paged items `{ id, code, name, status }` by name |
 | GET | `/api/v1/admin/me/locations` | any staff (§3) | | The caller's own fulfillment locations (G1; every location for all-locations staff); paged items `{ id, cityId, code, name, status }` by code |
-| POST | `/api/v1/admin/cities` | locations.manage | | Create (`DRAFT`) |
+| POST | `/api/v1/admin/cities` | locations.manage | | Create (`DRAFT`); optional `stateName` (at most 60 characters, LOC-R19) on create and PUT |
 | GET | `/api/v1/admin/cities/{cityId}` | locations.manage | ETag | Detail + readiness checklist |
 | PUT | `/api/v1/admin/cities/{cityId}` | locations.manage | IM | Update name, time zone |
 | GET | `/api/v1/admin/cities/{cityId}/readiness` | locations.manage | | Same checks as activation, no write |
@@ -1307,6 +1314,10 @@ needs that is not here is a missing API field, not a client calculation.
 | `freeDeliveryShortfallPaise` | Amount to add for free delivery; `null` if none configured |
 | `canCheckout` / `checkoutBlockers` | Server decision; blockers use §2 codes |
 | `messages[]` | Display strings (net-weight note, low stock, coupon hints) |
+
+Cart bar (CART-R32): show `totals.subtotalPaise`, `totals.discountPaise`, `totals.deliveryFeePaise` (with
+`deliveryFeeWaived`) and `totals.estimatedTotalPaise` (payable estimate) as given; the item count is `lines.length`.
+A cart without a pincode is not priced (`lines` empty, totals zero): ask for the pincode first.
 
 ### 5.3 Rules
 

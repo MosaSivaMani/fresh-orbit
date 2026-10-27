@@ -10415,6 +10415,12 @@
               "string"
             ]
           },
+          "badge": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "linkSlug": {
             "type": [
               "null",
@@ -11866,6 +11872,12 @@
           },
           "readiness": {
             "$ref": "#/components/schemas/ReadinessResponse"
+          },
+          "stateName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -11942,6 +11954,12 @@
           },
           "version": {
             "type": "string"
+          },
+          "stateName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -12631,6 +12649,12 @@
               "null",
               "string"
             ]
+          },
+          "stateName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -13096,7 +13120,8 @@
       "CustomerLoginCart": {
         "required": [
           "id",
-          "mergedLineCount"
+          "mergedLineCount",
+          "droppedLineCount"
         ],
         "type": "object",
         "properties": {
@@ -13105,6 +13130,10 @@
             "format": "uuid"
           },
           "mergedLineCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "droppedLineCount": {
             "type": "integer",
             "format": "int32"
           }
@@ -14219,6 +14248,12 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          },
+          "badge": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "linkSlug": {
             "type": [
@@ -18051,6 +18086,12 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "badge": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -18123,6 +18164,12 @@
           },
           "version": {
             "type": "string"
+          },
+          "badge": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -18230,6 +18277,12 @@
           },
           "stateCode": {
             "type": "string"
+          },
+          "stateName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -19464,7 +19517,9 @@
           "id",
           "code",
           "name",
-          "timeZone"
+          "timeZone",
+          "stateCode",
+          "stateName"
         ],
         "type": "object",
         "properties": {
@@ -19480,6 +19535,15 @@
           },
           "timeZone": {
             "type": "string"
+          },
+          "stateCode": {
+            "type": "string"
+          },
+          "stateName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -21298,6 +21362,12 @@
             ]
           },
           "timeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stateName": {
             "type": [
               "null",
               "string"

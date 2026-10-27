@@ -23,7 +23,7 @@ public sealed class CityService(
     public async Task<CityResponse> CreateAsync(CreateCityRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        var city = City.Create(request.Code, request.Name, request.StateCode, request.TimeZone);
+        var city = City.Create(request.Code, request.Name, request.StateCode, request.TimeZone, request.StateName);
         if (await cities.CodeExistsAsync(city.Code, cancellationToken))
         {
             throw new ConflictException(LocationsErrors.Duplicate, "Another city already uses this code.", "code");
@@ -38,7 +38,7 @@ public sealed class CityService(
     {
         ArgumentNullException.ThrowIfNull(request);
         var city = await LoadAsync(cityId, expectedVersion, cancellationToken);
-        city.Update(request.Name, request.StateCode, request.TimeZone);
+        city.Update(request.Name, request.StateCode, request.TimeZone, request.StateName);
         await SaveAsync(cancellationToken);
         return ToResponse(city);
     }
@@ -84,7 +84,10 @@ public sealed class CityService(
     public static CityResponse ToResponse(City city)
     {
         ArgumentNullException.ThrowIfNull(city);
-        return new CityResponse(city.Id, city.Code, city.Name, city.StateCode, city.TimeZone, city.Status, city.ActivatedAt, city.ActivatedBy, Formats.Version(city.Version));
+        return new CityResponse(city.Id, city.Code, city.Name, city.StateCode, city.TimeZone, city.Status, city.ActivatedAt, city.ActivatedBy, Formats.Version(city.Version))
+        {
+            StateName = city.StateName,
+        };
     }
 
     public static ReadinessResponse ToReadiness(Guid cityId, IReadOnlyList<MissingItem> missing)

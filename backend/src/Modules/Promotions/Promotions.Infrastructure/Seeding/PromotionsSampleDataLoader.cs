@@ -105,7 +105,8 @@ public sealed partial class PromotionsSampleDataLoader(
                     context.StartedAt.AddHours(row.StartsAtOffsetHours),
                     row.EndsAtOffsetHours is { } end ? context.StartedAt.AddHours(end) : null,
                     row.SortOrder,
-                    row.IsActive),
+                    row.IsActive,
+                    row.Badge),
                 cancellationToken);
             context.Track<Promotion>(db, banner.Id);
             insertedBanners++;
@@ -149,5 +150,6 @@ public sealed partial class PromotionsSampleDataLoader(
         int StartsAtOffsetHours,
         int? EndsAtOffsetHours,
         int SortOrder,
-        bool IsActive);
+        bool IsActive,
+        string? Badge = null);
 }

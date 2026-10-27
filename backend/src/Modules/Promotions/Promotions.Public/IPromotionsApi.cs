@@ -93,6 +93,9 @@ public sealed record BannerInfo(
     /// <summary>Public URL of <see cref="ImageKey"/> resolved by the file storage (W11); null without an image.</summary>
     public string? ImageUrl { get; init; }
 
+    /// <summary>Short label the admin set for the banner ("NEW", "20% OFF"); null when none. Show it as given.</summary>
+    public string? Badge { get; init; }
+
     /// <summary>
     /// The storefront slug of a CATEGORY or PRODUCT link target (W14), so clients link by slug; null for a
     /// COUPON link or when the target no longer exists. <see cref="LinkTarget"/> stays the id.

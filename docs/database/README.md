@@ -66,7 +66,7 @@ ordering.orders 1─N payments.payments 1─N payments.refunds; orders 0─1 pro
 ### locations
 | Table | Columns | Constraints |
 |---|---|---|
-| cities | id, code, name, state_code, time_zone, status DRAFT/ACTIVE/PAUSED/RETIRED, activated_at, activated_by | unique code |
+| cities | id, code, name, state_code, state_name (optional display name, LOC-R19), time_zone, status DRAFT/ACTIVE/PAUSED/RETIRED, activated_at, activated_by | unique code |
 | fulfillment_locations | id, city_id, code, name, address_line, pincode, phone, latitude, longitude, has_cold_storage, fssai_license_no, status DRAFT/ACTIVE/PAUSED | unique code |
 | service_areas | id, city_id, fulfillment_location_id, name, delivery_fee_paise, free_delivery_above_paise, min_order_paise, is_active | |
 | pincodes | id, pincode, service_area_id, is_active | unique (pincode) where is_active |
@@ -130,7 +130,7 @@ No prices are stored; the cart is priced on every read. Guest carts are allowed;
 | coupons | id, code citext, description, discount_type PERCENT/FLAT/FREE_DELIVERY, discount_value, max_discount_paise, min_order_paise, city_id, first_order_only, per_customer_limit, total_limit, used_count, valid_from, valid_to, status ACTIVE/PAUSED/EXPIRED | unique code; check used_count <= total_limit |
 | coupon_scopes | coupon_id, scope_type CATEGORY/PRODUCT, scope_id | PK all |
 | coupon_redemptions | id, coupon_id, customer_id, order_id, discount_paise, status APPLIED/REVERSED | unique order_id; index (coupon_id, customer_id) |
-| promotions | id, title, subtitle, image_key, link_type CATEGORY/PRODUCT/COUPON, link_target, city_id, starts_at, ends_at, sort_order, is_active | |
+| promotions | id, title, subtitle, image_key, badge (optional, at most 20 characters, PROMO-R29), link_type CATEGORY/PRODUCT/COUPON, link_target, city_id, starts_at, ends_at, sort_order, is_active | |
 
 ### ordering
 | Table | Columns | Constraints |

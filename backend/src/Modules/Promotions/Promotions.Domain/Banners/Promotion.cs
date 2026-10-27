@@ -13,6 +13,7 @@ public enum PromotionLinkType
 }
 
 /// <summary>Everything an admin sets on a home banner.</summary>
+/// <param name="Badge">Optional short label shown on the banner ("NEW", "20% OFF"); blank → none.</param>
 public sealed record PromotionDefinition(
     string Title,
     string? Subtitle,
@@ -23,7 +24,8 @@ public sealed record PromotionDefinition(
     DateTimeOffset StartsAt,
     DateTimeOffset? EndsAt,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    string? Badge = null);
 
 /// <summary>
 /// A home offer banner (<c>promotions.promotions</c>). Shown when active and <c>starts_at &lt;= at &lt; ends_at</c>
@@ -33,6 +35,7 @@ public sealed class Promotion : AggregateRoot
 {
     public const int MaxTitleLength = 120;
     public const int MaxSubtitleLength = 200;
+    public const int MaxBadgeLength = 20;
 
     private Promotion()
     {
@@ -45,6 +48,9 @@ public sealed class Promotion : AggregateRoot
     public string? Subtitle { get; private set; }
 
     public string? ImageKey { get; private set; }
+
+    /// <summary>Short label the clients show on the banner ("NEW", "20% OFF"), as the admin typed it; null when none.</summary>
+    public string? Badge { get; private set; }
 
     public PromotionLinkType LinkType { get; private set; }
 
@@ -82,6 +88,11 @@ public sealed class Promotion : AggregateRoot
             errors.Add(new FieldError("subtitle", PromotionsErrors.ValidationFailed, $"Subtitle must be at most {MaxSubtitleLength} characters."));
         }
 
+        if (definition.Badge is not null && definition.Badge.Trim().Length > MaxBadgeLength)
+        {
+            errors.Add(new FieldError("badge", PromotionsErrors.ValidationFailed, $"Badge must be at most {MaxBadgeLength} characters."));
+        }
+
         if (string.IsNullOrWhiteSpace(definition.LinkTarget))
         {
             errors.Add(new FieldError("linkTarget", PromotionsErrors.ValidationFailed, "Link target is required."));
@@ -110,6 +121,7 @@ public sealed class Promotion : AggregateRoot
         Title = definition.Title.Trim();
         Subtitle = string.IsNullOrWhiteSpace(definition.Subtitle) ? null : definition.Subtitle.Trim();
         ImageKey = string.IsNullOrWhiteSpace(definition.ImageKey) ? null : definition.ImageKey.Trim();
+        Badge = string.IsNullOrWhiteSpace(definition.Badge) ? null : definition.Badge.Trim();
         LinkType = definition.LinkType;
         LinkTarget = definition.LinkType == PromotionLinkType.Coupon ? definition.LinkTarget.Trim().ToUpperInvariant() : definition.LinkTarget.Trim();
         CityId = definition.CityId;

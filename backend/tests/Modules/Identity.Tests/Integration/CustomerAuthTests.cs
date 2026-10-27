@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using AwesomeAssertions;
+using FreshOrbit.Cart.Application.Carts;
+using FreshOrbit.Cart.Domain.Carts;
 using FreshOrbit.Customers.Domain.Customers;
 using FreshOrbit.E1Testing;
 using FreshOrbit.Identity.Domain.Tokens;
@@ -122,5 +125,46 @@ public sealed class CustomerAuthTests(E1Database database) : E1ApiTestBase(datab
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         (await ErrorCodeAsync(response)).Should().Be("REFRESH_TOKEN_INVALID");
+    }
+
+    [Fact]
+    public async Task Otp_verify_returns_the_merged_guest_cart()
+    {
+        var token = GuestTokens.Create();
+        var guest = ShoppingCart.ForGuest(GuestTokens.Hash(token), Factory.Clock.UtcNow);
+        await QueryAsync(async db =>
+        {
+            db.Add(guest);
+            return await db.SaveChangesAsync(Ct);
+        });
+        var phone = E1ApiFactory.NewPhone();
+        using var anonymous = Factory.CreateClient();
+        var (challengeId, code) = await Factory.RequestOtpAsync(anonymous, phone, Ct);
+
+        var response = await anonymous.PostAsJsonAsync("/api/v1/auth/otp/verify", new { challengeId, phone, code, guestCartToken = token }, Ct);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cart = (await ReadJsonAsync(response)).GetProperty("cart");
+        cart.ValueKind.Should().Be(JsonValueKind.Object);
+        cart.GetProperty("mergedLineCount").GetInt32().Should().Be(0);
+        cart.GetProperty("droppedLineCount").GetInt32().Should().Be(0);
+        var cartId = cart.GetProperty("id").GetGuid();
+        var carts = await QueryAsync(db => db.Set<ShoppingCart>().Where(c => c.Id == cartId || c.Id == guest.Id).ToListAsync(Ct));
+        carts.Single(c => c.Id == cartId).Status.Should().Be(CartStatus.Active);
+        carts.Single(c => c.Id == cartId).CustomerId.Should().NotBeNull();
+        carts.Single(c => c.Id == guest.Id).Status.Should().Be(CartStatus.Converted);
+    }
+
+    [Fact]
+    public async Task Otp_verify_without_a_known_guest_cart_returns_no_cart()
+    {
+        var phone = E1ApiFactory.NewPhone();
+        using var anonymous = Factory.CreateClient();
+        var (challengeId, code) = await Factory.RequestOtpAsync(anonymous, phone, Ct);
+
+        var response = await anonymous.PostAsJsonAsync("/api/v1/auth/otp/verify", new { challengeId, phone, code, guestCartToken = GuestTokens.Create() }, Ct);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ReadJsonAsync(response)).GetProperty("cart").ValueKind.Should().Be(JsonValueKind.Null);
     }
 }
