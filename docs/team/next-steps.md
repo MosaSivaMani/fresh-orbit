@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `security/round-2`), the sample-data loaders (L1, `backend/sample-loaders`) and the illustrated design system (U1) to `main`: `dotnet test` 999/999, all `pnpm` checks pass, no pending model changes. Start here when work resumes.
 
+## Paused 2026-10-28 (owner asleep): resume here
+
+- Merged today: #20 web home, #21 mobile screens, #22 web pages, #23 admin, #26 onboarding banner, #27 Shop sort fix, #28 Android back (D214–D234, D242–D246).
+- Latest live APK: release `demo-apk-d13dbe5` (`fresh-orbit-live-d13dbe5.apk`), sent to the owner.
+- Open: PR #29 mobile API audit (session `fresh-orbit-3a`, decisions D235–D241, one mobile test failing at last check).
+- In progress: branch `web/home-reference-fixes` (agent): owner compared the live web home with `design/mockups/web-home-reference-owner.png` — hero picture must sit at the left with the text beside it and three features in one row, 9 categories in one row, wider header, pincode bar over the hero wave, and prompts for 5 missing category pictures plus an optional harbour hero (`docs/design/prompts-web-home-2026-10-28.md`). Send the prompts to the owner when the PR is green.
+- After #29 merges: build a new live APK (`gh workflow run mobile-demo.yml --ref main`) and send the link.
+
 ## 0. Owner rules since 2026-10-24 (read first)
 - Nothing runs on the dev Mac (company laptop; owner: "dont run anything here"): edit and git only. Verification is GitHub CI (push a branch, open a draft PR, `gh pr checks`); designs are shown as artifacts.
 - Hosting (D127), owner's choice 2026-10-24: testing now with Option A (Codespaces + demo APK) and Option B (free Render + Neon demo link); later Option C (retry Oracle Always Free) and Option D (Hostinger KVM 1/2 at launch).
