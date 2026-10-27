@@ -8,6 +8,8 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 - Latest live APK: release `demo-apk-d13dbe5` (`fresh-orbit-live-d13dbe5.apk`), sent to the owner.
 - Open: PR #29 mobile API audit (session `fresh-orbit-3a`, decisions D235–D241, one mobile test failing at last check).
 - In progress: branch `web/home-reference-fixes` (agent): owner compared the live web home with `design/mockups/web-home-reference-owner.png` — hero picture must sit at the left with the text beside it and three features in one row, 9 categories in one row, wider header, pincode bar over the hero wave, and prompts for 5 missing category pictures plus an optional harbour hero (`docs/design/prompts-web-home-2026-10-28.md`). Send the prompts to the owner when the PR is green.
+- `web/home-reference-fixes` is a WIP commit (23285a1, no PR, CI red until done): new 20:7 aspect and six slots (5 categories + `WEB_HOME_HERO_HARBOUR`) in `@fresh/illustrations`; left: manifest entries + prompts, placeholder SVGs (byte-identical to `renderPlaceholder()`), category finals at 1024 with 512 webp copies in `backend/data/sample/images/categories`, the hero/category/header/check-bar layout fixes, docs, PR. Decide whether the hero slot has `character: FISHMONGER`.
+- PR #29 paused at 03c24fa: CI unconfirmed; the last failure was home_screen overflow from the cold-card text (fallback: keep the original text while serviceability loads).
 - After #29 merges: build a new live APK (`gh workflow run mobile-demo.yml --ref main`) and send the link.
 
 ## 0. Owner rules since 2026-10-24 (read first)
