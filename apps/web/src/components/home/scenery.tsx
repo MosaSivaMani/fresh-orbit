@@ -90,8 +90,26 @@ export function Trawler({ className }: ArtProps) {
       </g>
       <path d="M122 18h26l-6 8 6 8h-26z" fill="#F07A5A" />
       {/* cabin and wheelhouse */}
-      <rect x="84" y="88" width="78" height="38" rx="5" fill="#FFFDF8" stroke="#14302F" strokeWidth={3} />
-      <rect x="104" y="66" width="40" height="26" rx="4" fill="#0B7D70" stroke="#14302F" strokeWidth={3} />
+      <rect
+        x="84"
+        y="88"
+        width="78"
+        height="38"
+        rx="5"
+        fill="#FFFDF8"
+        stroke="#14302F"
+        strokeWidth={3}
+      />
+      <rect
+        x="104"
+        y="66"
+        width="40"
+        height="26"
+        rx="4"
+        fill="#0B7D70"
+        stroke="#14302F"
+        strokeWidth={3}
+      />
       <g fill="#BFE3EE" stroke="#14302F" strokeWidth={2}>
         <rect x="92" y="98" width="13" height="11" rx="2" />
         <rect x="112" y="98" width="13" height="11" rx="2" />
@@ -160,7 +178,11 @@ export function HarbourSky({ className }: ArtProps) {
       />
       <path d="M0 336c80-14 160-18 260-10s160 4 220-6v40H0z" fill="#E7B48F" opacity={0.35} />
       {/* soft water */}
-      <path d="M0 340c260-14 520-16 800-8s560 10 800-6v134H0z" fill="url(#fo-water)" opacity={0.75} />
+      <path
+        d="M0 340c260-14 520-16 800-8s560 10 800-6v134H0z"
+        fill="url(#fo-water)"
+        opacity={0.75}
+      />
       <g fill="none" stroke="#FFFDF8" strokeWidth={3} strokeLinecap="round" opacity={0.7}>
         <path d="M640 368c30-8 60-8 90 0M900 382c30-8 60-8 90 0M1120 360c24-6 48-6 72 0" />
       </g>
@@ -179,7 +201,10 @@ export function HeroWaves({ className }: ArtProps) {
       focusable="false"
       viewBox="0 0 1600 120"
       preserveAspectRatio="none"
-      className={cn("pointer-events-none absolute inset-x-0 bottom-0 block h-[72px] w-full lg:h-[110px]", className)}
+      className={cn(
+        "pointer-events-none absolute inset-x-0 bottom-0 block h-[72px] w-full lg:h-[110px]",
+        className,
+      )}
     >
       <path
         d="M0 46c120-26 240-30 380-10s260 34 420 14 300-48 460-34 220 26 340 10v94H0z"

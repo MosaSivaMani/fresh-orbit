@@ -27,9 +27,10 @@ describe("PromoCards", () => {
     expect(within(deliveredCard!).getByRole("heading", { level: 3 })).toHaveTextContent(
       "Chilled & Delivered Fresh",
     );
-    expect(
-      within(deliveredCard!).getByRole("link", { name: "See how it works" }),
-    ).toHaveAttribute("href", "/support/delivery-policy");
+    expect(within(deliveredCard!).getByRole("link", { name: "See how it works" })).toHaveAttribute(
+      "href",
+      "/support/delivery-policy",
+    );
   });
 
   it("gives every picture alt text and the section a heading", () => {

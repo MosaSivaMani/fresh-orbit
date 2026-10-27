@@ -25,8 +25,7 @@ export function HomeCategories({ categories }: { categories: HomeCategory[] }) {
           className="font-display text-text flex items-start gap-1 text-[1.75rem] leading-tight font-extrabold sm:text-[2rem]"
         >
           <span>
-            What&apos;s on your{" "}
-            <Script className="text-accent-coral-text">mind?</Script>
+            What&apos;s on your <Script className="text-accent-coral-text">mind?</Script>
           </span>
           <Sparks className="text-accent-coral mt-1 w-8" />
         </h2>

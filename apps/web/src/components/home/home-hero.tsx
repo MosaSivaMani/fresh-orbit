@@ -78,7 +78,10 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
 
       <div className="relative mx-auto flex h-full max-w-7xl flex-col items-center px-4 pt-8 lg:block lg:px-8 lg:pt-10">
         <div className="flex flex-col items-center gap-6 text-center lg:mr-[8%] lg:ml-[36%] lg:items-start lg:text-left">
-          <h1 id="home-hero-heading" className="text-text flex flex-col items-center lg:items-start">
+          <h1
+            id="home-hero-heading"
+            className="text-text flex flex-col items-center lg:items-start"
+          >
             <span className="inline-flex items-start text-[clamp(2.875rem,5.6vw,4.75rem)]">
               <Script className="leading-[0.95]">Fresh fish.</Script>
               <Sparks className="text-accent-coral -mt-1 ml-1 w-9 lg:w-11" />
