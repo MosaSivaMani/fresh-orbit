@@ -14,3 +14,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+# The owner's real scenery pictures (D287): the fishing trawler and three gulls, transparent PNGs. Loaded with
+# `package: 'fresh_theme'` (FreshSceneryPictures), so every app that uses the theme gets them.
+flutter:
+  assets:
+    - assets/scenery/

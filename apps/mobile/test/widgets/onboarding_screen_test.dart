@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/features/onboarding/onboarding_screen.dart';
 import 'package:fresh_orbit_app/illustrations/illustration.dart';
+import 'package:fresh_theme/fresh_theme.dart' show FreshGull, FreshSceneryPictures;
 
 import '../support/harness.dart';
 
@@ -272,6 +273,36 @@ void main() {
         expect(block.height, inInclusiveRange(300, 400));
         if (step < _pages.length) await _next(tester);
       }
+    });
+  }
+
+  for (final size in const [Size(360, 640), Size(390, 844)]) {
+    testWidgets('the first page shows the real trawler in the sea at ${size.width.toInt()}×${size.height.toInt()}', (
+      tester,
+    ) async {
+      IllustrationAssets.debugSetAvailable(const {});
+      await _pump(tester, size: size);
+
+      final ship = find.byKey(const Key('onboardingTrawler'));
+      expect(ship, findsOneWidget);
+      final picture = tester.widget<Image>(find.descendant(of: ship, matching: find.byType(Image))).image;
+      expect((picture as AssetImage).assetName, FreshSceneryPictures.trawler);
+      expect(find.byType(FreshGull), findsNWidgets(3));
+      // Left of the circle, its waves ending on the sea just above the sheet, inside the block.
+      final rect = tester.getRect(ship);
+      final avatar = tester.getRect(find.byKey(const ValueKey('avatar-ONBOARDING_FRESH')));
+      final block = tester.getRect(find.byKey(const ValueKey('onboardingBlock-1')));
+      expect(rect.width, greaterThanOrEqualTo(40));
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(avatar.left));
+      expect(rect.top, greaterThan(block.top));
+      expect(rect.bottom, moreOrLessEquals(block.bottom - 4, epsilon: 0.01));
+      for (var i = 0; i < 3; i++) {
+        final gull = tester.getRect(find.byType(FreshGull).at(i));
+        expect(gull.top, greaterThanOrEqualTo(rect.top), reason: 'gull $i');
+        expect(gull.right, lessThanOrEqualTo(rect.right), reason: 'gull $i');
+      }
+      expect(tester.takeException(), isNull);
     });
   }
 
