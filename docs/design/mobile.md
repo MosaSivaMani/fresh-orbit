@@ -605,3 +605,30 @@ Each flow was walked against the server (`docs/research/mobile-flow-audit-2026-1
 Tests: `test/widgets/fresh_gallery_test.dart`, `product_gallery_test.dart`, `flow_audit_test.dart`, and new cases
 in `order_tracking_test.dart` and `test/state/checkout_controller_test.dart`. Not run yet (CI blocked by billing).
 
+
+## 20. Sign-in look (D281, D282)
+
+The sign-in screen (`features/auth/login_screen.dart`) matches the owner's reference
+`design/mockups/app-login-reference-2026-10-29.jpg`. The screen only composes `fresh_theme` parts
+(`lib/src/auth.dart`, D207):
+
+| Part | What it draws |
+|---|---|
+| `FreshAuthPage` | The scrolling page: header, then the card's content with 14 px gaps and 24 px side margins. The Scaffold's background is paper, so the card runs to the bottom; the keyboard scrolls the page. |
+| `FreshAuthHeader` | Coral `#E5806A` block: round paper back button (left out when `onBack` is null: first run, or a login opened alone), `FreshAuthTitle`, the coast at the right, the cream card's 34 px rounded top, and the avatar centred on the card's edge (half above, half on the card). Avatar size is 38 % of the width or 22 % of the height, 112–156 px. |
+| `FreshAuthTitle` | Spaced caps eyebrow in white, a white Dancing Script line (40) with mango sparks, the key word in Baloo 2 800 ink (38) on a mango `#F5B544` brush tilted −2°. One header for screen readers. |
+| `FreshCoastScene` | Static, drawn: two gulls, peach clouds, a large pale sun, two palms on a spit of land, two fishing boats (the theme's trawler), deep and light teal sea running under the card. 160 × 200 design box, 42 % of the screen width (140–240 px). |
+| `FreshAvatarBadge` | Pale mint circle, white ring, dark ink outline, teal chat badge at the bottom right, a teal and a coral dot near the ring; the child is clipped to the circle. |
+| `FreshPhoneField` | Rounded outline (18 px), drawn India flag, `+91`, a chevron (look only: India only), a divider, the number field; error text under it. |
+| `FreshArrowButton` | Full-width ink pill, 56 px, label centred, arrow at the right; spinner and no taps while loading. |
+
+Steps: phone ("SIGN IN", *Your mobile* / **number**, "We will send a one-time code by SMS. Your cart stays with
+you."), first-run welcome ("WELCOME", *Sign in or* / **sign up**, "Sign in or create your account", "Skip for now,
+just browse" `skipSignIn`), code ("VERIFY", *Enter the* / **code**, six boxes, Verify, the Change number / Resend
+wrap). Keys `phoneField`, `otpField`, `skipSignIn` are unchanged; terms line at the bottom.
+
+Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282); until the PNG ships the app draws
+`AmmammaPortrait` (`lib/illustrations/portrait_painter.dart`). Prompt: `design/prompts-app-signin-2026-10-29.md`.
+
+Tests: `test/widgets/sign_in_look_test.dart` (every step at 360 × 640, the code step at 1.3× text, back button only
+when there is a page below, the parts) and `first_run_sign_in_test.dart` (flows).

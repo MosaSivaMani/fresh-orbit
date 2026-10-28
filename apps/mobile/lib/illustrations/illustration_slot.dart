@@ -17,7 +17,7 @@ enum IllustrationSlot {
   emptyAddresses('EMPTY_ADDRESSES', 'A small house with an empty doormat'),
   noSearchResults('NO_SEARCH_RESULTS', 'A small fish looking through a magnifying glass'),
   outOfStock('OUT_OF_STOCK', 'A fishmonger showing an empty ice tray'),
-  loginOtp('LOGIN_OTP', 'A home cook holding a phone with a message bubble'),
+  loginOtp('LOGIN_OTP', 'A smiling grandmother with silver hair in a bun, in a mango-yellow saree'),
   orderPlaced('ORDER_PLACED', 'A fishmonger giving a cheerful thumbs up next to a wrapped parcel'),
   orderPacking('ORDER_PACKING', 'A fishmonger packing fish into a cold box'),
   orderOnTheWay('ORDER_ON_THE_WAY', 'A delivery rider on a scooter with a cold box'),

@@ -151,6 +151,9 @@ soft shadow). Finals go into the slots at 1024 × 1024. A 512 × 512 WebP copy o
 FINAL the home passes `/illustrations/<file>` as the hero's `heroBackground`. Prompts ready to paste:
 `docs/design/prompts-web-home-2026-10-28.md`.
 
+`LOGIN_OTP` is a chest-up portrait of Ammamma for the round sign-in avatar (D282); prompt:
+`docs/design/prompts-app-signin-2026-10-29.md`.
+
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 
 ## 4. Components (`@fresh/ui`)

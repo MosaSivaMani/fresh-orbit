@@ -4,6 +4,10 @@
 // First run (D277): after onboarding the same screen opens as "Sign in or create your account" (welcome mode),
 // with "Skip for now, just browse" under the main button. After the code it goes home when a saved address gives a
 // serviceable pincode, else to the Location screen (D278).
+//
+// Look (D281, owner's reference docs/design/mockups/app-login-reference-2026-10-29.jpg): the theme's
+// FreshAuthPage (coral header with the drawn coast, Ammamma in a ringed avatar on the cream card's edge, the
+// India +91 phone field and the dark Send code pill). The OTP step keeps the same shell.
 
 import 'dart:async';
 
@@ -17,11 +21,11 @@ import '../../api/api_error.dart';
 import '../../api/models/auth.dart';
 import '../../core/format.dart';
 import '../../illustrations/illustration.dart';
+import '../../illustrations/portrait_painter.dart';
 import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
 import '../../state/first_run.dart';
 import '../../state/session.dart';
-import '../../widgets/bold.dart';
 
 /// Where a successful sign-in goes, keeping the pages below (D267). A screen that pushed the login itself
 /// passes no [from] and gets the page back by a pop. The router's redirect passes [from] (the page that needed
@@ -172,21 +176,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     final challenge = _challenge;
+    // The sign-in look (D281): coral header with the coast, Ammamma on the card's edge, the card below.
     return Scaffold(
-      backgroundColor: BlockTone.mango.background(c),
+      backgroundColor: c.paper,
       body: AutofillGroup(
-        child: ColorBlockScreen(
-          tone: BlockTone.mango,
-          eyebrow: widget.welcome ? 'Welcome' : 'Sign in',
-          heading: challenge != null
-              ? const [HeadingLine('Enter your', script: true), HeadingLine('code', brush: true)]
-              : widget.welcome
-              ? const [HeadingLine('Sign in or', script: true), HeadingLine('sign up', brush: true)]
-              : const [HeadingLine('Your mobile', script: true), HeadingLine('number', brush: true)],
-          slot: IllustrationSlot.loginOtp,
-          avatarSize: AvatarSize.small,
+        child: FreshAuthPage(
+          eyebrow: challenge != null ? 'Verify' : (widget.welcome ? 'Welcome' : 'Sign in'),
+          scriptLine: challenge != null ? 'Enter the' : (widget.welcome ? 'Sign in or' : 'Your mobile'),
+          brushLine: challenge != null ? 'code' : (widget.welcome ? 'sign up' : 'number'),
+          avatar: LayoutBuilder(
+            builder: (context, box) => Illustration(
+              slot: IllustrationSlot.loginOtp,
+              size: box.maxWidth,
+              inCircle: true,
+              excludeFromSemantics: true,
+              fallback: AmmammaPortrait(size: box.maxWidth),
+            ),
+          ),
           onBack: context.canPop() ? () => context.pop() : null,
-          sheetCrossAxis: CrossAxisAlignment.stretch,
           children: [
             if (widget.welcome && challenge == null) const SheetTitle('Sign in or create your account', header: true),
             SheetNote(
@@ -194,19 +201,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ? '${challenge.codeLength} digits sent to ${formatPhone(_e164!)}'
                   : widget.welcome
                   ? 'Enter your mobile number. We will send a one-time code by SMS; new numbers get an account.'
-                  : 'We will send a one-time code by SMS. Your cart stays with you.',
+                  : 'We will send a one-time code by SMS.\nYour cart stays with you.',
             ),
             if (challenge == null) ...[
-              TextField(
-                key: const Key('phoneField'),
+              FreshPhoneField(
+                fieldKey: const Key('phoneField'),
                 controller: _phone,
-                keyboardType: TextInputType.phone,
+                errorText: _phoneError,
                 autofillHints: const [AutofillHints.telephoneNumberNational],
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-                decoration: InputDecoration(labelText: 'Mobile number', prefixText: '+91 ', errorText: _phoneError),
                 onSubmitted: (_) => _requestOtp(),
               ),
-              PrimaryButton(label: 'Send code', loading: _busy, onPressed: _requestOtp),
+              FreshArrowButton(label: 'Send code', loading: _busy, onPressed: _requestOtp),
             ] else ...[
               OtpBoxes(
                 fieldKey: const Key('otpField'),
@@ -215,7 +221,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 errorText: _codeError,
                 onSubmitted: _verify,
               ),
-              PrimaryButton(label: 'Verify', loading: _busy, onPressed: _verify),
+              FreshArrowButton(label: 'Verify', loading: _busy, onPressed: _verify),
               // A wrap, not a row: with a large text size the two links take two lines instead of overflowing.
               Wrap(
                 alignment: WrapAlignment.spaceBetween,
