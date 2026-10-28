@@ -19,7 +19,8 @@ enum IllustrationSlot {
   outOfStock('OUT_OF_STOCK', 'A fishmonger showing an empty ice tray'),
   // The owner's chest-up Ammamma for the round sign-in avatar (D282, final picture D285).
   loginOtp('LOGIN_OTP', 'A smiling grandmother with silver hair in a bun, in a mango-yellow saree'),
-  orderPlaced('ORDER_PLACED', 'A fishmonger giving a cheerful thumbs up next to a wrapped parcel'),
+  // The owner's waist-up Padma for the order-placed header (D288, final picture D291).
+  orderPlaced('ORDER_PLACED', 'A smiling fishmonger giving a thumbs up while holding a big fresh seer fish'),
   orderPacking('ORDER_PACKING', 'A fishmonger packing fish into a cold box'),
   orderOnTheWay('ORDER_ON_THE_WAY', 'A delivery rider on a scooter with a cold box'),
   orderDelivered('ORDER_DELIVERED', 'A home cook receiving a cold box at the door'),

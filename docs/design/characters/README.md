@@ -38,6 +38,7 @@ Owner-generated finals land in `generated/` as `<slot_lower_snake>.jpg` (opaque 
 | ONBOARDING_BANNER_CLEANED | `generated/onboarding_banner_cleaned.png` (transparent) | 2026-10-24 |
 | LOGIN_OTP | `generated/login_otp.png` (transparent, Ammamma chest-up, FINAL in the package, D285) | 2026-10-29 |
 | SIGN_IN_COAST | `generated/sign_in_coast.png` (transparent, harbour for the sign-in header, FINAL, D286) | 2026-10-29 |
+| ORDER_PLACED | `generated/order_placed.png` (transparent, Padma waist-up with thumbs-up and seer fish, FINAL, D291) | 2026-10-29 |
 
 The five onboarding PNGs are 1.4–2.2 MB, over the package's 600 KB limit, so they are not imported into
 `packages/illustrations` yet (their slots stay PLACEHOLDER there): run `import` and then `optimize` (sharp makes

@@ -64,8 +64,8 @@ abstract final class FreshCelebrationColors {
 /// [title] in Baloo 2 800 white, [scriptWord] in ink Dancing Script on a mango brush with coral sparks, the
 /// [status] in a cream pill (left out when null), the [message] in white, and the character built by
 /// [character] for the size the header picks (about 44 % of the width, 140–200 px) at the right, its feet
-/// behind the card. The header runs under the status bar. Screen readers hear "[title] [scriptWord]" as one
-/// header, then the status and the message.
+/// behind the card. The status and the message end left of the character's box (D291). The header runs under
+/// the status bar. Screen readers hear "[title] [scriptWord]" as one header, then the status and the message.
 class FreshCelebrationHeader extends StatelessWidget {
   const FreshCelebrationHeader({
     super.key,
@@ -96,6 +96,10 @@ class FreshCelebrationHeader extends StatelessWidget {
   /// The character's size for a page [width] wide.
   static double characterSizeFor(double width) => (width * 0.44).clamp(140.0, 200.0);
 
+  /// The part of the character's size, from its box's left edge, the title may run into; the status and the
+  /// message end left of the box.
+  static const double titleReach = 0.28;
+
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
@@ -114,7 +118,7 @@ class FreshCelebrationHeader extends StatelessWidget {
               child: SizedBox.square(dimension: size, child: character(size)),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(gutter, top + 18, size * 0.72 + 6, overlap + 20),
+              padding: EdgeInsets.fromLTRB(gutter, top + 18, size * (1 - titleReach) + 6, overlap + 20),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: math.max(0.0, size - 46)),
                 child: Column(
@@ -122,20 +126,32 @@ class FreshCelebrationHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     FreshCelebrationTitle(title: title, scriptWord: scriptWord),
-                    if (status != null) ...[
-                      const SizedBox(height: 12),
-                      FreshStatusPill(label: status!),
-                    ],
-                    const SizedBox(height: 12),
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        fontFamily: AppFonts.body,
-                        fontFamilyFallback: FreshFonts.sansFallback,
-                        fontSize: 16,
-                        height: 1.3,
-                        fontWeight: FontWeight.w500,
-                        color: BlockInk.paper,
+                    // The status and the message stay left of the character's box: a waist-up picture (the
+                    // owner's Padma, D291) reaches its left edge with a thumbs-up at this height. Only the title,
+                    // above the character's head, may run into the box.
+                    Padding(
+                      padding: EdgeInsets.only(right: size * titleReach),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (status != null) ...[
+                            const SizedBox(height: 12),
+                            FreshStatusPill(label: status!),
+                          ],
+                          const SizedBox(height: 12),
+                          Text(
+                            message,
+                            style: const TextStyle(
+                              fontFamily: AppFonts.body,
+                              fontFamilyFallback: FreshFonts.sansFallback,
+                              fontSize: 16,
+                              height: 1.3,
+                              fontWeight: FontWeight.w500,
+                              color: BlockInk.paper,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

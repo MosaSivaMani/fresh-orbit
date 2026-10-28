@@ -274,18 +274,19 @@
     },
     {
       "slot": "ORDER_PLACED",
-      "file": "assets/order_placed.svg",
+      "file": "assets/order_placed.png",
       "placeholder": "assets/order_placed.svg",
-      "alt": "A fishmonger cheers among confetti because the order is placed.",
+      "alt": "A smiling fishmonger gives a thumbs up while holding a big fresh seer fish.",
       "character": "FISHMONGER",
-      "supporting": [
-        "POMFRET"
-      ],
-      "scene": "The fishmonger cheers with both arms raised while the pomfret does a happy flip, small rounded coral, teal and sand confetti shapes floating around them",
+      "scene": "The fishmonger, waist-up, gives a cheerful thumbs up with one gloved hand and holds a big fresh silver seer fish across her apron with the other, smiling straight at the viewer; her head, the thumbs up and the whole fish stay inside the square, and the picture ends at her waist",
       "aspect": "1:1",
       "background": "TRANSPARENT",
-      "status": "PLACEHOLDER",
-      "prompt": "The fishmonger cheers with both arms raised while the pomfret does a happy flip, small rounded coral, teal and sand confetti shapes floating around them. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Chanduva, the pomfret sidekick: A round silver pomfret fish with big glossy eyes, rosy cheeks and an open happy smile, using its fins as hands; a friendly character, never food; same look as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+      "status": "FINAL",
+      "prompt": "The fishmonger, waist-up, gives a cheerful thumbs up with one gloved hand and holds a big fresh silver seer fish across her apron with the other, smiling straight at the viewer; her head, the thumbs up and the whole fish stay inside the square, and the picture ends at her waist. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1024,
+      "height": 1024,
+      "source": "docs/design/characters/generated/order_placed.png",
+      "sourceBytes": 1854764
     },
     {
       "slot": "ORDER_PACKING",
