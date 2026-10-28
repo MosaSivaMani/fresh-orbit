@@ -136,6 +136,9 @@ export const seerLine: CartLine = {
   availability: { status: "IN_STOCK", message: null },
   isSellable: true,
   issues: [],
+  minOrder: { value: 500, unit: "GRAM" },
+  maxOrder: { value: 5000, unit: "GRAM" },
+  orderStep: { value: 250, unit: "GRAM" },
 };
 
 export const emptyCart: Cart = {

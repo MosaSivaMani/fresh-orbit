@@ -96,35 +96,52 @@ function dtf(key: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFor
   return f;
 }
 
-/** UTC instant -> IST date: "23 Oct 2026". */
-export function formatDate(value: DateInput): string {
-  return dtf("date", {
-    timeZone: IST_TIME_ZONE,
+/**
+ * The zone a time is shown in: the server's IANA `timeZone` (the store's, W10) when given, else India Standard Time.
+ * A missing or unknown zone falls back to IST instead of throwing while a page renders.
+ */
+function zoneOf(timeZone: string | null | undefined): string {
+  if (!timeZone) return IST_TIME_ZONE;
+  try {
+    new Intl.DateTimeFormat(LOCALE, { timeZone });
+    return timeZone;
+  } catch {
+    return IST_TIME_ZONE;
+  }
+}
+
+/** UTC instant -> date in the store's zone (IST by default): "23 Oct 2026". */
+export function formatDate(value: DateInput, timeZone?: string | null): string {
+  const zone = zoneOf(timeZone);
+  return dtf(`date:${zone}`, {
+    timeZone: zone,
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(toDate(value));
 }
 
-/** UTC instant -> IST time: "11:00 am". */
-export function formatTime(value: DateInput): string {
-  return dtf("time", {
-    timeZone: IST_TIME_ZONE,
+/** UTC instant -> time in the store's zone (IST by default): "11:00 am". */
+export function formatTime(value: DateInput, timeZone?: string | null): string {
+  const zone = zoneOf(timeZone);
+  return dtf(`time:${zone}`, {
+    timeZone: zone,
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   }).format(toDate(value));
 }
 
-/** UTC instant -> IST date and time: "23 Oct 2026, 11:00 am". */
-export function formatDateTime(value: DateInput): string {
-  return `${formatDate(value)}, ${formatTime(value)}`;
+/** UTC instant -> date and time in the store's zone (IST by default): "23 Oct 2026, 11:00 am". */
+export function formatDateTime(value: DateInput, timeZone?: string | null): string {
+  return `${formatDate(value, timeZone)}, ${formatTime(value, timeZone)}`;
 }
 
-/** UTC instant -> short IST weekday and date: "Fri, 23 Oct". */
-export function formatDayShort(value: DateInput): string {
-  return dtf("day", {
-    timeZone: IST_TIME_ZONE,
+/** UTC instant -> short weekday and date in the store's zone (IST by default): "Fri, 23 Oct". */
+export function formatDayShort(value: DateInput, timeZone?: string | null): string {
+  const zone = zoneOf(timeZone);
+  return dtf(`day:${zone}`, {
+    timeZone: zone,
     weekday: "short",
     day: "numeric",
     month: "short",

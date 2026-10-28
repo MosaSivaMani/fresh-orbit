@@ -23,7 +23,79 @@ const seerItem: ProductListItem = {
   locationRequired: false,
 };
 
+const withDefault: ProductListItem = {
+  ...seerItem,
+  defaultVariant: {
+    id: "v1",
+    name: "Medium (3-5 kg fish)",
+    sellUnit: "KG",
+    minOrder: { value: 500, unit: "GRAM" },
+    maxOrder: { value: 5000, unit: "GRAM" },
+    orderStep: { value: 250, unit: "GRAM" },
+    defaultPreparationCode: "STEAK",
+    serving: {
+      basis: { value: 1000, unit: "GRAM" },
+      netWeightGrams: 1000,
+      piecesMin: null,
+      piecesMax: null,
+      serves: null,
+    },
+  },
+};
+
 describe("ShopProductCard", () => {
+  it("adds the server's default size without reading the product (W3)", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "530017");
+    let cart = emptyCart;
+    let sent: unknown = null;
+    let productReads = 0;
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cart)),
+      http.get(`${API}/products/:slug`, () => {
+        productReads += 1;
+        return HttpResponse.json(seerFish);
+      }),
+      http.post(`${API}/cart/items`, async ({ request }) => {
+        sent = await request.json();
+        cart = cartWithSeer;
+        return HttpResponse.json(cartWithSeer);
+      }),
+    );
+    renderWithProviders(<ShopProductCard product={withDefault} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add Seer Fish to cart" }));
+
+    // The stepper uses the cart line's own bounds (W4): 500 g is the minimum, so − removes.
+    expect(
+      await screen.findByRole("button", { name: "Remove Seer Fish from cart" }),
+    ).toBeInTheDocument();
+    expect(sent).toEqual({
+      variantId: "v1",
+      preparationCode: "STEAK",
+      quantity: { value: 500, unit: "GRAM" },
+    });
+    expect(productReads).toBe(0);
+  });
+
+  it("opens the product page instead of adding when the item has no price here", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "530017");
+    let added = false;
+    server.use(
+      http.post(`${API}/cart/items`, () => {
+        added = true;
+        return HttpResponse.json(cartWithSeer);
+      }),
+    );
+    renderWithProviders(<ShopProductCard product={{ ...withDefault, fromPrice: null }} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add Seer Fish to cart" }));
+
+    await expect
+      .poll(() => routerMock.push.mock.calls.at(-1)?.[0])
+      .toBe("/products/seer-fish-vanjaram");
+    expect(added).toBe(false);
+  });
+
   it("adds the only size with its default cut and smallest quantity, then shows the server's stepper", async () => {
     writeBrowserCookie(PINCODE_COOKIE, "530017");
     let cart = emptyCart;

@@ -13,16 +13,17 @@ import {
   Textarea,
 } from "@fresh/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPinPlus } from "lucide-react";
+import { MapPinPlus, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { browserHttp } from "@/api/browser";
-import { addAddress, listAddresses } from "@/api/endpoints/account";
+import { addAddress, listAddresses, replaceAddress } from "@/api/endpoints/account";
 import { previewCheckout, placeOrder } from "@/api/endpoints/orders";
 import { type DroppedCartLine } from "@/api/types/cart";
 import {
   type Address,
+  type AddressInput,
   type CheckoutPreview,
   type PaymentMethod,
   type SubstitutionPreference,
@@ -31,7 +32,7 @@ import { AddressForm } from "@/components/account/address-form";
 import { OrderSummary } from "@/components/cart/order-summary";
 import { EmptyPage, LoadError } from "@/components/states";
 import { useCart, useChangeCartLocation } from "@/cart/use-cart";
-import { asApiError, describeError } from "@/lib/errors";
+import { asApiError, describeError, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { paymentMethodLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
@@ -115,6 +116,8 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
   const [substitution, setSubstitution] = useState<SubstitutionPreference>("CALL_ME");
   const [notes, setNotes] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<Address | null>(null);
+  const [addressNotice, setAddressNotice] = useState<string | null>(null);
   const [dropped, setDropped] = useState<DroppedCartLine[] | null>(null);
   const [priceChange, setPriceChange] = useState<PriceChange | null>(null);
   const [placeError, setPlaceError] = useState<{ message: string; traceId?: string } | null>(null);
@@ -195,6 +198,37 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
         ...(apiError?.traceId ? { traceId: apiError.traceId } : {}),
       });
       void preview.refetch();
+    }
+  }
+
+  /**
+   * Saves an edited address with `If-Match` (its version). A stale version (412 `CONCURRENCY_CONFLICT`) or a lost
+   * race (409 `CONCURRENT_SAVE`) reloads the addresses and asks the customer to look again; other refusals stay in
+   * the form under their fields. A changed pincode can change the store and the slots, so the slot is cleared.
+   */
+  async function saveEditedAddress(original: Address, input: AddressInput) {
+    try {
+      const saved = await replaceAddress(
+        browserHttp(),
+        original.addressId,
+        input,
+        original.version,
+      );
+      await queryClient.invalidateQueries({ queryKey: queryKeys.addresses });
+      if (saved.pincode !== original.pincode) setSlotId(null);
+      setDropped(null);
+      setEditing(null);
+      void queryClient.invalidateQueries({ queryKey: ["checkout-preview"] });
+    } catch (e) {
+      if (hasCode(e, "CONCURRENCY_CONFLICT", "CONCURRENT_SAVE")) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.addresses });
+        setEditing(null);
+        setAddressNotice(
+          "This address was changed elsewhere. We have loaded the latest version; please check it.",
+        );
+        return;
+      }
+      throw e;
     }
   }
 
@@ -310,6 +344,37 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
           ) : (
             <p className="text-text-muted text-sm">Add the address we should deliver to.</p>
           )}
+          {address && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start"
+              leadingIcon={<Pencil aria-hidden="true" />}
+              onClick={() => {
+                setAddressNotice(null);
+                setEditing(address);
+              }}
+            >
+              Edit this address
+            </Button>
+          )}
+          {addressNotice && (
+            <p role="status" className="bg-warning-subtle text-warning-text rounded-xl p-3 text-sm">
+              {addressNotice}
+            </p>
+          )}
+          <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
+            {editing && (
+              <DialogContent title="Edit delivery address" size="lg">
+                <AddressForm
+                  address={editing}
+                  submitLabel="Save and use this address"
+                  onCancel={() => setEditing(null)}
+                  onSubmit={(input) => saveEditedAddress(editing, input)}
+                />
+              </DialogContent>
+            )}
+          </Dialog>
           <Dialog open={adding} onOpenChange={setAdding}>
             <DialogContent title="New delivery address" size="lg">
               <AddressForm

@@ -41,6 +41,34 @@ describe("OfferStrip", () => {
   });
 });
 
+describe("OfferStrip pictures (W11)", () => {
+  it("shows the server's resolved picture and badge", () => {
+    const { container } = render(
+      <OfferStrip
+        banners={[
+          {
+            ...banner,
+            imageKey: "sample/banners/welcome.webp",
+            imageUrl: "/media/sample/banners/welcome.webp",
+            badge: "New",
+          },
+        ]}
+      />,
+    );
+    const src = container.querySelector("img")?.getAttribute("src") ?? "";
+    expect(decodeURIComponent(src)).toContain("/media/sample/banners/welcome.webp");
+    expect(screen.getByText("New")).toBeInTheDocument();
+  });
+
+  it("shows no picture when the server resolved none, even with a storage key", () => {
+    const { container } = render(
+      <OfferStrip banners={[{ ...banner, imageKey: "sample/banners/welcome.webp" }]} />,
+    );
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText("Offer")).toBeInTheDocument();
+  });
+});
+
 describe("offersBySlug", () => {
   it("keys product offers by the server's slug and skips banners without one", () => {
     const offers = offersBySlug([

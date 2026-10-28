@@ -1,4 +1,5 @@
 import { Sticker } from "@fresh/ui";
+import Image from "next/image";
 import Link from "next/link";
 import { type HomeBanner } from "@/api/types/catalog";
 
@@ -21,7 +22,11 @@ function hrefOf(banner: HomeBanner, categorySlugs: Record<string, string>): stri
   }
 }
 
-/** Offers from `GET /promotions`; all text is the server's. Renders nothing when there are no active offers. */
+/**
+ * Offers from `GET /promotions`; all text is the server's. The banner's picture is the server's resolved `imageUrl`
+ * (gap W11 closed, CAT-R28), never built from `imageKey`; the sticker is the server's `badge`, else "Offer". Renders
+ * nothing when there are no active offers.
+ */
 export function OfferStrip({
   banners,
   categorySlugs = {},
@@ -39,7 +44,7 @@ export function OfferStrip({
           <div className="border-mango bg-mango-soft flex h-full gap-4 overflow-hidden rounded-3xl border-[1.5px] border-dashed p-5">
             <div className="flex flex-1 flex-col gap-2">
               <Sticker tone="coral" size="sm" className="w-fit">
-                Offer
+                {banner.badge ?? "Offer"}
               </Sticker>
               <p className="text-text font-display text-xl leading-tight font-extrabold">
                 {banner.title}
@@ -52,6 +57,11 @@ export function OfferStrip({
                 </p>
               )}
             </div>
+            {banner.imageUrl && (
+              <div className="relative size-24 shrink-0 self-center overflow-hidden rounded-2xl sm:size-28">
+                <Image src={banner.imageUrl} alt="" fill sizes="112px" className="object-cover" />
+              </div>
+            )}
           </div>
         );
         return (

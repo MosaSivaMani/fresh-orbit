@@ -39,6 +39,22 @@ describe("SiteFooter", () => {
     );
   });
 
+  it("links every policy page, privacy and terms included", async () => {
+    getCities.mockResolvedValue([]);
+
+    render(await SiteFooter());
+
+    for (const href of [
+      "/support/delivery-policy",
+      "/support/cancellation-policy",
+      "/support/refund-policy",
+      "/support/privacy-policy",
+      "/support/terms",
+    ]) {
+      expect(document.querySelector(`footer a[href="${href}"]`)).not.toBeNull();
+    }
+  });
+
   it("still renders, with the pincode hint, when the API is unavailable", async () => {
     getCities.mockRejectedValue(new Error("fetch failed"));
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

@@ -38,10 +38,15 @@ function rupees(value: string | undefined): number | undefined {
   return Number(value);
 }
 
+/** A preparation code as the server writes it (UPPER_SNAKE, rule 8); anything else in the URL is ignored. */
+const PREPARATION_CODE = /^[A-Z][A-Z0-9_]{0,39}$/;
+
 export interface ShopFilters {
   categories: string[];
   q: string | undefined;
   sourceTypes: SourceType[];
+  /** Preparation method codes (`?prep=`), from the server's `GET /preparation-methods` (W8, CAT-R27). */
+  preparations: string[];
   inStock: boolean;
   minRupees: number | undefined;
   maxRupees: number | undefined;
@@ -57,6 +62,7 @@ export function parseShopFilters(params: SearchParams, fixedCategory?: string): 
     categories: fixedCategory ? [fixedCategory] : all(params.category).filter(Boolean),
     q: q && q.length > 0 ? q.slice(0, 60) : undefined,
     sourceTypes: all(params.source).filter((s): s is SourceType => SOURCES.has(s)),
+    preparations: [...new Set(all(params.prep).filter((p) => PREPARATION_CODE.test(p)))],
     inStock: first(params.inStock) === "true",
     minRupees: rupees(first(params.min)),
     maxRupees: rupees(first(params.max)),
@@ -77,6 +83,7 @@ export function toListParams(filters: ShopFilters, hasLocation: boolean): Produc
     ...(filters.categories.length ? { category: filters.categories } : {}),
     ...(filters.q ? { q: filters.q } : {}),
     ...(filters.sourceTypes.length ? { sourceType: filters.sourceTypes } : {}),
+    ...(filters.preparations.length ? { preparation: filters.preparations } : {}),
     ...(filters.inStock ? { inStock: true } : {}),
     ...(hasLocation && filters.minRupees !== undefined
       ? { minPricePaise: filters.minRupees * 100 }

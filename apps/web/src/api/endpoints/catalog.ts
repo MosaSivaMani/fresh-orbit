@@ -5,6 +5,7 @@ import {
   type CategoryNode,
   type HomeBanner,
   type HomeResponse,
+  type PreparationMethod,
   type PriceQuote,
   type ProductDetail,
   type ProductListItem,
@@ -68,6 +69,14 @@ export function getPriceQuote(
   params: { variantId: string; preparation?: string; quantity: number; unit: string },
 ): Promise<PriceQuote> {
   return http.get<PriceQuote>("/price-quote", { query: params });
+}
+
+/**
+ * Cleaning and cutting methods to filter the shop by (gap W8 closed, CAT-R27). With `X-Pincode` only the methods
+ * priced and stocked at that store; ordered by the server.
+ */
+export function getPreparationMethods(http: HttpClient): Promise<PreparationMethod[]> {
+  return http.get<PreparationMethod[]>("/preparation-methods");
 }
 
 export function suggest(http: HttpClient, q: string, signal?: AbortSignal): Promise<SuggestItem[]> {

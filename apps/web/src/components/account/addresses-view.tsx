@@ -167,7 +167,7 @@ export function AddressesView() {
                       editing.address.version,
                     );
                 } catch (e) {
-                  if (hasCode(e, "CONCURRENCY_CONFLICT")) {
+                  if (hasCode(e, "CONCURRENCY_CONFLICT", "CONCURRENT_SAVE")) {
                     await refresh();
                     setEditing(null);
                     toast({
