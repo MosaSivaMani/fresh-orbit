@@ -15,6 +15,18 @@ class SessionState {
 
 final sessionProvider = NotifierProvider<SessionController, SessionState>(SessionController.new);
 
+/// "Tell us about you" is due (D290): set by a sign-in whose account has no name yet (the verify answer's
+/// `user.fullName` is empty), cleared once the step opens, on sign-out and when the session ends. Kept apart from
+/// [SessionState] so the router's sign-in refresh does not fire for it.
+final aboutYouDueProvider = NotifierProvider<AboutYouDue, bool>(AboutYouDue.new);
+
+class AboutYouDue extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool due) => state = due;
+}
+
 class SessionController extends Notifier<SessionState> {
   @override
   SessionState build() => SessionState(signedIn: ref.read(tokenStoreProvider).hasSession);
@@ -34,6 +46,7 @@ class SessionController extends Notifier<SessionState> {
         );
     await tokens.saveTokens(result.tokens);
     await tokens.clearGuestCartToken();
+    ref.read(aboutYouDueProvider.notifier).set((result.user.fullName ?? '').trim().isEmpty);
     state = SessionState(signedIn: true, user: result.user);
     await _registerPushToken();
     return result;
@@ -50,11 +63,13 @@ class SessionController extends Notifier<SessionState> {
       // Signing out locally must work offline; the server token expires on its own.
     }
     await tokens.clearSession();
+    ref.read(aboutYouDueProvider.notifier).set(false);
     state = const SessionState(signedIn: false);
   }
 
   /// Called by the auth interceptor when refresh fails or a second 401 arrives.
   void onSessionEnded() {
+    ref.read(aboutYouDueProvider.notifier).set(false);
     if (state.signedIn) state = const SessionState(signedIn: false);
   }
 
