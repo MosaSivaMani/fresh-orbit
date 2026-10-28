@@ -283,9 +283,11 @@ describe("manifest.json", () => {
     const png = new Uint8Array(24);
     png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
     png.set([0, 0, 4, 0, 0, 0, 4, 0], 16);
+    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST) are read from disk.
+    const faked = (p: string) => p.endsWith(".png") && p.startsWith("assets/") && !disk.size(p);
     const facts: FileFacts = {
-      size: (p) => (p.endsWith(".png") ? 300 * 1024 : disk.size(p)),
-      head: (p) => (p.endsWith(".png") ? png : disk.head(p)),
+      size: (p) => (faked(p) ? 300 * 1024 : disk.size(p)),
+      head: (p) => (faked(p) ? png : disk.head(p)),
     };
     expect(checkManifest(m, facts)).toEqual([]);
     entry.file = "assets/Final Image.png";
