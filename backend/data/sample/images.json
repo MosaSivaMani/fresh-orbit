@@ -1,421 +1,629 @@
 {
   "version": 1,
   "sampleNote": "[SAMPLE] Fictional demo data; not a real business, person or price. Purged by --purge-sample.",
-  "policy": "Placeholders only. No downloaded or copyrighted images. The loader renders each placeholder at load time (solid background, product name, 'Sample image' label, 1200x1200 px PNG) and uploads it through IFileStorage. Real photography is supplied by the owner and replaces these through the admin image endpoints.",
+  "policy": "Real product pictures are committed files: images/products/<productSlug>/<n>.webp (n = 1 to 4, 1 = main picture), each with the alt text of its number under 'pictures' (D249). They are uploaded through the normal image pipeline (CAT-R16 renditions 320/640/1280). A product with no committed picture gets the drawn placeholder instead (1200x1200 PNG, no text) with the placeholder alt text. No downloaded or copyrighted images: the owner generates them from docs/design/prompts-product-pictures-2026-10.md.",
   "products": [
     {
       "productSlug": "seer-fish",
-      "images": [
+      "placeholder": {
+        "altText": "Seer Fish (Vanjaram) — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Seer Fish (Vanjaram)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Seer Fish (Vanjaram) — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Seer Fish (Vanjaram)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Seer fish, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Seer fish steaks, cleaned and cut about 1 cm thick"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra seer fish fry (vanjaram vepudu)"
         }
       ]
     },
     {
       "productSlug": "silver-pomfret",
-      "images": [
+      "placeholder": {
+        "altText": "Silver Pomfret — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Silver Pomfret",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Silver Pomfret — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Silver Pomfret",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Silver pomfret, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Silver pomfret, cleaned and scored, with curry-cut pieces"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra pomfret tawa fry"
         }
       ]
     },
     {
       "productSlug": "rohu",
-      "images": [
+      "placeholder": {
+        "altText": "Rohu — sample placeholder image",
+        "background": "#2E7D32",
+        "label": "Rohu",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Rohu — sample placeholder image",
-          "placeholder": {
-            "background": "#2E7D32",
-            "label": "Rohu",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Rohu, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Rohu curry-cut pieces, scales removed"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra rohu fish curry (chepala pulusu)"
         }
       ]
     },
     {
       "productSlug": "katla",
-      "images": [
+      "placeholder": {
+        "altText": "Katla — sample placeholder image",
+        "background": "#2E7D32",
+        "label": "Katla",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Katla — sample placeholder image",
-          "placeholder": {
-            "background": "#2E7D32",
-            "label": "Katla",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Katla, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Katla steaks and curry-cut pieces"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra katla fish curry"
         }
       ]
     },
     {
       "productSlug": "yellowfin-tuna",
-      "images": [
+      "placeholder": {
+        "altText": "Yellowfin Tuna — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Yellowfin Tuna",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Yellowfin Tuna — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Yellowfin Tuna",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Yellowfin tuna loin, raw, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Yellowfin tuna steaks and boneless cubes"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra tuna pepper fry"
         }
       ]
     },
     {
       "productSlug": "indian-mackerel",
-      "images": [
+      "placeholder": {
+        "altText": "Indian Mackerel (Bangda) — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Indian Mackerel (Bangda)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Indian Mackerel (Bangda) — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Indian Mackerel (Bangda)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Indian mackerel (bangda), whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Indian mackerel, cleaned, some with heads removed"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra mackerel masala fry"
         }
       ]
     },
     {
       "productSlug": "oil-sardine",
-      "images": [
+      "placeholder": {
+        "altText": "Oil Sardine (Mathi) — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Oil Sardine (Mathi)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Oil Sardine (Mathi) — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Oil Sardine (Mathi)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Oil sardines (mathi), whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Oil sardines, cleaned with heads removed"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra sardine fry (kavalu vepudu)"
         }
       ]
     },
     {
       "productSlug": "red-snapper",
-      "images": [
+      "placeholder": {
+        "altText": "Red Snapper — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Red Snapper",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Red Snapper — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Red Snapper",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Red snapper, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Red snapper curry-cut pieces and fillets"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra red snapper curry"
         }
       ]
     },
     {
       "productSlug": "barramundi",
-      "images": [
+      "placeholder": {
+        "altText": "Barramundi (Bhetki) — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Barramundi (Bhetki)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Barramundi (Bhetki) — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Barramundi (Bhetki)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Barramundi (bhetki), whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Barramundi skinless, boneless fillets"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra barramundi fry"
         }
       ]
     },
     {
       "productSlug": "tiger-prawns",
-      "images": [
+      "placeholder": {
+        "altText": "Tiger Prawns — sample placeholder image",
+        "background": "#E8743B",
+        "label": "Tiger Prawns",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Tiger Prawns — sample placeholder image",
-          "placeholder": {
-            "background": "#E8743B",
-            "label": "Tiger Prawns",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Tiger prawns, whole with head and shell, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Tiger prawns, peeled and deveined, some with tails on"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra prawn fry (royyala vepudu)"
         }
       ]
     },
     {
       "productSlug": "white-prawns",
-      "images": [
+      "placeholder": {
+        "altText": "White Prawns — sample placeholder image",
+        "background": "#E8743B",
+        "label": "White Prawns",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "White Prawns — sample placeholder image",
-          "placeholder": {
-            "background": "#E8743B",
-            "label": "White Prawns",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "White prawns, whole with head and shell, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "White prawns, peeled and deveined"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra prawn curry (royyala koora)"
         }
       ]
     },
     {
       "productSlug": "scampi",
-      "images": [
+      "placeholder": {
+        "altText": "Scampi (Freshwater Prawn) — sample placeholder image",
+        "background": "#E8743B",
+        "label": "Scampi (Freshwater Prawn)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Scampi (Freshwater Prawn) — sample placeholder image",
-          "placeholder": {
-            "background": "#E8743B",
-            "label": "Scampi (Freshwater Prawn)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Scampi, whole with long claws, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Scampi, deveined in the shell and peeled"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra scampi masala"
         }
       ]
     },
     {
       "productSlug": "mud-crab",
-      "images": [
+      "placeholder": {
+        "altText": "Mud Crab — sample placeholder image",
+        "background": "#C0392B",
+        "label": "Mud Crab",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Mud Crab — sample placeholder image",
-          "placeholder": {
-            "background": "#C0392B",
-            "label": "Mud Crab",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Mud crab, whole, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Mud crab, cleaned and cut, claws cracked"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra crab curry (peetala pulusu)"
         }
       ]
     },
     {
       "productSlug": "blue-swimmer-crab",
-      "images": [
+      "placeholder": {
+        "altText": "Blue Swimmer Crab — sample placeholder image",
+        "background": "#C0392B",
+        "label": "Blue Swimmer Crab",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Blue Swimmer Crab — sample placeholder image",
-          "placeholder": {
-            "background": "#C0392B",
-            "label": "Blue Swimmer Crab",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Blue swimmer crabs, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Blue swimmer crabs, cleaned and cut in halves"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra crab rasam (peetala charu)"
         }
       ]
     },
     {
       "productSlug": "squid",
-      "images": [
+      "placeholder": {
+        "altText": "Squid — sample placeholder image",
+        "background": "#6C5CE7",
+        "label": "Squid",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Squid — sample placeholder image",
-          "placeholder": {
-            "background": "#6C5CE7",
-            "label": "Squid",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Squid, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Squid, cleaned tubes and rings"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra squid roast"
         }
       ]
     },
     {
       "productSlug": "green-mussels",
-      "images": [
+      "placeholder": {
+        "altText": "Green Mussels — sample placeholder image",
+        "background": "#6C5CE7",
+        "label": "Green Mussels",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Green Mussels — sample placeholder image",
-          "placeholder": {
-            "background": "#6C5CE7",
-            "label": "Green Mussels",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Green mussels in the shell, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Green mussels, scrubbed and cleaned in the shell"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra mussel fry"
         }
       ]
     },
     {
       "productSlug": "clams",
-      "images": [
+      "placeholder": {
+        "altText": "Clams — sample placeholder image",
+        "background": "#6C5CE7",
+        "label": "Clams",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Clams — sample placeholder image",
-          "placeholder": {
-            "background": "#6C5CE7",
-            "label": "Clams",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Clams in the shell, on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Clams, washed and ready to cook"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra clam fry"
         }
       ]
     },
     {
       "productSlug": "spiny-lobster",
-      "images": [
+      "placeholder": {
+        "altText": "Spiny Lobster — sample placeholder image",
+        "background": "#6C5CE7",
+        "label": "Spiny Lobster",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Spiny Lobster — sample placeholder image",
-          "placeholder": {
-            "background": "#6C5CE7",
-            "label": "Spiny Lobster",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Spiny lobster, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Spiny lobster, butterflied"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra lobster masala grill"
         }
       ]
     },
     {
       "productSlug": "basa-fillet",
-      "images": [
+      "placeholder": {
+        "altText": "Basa Fillet — sample placeholder image",
+        "background": "#B08968",
+        "label": "Basa Fillet",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Basa Fillet — sample placeholder image",
-          "placeholder": {
-            "background": "#B08968",
-            "label": "Basa Fillet",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Basa fillets, skinless and boneless"
+        },
+        {
+          "number": 2,
+          "altText": "Basa fillet cut into portions"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra chilli basa fry"
         }
       ]
     },
     {
       "productSlug": "atlantic-salmon-fillet",
-      "images": [
+      "placeholder": {
+        "altText": "Atlantic Salmon Fillet — sample placeholder image",
+        "background": "#B08968",
+        "label": "Atlantic Salmon Fillet",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Atlantic Salmon Fillet — sample placeholder image",
-          "placeholder": {
-            "background": "#B08968",
-            "label": "Atlantic Salmon Fillet",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Atlantic salmon fillet portions, skin on"
+        },
+        {
+          "number": 2,
+          "altText": "Atlantic salmon portion, boneless, on a banana leaf"
+        },
+        {
+          "number": 3,
+          "altText": "Pan-seared salmon with Andhra spices"
         }
       ]
     },
     {
       "productSlug": "anchovy",
-      "images": [
+      "placeholder": {
+        "altText": "Anchovy (Nethili) — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Anchovy (Nethili)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Anchovy (Nethili) — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Anchovy (Nethili)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Anchovies (nethili), whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Anchovies, cleaned with heads removed"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra nethili fry"
         }
       ]
     },
     {
       "productSlug": "ribbon-fish",
-      "images": [
+      "placeholder": {
+        "altText": "Ribbon Fish — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Ribbon Fish",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Ribbon Fish — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Ribbon Fish",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Ribbon fish, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Ribbon fish, cleaned and curry-cut"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra ribbon fish fry (savalu vepudu)"
         }
       ]
     },
     {
       "productSlug": "indian-halibut",
-      "images": [
+      "placeholder": {
+        "altText": "Indian Halibut — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Indian Halibut",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Indian Halibut — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Indian Halibut",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Indian halibut, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Indian halibut steaks and curry-cut pieces"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra halibut fry"
         }
       ]
     },
     {
       "productSlug": "tongue-sole",
-      "images": [
+      "placeholder": {
+        "altText": "Tongue Sole — sample placeholder image",
+        "background": "#0E9384",
+        "label": "Tongue Sole",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Tongue Sole — sample placeholder image",
-          "placeholder": {
-            "background": "#0E9384",
-            "label": "Tongue Sole",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Tongue sole, whole on crushed ice"
+        },
+        {
+          "number": 2,
+          "altText": "Tongue sole, cleaned, and skinless fillets"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra tongue sole shallow fry"
         }
       ]
     },
     {
       "productSlug": "seer-fish-steaks",
-      "images": [
+      "placeholder": {
+        "altText": "Seer Fish Steaks (Pack) — sample placeholder image",
+        "background": "#B08968",
+        "label": "Seer Fish Steaks (Pack)",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Seer Fish Steaks (Pack) — sample placeholder image",
-          "placeholder": {
-            "background": "#B08968",
-            "label": "Seer Fish Steaks (Pack)",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Seer fish steaks, about 1 cm thick, centre bone in"
+        },
+        {
+          "number": 2,
+          "altText": "Seer fish steaks, close up on a banana leaf"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra seer fish curry (vanjaram pulusu)"
         }
       ]
     },
     {
       "productSlug": "marinated-prawns-andhra-fry",
-      "images": [
+      "placeholder": {
+        "altText": "Andhra Fry Marinated Prawns — sample placeholder image",
+        "background": "#D35400",
+        "label": "Andhra Fry Marinated Prawns",
+        "width": 1200,
+        "height": 1200
+      },
+      "pictures": [
         {
-          "sortOrder": 1,
-          "altText": "Andhra Fry Marinated Prawns — sample placeholder image",
-          "placeholder": {
-            "background": "#D35400",
-            "label": "Andhra Fry Marinated Prawns",
-            "width": 1200,
-            "height": 1200
-          },
-          "shotToReplaceWith": "Owner photograph: the product as delivered (after the default preparation) on a plain light background, natural light, no props hiding the cut."
+          "number": 1,
+          "altText": "Prawns in a red chilli, garlic and curry-leaf marinade"
+        },
+        {
+          "number": 2,
+          "altText": "Marinated prawns spread on a banana leaf, ready to fry"
+        },
+        {
+          "number": 3,
+          "altText": "Andhra prawn fry (royyala vepudu)"
         }
       ]
     }

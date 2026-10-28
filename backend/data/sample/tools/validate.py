@@ -28,6 +28,9 @@ PINCODE = re.compile(r"^[1-9][0-9]{5}$")
 E164 = re.compile(r"^\+[1-9][0-9]{7,14}$")
 # Fake block reserved in docs/product/sample-data.md (S-D3): +91 99999 00NNN.
 TEST_PHONE = re.compile(r"^\+919999900[0-9]{3}$")
+# Committed product pictures (D249): images/products/<slug>/<n>.webp, n = 1..4 (SampleProductPictures).
+MAX_PRODUCT_PICTURES = 4
+PRODUCT_PICTURE = re.compile(r"^products/([a-z0-9]+(?:-[a-z0-9]+)*)/([1-4])\.webp$")
 GSTIN_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 GSTIN = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
 
@@ -675,16 +678,24 @@ for entry in im.get("products", []):
     if slug not in products:
         err(w, "productSlug does not exist")
     image_products[slug] = entry
-    imgs = entry.get("images", [])
-    if not 1 <= len(imgs) <= 8:
-        err(w, "1 to 8 images per product (CAT-R16)")
-    for img in imgs:
-        if not img.get("altText"):
-            err(w, "altText is required (CAT-R16)")
-        no_marker(w, "altText", img.get("altText"))
-        ph = img.get("placeholder") or {}
-        if min(ph.get("width", 0), ph.get("height", 0)) < 800:
-            err(w, "placeholder must be at least 800 px on the shortest side (CAT-R16)")
+    ph = entry.get("placeholder") or {}
+    if not ph.get("altText"):
+        err(w, "placeholder.altText is required (CAT-R16)")
+    no_marker(w, "placeholder.altText", ph.get("altText"))
+    if min(ph.get("width", 0), ph.get("height", 0)) < 800:
+        err(w, "placeholder must be at least 800 px on the shortest side (CAT-R16)")
+    numbers = [pic.get("number") for pic in entry.get("pictures", [])]
+    if len(numbers) != len(set(numbers)):
+        err(w, "picture numbers must be unique")
+    for pic in entry.get("pictures", []):
+        if not isinstance(pic.get("number"), int) or not 1 <= pic["number"] <= MAX_PRODUCT_PICTURES:
+            err(w, f"picture number must be 1 to {MAX_PRODUCT_PICTURES} (D249)")
+        alt = pic.get("altText") or ""
+        if not alt.strip() or len(alt) > 200:
+            err(w, "picture altText is required, 1 to 200 characters (CAT-R16)")
+        if "placeholder" in alt.lower():
+            err(w, "a real picture's altText describes the picture, not a placeholder (D249)")
+        no_marker(w, "altText", alt)
 for slug, p in products.items():
     if p.get("targetStatus") == "ACTIVE" and slug not in image_products:
         err(f"catalog.products[{slug}]", "an ACTIVE product needs an image entry in images.json (CAT-R3)")
@@ -697,16 +708,35 @@ for entry in im.get("banners", []):
 
 # Committed pictures: images/<path> is the file of image key sample/<path> (SampleImageFiles); every file needs a key
 # and the same extension, and stays small.
+# Product pictures (D249): images/products/<slug>/<n>.webp needs a product with the alt text of picture n, and may be
+# larger (1280 px photos) than the 512 px category pictures.
 image_keys = {e.get("imageKey") for e in im.get("categories", []) + im.get("banners", [])}
 image_dir = SAMPLE_DIR / "images"
 for f in sorted(image_dir.rglob("*")) if image_dir.is_dir() else []:
     if not f.is_file():
         continue
-    key = "sample/" + f.relative_to(image_dir).as_posix()
+    relative = f.relative_to(image_dir).as_posix()
+    product_picture = PRODUCT_PICTURE.match(relative)
+    if product_picture:
+        slug, number = product_picture.group(1), int(product_picture.group(2))
+        entry = image_products.get(slug)
+        if entry is None:
+            err(f"images/{relative}", f"no product in images.json has the slug '{slug}'")
+        elif number not in {pic.get("number") for pic in entry.get("pictures", [])}:
+            err(f"images/{relative}", f"images.json has no altText for picture {number} of '{slug}'")
+        if f.read_bytes()[:4] != b"RIFF":
+            err(f"images/{relative}", "a product picture must be a WebP file")
+        if f.stat().st_size > 600_000:
+            err(f"images/{relative}", "keep product pictures under 600 KB")
+        continue
+    if relative.startswith("products/"):
+        err(f"images/{relative}", f"product pictures are images/products/<slug>/<1-{MAX_PRODUCT_PICTURES}>.webp (D249)")
+        continue
+    key = "sample/" + relative
     if key not in image_keys:
-        err(f"images/{f.relative_to(image_dir).as_posix()}", f"no category or banner in images.json has the key '{key}'")
+        err(f"images/{relative}", f"no category or banner in images.json has the key '{key}'")
     if f.stat().st_size > 400_000:
-        err(f"images/{f.relative_to(image_dir).as_posix()}", "keep sample pictures under 400 KB")
+        err(f"images/{relative}", "keep sample pictures under 400 KB")
 
 # ------------------------------------------------------------------ city readiness (LOC-R6)
 for code, city in cities.items():
