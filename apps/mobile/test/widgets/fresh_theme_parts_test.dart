@@ -2,6 +2,7 @@
 // mobile job runs only apps/mobile, so they are tested here.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -229,6 +230,50 @@ void main() {
       expect(tester.getSize(find.byType(HarbourScene)), const Size(111, 75));
       expect(find.descendant(of: find.byType(HarbourScene), matching: find.byType(ExcludeSemantics)), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('HarbourScene shows the real trawler, a far boat and four real gulls inside its box', (tester) async {
+      await _pump(tester, const HarbourScene());
+
+      final box = tester.getRect(find.byType(HarbourScene));
+      final ship = find.byKey(const Key('harbourTrawler'));
+      expect(ship, findsOneWidget);
+      expect(find.byKey(const Key('harbourFarTrawler')), findsOneWidget);
+      expect(find.byType(FreshGull), findsNWidgets(4));
+      final picture = tester.widget<Image>(find.descendant(of: ship, matching: find.byType(Image))).image;
+      expect(picture, isA<AssetImage>());
+      expect((picture as AssetImage).assetName, FreshSceneryPictures.trawler);
+      expect(picture.package, FreshSceneryPictures.package);
+      // The big boat sits on the sea in the lower half; nothing reaches outside the scene.
+      expect(tester.getRect(ship).bottom, greaterThan(box.top + box.height * 0.75));
+      for (final part in [find.byType(FreshTrawler), find.byType(FreshGull)]) {
+        for (var i = 0; i < part.evaluate().length; i++) {
+          final r = tester.getRect(part.at(i));
+          expect(box.contains(r.topLeft) && box.contains(r.bottomRight - const Offset(0.01, 0.01)), isTrue);
+        }
+      }
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('FreshTrawler and FreshGull keep the shape of their pictures', (tester) async {
+      await _pump(tester, const Column(children: [FreshTrawler(width: 120), FreshGull(width: 30, variant: 4)]));
+
+      expect(tester.getSize(find.byType(FreshTrawler)).width, 120);
+      expect(
+        tester.getSize(find.byType(FreshTrawler)).height,
+        closeTo(120 / FreshSceneryPictures.trawlerAspect, 0.01),
+      );
+      // Variant 4 wraps round to the second gull.
+      expect(tester.getSize(find.byType(FreshGull)).height, closeTo(30 / FreshSceneryPictures.gullAspects[1], 0.01));
+      final gull = tester.widget<Image>(find.descendant(of: find.byType(FreshGull), matching: find.byType(Image)));
+      expect((gull.image as AssetImage).assetName, FreshSceneryPictures.gulls[1]);
+    });
+
+    testWidgets('the scenery pictures are bundled with the theme package', (tester) async {
+      for (final asset in [FreshSceneryPictures.trawler, ...FreshSceneryPictures.gulls]) {
+        final data = await tester.runAsync(() => rootBundle.load('packages/${FreshSceneryPictures.package}/$asset'));
+        expect(data!.lengthInBytes, greaterThan(1000), reason: asset);
+      }
     });
 
     testWidgets('PalmsPainter draws palms from either edge without errors', (tester) async {
