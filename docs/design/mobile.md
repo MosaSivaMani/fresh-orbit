@@ -343,7 +343,7 @@ characters, stickers and receipts. `packages/flutter/fresh_theme` is not edited;
 | Search and category with no results | `NO_SEARCH_RESULTS` |
 | Product sold out | `OUT_OF_STOCK` |
 | OTP login, signed-out account | `LOGIN_OTP` |
-| Order success (receipt) | `ORDER_PLACED` |
+| Order success (ticket, D288) | `ORDER_PLACED` in the header; `HOME_CARD_RIDER` in the delivery-code note |
 | Tracking status card | `slotForOrderStatus`: placed/confirmed → `ORDER_PLACED`; `PREPARING`, `PACKED` → `ORDER_PACKING`; `OUT_FOR_DELIVERY` → `ORDER_ON_THE_WAY`; `DELIVERED` → `ORDER_DELIVERED`; `CANCELLED`, `PAYMENT_FAILED`, `RETURNED` → `ORDER_CANCELLED`; `DELIVERY_FAILED` → `ERROR_GENERIC` |
 | Complaint sent (dialog) | `COMPLAINT_RECEIVED` |
 | Help | `HELP_SUPPORT` (`HelpHero`) |
@@ -632,3 +632,42 @@ Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282); until 
 
 Tests: `test/widgets/sign_in_look_test.dart` (every step at 360 × 640, the code step at 1.3× text, back button only
 when there is a page below, the parts) and `first_run_sign_in_test.dart` (flows).
+
+## 21. Order-placed look and the sea floor (D288, D289)
+
+The order-placed screen (`features/checkout/order_success_screen.dart`, route `/order-success/:id`) matches the
+owner's reference `design/mockups/app-order-placed-reference-2026-10-29.png`. It only composes `fresh_theme`
+parts (`lib/src/celebration.dart`, `lib/src/sea_floor.dart`, D207); every value is the server's order, only
+formatted (rule 4).
+
+| Part | What it draws |
+|---|---|
+| `FreshCelebrationHeader` | Teal `#2C8378` block under the status bar (light status icons): `FreshCelebrationTitle`, the status in a `FreshStatusPill`, the white message, the character at the right (44 % of the width, 140–200 px) with her feet behind the card, and its `child` (the ticket) raised 30 px over the bottom edge with `FreshOverlapUp`. |
+| `FreshCelebrationTitle` | "Order" in white Baloo 2 800 (44), "placed" in ink Dancing Script on a mango `#F5B544` brush tilted −3°, coral sparks. One live header for screen readers. |
+| `FreshCelebrationBackdropPainter` | Static: the block with a wavy bottom edge, a pale sun, two boat silhouettes (the theme's trawler) and a palm at the right, two birds, lighter water and white wave curls along the edge. |
+| `FreshTicketCard` / `FreshTicketRow` | Cream card, 26 px corners, a bumpy (scalloped) bottom edge and a soft shadow: clipboard icon in a mint circle and the title (Baloo 26); dashed rule; rows split by hairlines, each an icon circle, the label and the value in a pill (mint or coral, one word can be bold); the total on a mint band with a teal ₹ circle, a divider, the amount (Baloo 28) and coral sparks; the note on a coral strip with a scale icon. |
+| `FreshNoteCard` | Pale blue note with an info icon, the text and a picture at the right. |
+| `FreshArrowButton` / `FreshOutlineArrowButton` | Full-width 56 px pills: ink filled "Track order →"; ink outline with a basket, "Continue shopping →". |
+
+Values: `Order {orderNumber}`; Delivery = `formatDayShort(slot.startAt)` over `formatTimeRange(...)` (left out
+without a slot); Payment = `paymentMethodLabel(paymentMethod)` with "delivery" bold; Deliver to =
+`address.oneLine` (left out without an address); Estimated total = `formatRupees(estimate.totalPaise)`; the pill
+is `orderStatusLabel(status)`. Keys: `orderPlacedPage`, `deliveryCodeNote`, `trackOrder` (→ `/orders/{id}`),
+`continueShopping` (→ `/home`). Back still goes home.
+
+**Sea floor (D289).** `FreshSeaFloor` is a decorative band (100 px plus the bottom system inset, excluded from
+semantics, static): three teal waves, two small fish, bubbles, coral branches at the bottom left and seaweed at
+the bottom right. The waves stretch with the width; fish, coral and seaweed scale with the band height only.
+Ways to use it:
+
+- `FreshSeaFloorScroll(children: …)` as a Scaffold body: a list that ends with the band (at the screen's bottom
+  on a short page, after the content on a long one). Used by order placed and Help.
+- `ColorBlockScreen(seaFloor: true)`: the sheet ends with the band. Used by the pincode screen, not served, empty
+  cart, empty wishlist, no orders and no notifications.
+- `FreshSeaFloor()` at the end of any column.
+
+Not on onboarding (its own sea and art). The sign-in page gets it once the sign-in branches merge.
+
+Tests: `test/widgets/order_success_test.dart` (server values on the ticket, status pill, rider note, both
+buttons, 360 × 640 at 1× and 1.3× text with the band at the bottom) and `test/widgets/sea_floor_test.dart` (size,
+inset, semantics, width scaling, short and long pages, pincode, not served, empty cart and Help at 360 × 640).

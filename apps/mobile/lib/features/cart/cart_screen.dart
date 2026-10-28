@@ -75,6 +75,7 @@ class _EmptyCart extends StatelessWidget {
     eyebrow: 'Your cart',
     heading: const [HeadingLine('Basket’s'), HeadingLine('empty', script: true)],
     slot: IllustrationSlot.emptyCart,
+    seaFloor: true,
     sticker: const StickerSpot(
       right: 26,
       top: 36,

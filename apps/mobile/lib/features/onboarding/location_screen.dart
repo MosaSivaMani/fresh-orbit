@@ -131,6 +131,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
             heading: const [HeadingLine('Not here'), HeadingLine('yet', script: true, brush: true)],
             slot: IllustrationSlot.notServiceable,
             onBack: back,
+            seaFloor: true,
             sticker: const StickerSpot(
               right: 30,
               top: 30,
@@ -159,6 +160,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
         avatarSize: AvatarSize.small,
         onBack: back,
         sheetCrossAxis: CrossAxisAlignment.stretch,
+        seaFloor: true,
         children: [
           const SheetNote('Prices, stock and delivery slots depend on your nearest store.'),
           TextField(

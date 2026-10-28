@@ -106,7 +106,7 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `ONBOARDING_BANNER_DELIVERY` | 2:1 | none (cold box, scooter, Indian doorstep) | — | — | Page 3 food banner |
 | `HOME_HERO_CATCH` | 3:2 | `FISHMONGER` (Padma with the morning catch) | — | — | Home hero "Today's catch is in!", bottom-right |
 | `HOME_CARD_CLEANED` | 1:1 | none (cleaned cuts on a board) | — | — | Home card "Cleaned your way" |
-| `HOME_CARD_RIDER` | 1:1 | `RIDER` (Ravi with the cold box) | — | — | Home card "Kept cold till your door" |
+| `HOME_CARD_RIDER` | 1:1 | `RIDER` (Ravi with the cold box) | — | — | Home card "Kept cold till your door"; order-placed delivery-code note (D288) |
 | `CATEGORY_FILLETS_STEAKS` | 1:1 | none (seer steaks, salmon fillet slices, lemon) | — | — | Website category circle (D248) |
 | `CATEGORY_READY_TO_COOK` | 1:1 | none (cleaned, scored sardines and mackerel) | — | — | Website category circle (D248) |
 | `CATEGORY_MARINATED` | 1:1 | none (masala-marinated fish pieces, curry leaves) | — | — | Website category circle (D248) |

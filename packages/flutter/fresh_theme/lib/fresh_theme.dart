@@ -6,13 +6,16 @@
 /// The rich screens' shared parts (D176, D181) are hand-written: the grid ([FreshLayout], [FreshColumns]), the
 /// highlights ([BrushHighlight], [Sparks], [ScriptLine], [SwooshUnderline], [Snowflake]) and the drawn scenery
 /// ([FreshScenery], [HarbourScenePainter], [PalmsPainter]). The sign-in look (D281): [FreshAuthPage],
-/// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene].
+/// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]. The
+/// order-placed look (D288): [FreshCelebrationHeader], [FreshTicketCard], [FreshNoteCard] and
+/// [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289): [FreshSeaFloor] and [FreshSeaFloorScroll].
 library;
 
 import 'package:flutter/material.dart';
 
 export 'src/auth.dart';
 export 'src/blocks.dart';
+export 'src/celebration.dart';
 export 'src/choices.dart';
 export 'src/feedback.dart';
 export 'src/gallery.dart';
@@ -25,6 +28,7 @@ export 'src/page.dart';
 export 'src/parts.dart';
 export 'src/prices.dart';
 export 'src/scenery.dart';
+export 'src/sea_floor.dart';
 export 'src/stickers.dart';
 export 'src/titles.dart';
 

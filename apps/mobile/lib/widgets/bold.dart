@@ -99,6 +99,7 @@ class ColorBlockScreen extends StatelessWidget {
     this.trailing,
     this.children = const [],
     this.sheetCrossAxis = CrossAxisAlignment.center,
+    this.seaFloor = false,
   });
 
   final BlockTone tone;
@@ -118,6 +119,10 @@ class ColorBlockScreen extends StatelessWidget {
   final Widget? trailing;
   final List<Widget> children;
   final CrossAxisAlignment sheetCrossAxis;
+
+  /// Ends the sheet with the sea floor ([FreshSeaFloor], D289): at the bottom of the screen when the sheet is
+  /// short, after the content when it scrolls.
+  final bool seaFloor;
 
   static const _stageTop = 14.0;
 
@@ -213,7 +218,7 @@ class ColorBlockScreen extends StatelessWidget {
                         EntranceMotion(
                           rise: 48,
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(20, 14, 20, 18 + bottomInset),
+                            padding: EdgeInsets.fromLTRB(20, 14, 20, seaFloor ? 18 : 18 + bottomInset),
                             child: Column(
                               crossAxisAlignment: sheetCrossAxis,
                               children: [
@@ -225,6 +230,7 @@ class ColorBlockScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (seaFloor) ...[const Spacer(), const FreshSeaFloor()],
                       ],
                     ),
                   ],

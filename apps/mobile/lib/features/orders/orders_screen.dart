@@ -54,6 +54,7 @@ class OrdersScreen extends ConsumerWidget {
           eyebrow: 'Your orders',
           heading: const [HeadingLine('No orders'), HeadingLine('yet', script: true, brush: true)],
           slot: IllustrationSlot.emptyOrders,
+          seaFloor: true,
           sticker: const StickerSpot(
             left: 22,
             top: 40,
