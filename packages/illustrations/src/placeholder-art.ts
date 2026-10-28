@@ -441,7 +441,7 @@ export const COMPOSITIONS: Record<string, Composition> = {
   },
   WEB_HOME_HERO_HARBOUR: {
     tint: "ice",
-    parts: [m("iceBed", 200, 70), m("fish", 90, 76, 0.8), m("lemon", 310, 44, 1.6)],
+    parts: [m("iceBed", 200, 70), f("FISHMONGER", 80, 140, 0.6), m("lemon", 310, 44, 1.6)],
   },
 };
 
