@@ -42,8 +42,8 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
   `import` sets `SCENE` or `TRANSPARENT` from the file itself (alpha or not) and rebuilds the prompt to match.
 - **Shapes**: `1:1` (empty states, features, status, onboarding tiles), `4:3` (onboarding, hero, delivery, admin
-  login), `2:1` (onboarding food banners, 1024 × 512 design size) or `3:2` (the home hero, 1024 × 683 design
-  size), 2% tolerance.
+  login), `2:1` (onboarding food banners, 1024 × 512 design size), `3:2` (the home hero, 1024 × 683 design
+  size) or `20:7` (the website's full-width hero, generated at 2400 × 840, 1024 × 358 design size), 2% tolerance.
 - **Object-only slots**: the onboarding tiles and banners have no `character` (and no `supporting`); their prompt is
   the scene, the style block, the background and the shape only. Their scenes say "no people, no characters and no
   faces" because the style block is written for character renders.
@@ -107,6 +107,12 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `HOME_HERO_CATCH` | 3:2 | `FISHMONGER` (Padma with the morning catch) | — | — | Home hero "Today's catch is in!", bottom-right |
 | `HOME_CARD_CLEANED` | 1:1 | none (cleaned cuts on a board) | — | — | Home card "Cleaned your way" |
 | `HOME_CARD_RIDER` | 1:1 | `RIDER` (Ravi with the cold box) | — | — | Home card "Kept cold till your door" |
+| `CATEGORY_FILLETS_STEAKS` | 1:1 | none (seer steaks, salmon fillet slices, lemon) | — | — | Website category circle (D248) |
+| `CATEGORY_READY_TO_COOK` | 1:1 | none (cleaned, scored sardines and mackerel) | — | — | Website category circle (D248) |
+| `CATEGORY_MARINATED` | 1:1 | none (masala-marinated fish pieces, curry leaves) | — | — | Website category circle (D248) |
+| `CATEGORY_FISH_EGGS` | 1:1 | none (a bowl of orange fish roe) | — | — | Website category circle (D248) |
+| `CATEGORY_READY_TO_EAT` | 1:1 | none (a bowl of Andhra fish curry) | — | — | Website category circle (D248) |
+| `WEB_HOME_HERO_HARBOUR` | 20:7 | `FISHMONGER` (Padma in the left third of a sunrise harbour) | — | — | Website home hero background, optional (D248) |
 
 The twelve onboarding pictures are all `TRANSPARENT` PNGs: save them as
 `docs/design/characters/generated/onboarding_tile_<name>.png` / `onboarding_banner_<name>.png`. Until they are
@@ -135,6 +141,15 @@ placeholder only for a product with no file. Brief: square ≥ 1024 px, soft day
 (D193) crops nothing important. The owner hands them to the PM (PNG or JPG is fine); the PM saves them as
 `docs/design/products/<slug>/<n>.png|jpg` (`sips -Z 1280`) and the `Sample images` workflow makes the 1280 px WebP
 (`tools/make_images.py`). Prompts for all 26 sample products: `prompts-product-pictures-2026-10.md`.
+
+The five `CATEGORY_*` slots (D248) cover the categories the sample data has no picture for. They are object-only
+`TRANSPARENT` pictures in the look of `backend/data/sample/images/categories/prawns-shrimp.webp` (photo-real seafood,
+soft shadow). Finals go into the slots at 1024 × 1024. A 512 × 512 WebP copy of each goes to
+`backend/data/sample/images/categories/<slug>.webp` (`fillets-steaks`, `ready-to-cook`, `marinated`, `fish-eggs`,
+`ready-to-eat`) once the owner sends them; until then the website shows the fish mark for those categories.
+`WEB_HOME_HERO_HARBOUR` is a `SCENE` at 20:7. While it is a placeholder the website draws its own sky; once it is
+FINAL the home passes `/illustrations/<file>` as the hero's `heroBackground`. Prompts ready to paste:
+`docs/design/prompts-web-home-2026-10-28.md`.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 
