@@ -15,6 +15,9 @@ import { LocationBanner } from "@/components/location-banner";
 import { Container, Section, SectionError } from "@/components/section";
 import { settle } from "@/lib/settle";
 
+/** A 1280 px copy of the owner's harbour picture for phones and laptops (D279). */
+const HARBOUR_1280 = "/home/web_home_hero_harbour-1280.jpg";
+
 /**
  * Home after the owner's reference (D188, `docs/design/mockups/web-home-reference-2026-10-28.png`): the harbour hero
  * with Padma, the headline and three feature chips; the white pincode-check and search bar over its bottom edge;
@@ -44,13 +47,22 @@ export default async function HomePage() {
   const offerLines = offersBySlug(banners);
   const freshness = slotText ? `Next slot ${slotText}` : undefined;
   const bestsellers = home.ok ? (home.value.data.bestsellers ?? []) : [];
-  // The owner's wide harbour picture replaces the drawn sky once its slot is FINAL (D188, D247).
-  const harbour = illustrations.WEB_HOME_HERO_HARBOUR;
-  const harbourBackground = harbour.status === "FINAL" ? `/illustrations/${harbour.src}` : null;
+  // The owner's harbour picture (FINAL since D279) replaces the drawn scenery and the separate Padma picture. The
+  // 1280 px copy in public/home serves smaller screens (next/image does not resize here: `unoptimized`).
+  const harbourSlot = illustrations.WEB_HOME_HERO_HARBOUR;
+  const harbourSrc = `/illustrations/${harbourSlot.src}`;
+  const harbour =
+    harbourSlot.status === "FINAL"
+      ? {
+          src: harbourSrc,
+          srcSet: `${HARBOUR_1280} 1280w, ${harbourSrc} ${harbourSlot.width}w`,
+          alt: harbourSlot.alt,
+        }
+      : null;
 
   return (
     <>
-      <HomeHero nextSlot={slotText} heroBackground={harbourBackground} />
+      <HomeHero nextSlot={slotText} harbour={harbour} />
       <HomeCheckBar />
 
       <Container className="flex flex-col gap-8 pt-10 pb-8">
