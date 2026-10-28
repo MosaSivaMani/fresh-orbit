@@ -48,6 +48,10 @@ class ApiError implements Exception {
   bool get isTransient =>
       status == 0 || status >= 500 || code == 'IDEMPOTENCY_IN_PROGRESS' || code == 'CONCURRENT_SAVE';
 
+  /// The catalogue needs a pincode it serves: none was sent (LOCATION_REQUIRED) or the stored one is not (or no
+  /// longer) served (PINCODE_NOT_SERVICEABLE). The way out is choosing another pincode (D236).
+  bool get needsPincode => code == 'LOCATION_REQUIRED' || code == 'PINCODE_NOT_SERVICEABLE';
+
   /// First message for a field (camelCase JSON path), for form field errors.
   String? fieldMessage(String field) {
     final list = errors[field];
@@ -58,6 +62,12 @@ class ApiError implements Exception {
   String get message {
     if (detail != null && detail!.isNotEmpty) return detail!;
     if (errors.isNotEmpty) return errors.values.first.first.message;
+    // 429 without a sentence: say how long to wait (Retry-After), not the bare title.
+    if (status == 429) {
+      return retryAfterSeconds == null
+          ? 'Too many tries. Please wait a moment and try again.'
+          : 'Too many tries. Please try again in $retryAfterSeconds seconds.';
+    }
     if (title != null && title!.isNotEmpty) return title!;
     return switch (code) {
       networkError => 'You seem to be offline. Check your connection and try again.',

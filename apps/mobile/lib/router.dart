@@ -37,7 +37,8 @@ bool _needsLogin(String path) =>
     path.startsWith('/checkout') ||
     path.startsWith('/orders/') ||
     path.startsWith('/account/') && !path.startsWith('/account/help') && !path.startsWith('/account/settings') ||
-    path.startsWith('/wishlist');
+    path.startsWith('/wishlist') ||
+    path.startsWith('/addresses');
 
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier<bool>(ref.read(sessionProvider).signedIn);
@@ -85,6 +86,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from']),
       ),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
+      // The address form over checkout (D268): full-screen routes outside the tab shell, so checkout pushes them
+      // and gets the saved address back without opening a second shell.
+      GoRoute(path: '/addresses/new', builder: (_, _) => const AddressFormScreen()),
+      GoRoute(
+        path: '/addresses/:addressId',
+        builder: (_, state) => AddressFormScreen(addressId: state.pathParameters['addressId']),
+      ),
       GoRoute(
         path: '/order-success/:orderId',
         builder: (_, state) => OrderSuccessScreen(orderId: state.pathParameters['orderId']!),

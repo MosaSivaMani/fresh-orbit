@@ -14,6 +14,7 @@ class Serviceability {
     this.cityStateName,
     this.locationId,
     this.locationName,
+    this.hasColdStorage,
     this.serviceAreaName,
     this.deliveryFeePaise,
     this.freeDeliveryAbovePaise,
@@ -35,6 +36,7 @@ class Serviceability {
       cityStateName: city == null ? null : optString(city, 'stateName'),
       locationId: location == null ? null : optString(location, 'id'),
       locationName: location == null ? null : reqString(location, 'name'),
+      hasColdStorage: location == null ? null : optBool(location, 'hasColdStorage'),
       serviceAreaName: area == null ? null : optString(area, 'name'),
       deliveryFeePaise: area == null ? null : optInt(area, 'deliveryFeePaise'),
       freeDeliveryAbovePaise: area == null ? null : optInt(area, 'freeDeliveryAbovePaise'),
@@ -55,6 +57,9 @@ class Serviceability {
   /// The store that serves the pincode; a back-in-stock alert names it.
   final String? locationId;
   final String? locationName;
+
+  /// The store keeps the catch in cold storage (LOC-R11). Only `true` lets the app say "Kept cold" (D212, D239).
+  final bool? hasColdStorage;
   final String? serviceAreaName;
   final int? deliveryFeePaise;
   final int? freeDeliveryAbovePaise;

@@ -103,8 +103,12 @@ class WishlistController extends AsyncNotifier<List<WishlistEntry>> {
 final inboxProvider = AsyncNotifierProvider<InboxController, InboxPage>(InboxController.new);
 
 class InboxController extends AsyncNotifier<InboxPage> {
+  // Read again when the customer signs in or out, so one customer never sees another's inbox (D272).
   @override
-  Future<InboxPage> build() => ref.read(accountRepositoryProvider).notifications();
+  Future<InboxPage> build() async {
+    if (!ref.watch(sessionProvider.select((s) => s.signedIn))) return InboxPage.empty;
+    return ref.read(accountRepositoryProvider).notifications();
+  }
 
   Future<void> markRead(String messageId) async {
     await ref.read(accountRepositoryProvider).markRead(messageId);
@@ -123,7 +127,10 @@ final preferencesProvider = AsyncNotifierProvider<PreferencesController, List<No
 
 class PreferencesController extends AsyncNotifier<List<NotificationPreference>> {
   @override
-  Future<List<NotificationPreference>> build() => ref.read(accountRepositoryProvider).preferences();
+  Future<List<NotificationPreference>> build() async {
+    if (!ref.watch(sessionProvider.select((s) => s.signedIn))) return const [];
+    return ref.read(accountRepositoryProvider).preferences();
+  }
 
   /// PUT replaces the full set; the server refuses disabling ORDER_UPDATES SMS (PREFERENCE_REQUIRED).
   Future<void> setEnabled(NotificationPreference preference, bool enabled) async {

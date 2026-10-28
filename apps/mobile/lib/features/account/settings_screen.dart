@@ -40,8 +40,7 @@ class SettingsScreen extends ConsumerWidget {
                   MenuRow(
                     icon: Icons.notifications_none_rounded,
                     title: 'Sign in to choose notifications',
-                    onTap: () =>
-                        context.push(Uri(path: '/login', queryParameters: {'from': '/account/settings'}).toString()),
+                    onTap: () => context.push('/login'),
                   ),
                 ],
               )
@@ -103,7 +102,7 @@ class SettingsScreen extends ConsumerWidget {
                 MenuRow(
                   icon: Icons.description_outlined,
                   title: 'Privacy and terms',
-                  onTap: () => context.go('/account/help'),
+                  onTap: () => context.push('/account/help'),
                 ),
                 if (signedIn)
                   MenuRow(
@@ -125,7 +124,7 @@ class SettingsScreen extends ConsumerWidget {
                 child: Center(
                   child: TextButton(
                     style: TextButton.styleFrom(foregroundColor: c.muted),
-                    onPressed: () => context.go('/account/profile'),
+                    onPressed: () => context.push('/account/profile'),
                     child: const Text('Delete my account'),
                   ),
                 ),

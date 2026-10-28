@@ -18,10 +18,29 @@ import '../../state/core_providers.dart';
 import '../../state/session.dart';
 import '../../widgets/bold.dart';
 
+/// Where a successful sign-in goes, keeping the pages below (D267). A screen that pushed the login itself
+/// passes no [from] and gets the page back by a pop. The router's redirect passes [from] (the page that needed
+/// sign-in): it replaces the login page, so Back still returns to where the customer was; opened as the only
+/// page (a link), it becomes the location.
+void leaveLogin(BuildContext context, String? from) {
+  final target = from != null && from.startsWith('/') && !from.startsWith('/login') ? from : null;
+  if (target != null) {
+    if (context.canPop()) {
+      context.pushReplacement(target);
+    } else {
+      context.go(target);
+    }
+  } else if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go('/home');
+  }
+}
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.from});
 
-  /// Where to go after login (e.g. /checkout).
+  /// The page that needed sign-in (set by the router's redirect, e.g. /checkout); null returns by a pop.
   final String? from;
 
   @override
@@ -108,14 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         unawaited(Future<void>.delayed(const Duration(seconds: 2), () => ref.invalidate(cartProvider)));
       }
       if (!mounted) return;
-      final target = widget.from;
-      if (target != null && target.startsWith('/')) {
-        context.go(target);
-      } else if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/home');
-      }
+      leaveLogin(context, widget.from);
     } on ApiError catch (e) {
       setState(() {
         switch (e.code) {

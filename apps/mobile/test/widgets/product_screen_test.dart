@@ -156,5 +156,24 @@ void main() {
     expect(deps.account.stockAlerts, ['v1@l1']);
   });
 
+  testWidgets('shows the catch date of the chosen size only when the server sends one (CAT-R25, D240)', (tester) async {
+    final json = productDetailJson();
+    ((json['variants']! as List<Object?>).first! as Map<String, Object?>)['freshness'] = {
+      'caughtOn': '2026-10-23',
+      'receivedAt': '2026-10-24T00:45:00Z',
+    };
+    deps.catalog.onProduct = (_, _) async => ProductDetail.fromJson(json);
+    await pump(tester);
+
+    expect(find.byKey(const Key('productCaught')), findsOneWidget);
+    expect(find.text('Caught Fri, 23 Oct'), findsOneWidget);
+  });
+
+  testWidgets('no freshness from the server shows no catch date', (tester) async {
+    await pump(tester);
+
+    expect(find.byKey(const Key('productCaught')), findsNothing);
+  });
+
   test('fixture cart parses', () => expect(cart().lines.single, isA<CartLine>()));
 }

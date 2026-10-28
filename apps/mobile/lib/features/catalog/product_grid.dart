@@ -115,7 +115,7 @@ class _ShopProductCardState extends ConsumerState<ShopProductCard> {
       await op();
     } on ApiError catch (e) {
       if (!mounted) return;
-      if (e.code == 'LOCATION_REQUIRED' || e.code == 'PINCODE_NOT_SERVICEABLE') {
+      if (e.needsPincode) {
         await context.push('/location?change=1');
       } else {
         showErrorSnack(context, e);

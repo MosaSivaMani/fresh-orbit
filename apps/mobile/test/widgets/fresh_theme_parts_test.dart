@@ -75,6 +75,38 @@ void main() {
       expect(tester.getSize(find.byKey(const Key('tall'))).height, 90);
     });
 
+    testWidgets('FreshColumns with stretch measures again when a column grows later (no overflow)', (tester) async {
+      final grow = ValueNotifier<double>(30);
+      addTearDown(grow.dispose);
+      await _pump(
+        tester,
+        SizedBox(
+          width: 300,
+          child: FreshColumns(
+            stretch: true,
+            children: [
+              ValueListenableBuilder<double>(
+                valueListenable: grow,
+                builder: (_, height, _) => Column(
+                  key: const Key('growing'),
+                  children: [SizedBox(height: height)],
+                ),
+              ),
+              const ColoredBox(key: Key('other'), color: Colors.blue, child: SizedBox(height: 90)),
+            ],
+          ),
+        ),
+      );
+      expect(tester.getSize(find.byKey(const Key('growing'))).height, 90);
+
+      grow.value = 140;
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byKey(const Key('growing'))).height, 140);
+      expect(tester.getSize(find.byKey(const Key('other'))).height, 140);
+    });
+
     testWidgets('FreshFitWidth keeps the full width and scales a too-tall child to the height', (tester) async {
       await _pump(
         tester,

@@ -214,7 +214,18 @@ class FakeOrderRepository implements OrderRepository {
     String complaintId, {
     required List<int> bytes,
     required String fileName,
-  }) async => complaintCalls.add('photo:$complaintId:$fileName');
+  }) async {
+    final f = failPhotoOnce;
+    if (f != null) {
+      failPhotoOnce = null;
+      complaintCalls.add('photoFailed:$complaintId:$fileName');
+      throw f;
+    }
+    complaintCalls.add('photo:$complaintId:$fileName');
+  }
+
+  /// When set, the next photo upload throws it (and is cleared).
+  Object? failPhotoOnce;
 
   /// What accept/reject returns; the test sets it.
   OrderDetail Function(String substitutionId, bool accept)? onAnswer;
@@ -229,8 +240,10 @@ class FakeOrderRepository implements OrderRepository {
   @override
   Future<List<Complaint>> complaints(String orderId) async => const [];
 
+  Future<InvoiceLink> Function()? onInvoice;
+
   @override
-  Future<InvoiceLink> invoice(String orderId) async => const InvoiceLink();
+  Future<InvoiceLink> invoice(String orderId) => (onInvoice ?? () async => const InvoiceLink())();
 }
 
 class FakeAccountRepository implements AccountRepository {
@@ -251,7 +264,13 @@ class FakeAccountRepository implements AccountRepository {
   }) async => me ?? _unexpected('updateProfile');
 
   @override
-  Future<void> deleteAccount({required String version}) async {}
+  Future<void> deleteAccount({required String version}) async {
+    final f = failDelete;
+    if (f != null) throw f;
+  }
+
+  /// When set, DELETE /me throws it.
+  Object? failDelete;
 
   @override
   Future<List<Address>> addresses() async => addressList;
@@ -280,8 +299,12 @@ class FakeAccountRepository implements AccountRepository {
       wish = wish.where((w) => w.productId != productId).toList();
 
   @override
-  Future<InboxPage> notifications({bool unreadOnly = false, int page = 1}) async =>
-      const InboxPage(items: [], unreadCount: 0, totalCount: 0);
+  Future<InboxPage> notifications({bool unreadOnly = false, int page = 1}) async {
+    notificationReads++;
+    return const InboxPage(items: [], unreadCount: 0, totalCount: 0);
+  }
+
+  int notificationReads = 0;
 
   @override
   Future<void> markRead(String messageId) async {}

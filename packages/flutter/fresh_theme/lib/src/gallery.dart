@@ -1,63 +1,64 @@
-// The swipeable picture gallery of a product page (D193, D207): every picture as a page, page dots over the
-// bottom of the picture (tap one to go to that picture) and "Photo i of n" for screen readers. It fills the
-// space it is given, so the screen keeps its own 3:2 frame ([FreshPictureFrame]) and the header never changes
-// size. The app may pass its own image widget; nothing here reads an app model.
+// The one swipeable picture gallery of the app (D193, D207, D266, D276): the product page shows every picture
+// the server sends, one per page, with page dots on a paper pill (tap one to go to that picture). It fills the
+// space it is given, so the screen keeps its own 3:2 frame and the header never changes size. Pictures arrive
+// as widgets (the app passes its image widget with the server's alt text), so the package knows no product model.
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
-/// One picture of a [FreshImageGallery]: its address and the server's alt text (empty or null = decorative).
-@immutable
-class FreshGalleryImage {
-  const FreshGalleryImage({required this.url, this.alt});
-
-  final String url;
-  final String? alt;
-}
-
-/// Builds the widget of one picture; it is given the whole page (or the whole gallery for a single picture).
-typedef FreshGalleryImageBuilder = Widget Function(BuildContext context, FreshGalleryImage image, int index);
-
-/// All pictures of a product, one page each, filling the space it is given.
-///
-/// - No pictures: [emptyBuilder], or the fish placeholder of [ProductPhoto].
-/// - One picture: just that picture (no pages, no dots).
-/// - More: a [PageView] to swipe, page dots at [dotsAlignment] (the current one a wider ink pill; tapping a dot
-///   goes to that picture, at once when the platform asks for less motion) and "Photo i of n" for screen readers.
-///
-/// [imageBuilder] draws one picture; by default a [ProductPhoto] in the 3:2 frame with the alt text.
-class FreshImageGallery extends StatefulWidget {
-  const FreshImageGallery({
+/// Pages of pictures the customer swipes through, with tappable dots on a paper pill. One picture shows alone
+/// (no swipe, no dots); none shows [empty]. Screen readers hear "Picture 2 of 4", can move with the increase and
+/// decrease actions, and each dot is a button ("Show picture 3"), so the pictures are reachable without a swipe.
+/// Under reduced motion a dot or an action shows its picture at once.
+class FreshGallery extends StatefulWidget {
+  const FreshGallery({
     super.key,
-    required this.images,
-    this.imageBuilder,
-    this.emptyBuilder,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.empty,
+    this.onPageChanged,
     this.dotsAlignment = Alignment.bottomCenter,
     this.dotsPadding = const EdgeInsets.all(12),
-    this.onPageChanged,
   });
 
-  final List<FreshGalleryImage> images;
-  final FreshGalleryImageBuilder? imageBuilder;
-  final WidgetBuilder? emptyBuilder;
+  final int itemCount;
+
+  /// Builds one picture; it is given the whole page (or the whole gallery for a single picture). Pass the
+  /// server's alt text to the picture's semantics label here.
+  final IndexedWidgetBuilder itemBuilder;
+
+  /// Shown when there is no picture (for example the app's placeholder).
+  final Widget? empty;
+  final ValueChanged<int>? onPageChanged;
 
   /// Where the dots sit over the picture; move them aside when the screen puts a sticker at the bottom centre.
   final Alignment dotsAlignment;
   final EdgeInsets dotsPadding;
-  final ValueChanged<int>? onPageChanged;
 
   /// How long a tap on a dot takes to slide to its picture (when motion is allowed).
   static const Duration slideDuration = Duration(milliseconds: 280);
 
   @override
-  State<FreshImageGallery> createState() => _FreshImageGalleryState();
+  State<FreshGallery> createState() => _FreshGalleryState();
 }
 
-class _FreshImageGalleryState extends State<FreshImageGallery> {
-  final PageController _controller = PageController();
+class _FreshGalleryState extends State<FreshGallery> {
+  final _controller = PageController();
   int _index = 0;
+
+  @override
+  void didUpdateWidget(FreshGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Fewer pictures after a refresh: stay on the last one that exists.
+    if (_index >= widget.itemCount && widget.itemCount > 0) {
+      _index = widget.itemCount - 1;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_controller.hasClients) _controller.jumpToPage(_index);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -65,56 +66,39 @@ class _FreshImageGalleryState extends State<FreshImageGallery> {
     super.dispose();
   }
 
-  Widget _image(BuildContext context, int index) {
-    final image = widget.images[index];
-    final builder = widget.imageBuilder;
-    if (builder != null) return builder(context, image, index);
-    final alt = image.alt;
-    return ProductPhoto(
-      url: image.url,
-      semanticLabel: alt == null || alt.isEmpty ? null : alt,
-      aspectRatio: FreshLayout.pictureAspect,
-      radius: 0,
-      transparent: true,
-    );
-  }
-
-  void _showPage(int index) {
-    if (!_controller.hasClients) return;
+  void _go(int page) {
+    if (page < 0 || page >= widget.itemCount || !_controller.hasClients) return;
     if (motionAllowed(context)) {
-      unawaited(
-        _controller.animateToPage(index, duration: FreshImageGallery.slideDuration, curve: Curves.easeOutCubic),
-      );
+      unawaited(_controller.animateToPage(page, duration: FreshGallery.slideDuration, curve: Curves.easeOutCubic));
     } else {
-      _controller.jumpToPage(index);
+      _controller.jumpToPage(page);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final count = widget.images.length;
-    if (count == 0) {
-      final empty = widget.emptyBuilder;
-      if (empty != null) return empty(context);
-      return const ProductPhoto(url: null, aspectRatio: FreshLayout.pictureAspect, radius: 0, transparent: true);
-    }
-    if (count == 1) return _image(context, 0);
-
+    final count = widget.itemCount;
+    if (count == 0) return widget.empty ?? const SizedBox.expand();
+    if (count == 1) return KeyedSubtree(key: const Key('freshGallerySingle'), child: widget.itemBuilder(context, 0));
     final current = _index < count ? _index : count - 1;
     return Semantics(
+      key: const Key('freshGallery'),
       container: true,
-      label: 'Photo ${current + 1} of $count',
+      label: 'Picture ${current + 1} of $count',
+      onIncrease: current < count - 1 ? () => _go(current + 1) : null,
+      onDecrease: current > 0 ? () => _go(current - 1) : null,
       child: Stack(
         children: [
           Positioned.fill(
             child: PageView.builder(
+              key: const Key('freshGalleryPages'),
               controller: _controller,
               itemCount: count,
               onPageChanged: (i) {
                 setState(() => _index = i);
                 widget.onPageChanged?.call(i);
               },
-              itemBuilder: _image,
+              itemBuilder: widget.itemBuilder,
             ),
           ),
           Positioned.fill(
@@ -122,7 +106,7 @@ class _FreshImageGalleryState extends State<FreshImageGallery> {
               padding: widget.dotsPadding,
               child: Align(
                 alignment: widget.dotsAlignment,
-                child: _GalleryDots(count: count, index: current, onSelect: _showPage),
+                child: _GalleryDots(count: count, index: current, onSelect: _go),
               ),
             ),
           ),
@@ -145,8 +129,9 @@ class _GalleryDots extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = illustratedColors(context);
     return DecoratedBox(
+      key: const Key('freshGalleryDots'),
       decoration: BoxDecoration(
-        color: c.paper.withValues(alpha: 0.85),
+        color: c.paper.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(FreshRadius.full),
       ),
       child: Padding(
@@ -159,17 +144,17 @@ class _GalleryDots extends StatelessWidget {
                 container: true,
                 button: true,
                 selected: i == index,
-                label: 'Show photo ${i + 1}',
+                label: 'Show picture ${i + 1}',
                 onTap: () => onSelect(i),
                 excludeSemantics: true,
                 child: GestureDetector(
-                  key: ValueKey('fresh-gallery-dot-$i'),
+                  key: ValueKey('freshGalleryDot-$i'),
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onSelect(i),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                     child: Container(
-                      key: ValueKey('fresh-gallery-dot-mark-$i'),
+                      key: ValueKey('freshGalleryDotMark-$i'),
                       width: i == index ? 24 : 7,
                       height: 7,
                       decoration: BoxDecoration(

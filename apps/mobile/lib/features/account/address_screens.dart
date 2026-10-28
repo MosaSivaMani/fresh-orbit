@@ -1,6 +1,6 @@
 // Addresses (docs/api §4.2): list with default, add, edit (If-Match), delete, make default. Field errors from
-// the server's Problem Details are shown at the fields. A new address starts from the shopping pincode, and the
-// city and state the server knows for a pincode fill the empty fields.
+// the server's Problem Details are shown at the fields. A new address starts from the shopping pincode and the
+// customer's name and number, and the city and state the server knows for a pincode fill the empty fields.
 
 import 'dart:async';
 
@@ -280,8 +280,21 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
       }
     }
     if (id == null && !_loaded) {
-      // A new address starts from the pincode the customer shops with.
+      // A new address starts from the pincode the customer shops with, and the name and number of the signed-in
+      // customer (D268); every field stays editable.
+      final profile = ref.watch(profileProvider);
+      if (profile.isLoading && !profile.hasValue) {
+        return const Scaffold(
+          appBar: PageHeader(text: 'New', brushed: 'address'),
+          body: ListSkeleton(rows: 4),
+        );
+      }
       _loaded = true;
+      final me = profile.value;
+      if (me?.fullName case final name? when name.trim().isNotEmpty) _c['recipientName']!.text = name.trim();
+      if (me?.phone case final phone? when phone.startsWith('+91') && phone.length == 13) {
+        _c['phone']!.text = phone.substring(3);
+      }
       final pincode = ref.read(pincodeProvider);
       if (pincode != null) {
         _c['pincode']!.text = pincode;

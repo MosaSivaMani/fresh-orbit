@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/api/models/orders.dart';
 import 'package:fresh_orbit_app/core/photo_picker.dart';
 import 'package:fresh_orbit_app/features/orders/order_tracking_screen.dart';
@@ -152,5 +153,104 @@ void main() {
     expect(parts[0], 'o1');
     expect(parts[1], 'WRONG_ADDRESS');
     expect(parts[2], isNotEmpty);
+  });
+
+  group('report a problem (D270)', () {
+    late TestDeps deps;
+
+    setUp(() {
+      deps = TestDeps(pincode: '600041', signedIn: true);
+      deps.orders.onOrder = (_) async => order(
+        status: 'DELIVERED',
+        allowedActions: {'cancel': false, 'raiseComplaint': true, 'downloadInvoice': true, 'reorder': false},
+      );
+      deps.orders.onTracking = (_) async => tracking('DELIVERED');
+    });
+
+    Future<void> openSheet(WidgetTester tester) async {
+      await pumpScreen(
+        tester,
+        deps,
+        const OrderTrackingScreen(orderId: 'o1'),
+        overrides: [
+          photoPickerProvider.overrideWithValue(
+            () async => ComplaintPhotoUpload(bytes: utf8.encode('not a picture'), fileName: 'fish.png'),
+          ),
+        ],
+      );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('reportProblem')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('reportProblem')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> chooseItem(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('complaintItem')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Seer Fish (Vanjaram)').last);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> send(WidgetTester tester) async {
+      await tester.ensureVisible(find.byKey(const Key('sendComplaint')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('sendComplaint')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('"Delivered late" still names the item, and a description under 10 characters is not sent', (
+      tester,
+    ) async {
+      await openSheet(tester);
+      await tester.tap(find.byKey(const ValueKey('complaintKind-LATE')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('complaintItem')), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('complaintDescription')), 'Too late');
+      await send(tester);
+      expect(deps.orders.complaintCalls, isEmpty);
+
+      await chooseItem(tester);
+      await send(tester);
+      expect(deps.orders.complaintCalls, isEmpty); // still under 10 characters
+
+      await tester.enterText(find.byKey(const Key('complaintDescription')), 'It came two hours late.');
+      await send(tester);
+      expect(deps.orders.complaintCalls, ['raise:LATE']);
+    });
+
+    testWidgets('a failed photo is sent again without raising the complaint twice', (tester) async {
+      deps.orders.failPhotoOnce = const ApiError(status: 413, code: 'PAYLOAD_TOO_LARGE');
+      await openSheet(tester);
+      await chooseItem(tester);
+      await tester.enterText(find.byKey(const Key('complaintDescription')), 'The fish was not fresh.');
+      await tester.tap(find.byKey(const Key('addComplaintPhoto')));
+      await tester.pumpAndSettle();
+
+      await send(tester);
+      expect(deps.orders.complaintCalls, ['raise:QUALITY', 'photoFailed:c1:fish.png']);
+      expect(find.byKey(const Key('complaintRaised')), findsOneWidget);
+      expect(find.byKey(const Key('complaintError')), findsOneWidget);
+
+      await send(tester);
+      expect(deps.orders.complaintCalls, ['raise:QUALITY', 'photoFailed:c1:fish.png', 'photo:c1:fish.png']);
+      expect(find.byKey(const Key('sendComplaint')), findsNothing); // the sheet closed
+    });
+
+    testWidgets('an invoice that is not issued yet is a calm note, not an error', (tester) async {
+      deps.orders.onInvoice = () async => throw const ApiError(status: 404, code: 'INVOICE_NOT_ISSUED');
+      await pumpScreen(tester, deps, const OrderTrackingScreen(orderId: 'o1'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('orderInvoice')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('orderInvoice')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      // Not the error snack bar (that one shows the problem's own sentence).
+      expect(find.text(const ApiError(status: 404, code: 'INVOICE_NOT_ISSUED').message), findsNothing);
+    });
   });
 }

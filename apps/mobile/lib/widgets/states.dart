@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
+import 'package:go_router/go_router.dart';
 
 import '../api/api_error.dart';
 import '../illustrations/illustration.dart';
@@ -69,15 +70,18 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-/// The error illustration for an API error: offline for network failures, not found for 404, else generic.
+/// The error illustration for an API error: offline for network failures, not served for a pincode refusal, not
+/// found for 404, else generic.
 IllustrationSlot slotForError(ApiError e) {
+  if (e.needsPincode) return IllustrationSlot.notServiceable;
   if (e.status == 0 && (e.code == ApiError.networkError || e.code == 'TIMEOUT')) return IllustrationSlot.offline;
   if (e.status == 404) return IllustrationSlot.notFound;
   return IllustrationSlot.errorGeneric;
 }
 
-/// Failed load: the server's sentence, its trace id ("Reference: …") and a retry button. Announced to
-/// screen readers as a live region.
+/// Failed load: the server's sentence, its trace id ("Reference: …") and a retry button. A pincode refusal also
+/// offers "Change pincode", because retrying with the same pincode fails again (D236). Announced to screen
+/// readers as a live region.
 class ErrorState extends StatelessWidget {
   const ErrorState({super.key, required this.error, this.onRetry, this.compact = false});
 
@@ -94,6 +98,7 @@ class ErrorState extends StatelessWidget {
     final title = switch (slot) {
       IllustrationSlot.offline => 'You are offline',
       IllustrationSlot.notFound => 'We could not find this',
+      IllustrationSlot.notServiceable => 'Choose where to deliver',
       _ => 'Could not load this',
     };
     final body = Column(
@@ -116,6 +121,15 @@ class ErrorState extends StatelessWidget {
             'Reference: ${apiError.traceId}',
             style: theme.textTheme.bodySmall?.copyWith(color: colors.textMuted),
             textAlign: TextAlign.center,
+          ),
+        ],
+        if (apiError.needsPincode) ...[
+          const SizedBox(height: FreshSpacing.s4),
+          FilledButton.icon(
+            key: const Key('changePincode'),
+            onPressed: () => context.push('/location?change=1'),
+            icon: const Icon(Icons.location_on_outlined),
+            label: const Text('Change pincode'),
           ),
         ],
         if (onRetry != null) ...[

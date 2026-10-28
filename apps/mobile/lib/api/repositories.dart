@@ -4,6 +4,7 @@
 import 'package:dio/dio.dart';
 
 import 'api_client.dart';
+import 'api_error.dart';
 import 'models/account.dart';
 import 'models/auth.dart';
 import 'models/cart.dart';
@@ -192,10 +193,17 @@ class HttpCartRepository implements CartRepository {
   @override
   Future<Cart> remove(String lineId) async => _cart(await _api.delete('cart/items/${_seg(lineId)}'));
 
+  /// A cart that is already gone (404 CART_NOT_FOUND: never created, ordered or expired) is the empty cart the
+  /// customer asked for (D237).
   @override
   Future<Cart> clear() async {
-    final data = await _api.delete('cart');
-    return data == null ? Cart.empty : _cart(data);
+    try {
+      final data = await _api.delete('cart');
+      return data == null ? Cart.empty : _cart(data);
+    } on ApiError catch (e) {
+      if (e.code == 'CART_NOT_FOUND') return Cart.empty;
+      rethrow;
+    }
   }
 
   @override
@@ -265,7 +273,7 @@ class HttpOrderRepository implements OrderRepository {
 
   @override
   Future<Paged<OrderSummary>> orders({int page = 1, int pageSize = 20}) async => parseObject(
-    await _api.get('orders', query: {'page': page, 'pageSize': pageSize, 'sort': '-placedAt'}),
+    await _api.get('orders', query: {'page': page, 'pageSize': pageSize}),
     (j) => Paged.fromJson(j, OrderSummary.fromJson),
   );
 

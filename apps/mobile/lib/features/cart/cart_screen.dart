@@ -443,7 +443,7 @@ class _CouponStripState extends ConsumerState<_CouponStrip> {
     if (!signedIn) {
       return InkWell(
         borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
-        onTap: () => context.push(Uri(path: '/login', queryParameters: {'from': '/cart'}).toString()),
+        onTap: () => context.push('/login'),
         child: strip(Text('Sign in to apply a coupon', style: bold)),
       );
     }

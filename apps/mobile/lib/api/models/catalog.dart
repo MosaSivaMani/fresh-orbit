@@ -32,6 +32,7 @@ class ProductSummary {
     this.fromPrice,
     this.availability,
     required this.locationRequired,
+    this.freshness,
   });
 
   factory ProductSummary.fromJson(Json j) {
@@ -46,6 +47,7 @@ class ProductSummary {
       fromPrice: price == null ? null : FromPrice.fromJson(price),
       availability: optAvailability(j, 'availability'),
       locationRequired: optBool(j, 'locationRequired') ?? false,
+      freshness: Freshness.fromJsonOrNull(j['freshness']),
     );
   }
 
@@ -58,6 +60,24 @@ class ProductSummary {
   final FromPrice? fromPrice;
   final Availability? availability;
   final bool locationRequired;
+
+  /// The default variant's next batch (CAT-R25); null without a pincode or sellable stock.
+  final Freshness? freshness;
+}
+
+/// `{ caughtOn, receivedAt }` of the batch the next order is packed from (CAT-R25). Shown as given; nothing is
+/// shown when it is null, and no catch time is guessed (D212, D240).
+class Freshness {
+  const Freshness({this.caughtOn, this.receivedAt});
+
+  static Freshness? fromJsonOrNull(Object? value) {
+    final j = asJsonOrNull(value, 'freshness');
+    return j == null ? null : Freshness(caughtOn: optString(j, 'caughtOn'), receivedAt: optInstant(j, 'receivedAt'));
+  }
+
+  /// Calendar date `YYYY-MM-DD`; null when the catch date was not recorded at receipt.
+  final String? caughtOn;
+  final DateTime? receivedAt;
 }
 
 class Category {
@@ -88,8 +108,8 @@ class Category {
 }
 
 /// Home banner (Promotions `HomeBanner`). Kept loose on purpose. `linkType` is CATEGORY, PRODUCT or COUPON;
-/// `linkSlug` is the category or product slug (D172), null for a coupon or a missing target. The API has no
-/// badge yet; the app shows one only when the server sends it.
+/// `linkSlug` is the category or product slug (D172), null for a coupon or a missing target. `badge` is the
+/// admin's optional short text (D210), shown as given.
 class HomeBanner {
   const HomeBanner({required this.title, this.subtitle, this.imageUrl, this.badge, this.linkType, this.linkSlug});
 
@@ -212,6 +232,8 @@ class Variant {
     this.compareAtPaise,
     required this.preparations,
     this.availability,
+    this.freshness,
+    this.serving,
   });
 
   factory Variant.fromJson(Json j) {
@@ -228,6 +250,8 @@ class Variant {
       compareAtPaise: optInt(j, 'compareAtPaise'),
       preparations: listOrEmpty(j, 'preparations', Preparation.fromJson),
       availability: availability == null ? null : VariantAvailability.fromJson(availability),
+      freshness: Freshness.fromJsonOrNull(j['freshness']),
+      serving: Serving.fromJsonOrNull(j['serving']),
     );
   }
 
@@ -244,6 +268,12 @@ class Variant {
   final int? compareAtPaise;
   final List<Preparation> preparations;
   final VariantAvailability? availability;
+
+  /// This size's next batch (CAT-R25).
+  final Freshness? freshness;
+
+  /// Pieces and servings per serving basis, as the server states them (CAT-R21); null when not stated.
+  final Serving? serving;
 
   Preparation? get defaultPreparation {
     for (final p in preparations) {
@@ -269,10 +299,12 @@ class ProductDetail {
     required this.netWeightNote,
     this.isWishlisted,
     required this.locationRequired,
+    this.offer,
   });
 
   factory ProductDetail.fromJson(Json j) {
     final category = asJsonOrNull(j['category'], 'category');
+    final offer = asJsonOrNull(j['offer'], 'offer');
     return ProductDetail(
       id: reqString(j, 'id'),
       slug: reqString(j, 'slug'),
@@ -288,6 +320,7 @@ class ProductDetail {
       netWeightNote: optString(j, 'netWeightNote') ?? '',
       isWishlisted: optBool(j, 'isWishlisted'),
       locationRequired: optBool(j, 'locationRequired') ?? false,
+      offer: offer == null ? null : ProductOffer.fromJson(offer),
     );
   }
 
@@ -305,6 +338,46 @@ class ProductDetail {
   final String netWeightNote;
   final bool? isWishlisted;
   final bool locationRequired;
+
+  /// The coupon line for the pincode's city (CAT-R26); null without a location or when none applies.
+  final ProductOffer? offer;
+}
+
+/// `offer { couponCode, text }` on a product: the server's sentence, shown as sent (no amount worked out here).
+class ProductOffer {
+  const ProductOffer({required this.couponCode, required this.text});
+
+  factory ProductOffer.fromJson(Json j) =>
+      ProductOffer(couponCode: optString(j, 'couponCode') ?? '', text: optString(j, 'text') ?? '');
+
+  final String couponCode;
+  final String text;
+}
+
+/// `serving { basis, netWeightGrams, piecesMin, piecesMax, serves }` (CAT-R21): per one kg net, one pack or one
+/// piece. Missing values stay null; the app never scales them to another quantity.
+class Serving {
+  const Serving({required this.basis, this.piecesMin, this.piecesMax, this.serves});
+
+  static Serving? fromJsonOrNull(Object? value) {
+    if (value is! Map) return null;
+    final j = value.cast<String, dynamic>();
+    final basis = optQuantity(j, 'basis');
+    if (basis == null) return null;
+    return Serving(
+      basis: basis,
+      piecesMin: optInt(j, 'piecesMin'),
+      piecesMax: optInt(j, 'piecesMax'),
+      serves: optInt(j, 'serves'),
+    );
+  }
+
+  final Quantity basis;
+  final int? piecesMin;
+  final int? piecesMax;
+  final int? serves;
+
+  bool get isEmpty => piecesMin == null && serves == null;
 }
 
 /// One line priced by the server before it is added (GET /price-quote, CART-R24): the estimate for the chosen
@@ -344,11 +417,23 @@ class PriceQuote {
 
 /// The business's public profile (GET /business-profile): who runs the shop and how to reach support.
 class BusinessProfile {
-  const BusinessProfile({this.tradeName, this.legalName, this.supportPhone, this.supportEmail, this.supportHours});
+  const BusinessProfile({
+    this.tradeName,
+    this.legalName,
+    this.supportPhone,
+    this.supportEmail,
+    this.supportHours,
+    this.address,
+    this.gstin,
+    this.fssaiLicenseNo,
+  });
 
   factory BusinessProfile.fromJson(Json j) => BusinessProfile(
     tradeName: optString(j, 'tradeName'),
     legalName: optString(j, 'legalName'),
+    address: optString(j, 'address'),
+    gstin: optString(j, 'gstin'),
+    fssaiLicenseNo: optString(j, 'fssaiLicenseNo'),
     supportPhone: optString(j, 'supportPhone'),
     supportEmail: optString(j, 'supportEmail'),
     supportHours: optString(j, 'supportHours'),
@@ -359,6 +444,11 @@ class BusinessProfile {
   final String? supportPhone;
   final String? supportEmail;
   final String? supportHours;
+
+  /// The registered address, GSTIN and FSSAI licence (legal details the store must show; null until set).
+  final String? address;
+  final String? gstin;
+  final String? fssaiLicenseNo;
 }
 
 class SearchSuggestion {

@@ -555,3 +555,38 @@ order detail → account all link up; no button is dead.
 
 The demo build refuses price quotes (no price engine; the page shows the unit price only), lists one sample
 coupon that it does not apply, and answers stock alerts and the business profile with sample values.
+
+## 18. Requests the server accepts (API contract audit, D235–D241)
+
+Every call the app sends was checked against the server's validators and the Render demo
+(`docs/research/mobile-api-audit-2026-10.md`). What the app does so no screen meets a refusal it cannot get out of:
+
+| Where | Behaviour |
+|---|---|
+| Search | A search is sent only when it has 2 to 60 characters after trimming and at least one letter or digit (CAT-R12, `core/search_text.dart`); otherwise the "Search the catch" hint stays and neither `/products` nor `/search/suggest` is called. The field stops at 60 characters (D235) |
+| Any catalogue error | `PINCODE_NOT_SERVICEABLE` or `LOCATION_REQUIRED` (a stored pincode that is no longer served, or none) shows "Choose where to deliver" with **Change pincode** (opens `/location?change=1`) beside Try again (D236) |
+| Clear cart | `DELETE /cart` answered 404 `CART_NOT_FOUND` (the cart was ordered or expired) reads as the empty cart (D237) |
+| Home header | The city line is "City, State" when `/serviceability` sends `city.stateName` (D209), else the city alone (D238) |
+| Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Slots to your door", "Fee and minimum order." (D212, D239) |
+| Product page, shop cards | "Caught Fri, 23 Oct" from `freshness.caughtOn` (CAT-R25): the chosen size on the product page, the default size as the card's picture chip (a Low stock / Sold out chip takes the spot first); nothing when the server sends none (D240) |
+| Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |
+
+## 19. Every flow end to end (flow audit, D265–D275)
+
+Each flow was walked against the server (`docs/research/mobile-flow-audit-2026-10.md`). What changed:
+
+| Where | Behaviour |
+|---|---|
+| Product pictures | `FreshGallery` (fresh_theme, the only gallery part, D276): every server picture, swipeable, tappable dots on a paper pill (each a "Show picture i" button; at once under reduced motion); one picture alone, none the placeholder; "Picture i of n" with increase / decrease for screen readers; alt text from the server on each picture (D266). Keys `productGallery`, `productImage-<i>`, `freshGalleryPages`, `freshGalleryDots`, `freshGalleryDot-<i>` |
+| Product facts | Offer line (`productOffer`), serving facts (`productServing`), "Kept cold" only with cold storage (D274) |
+| Sign-in | Pushed by a screen: pops back; from the router's redirect: replaced by the page that needed it (`leaveLogin`, D267) |
+| Checkout address | Edit (`editAddress-<id>`) and Add (`addAddress`) open `/addresses/:id` and `/addresses/new` (full screen, outside the shell); a new address starts with the profile's name and number (D268) |
+| Checkout key | One Idempotency-Key per request body; slot refusals re-read the slots (D269); "Leave it out" substitution (`substitutionNone`, D275) |
+| Report a problem | Item always required, 10–1000 characters; raised once, photos retried alone (`sendComplaint`, `complaintRaised`, `finishComplaint`, D270) |
+| Refusals | Invoice not issued is a note; delete-account refusals in `profileError`; 429 says the wait (D271) |
+| Inbox, preferences | Follow sign-in and sign-out (D272) |
+| Help | "About the store" (`helpStoreDetails`) with legal name, address, GSTIN, FSSAI (D273) |
+
+Tests: `test/widgets/fresh_gallery_test.dart`, `product_gallery_test.dart`, `flow_audit_test.dart`, and new cases
+in `order_tracking_test.dart` and `test/state/checkout_controller_test.dart`. Not run yet (CI blocked by billing).
+

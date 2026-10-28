@@ -101,6 +101,15 @@ class HelpScreen extends ConsumerWidget {
               _ => const SkeletonBox(height: 56),
             },
           ),
+          if (profile.value case final p? when _StoreDetails.hasAny(p)) ...[
+            const SizedBox(height: FreshLayout.sectionGap),
+            const Padding(
+              padding: FreshLayout.page,
+              child: PageTitle(text: 'About the', brushed: 'store', size: 20),
+            ),
+            const SizedBox(height: 8),
+            Padding(padding: FreshLayout.page, child: _StoreDetails(profile: p)),
+          ],
         ],
       ),
     );
@@ -141,6 +150,38 @@ class _Contacts extends StatelessWidget {
               subtitle: Text(email),
               onTap: () => openExternal(context, Uri(scheme: 'mailto', path: email)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The legal details from the business profile (legal name, registered address, GSTIN, FSSAI licence), as
+/// configured by the owner (D273). Rows the owner has not filled are left out.
+class _StoreDetails extends StatelessWidget {
+  const _StoreDetails({required this.profile});
+
+  final BusinessProfile profile;
+
+  static bool hasAny(BusinessProfile p) =>
+      [p.legalName, p.address, p.gstin, p.fssaiLicenseNo].any((v) => v != null && v.trim().isNotEmpty);
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <(String, String?)>[
+      ('Legal name', profile.legalName),
+      ('Registered address', profile.address),
+      ('GSTIN', profile.gstin),
+      ('FSSAI licence', profile.fssaiLicenseNo),
+    ];
+    return SectionBox(
+      key: const Key('helpStoreDetails'),
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (final (label, value) in rows)
+            if (value != null && value.trim().isNotEmpty)
+              ListTile(title: Text(label), subtitle: SelectableText(value)),
         ],
       ),
     );

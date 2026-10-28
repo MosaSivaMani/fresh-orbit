@@ -107,7 +107,7 @@ class RoundIconButton extends StatelessWidget {
   }
 }
 
-/// Page dots: the current one is a 24 px ink pill.
+/// Page dots: the current one is a 24 px ink pill. As wide as the dots (centre it where needed).
 class PageDots extends StatelessWidget {
   const PageDots({super.key, required this.count, required this.index});
 
@@ -121,6 +121,7 @@ class PageDots extends StatelessWidget {
       label: 'Page ${index + 1} of $count',
       child: ExcludeSemantics(
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             for (var i = 0; i < count; i++)
