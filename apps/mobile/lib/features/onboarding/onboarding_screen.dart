@@ -20,6 +20,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../illustrations/illustration.dart';
 import '../../state/core_providers.dart';
+import '../../state/session.dart';
 import '../../widgets/bold.dart';
 import 'onboarding_art.dart';
 
@@ -213,9 +214,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
+  /// Done or skipped: the first-run sign-in comes next (D277), once; then the pincode.
   Future<void> _finish() async {
-    await ref.read(appPrefsProvider).setOnboardingDone();
-    if (mounted) context.go('/location');
+    final prefs = ref.read(appPrefsProvider);
+    await prefs.setOnboardingDone();
+    if (!mounted) return;
+    final offerSignIn = !prefs.welcomeSignInShown && !ref.read(sessionProvider).signedIn;
+    context.go(offerSignIn ? '/login?welcome=1' : '/location');
   }
 
   Future<void> _next() async {
