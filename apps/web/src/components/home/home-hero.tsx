@@ -67,6 +67,7 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
           className="object-cover object-[78%_0%] lg:object-[82%_0%]"
         />
       }
+      ship={<Image src="/home/hero-ship.jpg" alt="" fill sizes="360px" className="object-cover" />}
       background={
         heroBackground ? (
           <Image src={heroBackground} alt="" fill priority sizes="100vw" className="object-cover" />
