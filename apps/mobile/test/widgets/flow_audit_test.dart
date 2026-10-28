@@ -1,6 +1,6 @@
 // Fixes from the mobile flow audit (docs/research/mobile-flow-audit-2026-10.md): sign-in returns to where the
-// customer was (D263), checkout edits an address in place (D264), the inbox follows the session (D268), account
-// deletion refusals are shown (D267), the help page shows the store's legal details (D269), and a 429 says how
+// customer was (D267), checkout edits an address in place (D268), the inbox follows the session (D272), account
+// deletion refusals are shown (D271), the help page shows the store's legal details (D273), and a 429 says how
 // long to wait.
 
 import 'dart:async';
@@ -67,7 +67,7 @@ Profile _profile() => Profile.fromJson({
 });
 
 void main() {
-  group('leaveLogin (D263)', () {
+  group('leaveLogin (D267)', () {
     testWidgets('a login pushed by a screen pops back to that screen', (tester) async {
       final router = await _pumpRouter(tester);
       unawaited(router.push('/login'));
@@ -118,7 +118,7 @@ void main() {
     });
   });
 
-  testWidgets('checkout edits an address in place over the checkout (D264)', (tester) async {
+  testWidgets('checkout edits an address in place over the checkout (D268)', (tester) async {
     final deps = TestDeps(pincode: '600041', signedIn: true);
     deps.account.addressList = [address()];
     deps.location.onSlots = (_) async => slots();
@@ -148,7 +148,7 @@ void main() {
   });
 
   for (final signedIn in [false, true]) {
-    test('the inbox is read only for a signed-in customer (signed in: $signedIn, D268)', () async {
+    test('the inbox is read only for a signed-in customer (signed in: $signedIn, D272)', () async {
       final deps = TestDeps(pincode: '600041', signedIn: signedIn);
       await deps.load();
       final container = deps.container();
@@ -162,7 +162,7 @@ void main() {
     });
   }
 
-  testWidgets('a refused account deletion (422 ACCOUNT_HAS_OPEN_MATTERS) is shown (D267)', (tester) async {
+  testWidgets('a refused account deletion (422 ACCOUNT_HAS_OPEN_MATTERS) is shown (D271)', (tester) async {
     final deps = TestDeps(pincode: '600041', signedIn: true);
     deps.account.me = _profile();
     deps.account.failDelete = ApiError.fromProblem(422, {
@@ -186,7 +186,7 @@ void main() {
     expect(find.text('route:/home'), findsNothing);
   });
 
-  testWidgets('help shows the legal details the owner configured (D269)', (tester) async {
+  testWidgets('help shows the legal details the owner configured (D273)', (tester) async {
     final deps = TestDeps(pincode: '600041');
     deps.catalog.profile = const BusinessProfile(
       legalName: 'Sample Legal Name',

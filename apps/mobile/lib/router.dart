@@ -86,7 +86,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from']),
       ),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
-      // The address form over checkout (D264): full-screen routes outside the tab shell, so checkout pushes them
+      // The address form over checkout (D268): full-screen routes outside the tab shell, so checkout pushes them
       // and gets the saved address back without opening a second shell.
       GoRoute(path: '/addresses/new', builder: (_, _) => const AddressFormScreen()),
       GoRoute(

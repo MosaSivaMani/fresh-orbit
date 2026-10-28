@@ -224,7 +224,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Hero: every picture in the 3:2 frame on teal-soft inside the gutters, swipeable with dots (D262), and a
+          // Hero: every picture in the 3:2 frame on teal-soft inside the gutters, swipeable with dots (D266), and a
           // sticker (D193).
           Padding(
             padding: FreshLayout.page,
@@ -474,7 +474,7 @@ String? servingText(Serving? serving) {
 }
 
 /// Promises of the shop, as small tiles. "Kept cold" only when the store for the pincode has cold storage
-/// (LOC-R11, D239, D270), like the home.
+/// (LOC-R11, D239, D274), like the home.
 class _Facts extends StatelessWidget {
   const _Facts({required this.keptCold});
 
@@ -557,7 +557,8 @@ class _AddAction extends StatelessWidget {
   }
 }
 
-/// Every picture the server sends for the product, swipeable with page dots (the theme's [FreshGallery], D262).
+/// Every picture the server sends for the product, swipeable with tappable dots (the theme's [FreshGallery], D266,
+/// D276), each with the server's alt text.
 /// One picture shows alone; none shows the calm placeholder.
 class _Gallery extends StatelessWidget {
   const _Gallery({required this.images});

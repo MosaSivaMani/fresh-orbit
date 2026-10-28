@@ -103,7 +103,7 @@ class WishlistController extends AsyncNotifier<List<WishlistEntry>> {
 final inboxProvider = AsyncNotifierProvider<InboxController, InboxPage>(InboxController.new);
 
 class InboxController extends AsyncNotifier<InboxPage> {
-  // Read again when the customer signs in or out, so one customer never sees another's inbox (D268).
+  // Read again when the customer signs in or out, so one customer never sees another's inbox (D272).
   @override
   Future<InboxPage> build() async {
     if (!ref.watch(sessionProvider.select((s) => s.signedIn))) return InboxPage.empty;

@@ -77,7 +77,7 @@ class OrderActions {
   }
 
   /// Raises the complaint (JSON, `Idempotency-Key`). Photos go to it afterwards with [addComplaintPhoto], so a
-  /// failed photo never raises the complaint a second time (D266).
+  /// failed photo never raises the complaint a second time (D270).
   Future<Complaint> raiseComplaint(
     String orderId, {
     required String orderItemId,

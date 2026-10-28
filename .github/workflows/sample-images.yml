@@ -8,6 +8,7 @@ on:
   pull_request:
     paths:
       - docs/design/characters/generated/**
+      - docs/design/products/**
       - backend/data/sample/tools/make_images.py
       - .github/workflows/sample-images.yml
 

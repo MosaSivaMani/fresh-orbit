@@ -281,7 +281,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     }
     if (id == null && !_loaded) {
       // A new address starts from the pincode the customer shops with, and the name and number of the signed-in
-      // customer (D264); every field stays editable.
+      // customer (D268); every field stays editable.
       final profile = ref.watch(profileProvider);
       if (profile.isLoading && !profile.hasValue) {
         return const Scaffold(

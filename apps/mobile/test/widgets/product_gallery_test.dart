@@ -1,5 +1,5 @@
 // Product page details from the mobile flow audit (docs/research/mobile-flow-audit-2026-10.md): every picture
-// in the gallery (D262), the server's offer line (CAT-R26) and serving facts (CAT-R21), and "Kept cold" only
+// in the gallery (D266), the server's offer line (CAT-R26) and serving facts (CAT-R21), and "Kept cold" only
 // when the pincode's store has cold storage (D239).
 
 import 'package:flutter/material.dart';
@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/models/catalog.dart';
 import 'package:fresh_orbit_app/api/models/locations.dart';
 import 'package:fresh_orbit_app/features/catalog/product_screen.dart';
-import 'package:fresh_theme/fresh_theme.dart';
 
 import '../support/fixtures.dart';
 import '../support/harness.dart';
@@ -44,14 +43,15 @@ void main() {
       expect(find.byKey(const Key('productGallery')), findsOneWidget);
       expect(find.byKey(const ValueKey('productImage-0')), findsOneWidget);
       if (count == 1) {
-        expect(find.byType(PageDots), findsNothing);
+        expect(find.byKey(const Key('freshGalleryDots')), findsNothing);
       } else {
-        expect(tester.widget<PageDots>(find.byType(PageDots)).count, count);
+        expect(find.byKey(ValueKey('freshGalleryDot-${count - 1}')), findsOneWidget);
+        expect(find.byKey(ValueKey('freshGalleryDot-$count')), findsNothing);
         for (var i = 1; i < count; i++) {
           await tester.drag(find.byKey(const Key('freshGalleryPages')), const Offset(-300, 0));
           await tester.pumpAndSettle();
           expect(find.byKey(ValueKey('productImage-$i')), findsOneWidget);
-          expect(tester.widget<PageDots>(find.byType(PageDots)).index, i);
+          expect(tester.getSize(find.byKey(ValueKey('freshGalleryDotMark-$i'))).width, 24);
         }
       }
     });
@@ -61,7 +61,7 @@ void main() {
     await pump(tester, productDetailJson());
 
     expect(find.byKey(const Key('productGallery')), findsOneWidget);
-    expect(find.byType(PageDots), findsNothing);
+    expect(find.byKey(const Key('freshGalleryDots')), findsNothing);
   });
 
   testWidgets('shows the server offer line and serving facts as sent', (tester) async {

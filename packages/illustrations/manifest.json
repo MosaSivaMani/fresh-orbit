@@ -11,7 +11,8 @@
     "1:1": "Square 1:1 image, subject centred, full body or three-quarter view",
     "4:3": "Landscape 4:3 image, subject slightly off centre with room on one side",
     "2:1": "Wide 2:1 banner image, the subjects spread across the whole width, seen from slightly above",
-    "3:2": "Wide 3:2 image, the subject on the right half with the left third kept empty"
+    "3:2": "Wide 3:2 image, the subject on the right half with the left third kept empty",
+    "20:7": "Very wide 20:7 website hero image, 2400 by 840 pixels, the subject in the left third and the right two-thirds kept calm and open for text"
   },
   "characters": {
     "FISHMONGER": {
@@ -668,6 +669,73 @@
       "background": "TRANSPARENT",
       "status": "PLACEHOLDER",
       "prompt": "Ravi riding his electric scooter to the right, side view, waving with his left hand, the ice-blue cold backpack clearly visible, the whole scooter in the picture. Ravi, the delivery rider: A man, about 26, with a short beard and moustache and a cheerful smile; a sea-teal helmet with a clear visor; a teal rain jacket with silver reflective stripes; an ice-blue insulated backpack with a white snowflake mark; dark cargo trousers and white sneakers; rides a coral-orange electric scooter; same face and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "CATEGORY_FILLETS_STEAKS",
+      "file": "assets/category_fillets_steaks.svg",
+      "placeholder": "assets/category_fillets_steaks.svg",
+      "alt": "Raw seer fish steaks and salmon fillet slices with lemon wedges on a banana leaf.",
+      "scene": "Three thick raw seer fish steaks and two pink salmon fillet slices fanned out on a small banana leaf with two lemon wedges, photo-real seafood seen from the front and slightly above with a soft shadow under it, no knife, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Three thick raw seer fish steaks and two pink salmon fillet slices fanned out on a small banana leaf with two lemon wedges, photo-real seafood seen from the front and slightly above with a soft shadow under it, no knife, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "CATEGORY_READY_TO_COOK",
+      "file": "assets/category_ready_to_cook.svg",
+      "placeholder": "assets/category_ready_to_cook.svg",
+      "alt": "Cleaned whole sardines and mackerel, scored and ready for the pan, with a lemon half.",
+      "scene": "Four cleaned whole sardines and mackerel, gutted and scored, ready for the pan, laid side by side with a lemon half and a few curry leaves, photo-real seafood seen from slightly above with a soft shadow under it, no pan, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Four cleaned whole sardines and mackerel, gutted and scored, ready for the pan, laid side by side with a lemon half and a few curry leaves, photo-real seafood seen from slightly above with a soft shadow under it, no pan, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "CATEGORY_MARINATED",
+      "file": "assets/category_marinated.svg",
+      "placeholder": "assets/category_marinated.svg",
+      "alt": "Fish pieces in a red masala marinade with curry leaves, a green chilli and a lemon wedge.",
+      "scene": "Raw fish pieces coated in a thick red-orange Andhra masala marinade on a small steel plate with fresh curry leaves, a slit green chilli and a lemon wedge, photo-real food seen from slightly above with a soft shadow under it, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "Raw fish pieces coated in a thick red-orange Andhra masala marinade on a small steel plate with fresh curry leaves, a slit green chilli and a lemon wedge, photo-real food seen from slightly above with a soft shadow under it, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "CATEGORY_FISH_EGGS",
+      "file": "assets/category_fish_eggs.svg",
+      "placeholder": "assets/category_fish_eggs.svg",
+      "alt": "A small bowl of bright orange fish roe with a lemon wedge and coriander.",
+      "scene": "A small round ceramic bowl filled with glistening bright-orange fish roe, a lemon wedge and a sprig of coriander beside it, photo-real food seen from the front and slightly above with a soft shadow under it, no spoon, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A small round ceramic bowl filled with glistening bright-orange fish roe, a lemon wedge and a sprig of coriander beside it, photo-real food seen from the front and slightly above with a soft shadow under it, no spoon, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "CATEGORY_READY_TO_EAT",
+      "file": "assets/category_ready_to_eat.svg",
+      "placeholder": "assets/category_ready_to_eat.svg",
+      "alt": "A bowl of Andhra fish curry with fish pieces in a red tamarind gravy and curry leaves.",
+      "scene": "A round bowl of Andhra fish curry with tender fish pieces in a thick red-orange tamarind gravy, a few curry leaves on top, photo-real food seen from the front and slightly above with a soft shadow under it, no spoon, no hands, no people, no characters and no faces",
+      "aspect": "1:1",
+      "background": "TRANSPARENT",
+      "status": "PLACEHOLDER",
+      "prompt": "A round bowl of Andhra fish curry with tender fish pieces in a thick red-orange tamarind gravy, a few curry leaves on top, photo-real food seen from the front and slightly above with a soft shadow under it, no spoon, no hands, no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+    },
+    {
+      "slot": "WEB_HOME_HERO_HARBOUR",
+      "file": "assets/web_home_hero_harbour.svg",
+      "placeholder": "assets/web_home_hero_harbour.svg",
+      "alt": "Padma holds a fresh seer fish at a fishing harbour at sunrise, with boats, crates of fish and gulls behind her.",
+      "character": "FISHMONGER",
+      "scene": "A wide sunrise fishing harbour on the Andhra coast: wooden fishing boats with coral and teal hulls at the jetty, stacks of plastic crates full of fresh fish on ice, a few gulls in a peach-and-cream sky and the sun low over calm water; Padma stands in the left third, seen from the waist up, smiling at the viewer and holding a large fresh silver seer fish across her body with both gloved hands; the right two-thirds stays calm open sky and sea in soft light, with no boats, people or objects there, leaving clear space for text",
+      "aspect": "20:7",
+      "background": "SCENE",
+      "status": "PLACEHOLDER",
+      "prompt": "A wide sunrise fishing harbour on the Andhra coast: wooden fishing boats with coral and teal hulls at the jetty, stacks of plastic crates full of fresh fish on ice, a few gulls in a peach-and-cream sky and the sun low over calm water; Padma stands in the left third, seen from the waist up, smiling at the viewer and holding a large fresh silver seer fish across her body with both gloved hands; the right two-thirds stays calm open sky and sea in soft light, with no boats, people or objects there, leaving clear space for text. Padma, the fishmonger (our lead): An Indian woman, about 30, warm brown skin, a small dark bindi and a bright friendly smile; a coral headscarf over a low black bun; a white short-sleeve kurta under a glossy sea-teal fishmonger apron, with a coral skirt hem showing below it; light-blue rubber gloves; dark-green rubber boots; she often holds a fresh silver fish; same face, headscarf and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: a full, softly lit scene that fits the moment (the harbour at sunrise, the fish market, a home kitchen or a city street), slightly out of focus behind the characters, with no signs or writing anywhere. Very wide 20:7 website hero image, 2400 by 840 pixels, the subject in the left third and the right two-thirds kept calm and open for text. No text, no letters, no numbers, no logos, no watermark. High resolution."
     }
   ]
 }

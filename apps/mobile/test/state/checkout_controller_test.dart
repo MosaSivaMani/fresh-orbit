@@ -177,7 +177,7 @@ void main() {
     await controller().placeOrder();
     final firstKey = deps.orders.placed.single.key;
 
-    // The customer pulls a fresh preview and the server's expected total moved: the body differs (D265).
+    // The customer pulls a fresh preview and the server's expected total moved: the body differs (D269).
     deps.orders.onPreview = (_) async => preview(expectedTotal: 71900);
     await controller().refreshPreview();
     await controller().placeOrder();

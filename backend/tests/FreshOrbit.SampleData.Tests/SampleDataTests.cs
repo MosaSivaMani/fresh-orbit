@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using AwesomeAssertions;
+using FreshOrbit.Catalog.Infrastructure.Seeding;
 using FreshOrbit.Hosting;
 using FreshOrbit.Migrations;
 using FreshOrbit.SharedKernel.Actors;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging.Abstractions;
+using SkiaSharp;
 
 [assembly: AssemblyFixture(typeof(FreshOrbit.SampleData.Tests.SampleDatabase))]
 
@@ -49,7 +51,7 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         ["catalog.categories"] = 11,
         ["catalog.products"] = 26,
         ["catalog.product_variants"] = 28,
-        ["catalog.product_images"] = 26,
+        ["catalog.product_images"] = ExpectedProductImages(),
         ["pricing.tax_rules"] = 4,
         ["pricing.variant_prices"] = 28,
         ["pricing.preparation_charges"] = 67,
@@ -133,6 +135,46 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         (await runner.RunAsync(new MigrationCommand(LoadSample: false, PurgeSample: true, CreateAdmin: null), Ct)).Should().Be(2);
     }
 
+    [Fact]
+    public async Task Committed_product_pictures_replace_the_placeholder_in_number_order()
+    {
+        // D249: a copy of the sample set with pictures 1 and 2 of seer-fish committed (3 has alt text but no file).
+        var sample = CopySampleSet();
+        var pictures = Path.Combine(sample, "images", "products", "seer-fish");
+        Directory.CreateDirectory(pictures);
+        var main = SamplePlaceholderRenderer.Render(1280, 1280, PlaceholderShape.Crab, SKEncodedImageFormat.Webp);
+        await File.WriteAllBytesAsync(Path.Combine(pictures, "1.webp"), main, Ct);
+        await File.WriteAllBytesAsync(Path.Combine(pictures, "2.webp"), SamplePlaceholderRenderer.Render(1200, 1200, PlaceholderShape.Prawn, SKEncodedImageFormat.Webp), Ct);
+        await using var services = BuildServices();
+        await RunReferenceLoadersAsync(services);
+
+        await LoadSampleAsync(services, sample);
+
+        var seer = await ImagesOfAsync("seer-fish");
+        seer.Select(i => i.AltText).Should().Equal("Seer fish, whole on crushed ice", "Seer fish steaks, cleaned and cut about 1 cm thick");
+        (await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, seer[0].StorageKey, "original"), Ct)).Should().Equal(main, "picture 1 is uploaded as committed and is the main picture");
+        foreach (var width in new[] { "320", "640", "1280" })
+        {
+            File.Exists(Path.Combine(_mediaRoot, seer[0].StorageKey, width + ".webp")).Should().BeTrue("the sample pictures get the same renditions as an admin upload (CAT-R16)");
+        }
+
+        (await ImagesOfAsync("rohu")).Select(i => i.AltText).Should().Equal(["Rohu — sample placeholder image"], "a product without a committed picture keeps the placeholder");
+        (await ScalarAsync("SELECT count(*) FROM catalog.product_images")).Should().Be(ExpectedProductImages() + 1);
+
+        await using (var api = new ApiFactory(database))
+        {
+            using var client = api.CreateClient();
+            using var response = await client.GetAsync($"/api/v1/products/seer-fish?pincode={SamplePincode}", Ct);
+            var body = await response.Content.ReadAsStringAsync(Ct);
+            response.IsSuccessStatusCode.Should().BeTrue(body);
+            var images = JsonDocument.Parse(body).RootElement.GetProperty("images").EnumerateArray().ToList();
+            images.Select(i => i.GetProperty("altText").GetString()).Should().Equal("Seer fish, whole on crushed ice", "Seer fish steaks, cleaned and cut about 1 cm thick");
+        }
+
+        await PurgeAsync(services);
+        (await ScalarAsync("SELECT count(*) FROM catalog.product_images")).Should().Be(0);
+    }
+
     public ValueTask DisposeAsync()
     {
         if (Directory.Exists(_mediaRoot))
@@ -141,6 +183,54 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         }
 
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Product images one load inserts (D249): each product's committed pictures (images/products/{slug}/{n}.webp),
+    /// or one placeholder when it has none.
+    /// </summary>
+    private static int ExpectedProductImages()
+    {
+        var sample = DataPath("sample");
+        using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(sample, "catalog.json")));
+        return catalog.RootElement.GetProperty("products").EnumerateArray()
+            .Select(p => p.GetProperty("slug").GetString()!)
+            .Sum(slug => Math.Max(1, Enumerable.Range(1, SampleProductPictures.MaxPictures).Count(n => SampleImageFiles.Find(sample, SampleProductPictures.ImageKey(slug, n)) is not null)));
+    }
+
+    /// <summary>A copy of backend/data/sample under this test's temp folder, so pictures can be added to it.</summary>
+    private string CopySampleSet()
+    {
+        var source = DataPath("sample");
+        var target = Path.Combine(_mediaRoot, "sample-set");
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var copy = Path.Combine(target, Path.GetRelativePath(source, file));
+            Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+            File.Copy(file, copy);
+        }
+
+        return target;
+    }
+
+    private async Task<List<(string AltText, string StorageKey)>> ImagesOfAsync(string productSlug)
+    {
+        await using var db = database.CreateDbContext();
+        await db.Database.OpenConnectionAsync(Ct);
+        await using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = "SELECT i.alt_text, i.storage_key FROM catalog.product_images i JOIN catalog.products p ON p.id = i.product_id WHERE p.slug = @slug ORDER BY i.sort_order";
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "slug";
+        parameter.Value = productSlug;
+        command.Parameters.Add(parameter);
+        var images = new List<(string AltText, string StorageKey)>();
+        await using var reader = await command.ExecuteReaderAsync(Ct);
+        while (await reader.ReadAsync(Ct))
+        {
+            images.Add((reader.GetString(0), reader.GetString(1)));
+        }
+
+        return images;
     }
 
     internal static string DataPath(string kind)
@@ -197,10 +287,10 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         }
     }
 
-    private static async Task LoadSampleAsync(IServiceProvider services)
+    private static async Task LoadSampleAsync(IServiceProvider services, string? sampleDirectory = null)
     {
         await using var scope = services.CreateAsyncScope();
-        var context = new SampleDataContext(DataPath("sample"), scope.ServiceProvider.GetRequiredService<ISampleRecordTracker>(), scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
+        var context = new SampleDataContext(sampleDirectory ?? DataPath("sample"), scope.ServiceProvider.GetRequiredService<ISampleRecordTracker>(), scope.ServiceProvider.GetRequiredService<IClock>().UtcNow);
         foreach (var loader in scope.ServiceProvider.GetServices<ISampleDataLoader>().OrderBy(l => l.Order))
         {
             await loader.LoadAsync(context, Ct);

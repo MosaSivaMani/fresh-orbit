@@ -157,7 +157,7 @@ class _Contacts extends StatelessWidget {
 }
 
 /// The legal details from the business profile (legal name, registered address, GSTIN, FSSAI licence), as
-/// configured by the owner (D269). Rows the owner has not filled are left out.
+/// configured by the owner (D273). Rows the owner has not filled are left out.
 class _StoreDetails extends StatelessWidget {
   const _StoreDetails({required this.profile});
 

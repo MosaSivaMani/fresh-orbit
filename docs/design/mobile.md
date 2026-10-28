@@ -571,21 +571,21 @@ Every call the app sends was checked against the server's validators and the Ren
 | Product page, shop cards | "Caught Fri, 23 Oct" from `freshness.caughtOn` (CAT-R25): the chosen size on the product page, the default size as the card's picture chip (a Low stock / Sold out chip takes the spot first); nothing when the server sends none (D240) |
 | Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |
 
-## 19. Every flow end to end (flow audit, D261–D271)
+## 19. Every flow end to end (flow audit, D265–D275)
 
 Each flow was walked against the server (`docs/research/mobile-flow-audit-2026-10.md`). What changed:
 
 | Where | Behaviour |
 |---|---|
-| Product pictures | `FreshGallery` (fresh_theme): every server picture, swipeable, `PageDots` on a paper pill; one picture alone, none the placeholder; increase / decrease for screen readers (D262). Keys `productGallery`, `productImage-<i>`, `freshGalleryPages`, `freshGalleryDots` |
-| Product facts | Offer line (`productOffer`), serving facts (`productServing`), "Kept cold" only with cold storage (D270) |
-| Sign-in | Pushed by a screen: pops back; from the router's redirect: replaced by the page that needed it (`leaveLogin`, D263) |
-| Checkout address | Edit (`editAddress-<id>`) and Add (`addAddress`) open `/addresses/:id` and `/addresses/new` (full screen, outside the shell); a new address starts with the profile's name and number (D264) |
-| Checkout key | One Idempotency-Key per request body; slot refusals re-read the slots (D265); "Leave it out" substitution (`substitutionNone`, D271) |
-| Report a problem | Item always required, 10–1000 characters; raised once, photos retried alone (`sendComplaint`, `complaintRaised`, `finishComplaint`, D266) |
-| Refusals | Invoice not issued is a note; delete-account refusals in `profileError`; 429 says the wait (D267) |
-| Inbox, preferences | Follow sign-in and sign-out (D268) |
-| Help | "About the store" (`helpStoreDetails`) with legal name, address, GSTIN, FSSAI (D269) |
+| Product pictures | `FreshGallery` (fresh_theme, the only gallery part, D276): every server picture, swipeable, tappable dots on a paper pill (each a "Show picture i" button; at once under reduced motion); one picture alone, none the placeholder; "Picture i of n" with increase / decrease for screen readers; alt text from the server on each picture (D266). Keys `productGallery`, `productImage-<i>`, `freshGalleryPages`, `freshGalleryDots`, `freshGalleryDot-<i>` |
+| Product facts | Offer line (`productOffer`), serving facts (`productServing`), "Kept cold" only with cold storage (D274) |
+| Sign-in | Pushed by a screen: pops back; from the router's redirect: replaced by the page that needed it (`leaveLogin`, D267) |
+| Checkout address | Edit (`editAddress-<id>`) and Add (`addAddress`) open `/addresses/:id` and `/addresses/new` (full screen, outside the shell); a new address starts with the profile's name and number (D268) |
+| Checkout key | One Idempotency-Key per request body; slot refusals re-read the slots (D269); "Leave it out" substitution (`substitutionNone`, D275) |
+| Report a problem | Item always required, 10–1000 characters; raised once, photos retried alone (`sendComplaint`, `complaintRaised`, `finishComplaint`, D270) |
+| Refusals | Invoice not issued is a note; delete-account refusals in `profileError`; 429 says the wait (D271) |
+| Inbox, preferences | Follow sign-in and sign-out (D272) |
+| Help | "About the store" (`helpStoreDetails`) with legal name, address, GSTIN, FSSAI (D273) |
 
 Tests: `test/widgets/fresh_gallery_test.dart`, `product_gallery_test.dart`, `flow_audit_test.dart`, and new cases
 in `order_tracking_test.dart` and `test/state/checkout_controller_test.dart`. Not run yet (CI blocked by billing).

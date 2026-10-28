@@ -4,7 +4,7 @@
 // Idempotency: the key is created when the customer taps "Place order" and reused only while the outcome is
 // unknown (network error, 5xx, IDEMPOTENCY_IN_PROGRESS, CONCURRENT_SAVE). A definitive refusal (4xx) is
 // replayed by the server for the same key, so the next attempt gets a new key. The key belongs to one request
-// body (D265): any change of selection, notes or expected total (a refreshed preview, an accepted new price)
+// body (D269): any change of selection, notes or expected total (a refreshed preview, an accepted new price)
 // starts a new key, because the same key with a different body is refused (422 IDEMPOTENCY_KEY_REUSED).
 //
 // PRICE_CHANGED (409): the problem's `preview` member is shown to the customer; accepting places the order

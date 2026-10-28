@@ -155,7 +155,7 @@ void main() {
     expect(parts[2], isNotEmpty);
   });
 
-  group('report a problem (D266)', () {
+  group('report a problem (D270)', () {
     late TestDeps deps;
 
     setUp(() {

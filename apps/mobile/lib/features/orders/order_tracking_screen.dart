@@ -503,7 +503,7 @@ class _Actions extends ConsumerWidget {
                 }
               } on ApiError catch (e) {
                 if (!context.mounted) return;
-                // 404 INVOICE_NOT_ISSUED: the bill is made after delivery; not a failure (D267).
+                // 404 INVOICE_NOT_ISSUED: the bill is made after delivery; not a failure (D271).
                 if (e.code == 'INVOICE_NOT_ISSUED') {
                   showInfoSnack(context, 'The invoice is not ready yet.');
                 } else {
@@ -616,7 +616,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
   String? _descriptionError;
   final List<ComplaintPhotoUpload> _photos = [];
 
-  /// Set once the server accepted the complaint: Send then only retries the photos still waiting (D266).
+  /// Set once the server accepted the complaint: Send then only retries the photos still waiting (D270).
   Complaint? _complaint;
 
   /// Photos per complaint the app offers, as the server allows (4, `COMPLAINT_PHOTO_LIMIT_REACHED`).

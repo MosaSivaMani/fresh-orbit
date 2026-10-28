@@ -18,7 +18,7 @@ import '../../state/core_providers.dart';
 import '../../state/session.dart';
 import '../../widgets/bold.dart';
 
-/// Where a successful sign-in goes, keeping the pages below (D263). A screen that pushed the login itself
+/// Where a successful sign-in goes, keeping the pages below (D267). A screen that pushed the login itself
 /// passes no [from] and gets the page back by a pop. The router's redirect passes [from] (the page that needed
 /// sign-in): it replaces the login page, so Back still returns to where the customer was; opened as the only
 /// page (a link), it becomes the location.

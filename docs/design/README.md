@@ -287,7 +287,7 @@ States: no pincode → prices hidden with "Set pincode to see prices" (`location
 4. `Pagination` (or "Load more" button) at bottom. Loading: `Skeleton` cards. Empty: `EmptyState` + clear filters.
 
 **Product detail**
-1. Gallery (main image, thumbnails; arrows + swipe).
+1. Gallery (`ProductGallery` from `@fresh/ui`: every photo in a 3:2 frame, swipe, dots, thumbnails; arrow keys).
 2. Title, local names, `Badge`s; `PriceTag` (per kg + MRP) and "Approx. price for selected weight" from the server estimate; max chargeable note (`Tooltip` + inline text).
 3. Variant `RadioGroup` (weight packs) · preparation `RadioGroup`/`Select` with prep charge text from server · `QuantityStepper` (server step) · `WeightLabel` gross/net.
 4. Primary `Button` "Add to cart" (sticky bottom bar on mobile with price).
