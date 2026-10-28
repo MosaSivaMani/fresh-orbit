@@ -20,7 +20,7 @@ describe("orderSteps", () => {
   });
 
   it("shows recorded times in the store's time zone from the server (W10)", () => {
-    const timeline = [{ status: "CONFIRMED", at: "2026-10-23T19:00:00Z" }];
+    const timeline = [{ status: "CONFIRMED" as const, at: "2026-10-23T19:00:00Z" }];
     // 19:00 UTC is 24 Oct in IST and 23 Oct in UTC.
     expect(orderSteps("CONFIRMED", timeline)[0]!.time).toContain("24 Oct");
     expect(orderSteps("CONFIRMED", timeline, "UTC")[0]!.time).toContain("23 Oct");
