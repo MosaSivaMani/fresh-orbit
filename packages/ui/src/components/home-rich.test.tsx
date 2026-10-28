@@ -60,6 +60,28 @@ describe("HarbourHero", () => {
 
     expect(container.querySelector("img")?.closest("[aria-hidden='true']")).not.toBeNull();
   });
+
+  it("shows a ship picture in place of the drawn trawler as decoration", () => {
+    const { container } = render(
+      <HarbourHero heading={<h1>Hi</h1>} ship={<img src="/ship.jpg" alt="" />} />,
+    );
+
+    const ship = container.querySelector("[data-ship] img");
+    expect(ship).not.toBeNull();
+    expect(ship?.closest("[aria-hidden='true']")).not.toBeNull();
+  });
+
+  it("shows bird pictures in place of the drawn gulls as decoration", () => {
+    const { container } = render(
+      <HarbourHero
+        heading={<h1>Hi</h1>}
+        gulls={[<img key="a" src="/g1.png" alt="" />, <img key="b" src="/g2.png" alt="" />]}
+      />,
+    );
+
+    const birds = container.querySelectorAll("[data-gull][aria-hidden='true'] img");
+    expect(birds).toHaveLength(2);
+  });
 });
 
 describe("CheckBar", () => {

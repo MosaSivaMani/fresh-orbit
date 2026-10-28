@@ -262,7 +262,19 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
   picture?: ReactNode;
   /** An optional background picture covering the hero (decorative). Without it the harbour sky is drawn. */
   background?: ReactNode;
+  /**
+   * An optional ship picture for the bottom right (decorative, an `<img>` filling its box); its edges fade into the
+   * sky. Without it the drawn trawler is shown (D283).
+   */
+  ship?: ReactNode;
+  /**
+   * Optional bird pictures for the sky (decorative, cut-out `<img>`s filling their boxes), the first top centre and
+   * the second top right. Without them the drawn gulls are shown (D283).
+   */
+  gulls?: readonly [ReactNode, ReactNode];
 }
+
+const SHIP_FADE = "radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)";
 
 /**
  * The full-bleed harbour hero (D188, D247): 500 px tall from `lg`, a peach-to-cream sky with the drawn sun and water
@@ -277,6 +289,8 @@ export function HarbourHero({
   tagline,
   picture,
   background,
+  ship,
+  gulls,
   className,
   ...props
 }: HarbourHeroProps) {
@@ -303,9 +317,41 @@ export function HarbourHero({
         <HarbourSky className="-z-10" />
       )}
 
-      <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
-      <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
-      <Trawler className="absolute right-[1%] bottom-16 hidden w-[210px] lg:block" />
+      {gulls ? (
+        <>
+          <div
+            aria-hidden="true"
+            data-gull=""
+            className="absolute top-4 left-[50%] hidden aspect-[26/15] w-[120px] lg:block"
+          >
+            {gulls[0]}
+          </div>
+          <div
+            aria-hidden="true"
+            data-gull=""
+            className="absolute top-36 right-[3%] aspect-[23/10] w-20 lg:top-44 lg:w-[110px]"
+          >
+            {gulls[1]}
+          </div>
+        </>
+      ) : (
+        <>
+          <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
+          <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
+        </>
+      )}
+      {ship ? (
+        <div
+          aria-hidden="true"
+          data-ship=""
+          className="absolute right-0 bottom-10 hidden aspect-[30/19] w-[320px] lg:block xl:w-[360px]"
+          style={{ maskImage: SHIP_FADE, WebkitMaskImage: SHIP_FADE }}
+        >
+          {ship}
+        </div>
+      ) : (
+        <Trawler className="absolute right-[1%] bottom-16 hidden w-[210px] lg:block" />
+      )}
 
       <div className="relative flex h-full flex-col items-center px-4 pt-6 pb-20 lg:grid lg:grid-cols-[35%_minmax(0,1fr)] lg:items-stretch lg:px-0 lg:pt-0 lg:pb-0">
         {picture && (
