@@ -178,6 +178,25 @@ describe("manifest.json", () => {
     expect(designSize("3:2")).toEqual({ width: 1024, height: 683 });
   });
 
+  it("adds five object-only category pictures and the 20:7 website hero with Padma", () => {
+    const slot = (code: string) => manifest.slots.find((s) => s.slot === code)!;
+    for (const code of [
+      "CATEGORY_FILLETS_STEAKS",
+      "CATEGORY_READY_TO_COOK",
+      "CATEGORY_MARINATED",
+      "CATEGORY_FISH_EGGS",
+      "CATEGORY_READY_TO_EAT",
+    ])
+      expect(slot(code)).toMatchObject({ aspect: "1:1", background: "TRANSPARENT" });
+    expect(slot("CATEGORY_FISH_EGGS").character).toBeUndefined();
+    expect(slot("WEB_HOME_HERO_HARBOUR")).toMatchObject({
+      aspect: "20:7",
+      background: "SCENE",
+      character: "FISHMONGER",
+    });
+    expect(designSize("20:7")).toEqual({ width: 1024, height: 358 });
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);

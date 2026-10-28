@@ -22,8 +22,8 @@ for demos, manual testing and screenshots. It is not reference data, never loade
 | `customers.json` | Customers (+ Identity users) | 3 demo customers, 5 addresses (one deliberately outside the service areas) | OTP-verify user creation, `PATCH /me`, `POST /me/addresses` (`SaveAddressRequest`) |
 | `settings.json` | Settings | Business profile (trade name Fresh Orbit, fake GSTIN, fake support phone and email, `Asia/Kolkata`), loaded only when no profile exists | `PUT /admin/settings/business-profile` (`SaveBusinessProfileRequest`) |
 | `identity.json` | Identity | 2 staff: `sample.admin@freshorbit.example` (ADMIN), `sample.finance@freshorbit.example` (FINANCE); no passwords | `POST /admin/staff` (`CreateStaffRequest` without `temporaryPassword`) |
-| `images.json` | Catalog / Promotions | One placeholder image description per product, category and banner | `POST …/products/{id}/images` (rendered, not downloaded) |
-| `images/` | Catalog / Promotions | Real pictures (WebP): `categories/fish`, `prawns-shrimp`, `crabs`, `shellfish` (512²) and `banners/welcome`, `prawn-week` (1200×600), made from the owner's pictures in `docs/design/characters/generated` by `tools/make_images.py` on the CI runner (workflow `sample-images.yml`) | Stored as the file of image key `sample/<path>` (`SampleImageFiles`); a key without a file is drawn |
+| `images.json` | Catalog / Promotions | Per product: the alt text of each real picture (`pictures[].number`, `altText`) and a placeholder with its own alt text; one placeholder per category and banner | `POST …/products/{id}/images` (committed picture, else rendered; never downloaded) |
+| `images/` | Catalog / Promotions | Real pictures (WebP): `categories/fish`, `prawns-shrimp`, `crabs`, `shellfish` (512²) and `banners/welcome`, `prawn-week` (1200×600), made from the owner's pictures in `docs/design/characters/generated` by `tools/make_images.py` on the CI runner (workflow `sample-images.yml`); product pictures `products/<slug>/<n>.webp` (n = 1–4, 1280 px, D249) made the same way from `docs/design/products/<slug>/<n>.png\|jpg` | Stored as the file of image key `sample/<path>` (`SampleImageFiles`); a key without a file is drawn. Product pictures are uploaded through `ProductImageService` in number order (`SampleProductPictures`) |
 
 Product list (scientific names and local names are drafts for the owner to verify):
 
@@ -127,7 +127,7 @@ Module notes:
 | Module | Note |
 |---|---|
 | Identity | Staff password: from `FRESHORBIT_SAMPLE_STAFF_PASSWORD` (≥ 12 chars, IDN-R13); when absent, generate a random one and print it once to the console. Never written to a file. A sample ADMIN makes `--create-admin` refuse (`ADMIN_ALREADY_EXISTS`) until purged — acceptable for dev and staging |
-| Catalog | `targetStatus: ACTIVE` → publish after variants and the image exist (CAT-R3). Placeholder (as built, replacing the `background`/`label` style of `images.json`): soft sand gradient, a pale teal disc and a simple silhouette in brand teal (`#0E9384`/`#0B7D70`) — a prawn for prawns, scampi, lobster and prawn banners, a crab for crabs, else a fish; **no text** in the image (the product name is shown by the UI). Product images are PNGs uploaded through `ProductImageService` (normal CAT-R16 renditions); category and banner images are WebP files written to `IFileStorage` at the `imageKey` of `images.json` (banners only when the file is missing) |
+| Catalog | `targetStatus: ACTIVE` → publish after variants and the image exist (CAT-R3). Placeholder (as built, replacing the `background`/`label` style of `images.json`): soft sand gradient, a pale teal disc and a simple silhouette in brand teal (`#0E9384`/`#0B7D70`) — a prawn for prawns, scampi, lobster and prawn banners, a crab for crabs, else a fish; **no text** in the image (the product name is shown by the UI). Product images are the committed pictures `images/products/<slug>/<n>.webp` with their `images.json` alt text, else one placeholder PNG, uploaded through `ProductImageService` (normal CAT-R16 renditions, D249); category and banner images are WebP files written to `IFileStorage` at the `imageKey` of `images.json` (banners only when the file is missing) |
 | Pricing | Use the bulk service with the file's `bulk` object as-is (all-or-nothing, PRC-R13); `validFrom: null` = `T0` |
 | Inventory | `receivedAtOffsetHours` is informational if the receipt service stamps `received_at = now`; `caughtOrHarvestedOn` and `bestBeforeAt` come from the offsets |
 | Delivery | Slots are not in the file; the generation job creates them after activation (DEL-R9) |
@@ -189,7 +189,8 @@ errors; a GSTIN with a changed check character or state code 40 is refused.
 
 CI: the backend job in `.github/workflows/ci.yml` runs the validator (step "Validate sample data").
 The validator also checks every committed picture under `images/`: it must be the file of a category or banner key in
-`images.json` and stay under 400 KB.
+`images.json` and stay under 400 KB, or a product picture `products/<slug>/<1-4>.webp` (WebP, under 600 KB) of a
+product whose `pictures` give that number an alt text (D249). Picture alt texts must not say "placeholder".
 
 **Demo (D160).** The demo's disk is emptied by every restart. A missing `/media/sample/...` file is answered with the
 committed picture from `Seeding:SampleDataPath` (`/app/data/sample` in the demo image) when one exists for the key,

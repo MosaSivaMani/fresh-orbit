@@ -1,4 +1,5 @@
 import { formatDayShort, formatTime } from "@fresh/core";
+import { illustrations } from "@fresh/illustrations";
 import { FilterChip, WaveBand } from "@fresh/ui";
 import Link from "next/link";
 import { getHome, getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
@@ -34,17 +35,22 @@ export default async function HomePage() {
   const nextSlot = area?.nextSlot ?? null;
   const city = area?.serviceable ? (area.city?.name ?? null) : null;
   const pincodeRefused = home.ok && home.value.pincodeRefused;
+  // Slot times read in the store's time zone (D258).
+  const zone = area?.city?.timeZone;
   const slotText = nextSlot
-    ? `${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
+    ? `${formatDayShort(nextSlot.startAt, zone)}, ${formatTime(nextSlot.startAt, zone)} – ${formatTime(nextSlot.endAt, zone)}`
     : null;
   const banners = offers.ok ? offers.value.data : [];
   const offerLines = offersBySlug(banners);
   const freshness = slotText ? `Next slot ${slotText}` : undefined;
   const bestsellers = home.ok ? (home.value.data.bestsellers ?? []) : [];
+  // The owner's wide harbour picture replaces the drawn sky once its slot is FINAL (D188, D247).
+  const harbour = illustrations.WEB_HOME_HERO_HARBOUR;
+  const harbourBackground = harbour.status === "FINAL" ? `/illustrations/${harbour.src}` : null;
 
   return (
     <>
-      <HomeHero nextSlot={slotText} heroBackground={null} />
+      <HomeHero nextSlot={slotText} heroBackground={harbourBackground} />
       <HomeCheckBar />
 
       <Container className="flex flex-col gap-8 pt-10 pb-8">
