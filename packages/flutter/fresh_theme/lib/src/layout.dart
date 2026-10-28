@@ -153,10 +153,8 @@ class _RenderEqualHeightColumns extends RenderBox
     var tallest = 0.0;
     var x = 0.0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
-      child.layout(
-        BoxConstraints(minWidth: column, maxWidth: column, minHeight: height, maxHeight: constraints.maxHeight),
-        parentUsesSize: true,
-      );
+      // No maximum: a column that fills its height (a Column) would otherwise take the whole space given.
+      child.layout(BoxConstraints(minWidth: column, maxWidth: column, minHeight: height), parentUsesSize: true);
       tallest = math.max(tallest, child.size.height);
       (child.parentData! as _ColumnParentData).offset = Offset(x, 0);
       x += column + gap;
