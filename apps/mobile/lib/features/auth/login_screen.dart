@@ -1,5 +1,9 @@
 // Login: phone → OTP (docs/api §4.1). The guest cart token goes with verify; the server merges the guest cart
 // asynchronously, so the cart is re-read right after login and once more shortly after.
+//
+// First run (D277): after onboarding the same screen opens as "Sign in or create your account" (welcome mode),
+// with "Skip for now, just browse" under the main button. After the code it goes home when a saved address gives a
+// serviceable pincode, else to the Location screen (D278).
 
 import 'dart:async';
 
@@ -15,6 +19,7 @@ import '../../core/format.dart';
 import '../../illustrations/illustration.dart';
 import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
+import '../../state/first_run.dart';
 import '../../state/session.dart';
 import '../../widgets/bold.dart';
 
@@ -38,10 +43,13 @@ void leaveLogin(BuildContext context, String? from) {
 }
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key, this.from});
+  const LoginScreen({super.key, this.from, this.welcome = false});
 
   /// The page that needed sign-in (set by the router's redirect, e.g. /checkout); null returns by a pop.
   final String? from;
+
+  /// The first-run step after onboarding (D277): opened with `go`, so there is no page below to return to.
+  final bool welcome;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -57,6 +65,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
   int _resendIn = 0;
   Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Shown once (D277): remembered at once, so closing the app here never offers it again.
+    if (widget.welcome) unawaited(ref.read(appPrefsProvider).setWelcomeSignInShown());
+  }
+
+  /// Welcome mode: browse without an account; checkout and the account still ask for sign-in.
+  void _skip() => context.go('/location');
 
   @override
   void dispose() {
@@ -127,6 +145,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         unawaited(Future<void>.delayed(const Duration(seconds: 2), () => ref.invalidate(cartProvider)));
       }
       if (!mounted) return;
+      if (widget.welcome) {
+        final next = await pageAfterFirstSignIn(ref);
+        if (mounted) context.go(next);
+        return;
+      }
       leaveLogin(context, widget.from);
     } on ApiError catch (e) {
       setState(() {
@@ -154,19 +177,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: AutofillGroup(
         child: ColorBlockScreen(
           tone: BlockTone.mango,
-          eyebrow: 'Sign in',
-          heading: challenge == null
-              ? const [HeadingLine('Your mobile', script: true), HeadingLine('number', brush: true)]
-              : const [HeadingLine('Enter your', script: true), HeadingLine('code', brush: true)],
+          eyebrow: widget.welcome ? 'Welcome' : 'Sign in',
+          heading: challenge != null
+              ? const [HeadingLine('Enter your', script: true), HeadingLine('code', brush: true)]
+              : widget.welcome
+              ? const [HeadingLine('Sign in or', script: true), HeadingLine('sign up', brush: true)]
+              : const [HeadingLine('Your mobile', script: true), HeadingLine('number', brush: true)],
           slot: IllustrationSlot.loginOtp,
           avatarSize: AvatarSize.small,
           onBack: context.canPop() ? () => context.pop() : null,
           sheetCrossAxis: CrossAxisAlignment.stretch,
           children: [
+            if (widget.welcome && challenge == null) const SheetTitle('Sign in or create your account', header: true),
             SheetNote(
-              challenge == null
-                  ? 'We will send a one-time code by SMS. Your cart stays with you.'
-                  : '${challenge.codeLength} digits sent to ${formatPhone(_e164!)}',
+              challenge != null
+                  ? '${challenge.codeLength} digits sent to ${formatPhone(_e164!)}'
+                  : widget.welcome
+                  ? 'Enter your mobile number. We will send a one-time code by SMS; new numbers get an account.'
+                  : 'We will send a one-time code by SMS. Your cart stays with you.',
             ),
             if (challenge == null) ...[
               TextField(
@@ -202,6 +230,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ],
+            if (widget.welcome)
+              TextButton(
+                key: const Key('skipSignIn'),
+                onPressed: _busy ? null : _skip,
+                child: const Text('Skip for now, just browse'),
+              ),
             Text(
               'By continuing you agree to our terms and privacy policy.',
               textAlign: TextAlign.center,

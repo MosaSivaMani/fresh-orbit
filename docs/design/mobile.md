@@ -67,6 +67,10 @@ Every data screen has a loading skeleton, an empty state and an error state (wit
 ## 3. Navigation map
 
 ```
+first run (D277, D278):
+/splash ─► /onboarding ─► /login?welcome=1 ─► /location ─► /home   (skip, or no serviceable saved address)
+                                 └────────────────────────► /home   (saved address the server finds serviceable)
+later launches (unchanged; the splash skips steps already done):
 /splash ─► /onboarding ─► /location ─► /home
                                          │
  ┌─────────── bottom navigation (StatefulShellRoute, state kept per tab) ───────────┐
@@ -82,6 +86,17 @@ Every data screen has a loading skeleton, an empty state and an error state (wit
      ├─► /search ─┴─► /product/:slug ─► (add) ─► /cart ─► /checkout * ─► /order-success/:id ─► /orders/:id
      └─► /wishlist *              /location?change=1 (pincode chip)
 ```
+
+First run (D277, D278): finishing or skipping onboarding opens the sign-in as a first-run step,
+`/login?welcome=1` ("Sign in or create your account", the same phone → OTP flow; the server creates the account
+for a new number). It opens with `go`, so Back closes the app instead of returning to onboarding. Under the main
+button "Skip for now, just browse" (`skipSignIn`) goes to `/location`; checkout and the account still ask for
+sign-in as before. After the code: the customer's saved addresses (default first) are checked with the server's
+serviceability; the first serviceable pincode becomes the delivery pincode (the store the Location screen
+writes) and the app goes to `/home`, otherwise to `/location` (also when the cart holds lines for another pincode,
+or a read fails). The step is shown once (`AppPrefs.welcomeSignInShown`, set when it opens); the splash is
+unchanged, so a returning customer is never asked to sign in at launch. There is no name step: the sign-in flow
+has none, and the name stays on Account › Profile.
 
 `*` needs a session. The router redirect sends signed-out users to `/login?from=<path>` for `/checkout`,
 `/orders/…`, `/account/…` (except `/account/help`) and `/wishlist`, and returns them to `from` after sign-in.

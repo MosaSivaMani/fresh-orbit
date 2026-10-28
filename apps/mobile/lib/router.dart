@@ -83,7 +83,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
       GoRoute(
         path: '/login',
-        builder: (_, state) => LoginScreen(from: state.uri.queryParameters['from']),
+        // `welcome=1`: the first-run step after onboarding (D277), with "Skip for now, just browse".
+        builder: (_, state) => LoginScreen(
+          from: state.uri.queryParameters['from'],
+          welcome: state.uri.queryParameters['welcome'] == '1',
+        ),
       ),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
       // The address form over checkout (D268): full-screen routes outside the tab shell, so checkout pushes them

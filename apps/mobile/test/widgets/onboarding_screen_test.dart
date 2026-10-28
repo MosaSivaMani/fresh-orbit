@@ -194,7 +194,8 @@ void main() {
 
     await _next(tester);
     expect(deps.prefs.onboardingDone, isTrue);
-    expect(find.text('route:/location'), findsOneWidget);
+    // The first-run sign-in comes next (D277).
+    expect(find.text('route:/login?welcome=1'), findsOneWidget);
   });
 
   testWidgets('Next works with reduced motion', (tester) async {
@@ -216,7 +217,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deps.prefs.onboardingDone, isTrue);
-    expect(find.text('route:/location'), findsOneWidget);
+    // The first-run sign-in comes next (D277).
+    expect(find.text('route:/login?welcome=1'), findsOneWidget);
   });
 
   for (final size in const [Size(360, 640), Size(390, 844)]) {
