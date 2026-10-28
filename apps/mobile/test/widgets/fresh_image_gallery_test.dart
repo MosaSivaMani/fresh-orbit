@@ -153,9 +153,9 @@ void main() {
 
       expect(
         tester.getSemantics(_dot(1)),
-        containsSemantics(label: 'Show photo 2', isButton: true, hasTapAction: true),
+        isSemantics(label: 'Show photo 2', isButton: true, hasTapAction: true),
       );
-      tester.semantics.tap(_dot(1));
+      tester.semantics.tap(find.semantics.byLabel('Show photo 2'));
       await tester.pump();
 
       expect(find.byKey(const ValueKey('picture-1')), findsOneWidget);

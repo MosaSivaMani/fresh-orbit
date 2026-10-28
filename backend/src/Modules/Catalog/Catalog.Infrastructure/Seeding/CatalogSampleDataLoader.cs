@@ -125,9 +125,9 @@ public sealed partial class CatalogSampleDataLoader(
             var picture = pictures.Products.FirstOrDefault(p => p.ProductSlug == row.Slug);
             var committed = SampleProductPictures.Find(context.DirectoryPath, row.Slug, (picture?.Pictures ?? []).ToDictionary(p => p.Number, p => p.AltText));
             var uploads = new List<(byte[] Bytes, string AltText)>();
-            foreach (var file in committed)
+            foreach (var committedPicture in committed)
             {
-                uploads.Add((await File.ReadAllBytesAsync(file.FilePath, cancellationToken), file.AltText));
+                uploads.Add((await File.ReadAllBytesAsync(committedPicture.FilePath, cancellationToken), committedPicture.AltText));
             }
 
             if (uploads.Count == 0 && picture is not null)
