@@ -60,6 +60,21 @@ describe("HarbourHero", () => {
 
     expect(container.querySelector("img")?.closest("[aria-hidden='true']")).not.toBeNull();
   });
+
+  it("shows a full scene picture in place of the picture, the sky and the drawings", () => {
+    const { container } = render(
+      <HarbourHero
+        heading={<h1>Hi</h1>}
+        picture={<img src="/padma.png" alt="Padma alone" />}
+        scene={<img src="/harbour.jpg" alt="Padma at the harbour" />}
+      />,
+    );
+
+    expect(screen.getByRole("img", { name: "Padma at the harbour" })).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Padma alone" })).toBeNull();
+    // Only the waves are still drawn; no sky, gulls or trawler.
+    expect(container.querySelectorAll("svg")).toHaveLength(1);
+  });
 });
 
 describe("CheckBar", () => {

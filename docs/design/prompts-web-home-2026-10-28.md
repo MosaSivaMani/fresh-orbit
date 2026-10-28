@@ -14,7 +14,7 @@ Paste one prompt, unchanged, into an image tool whose licence allows commercial 
 | `CATEGORY_MARINATED` (Marinated) | `category_marinated.png` (transparent PNG) | 1024 × 1024 | 512 × 512 WebP at `backend/data/sample/images/categories/marinated.webp` |
 | `CATEGORY_FISH_EGGS` (Fish Eggs) | `category_fish_eggs.png` (transparent PNG) | 1024 × 1024 | 512 × 512 WebP at `backend/data/sample/images/categories/fish-eggs.webp` |
 | `CATEGORY_READY_TO_EAT` (Ready to Eat) | `category_ready_to_eat.png` (transparent PNG) | 1024 × 1024 | 512 × 512 WebP at `backend/data/sample/images/categories/ready-to-eat.webp` |
-| `WEB_HOME_HERO_HARBOUR` | `web_home_hero_harbour.jpg` (no transparency) | 2400 × 840 | — (the package's `import` and `optimize` scripts bring it under 600 KB) |
+| `WEB_HOME_HERO_HARBOUR` | `web_home_hero_harbour.jpg` (no transparency) | 2400 × 840 | Delivered 2026-10-29 at 2120 × 742 (D279); 1280 px copy at `apps/web/public/home/web_home_hero_harbour-1280.jpg` |
 
 The category pictures should look like `backend/data/sample/images/categories/prawns-shrimp.webp`: photo-real
 seafood on a transparent background with a soft shadow, the subject filling about 80 % of the square. In the hero,
