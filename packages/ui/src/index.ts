@@ -255,6 +255,12 @@ export {
   type PaginationItem,
   type PaginationProps,
 } from "./components/pagination";
+export {
+  ProductGallery,
+  type ProductGalleryImage,
+  type ProductGalleryImageRenderProps,
+  type ProductGalleryProps,
+} from "./components/product-gallery";
 export { Select, type SelectOption, type SelectProps } from "./components/select";
 export { Spinner, type SpinnerProps } from "./components/spinner";
 export { Toaster, dismissToast, toast, type ToastInput, type ToastTone } from "./components/toast";

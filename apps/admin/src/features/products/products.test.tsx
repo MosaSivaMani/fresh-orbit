@@ -229,6 +229,120 @@ describe("products", () => {
     expect(sent).toMatchObject({ piecesMin: 10, piecesMax: 14, serves: 4 });
   });
 
+  describe("photos", () => {
+    const photos = [
+      {
+        id: "image-1",
+        storageKey: "products/p/image-1",
+        url: "/media/products/p/image-1/640.webp",
+        altText: "Seer fish, whole on crushed ice",
+        width: 1280,
+        height: 1280,
+        sortOrder: 0,
+      },
+      {
+        id: "image-2",
+        storageKey: "products/p/image-2",
+        url: "/media/products/p/image-2/640.webp",
+        altText: "Seer fish steaks",
+        width: 1280,
+        height: 1280,
+        sortOrder: 1,
+      },
+    ];
+
+    it("makes a later photo the main photo through the image order with If-Match", async () => {
+      catalogHandlers();
+      let ifMatch: string | null = null;
+      let sent: unknown;
+      server.use(
+        http.get(`${API}/admin/products/${PRODUCT_ID}`, () =>
+          HttpResponse.json(product({ images: photos })),
+        ),
+        http.put(`${API}/admin/products/${PRODUCT_ID}/images/order`, async ({ request }) => {
+          ifMatch = request.headers.get("If-Match");
+          sent = await request.json();
+          return HttpResponse.json(product({ images: photos, version: "42" }));
+        }),
+      );
+      const { user } = renderApp({
+        path: `/products/${PRODUCT_ID}`,
+        permissions: ["catalog.manage"],
+      });
+
+      await user.click(await screen.findByRole("tab", { name: /Photos \(2\)/ }));
+      expect(screen.getByRole("button", { name: "Make photo 1 the main photo" })).toBeDisabled();
+      await user.click(screen.getByRole("button", { name: "Make photo 2 the main photo" }));
+
+      await waitFor(() => expect(sent).toEqual({ imageIds: ["image-2", "image-1"] }));
+      expect(ifMatch).toBe('"41"');
+    });
+
+    it("uploads a photo with its alt text", async () => {
+      catalogHandlers();
+      let altText: string | null = null;
+      let fileName: string | null = null;
+      server.use(
+        http.get(`${API}/admin/products/${PRODUCT_ID}`, () =>
+          HttpResponse.json(product({ images: photos })),
+        ),
+        http.post(`${API}/admin/products/${PRODUCT_ID}/images`, async ({ request }) => {
+          const form = await request.formData();
+          const sentAlt = form.get("altText");
+          const sentFile = form.get("file");
+          altText = typeof sentAlt === "string" ? sentAlt : null;
+          fileName = sentFile !== null && typeof sentFile !== "string" ? sentFile.name : null;
+          return HttpResponse.json(photos[0], { status: 201 });
+        }),
+      );
+      const { user } = renderApp({
+        path: `/products/${PRODUCT_ID}`,
+        permissions: ["catalog.manage"],
+      });
+
+      await user.click(await screen.findByRole("tab", { name: /Photos/ }));
+      await user.upload(
+        screen.getByLabelText(/^Photo/, { selector: "input" }),
+        new File([new Uint8Array([1, 2, 3])], "seer-3.webp", { type: "image/webp" }),
+      );
+      await user.type(
+        screen.getByLabelText(/Alt text/, { selector: "input" }),
+        "Andhra seer fish fry",
+      );
+      await user.click(screen.getByRole("button", { name: "Upload" }));
+
+      await waitFor(() => expect(altText).toBe("Andhra seer fish fry"));
+      expect(fileName).toBe("seer-3.webp");
+    });
+
+    it("deletes a photo with If-Match after confirming", async () => {
+      catalogHandlers();
+      let deleted: string | null = null;
+      server.use(
+        http.get(`${API}/admin/products/${PRODUCT_ID}`, () =>
+          HttpResponse.json(product({ images: photos })),
+        ),
+        http.delete(
+          `${API}/admin/products/${PRODUCT_ID}/images/:imageId`,
+          ({ params, request }) => {
+            deleted = `${String(params.imageId)} ${request.headers.get("If-Match") ?? ""}`;
+            return HttpResponse.json(product({ images: [photos[0]!], version: "42" }));
+          },
+        ),
+      );
+      const { user } = renderApp({
+        path: `/products/${PRODUCT_ID}`,
+        permissions: ["catalog.manage"],
+      });
+
+      await user.click(await screen.findByRole("tab", { name: /Photos/ }));
+      await user.click(screen.getByRole("button", { name: "Delete photo 2" }));
+      await user.click(await screen.findByRole("button", { name: "Delete photo" }));
+
+      await waitFor(() => expect(deleted).toBe('image-2 "41"'));
+    });
+  });
+
   it("refuses the editor without catalog.manage", async () => {
     renderApp({ path: `/products/${PRODUCT_ID}`, permissions: ["orders.view"] });
     expect(await screen.findByText("You do not have access to this page")).toBeInTheDocument();

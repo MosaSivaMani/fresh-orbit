@@ -44,6 +44,7 @@ badges) live here and the app uses them from here; a screen never builds its own
 | `lib/src/header.dart` | `PageHeader` (the app's screen header; `PageHeader.plain` for a product name), `PaperCircleButton`, `BackCircleButton` (the app sets `BackCircleButton.defaultBack` to its router's back), `CountPip` |
 | `lib/src/blocks.dart` | `BlockTone`, `SheetTitle`, `SheetNote`, `RoundIconButton`, `PageDots`, `FilterPill`, `SectionBox`, `SectionTitle`, `MenuLabel`, `SlotButton`, `SegmentedPills`, `MenuCard`, `MenuRow`, `ProgressSteps`, `StickyActionBar`, `TealActionButton`, `StickerSpot` |
 | `lib/src/feedback.dart` | `SkeletonBox`, `LoadingSemantics`, `ListSkeleton`, `GridSkeleton`, `productGridDelegate`, `BannerTone` + `InfoBanner`, `showInfoSnack`, `FreshBadge`, `PrimaryButton`, `ProductPhoto` |
+| `lib/src/gallery.dart` | `FreshImageGallery` + `FreshGalleryImage` (url, alt): every picture of a product as a swipeable page that fills its parent (the screen keeps its 3:2 `FreshPictureFrame`), tappable page dots (only for more than one picture; at once under reduced motion), "Photo i of n" for screen readers; the app may pass its own `imageBuilder` and `emptyBuilder` |
 | `lib/src/stickers.dart` | `Sticker` + `StickerTone`, `PolaroidCard`, `ReceiptRow` + `ReceiptCard` |
 | `lib/src/motion.dart` | `EntranceMotion`, `motionAllowed(context)` |
 | `lib/src/prices.dart` | `PriceEstimateRow` (the server's estimate and "at most" for a line), `CouponTile` (code, description, condition, one action) |
