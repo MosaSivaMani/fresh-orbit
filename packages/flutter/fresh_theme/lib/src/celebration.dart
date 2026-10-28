@@ -653,26 +653,32 @@ class _TotalBand extends StatelessWidget {
             child: const Icon(Icons.currency_rupee_rounded, color: BlockInk.paper, size: 26),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: AppText.display(BlockInk.ink, 18))),
-          Container(
-            width: 1,
-            height: 34,
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            color: FreshCelebrationColors.tealInk.withValues(alpha: 0.2),
-          ),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Text(
-                value,
-                style: AppText.price(BlockInk.ink, size: 28),
-              ),
-              const Positioned(
-                right: -16,
-                top: -14,
-                child: Sparks(color: FreshHighlightColors.coral, degrees: 10, scale: 0.6),
-              ),
-            ],
+          // Label and amount share one line when they fit; on a narrow screen or with large text the amount
+          // moves under the label (fit by layout, never by shrinking, D183).
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 2,
+              children: [
+                Text(label, style: AppText.display(BlockInk.ink, 18)),
+                Padding(
+                  padding: const EdgeInsets.only(right: 14),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Text(value, style: AppText.price(BlockInk.ink, size: 28)),
+                      const Positioned(
+                        right: -16,
+                        top: -14,
+                        child: Sparks(color: FreshHighlightColors.coral, degrees: 10, scale: 0.6),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
