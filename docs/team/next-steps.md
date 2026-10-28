@@ -4,6 +4,7 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 
 ## Paused 2026-10-28 (owner asleep): resume here
 
+- **Blocker (2026-10-28): GitHub Actions refuses to start jobs** ("recent account payments have failed or your spending limit needs to be increased"). Owner must fix Settings → Billing & plans. Until then no CI, no merges, no APK builds. Waiting: PR #29 (03c24fa) and PR #30 `web/home-reference-fixes` (71d37df, draft; TEMP CI step f09ed34 prints the six placeholder SVGs — commit them, apply Prettier, revert the step).
 - Merged today: #20 web home, #21 mobile screens, #22 web pages, #23 admin, #26 onboarding banner, #27 Shop sort fix, #28 Android back (D214–D234, D242–D246).
 - Latest live APK: release `demo-apk-d13dbe5` (`fresh-orbit-live-d13dbe5.apk`), sent to the owner.
 - Open: PR #29 mobile API audit (session `fresh-orbit-3a`, decisions D235–D241, one mobile test failing at last check).
