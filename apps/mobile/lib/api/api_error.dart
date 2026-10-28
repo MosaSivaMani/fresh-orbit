@@ -62,6 +62,12 @@ class ApiError implements Exception {
   String get message {
     if (detail != null && detail!.isNotEmpty) return detail!;
     if (errors.isNotEmpty) return errors.values.first.first.message;
+    // 429 without a sentence: say how long to wait (Retry-After), not the bare title.
+    if (status == 429) {
+      return retryAfterSeconds == null
+          ? 'Too many tries. Please wait a moment and try again.'
+          : 'Too many tries. Please try again in $retryAfterSeconds seconds.';
+    }
     if (title != null && title!.isNotEmpty) return title!;
     return switch (code) {
       networkError => 'You seem to be offline. Check your connection and try again.',

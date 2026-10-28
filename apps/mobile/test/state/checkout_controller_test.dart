@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/state/checkout_state.dart';
+import 'package:fresh_orbit_app/state/location_state.dart';
 
 import '../support/fixtures.dart';
 import '../support/harness.dart';
@@ -163,5 +164,90 @@ void main() {
 
     expect(state().slotId, isNull);
     expect(state().preview, isNull);
+  });
+
+  test('a transient failure keeps the key only while the body is the same; a re-priced preview gets a new key', () async {
+    var attempt = 0;
+    deps.orders.onPlace = (_, _) async {
+      attempt++;
+      if (attempt == 1) throw const ApiError(status: 0, code: ApiError.networkError);
+      return order();
+    };
+    await choose();
+    await controller().placeOrder();
+    final firstKey = deps.orders.placed.single.key;
+
+    // The customer pulls a fresh preview and the server's expected total moved: the body differs (D265).
+    deps.orders.onPreview = (_) async => preview(expectedTotal: 71900);
+    await controller().refreshPreview();
+    await controller().placeOrder();
+
+    expect(deps.orders.placed, hasLength(2));
+    expect(deps.orders.placed[1].request.expectedTotalPaise, 71900);
+    expect(deps.orders.placed[1].key, isNot(firstKey));
+  });
+
+  test('changing the delivery note after an unknown outcome sends a new key', () async {
+    var attempt = 0;
+    deps.orders.onPlace = (_, _) async {
+      attempt++;
+      if (attempt == 1) throw const ApiError(status: 503, code: 'SERVICE_UNAVAILABLE');
+      return order();
+    };
+    await choose();
+    await controller().placeOrder();
+    controller().setNotes('Ring the bell');
+    await controller().placeOrder();
+
+    expect(deps.orders.placed[1].request.customerNotes, 'Ring the bell');
+    expect(deps.orders.placed[1].key, isNot(deps.orders.placed[0].key));
+  });
+
+  test('a slot refusal reads the slots again so the customer sees what is open', () async {
+    var slotReads = 0;
+    deps.location.onSlots = (_) async {
+      slotReads++;
+      return slots();
+    };
+    container.listen(deliverySlotsProvider('600041'), (_, _) {});
+    await container.read(deliverySlotsProvider('600041').future);
+    deps.orders.onPlace = (_, _) async => throw const ApiError(status: 422, code: 'SLOT_FULL');
+    await choose();
+
+    await controller().placeOrder();
+    await container.read(deliverySlotsProvider('600041').future);
+
+    expect(state().placeError!.code, 'SLOT_FULL');
+    expect(slotReads, 2);
+  });
+
+  test('editing the chosen address keeps the slot for the same pincode and prices again', () async {
+    await choose();
+    final previewsBefore = deps.orders.previews.length;
+
+    await controller().addressEdited('a1', pincode: '600041');
+
+    expect(state().slotId, 's1');
+    expect(deps.orders.previews.length, previewsBefore + 1);
+  });
+
+  test('editing the chosen address to another pincode clears the slot', () async {
+    await choose();
+
+    await controller().addressEdited('a1', pincode: '600099');
+
+    expect(state().addressPincode, '600099');
+    expect(state().slotId, isNull);
+    expect(state().preview, isNull);
+  });
+
+  test('editing another address leaves the choice alone', () async {
+    await choose();
+    final previewsBefore = deps.orders.previews.length;
+
+    await controller().addressEdited('a2', pincode: '600099');
+
+    expect(state().addressPincode, '600041');
+    expect(deps.orders.previews.length, previewsBefore);
   });
 }

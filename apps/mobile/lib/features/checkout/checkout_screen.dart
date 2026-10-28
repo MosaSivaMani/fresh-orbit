@@ -44,8 +44,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _addAddress() async {
-    final created = await context.push<Address>('/account/addresses/new');
+    final created = await context.push<Address>('/addresses/new');
     if (created != null && mounted) await _checkout.selectAddress(created.id, pincode: created.pincode);
+  }
+
+  /// Edits an address in place (the form starts filled with it); the chosen one is priced again.
+  Future<void> _editAddress(Address a) async {
+    final saved = await context.push<Address>('/addresses/${Uri.encodeComponent(a.id)}');
+    if (saved != null && mounted) await _checkout.addressEdited(saved.id, pincode: saved.pincode);
   }
 
   Future<void> _place() async {
@@ -110,10 +116,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         children: [
                           for (final a in list)
                             RadioListTile<String>(
+                              key: ValueKey('checkoutAddress-${a.id}'),
                               contentPadding: EdgeInsets.zero,
                               value: a.id,
                               title: Text('${humanizeCode(a.label)} · ${a.recipientName}'),
                               subtitle: Text(a.oneLine),
+                              secondary: IconButton(
+                                key: ValueKey('editAddress-${a.id}'),
+                                tooltip: 'Edit ${humanizeCode(a.label)} address',
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () => _editAddress(a),
+                              ),
                             ),
                         ],
                       ),
@@ -121,6 +134,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(
+                        key: const Key('addAddress'),
                         onPressed: _addAddress,
                         icon: const Icon(Icons.add),
                         label: const Text('Add a new address'),
@@ -172,6 +186,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                         value: 'AUTO_SIMILAR',
                         title: Text('Replace with a similar item'),
                         subtitle: Text('Only when it costs the same or less.'),
+                      ),
+                      RadioListTile<String>(
+                        key: Key('substitutionNone'),
+                        contentPadding: EdgeInsets.zero,
+                        value: 'NONE',
+                        title: Text('Leave it out'),
+                        subtitle: Text('We remove it from your order.'),
                       ),
                     ],
                   ),

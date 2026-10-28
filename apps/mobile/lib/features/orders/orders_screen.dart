@@ -37,7 +37,7 @@ class OrdersScreen extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => context.push(Uri(path: '/login', queryParameters: {'from': '/orders'}).toString()),
+                onPressed: () => context.push('/login'),
                 child: const Text('Sign in'),
               ),
             ),

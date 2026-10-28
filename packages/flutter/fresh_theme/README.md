@@ -46,6 +46,7 @@ badges) live here and the app uses them from here; a screen never builds its own
 | `lib/src/feedback.dart` | `SkeletonBox`, `LoadingSemantics`, `ListSkeleton`, `GridSkeleton`, `productGridDelegate`, `BannerTone` + `InfoBanner`, `showInfoSnack`, `FreshBadge`, `PrimaryButton`, `ProductPhoto` |
 | `lib/src/stickers.dart` | `Sticker` + `StickerTone`, `PolaroidCard`, `ReceiptRow` + `ReceiptCard` |
 | `lib/src/motion.dart` | `EntranceMotion`, `motionAllowed(context)` |
+| `lib/src/gallery.dart` | `FreshGallery`: swipeable pictures with `PageDots` on a paper pill; one picture alone, none shows `empty`; increase / decrease for screen readers (D262) |
 | `lib/src/prices.dart` | `PriceEstimateRow` (the server's estimate and "at most" for a line), `CouponTile` (code, description, condition, one action) |
 
 Still in the app, because they read app models, API errors or the bundled illustrations: `ColorBlockScreen`,

@@ -227,6 +227,9 @@ class InboxMessage {
 class InboxPage {
   const InboxPage({required this.items, required this.unreadCount, required this.totalCount});
 
+  /// Signed out: nothing to show.
+  static const empty = InboxPage(items: [], unreadCount: 0, totalCount: 0);
+
   factory InboxPage.fromJson(Json j) => InboxPage(
     items: reqList(j, 'items', InboxMessage.fromJson),
     unreadCount: optInt(j, 'unreadCount') ?? 0,

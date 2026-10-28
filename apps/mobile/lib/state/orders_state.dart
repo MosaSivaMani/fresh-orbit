@@ -76,32 +76,35 @@ class OrderActions {
     _refresh(orderId);
   }
 
-  /// Raises the complaint (JSON), then uploads each photo to it, one request per photo. Returns the complaint.
+  /// Raises the complaint (JSON, `Idempotency-Key`). Photos go to it afterwards with [addComplaintPhoto], so a
+  /// failed photo never raises the complaint a second time (D266).
   Future<Complaint> raiseComplaint(
     String orderId, {
-    String? orderItemId,
+    required String orderItemId,
     required String kind,
     required String description,
     required String idempotencyKey,
-    List<ComplaintPhotoUpload> photos = const [],
   }) async {
-    final repo = _ref.read(orderRepositoryProvider);
-    final complaint = await repo.raiseComplaint(
-      orderId,
-      orderItemId: orderItemId,
-      kind: kind,
-      description: description,
-      idempotencyKey: idempotencyKey,
-    );
-    try {
-      for (final p in photos) {
-        await repo.addComplaintPhoto(orderId, complaint.id, bytes: p.bytes, fileName: p.fileName);
-      }
-    } finally {
-      _ref.invalidate(orderComplaintsProvider(orderId));
-      _refresh(orderId);
-    }
+    final complaint = await _ref
+        .read(orderRepositoryProvider)
+        .raiseComplaint(
+          orderId,
+          orderItemId: orderItemId,
+          kind: kind,
+          description: description,
+          idempotencyKey: idempotencyKey,
+        );
+    _ref.invalidate(orderComplaintsProvider(orderId));
+    _refresh(orderId);
     return complaint;
+  }
+
+  /// One photo to a raised complaint (multipart `file`); the server checks type, size and the photo limit.
+  Future<void> addComplaintPhoto(String orderId, String complaintId, ComplaintPhotoUpload photo) async {
+    await _ref
+        .read(orderRepositoryProvider)
+        .addComplaintPhoto(orderId, complaintId, bytes: photo.bytes, fileName: photo.fileName);
+    _ref.invalidate(orderComplaintsProvider(orderId));
   }
 
   /// Accepts or rejects a proposed substitution; the server answers with the updated order.

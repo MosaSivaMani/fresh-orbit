@@ -888,7 +888,16 @@ class _SpecialsRow extends StatelessWidget {
             tint: tint,
             pictureHeight: picture,
             picture: _specialPicture(banner, i, tint),
-            onTap: route == null ? null : () => context.push(route),
+            // A category opens the Shop tab (like the category tiles); a product page is pushed so Back returns.
+            onTap: route == null
+                ? null
+                : () {
+                    if (route.startsWith('/shop')) {
+                      context.go(route);
+                    } else {
+                      context.push(route);
+                    }
+                  },
             paper: c.paper,
             ink: c.ink,
             muted: c.muted,

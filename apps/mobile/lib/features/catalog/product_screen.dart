@@ -112,7 +112,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
   Future<void> _notify(ProductDetail d, Variant v) async {
     if (!ref.read(sessionProvider).signedIn) {
-      await context.push(Uri(path: '/login', queryParameters: {'from': '/product/${d.slug}'}).toString());
+      await context.push('/login');
       return;
     }
     setState(() => _notifying = true);
@@ -138,7 +138,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
   Future<void> _toggleWishlist(ProductDetail d) async {
     if (!ref.read(sessionProvider).signedIn) {
-      await context.push(Uri(path: '/login', queryParameters: {'from': '/product/${d.slug}'}).toString());
+      await context.push('/login');
       return;
     }
     try {
@@ -224,7 +224,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Hero: the picture in the 3:2 frame on teal-soft inside the gutters, with a sticker (D193).
+          // Hero: every picture in the 3:2 frame on teal-soft inside the gutters, swipeable with dots (D262), and a
+          // sticker (D193).
           Padding(
             padding: FreshLayout.page,
             child: FreshPictureFrame(
@@ -234,7 +235,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               child: Stack(
                 children: [
                   Positioned.fill(child: _Gallery(images: detail.images)),
-                  if (heroSticker != null) Positioned(left: 14, bottom: 12, child: heroSticker),
+                  // Top left, so it never covers the gallery's dots at the bottom.
+                  if (heroSticker != null) Positioned(left: 14, top: 12, child: heroSticker),
                 ],
               ),
             ),
@@ -284,8 +286,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   const SizedBox(height: FreshSpacing.s3),
                   _SoldOutCard(notSoldHere: v.availability!.status == 'NOT_SOLD_HERE'),
                 ],
+                if (detail.offer case final offer? when offer.text.isNotEmpty) ...[
+                  const SizedBox(height: FreshSpacing.s2),
+                  InfoBanner(key: const Key('productOffer'), tone: BannerTone.success, text: offer.text),
+                ],
                 const SizedBox(height: FreshLayout.cardGap),
-                const _Facts(),
+                _Facts(keptCold: ref.watch(currentServiceabilityProvider).value?.hasColdStorage == true),
                 if (detail.variants.length > 1) ...[
                   const SizedBox(height: FreshLayout.sectionGap),
                   const PageTitle(text: 'Pick a', brushed: 'size', size: 19),
@@ -309,6 +315,14 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                 ] else ...[
                   const SizedBox(height: FreshSpacing.s2),
                   Text(v.name, style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
+                ],
+                if (servingText(v.serving) case final serving?) ...[
+                  const SizedBox(height: FreshSpacing.s1),
+                  Text(
+                    serving,
+                    key: const Key('productServing'),
+                    style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
+                  ),
                 ],
                 if (v.preparations.isNotEmpty) ...[
                   const SizedBox(height: FreshLayout.sectionGap),
@@ -444,9 +458,27 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   }
 }
 
-/// Three fixed promises of the shop, as small tiles.
+/// The server's serving facts for one basis (CAT-R21), only formatted: "About 80–120 pieces per 1 kg · serves 4".
+/// Null when the server states none.
+String? servingText(Serving? serving) {
+  if (serving == null || serving.isEmpty) return null;
+  final pieces = switch ((serving.piecesMin, serving.piecesMax)) {
+    (final int min, final int max) when min == max => '$min pieces',
+    (final int min, final int max) => '$min–$max pieces',
+    _ => null,
+  };
+  final per = 'per ${formatQuantity(serving.basis)}';
+  final serves = serving.serves;
+  if (pieces == null) return serves == null ? null : 'Serves $serves $per';
+  return serves == null ? 'About $pieces $per' : 'About $pieces $per · serves $serves';
+}
+
+/// Promises of the shop, as small tiles. "Kept cold" only when the store for the pincode has cold storage
+/// (LOC-R11, D239, D270), like the home.
 class _Facts extends StatelessWidget {
-  const _Facts();
+  const _Facts({required this.keptCold});
+
+  final bool keptCold;
 
   @override
   Widget build(BuildContext context) {
@@ -477,7 +509,7 @@ class _Facts extends StatelessWidget {
     return FreshColumns(
       stretch: true,
       children: [
-        fact(Icons.ac_unit_rounded, 'Kept cold'),
+        if (keptCold) fact(Icons.ac_unit_rounded, 'Kept cold'),
         fact(Icons.content_cut_rounded, 'Cut your way'),
         fact(Icons.scale_outlined, 'Net weight'),
       ],
@@ -525,38 +557,25 @@ class _AddAction extends StatelessWidget {
   }
 }
 
-class _Gallery extends StatefulWidget {
+/// Every picture the server sends for the product, swipeable with page dots (the theme's [FreshGallery], D262).
+/// One picture shows alone; none shows the calm placeholder.
+class _Gallery extends StatelessWidget {
   const _Gallery({required this.images});
 
   final List<ProductImage> images;
 
   @override
-  State<_Gallery> createState() => _GalleryState();
-}
-
-class _GalleryState extends State<_Gallery> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final images = widget.images;
-    if (images.length <= 1) {
-      return ProductImageView(
-        url: images.firstOrNull?.url,
-        alt: images.firstOrNull?.altText,
-        aspectRatio: FreshLayout.pictureAspect,
-      );
-    }
-    return Semantics(
-      label: 'Image ${_index + 1} of ${images.length}',
-      child: PageView.builder(
-        itemCount: images.length,
-        onPageChanged: (i) => setState(() => _index = i),
-        itemBuilder: (_, i) =>
-            ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: FreshLayout.pictureAspect),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => FreshGallery(
+    key: const Key('productGallery'),
+    itemCount: images.length,
+    empty: const ProductImageView(url: null, aspectRatio: FreshLayout.pictureAspect),
+    itemBuilder: (_, i) => ProductImageView(
+      key: ValueKey('productImage-$i'),
+      url: images[i].url,
+      alt: images[i].altText,
+      aspectRatio: FreshLayout.pictureAspect,
+    ),
+  );
 }
 
 /// Large product image with alt text from the server.

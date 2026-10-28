@@ -214,8 +214,7 @@ class _ProfileCard extends StatelessWidget {
                           foregroundColor: BlockInk.paper,
                           minimumSize: const Size(48, 44),
                         ),
-                        onPressed: () =>
-                            context.push(Uri(path: '/login', queryParameters: {'from': '/account'}).toString()),
+                        onPressed: () => context.push('/login'),
                         child: const Text('Sign in'),
                       ),
                     ],
@@ -354,8 +353,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         showInfoSnack(context, 'Your account is deleted.');
       }
     } on ApiError catch (e) {
-      // 409: refused while an order is still open; the server says why.
-      setState(() => _error = e);
+      // 409 while an order is still open, 422 ACCOUNT_HAS_OPEN_MATTERS (open complaint or refund), 412 when the
+      // profile changed: the server says why. A stale version is read again for the next try.
+      if (e.status == 412) {
+        _loadedVersion = null;
+        ref.invalidate(profileProvider);
+      }
+      if (mounted) setState(() => _error = e);
     }
   }
 
@@ -398,13 +402,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: const Text('Offers and news'),
                 subtitle: const Text('Send me offers by SMS and e-mail.'),
               ),
-              if (_error != null && _error!.errors.isEmpty) InfoBanner(tone: BannerTone.danger, text: _error!.message),
+              // Anything not shown at a field: 409 open orders, 422 ACCOUNT_HAS_OPEN_MATTERS (errors.account), 429.
+              if (_error != null && _error!.fieldMessage('fullName') == null && _error!.fieldMessage('email') == null)
+                InfoBanner(key: const Key('profileError'), tone: BannerTone.danger, text: _error!.message),
               const SizedBox(height: FreshSpacing.s3),
               PrimaryButton(label: 'Save', loading: _saving, onPressed: _save),
               const SizedBox(height: FreshSpacing.s6),
               TextButton.icon(
                 style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                 icon: const Icon(Icons.delete_outline),
+                key: const Key('deleteAccount'),
                 label: const Text('Delete my account'),
                 onPressed: _delete,
               ),

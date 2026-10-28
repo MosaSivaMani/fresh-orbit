@@ -3,11 +3,14 @@
 //
 // Idempotency: the key is created when the customer taps "Place order" and reused only while the outcome is
 // unknown (network error, 5xx, IDEMPOTENCY_IN_PROGRESS, CONCURRENT_SAVE). A definitive refusal (4xx) is
-// replayed by the server for the same key, so the next attempt gets a new key. Any change of selection or an
-// accepted new price also starts a new key (same key with a different body → IDEMPOTENCY_KEY_REUSED).
+// replayed by the server for the same key, so the next attempt gets a new key. The key belongs to one request
+// body (D265): any change of selection, notes or expected total (a refreshed preview, an accepted new price)
+// starts a new key, because the same key with a different body is refused (422 IDEMPOTENCY_KEY_REUSED).
 //
 // PRICE_CHANGED (409): the problem's `preview` member is shown to the customer; accepting places the order
 // again with the new `expectedTotalPaise` from that preview. The app never computes the difference itself.
+
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,6 +21,7 @@ import '../api/models/json.dart';
 import '../api/models/orders.dart';
 import 'cart_state.dart';
 import 'core_providers.dart';
+import 'location_state.dart';
 import 'orders_state.dart';
 
 class CheckoutState {
@@ -109,8 +113,14 @@ class PreferredSlotController extends Notifier<String?> {
 
 final checkoutProvider = NotifierProvider.autoDispose<CheckoutController, CheckoutState>(CheckoutController.new);
 
+/// Refusals about the chosen slot: the slot list is read again so the customer sees what is still open.
+const _slotRefusals = {'SLOT_FULL', 'SLOT_CUTOFF_PASSED', 'SLOT_NOT_AVAILABLE'};
+
 class CheckoutController extends Notifier<CheckoutState> {
   String? _idempotencyKey;
+
+  /// The request body [_idempotencyKey] was made for.
+  String? _keyBody;
   int _previewSeq = 0;
 
   /// The key of the current place-order action (exposed for tests and diagnostics).
@@ -130,6 +140,16 @@ class CheckoutController extends Notifier<CheckoutState> {
       clearPreview: true,
       clearPlaceError: true,
     );
+    await refreshPreview();
+  }
+
+  /// The chosen address was edited (from checkout): its pincode may have moved to another store, so the slot is
+  /// kept only for the same pincode, and the server prices the order again.
+  Future<void> addressEdited(String addressId, {required String pincode}) async {
+    if (addressId != state.addressId) return;
+    _idempotencyKey = null;
+    final samePincode = pincode == state.addressPincode;
+    state = state.copyWith(addressPincode: pincode, clearSlot: !samePincode, clearPreview: true, clearPlaceError: true);
     await refreshPreview();
   }
 
@@ -202,19 +222,19 @@ class CheckoutController extends Notifier<CheckoutState> {
   Future<OrderDetail?> _place(int expectedTotalPaise) async {
     final selection = state.selection;
     if (selection == null || state.placing) return null;
-    _idempotencyKey ??= newIdempotencyKey();
+    final request = PlaceOrderRequest(
+      selection: selection,
+      expectedTotalPaise: expectedTotalPaise,
+      customerNotes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+    );
+    final body = jsonEncode(request.toJson());
+    if (_idempotencyKey == null || _keyBody != body) {
+      _idempotencyKey = newIdempotencyKey();
+      _keyBody = body;
+    }
     state = state.copyWith(placing: true, clearPlaceError: true);
     try {
-      final order = await ref
-          .read(orderRepositoryProvider)
-          .placeOrder(
-            PlaceOrderRequest(
-              selection: selection,
-              expectedTotalPaise: expectedTotalPaise,
-              customerNotes: state.notes.trim().isEmpty ? null : state.notes.trim(),
-            ),
-            idempotencyKey: _idempotencyKey!,
-          );
+      final order = await ref.read(orderRepositoryProvider).placeOrder(request, idempotencyKey: _idempotencyKey!);
       _idempotencyKey = null;
       if (!ref.mounted) return order;
       state = state.copyWith(placing: false, placedOrder: order);
@@ -236,6 +256,9 @@ class CheckoutController extends Notifier<CheckoutState> {
         return null;
       }
       if (!e.isTransient) _idempotencyKey = null;
+      if (_slotRefusals.contains(e.code) && state.addressPincode != null) {
+        ref.invalidate(deliverySlotsProvider(state.addressPincode!));
+      }
       state = state.copyWith(placing: false, placeError: e);
       if (!e.isTransient) await refreshPreview(); // show the server's current blockers
       return null;

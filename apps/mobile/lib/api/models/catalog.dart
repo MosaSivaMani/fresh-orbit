@@ -233,6 +233,7 @@ class Variant {
     required this.preparations,
     this.availability,
     this.freshness,
+    this.serving,
   });
 
   factory Variant.fromJson(Json j) {
@@ -250,6 +251,7 @@ class Variant {
       preparations: listOrEmpty(j, 'preparations', Preparation.fromJson),
       availability: availability == null ? null : VariantAvailability.fromJson(availability),
       freshness: Freshness.fromJsonOrNull(j['freshness']),
+      serving: Serving.fromJsonOrNull(j['serving']),
     );
   }
 
@@ -269,6 +271,9 @@ class Variant {
 
   /// This size's next batch (CAT-R25).
   final Freshness? freshness;
+
+  /// Pieces and servings per serving basis, as the server states them (CAT-R21); null when not stated.
+  final Serving? serving;
 
   Preparation? get defaultPreparation {
     for (final p in preparations) {
@@ -294,10 +299,12 @@ class ProductDetail {
     required this.netWeightNote,
     this.isWishlisted,
     required this.locationRequired,
+    this.offer,
   });
 
   factory ProductDetail.fromJson(Json j) {
     final category = asJsonOrNull(j['category'], 'category');
+    final offer = asJsonOrNull(j['offer'], 'offer');
     return ProductDetail(
       id: reqString(j, 'id'),
       slug: reqString(j, 'slug'),
@@ -313,6 +320,7 @@ class ProductDetail {
       netWeightNote: optString(j, 'netWeightNote') ?? '',
       isWishlisted: optBool(j, 'isWishlisted'),
       locationRequired: optBool(j, 'locationRequired') ?? false,
+      offer: offer == null ? null : ProductOffer.fromJson(offer),
     );
   }
 
@@ -330,6 +338,46 @@ class ProductDetail {
   final String netWeightNote;
   final bool? isWishlisted;
   final bool locationRequired;
+
+  /// The coupon line for the pincode's city (CAT-R26); null without a location or when none applies.
+  final ProductOffer? offer;
+}
+
+/// `offer { couponCode, text }` on a product: the server's sentence, shown as sent (no amount worked out here).
+class ProductOffer {
+  const ProductOffer({required this.couponCode, required this.text});
+
+  factory ProductOffer.fromJson(Json j) =>
+      ProductOffer(couponCode: optString(j, 'couponCode') ?? '', text: optString(j, 'text') ?? '');
+
+  final String couponCode;
+  final String text;
+}
+
+/// `serving { basis, netWeightGrams, piecesMin, piecesMax, serves }` (CAT-R21): per one kg net, one pack or one
+/// piece. Missing values stay null; the app never scales them to another quantity.
+class Serving {
+  const Serving({required this.basis, this.piecesMin, this.piecesMax, this.serves});
+
+  static Serving? fromJsonOrNull(Object? value) {
+    if (value is! Map) return null;
+    final j = value.cast<String, dynamic>();
+    final basis = optQuantity(j, 'basis');
+    if (basis == null) return null;
+    return Serving(
+      basis: basis,
+      piecesMin: optInt(j, 'piecesMin'),
+      piecesMax: optInt(j, 'piecesMax'),
+      serves: optInt(j, 'serves'),
+    );
+  }
+
+  final Quantity basis;
+  final int? piecesMin;
+  final int? piecesMax;
+  final int? serves;
+
+  bool get isEmpty => piecesMin == null && serves == null;
 }
 
 /// One line priced by the server before it is added (GET /price-quote, CART-R24): the estimate for the chosen
@@ -369,11 +417,23 @@ class PriceQuote {
 
 /// The business's public profile (GET /business-profile): who runs the shop and how to reach support.
 class BusinessProfile {
-  const BusinessProfile({this.tradeName, this.legalName, this.supportPhone, this.supportEmail, this.supportHours});
+  const BusinessProfile({
+    this.tradeName,
+    this.legalName,
+    this.supportPhone,
+    this.supportEmail,
+    this.supportHours,
+    this.address,
+    this.gstin,
+    this.fssaiLicenseNo,
+  });
 
   factory BusinessProfile.fromJson(Json j) => BusinessProfile(
     tradeName: optString(j, 'tradeName'),
     legalName: optString(j, 'legalName'),
+    address: optString(j, 'address'),
+    gstin: optString(j, 'gstin'),
+    fssaiLicenseNo: optString(j, 'fssaiLicenseNo'),
     supportPhone: optString(j, 'supportPhone'),
     supportEmail: optString(j, 'supportEmail'),
     supportHours: optString(j, 'supportHours'),
@@ -384,6 +444,11 @@ class BusinessProfile {
   final String? supportPhone;
   final String? supportEmail;
   final String? supportHours;
+
+  /// The registered address, GSTIN and FSSAI licence (legal details the store must show; null until set).
+  final String? address;
+  final String? gstin;
+  final String? fssaiLicenseNo;
 }
 
 class SearchSuggestion {

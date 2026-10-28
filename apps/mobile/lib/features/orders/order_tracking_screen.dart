@@ -461,6 +461,7 @@ class _Actions extends ConsumerWidget {
           ),
         if (a.raiseComplaint)
           OutlinedButton.icon(
+            key: const Key('reportProblem'),
             icon: const Icon(Icons.report_problem_outlined),
             label: const Text('Report a problem'),
             onPressed: () async {
@@ -488,6 +489,7 @@ class _Actions extends ConsumerWidget {
           ),
         if (a.downloadInvoice)
           OutlinedButton.icon(
+            key: const Key('orderInvoice'),
             icon: const Icon(Icons.receipt_outlined),
             label: const Text('Invoice'),
             onPressed: () async {
@@ -498,6 +500,14 @@ class _Actions extends ConsumerWidget {
                   showInfoSnack(context, 'The invoice is not ready yet.');
                 } else {
                   await openExternal(context, Uri.parse(link.pdfUrl!));
+                }
+              } on ApiError catch (e) {
+                if (!context.mounted) return;
+                // 404 INVOICE_NOT_ISSUED: the bill is made after delivery; not a failure (D267).
+                if (e.code == 'INVOICE_NOT_ISSUED') {
+                  showInfoSnack(context, 'The invoice is not ready yet.');
+                } else {
+                  showErrorSnack(context, e);
                 }
               } catch (e) {
                 if (context.mounted) showErrorSnack(context, e);
@@ -602,11 +612,19 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
   String _kind = 'QUALITY';
   String? _itemId;
   final _description = TextEditingController();
-  String? _fieldError;
+  String? _itemError;
+  String? _descriptionError;
   final List<ComplaintPhotoUpload> _photos = [];
 
-  /// Photos per complaint the app offers (the server checks its own limit).
+  /// Set once the server accepted the complaint: Send then only retries the photos still waiting (D266).
+  Complaint? _complaint;
+
+  /// Photos per complaint the app offers, as the server allows (4, `COMPLAINT_PHOTO_LIMIT_REACHED`).
   static const _maxPhotos = 4;
+
+  /// The server's description length (10–1000 characters).
+  static const _minDescription = 10;
+  static const _maxDescription = 1000;
 
   Future<void> _addPhoto() async {
     try {
@@ -623,9 +641,44 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
     super.dispose();
   }
 
+  Future<void> _send() async {
+    final orderId = widget.order.id;
+    final actions = ref.read(orderActionsProvider);
+    if (_complaint == null) {
+      // Every complaint names the item (the server requires orderItemId), even "Delivered late".
+      final itemMissing = _itemId == null;
+      final text = _description.text.trim();
+      final shortText = text.length < _minDescription;
+      setState(() {
+        _itemError = itemMissing ? 'Choose the item with the problem.' : null;
+        _descriptionError = shortText ? 'Describe the problem in at least $_minDescription characters.' : null;
+      });
+      if (itemMissing || shortText) return;
+      final ok = await submit((key) async {
+        _complaint = await actions.raiseComplaint(
+          orderId,
+          orderItemId: _itemId!,
+          kind: _kind,
+          description: text,
+          idempotencyKey: key,
+        );
+      });
+      if (!ok) return;
+    }
+    // One request per photo; each one sent leaves the list, so a retry sends only the rest.
+    final complaintId = _complaint!.id;
+    while (_photos.isNotEmpty) {
+      final photo = _photos.first;
+      final ok = await submit((_) => actions.addComplaintPhoto(orderId, complaintId, photo));
+      if (!ok || !mounted) return;
+      setState(() => _photos.remove(photo));
+    }
+    if (mounted) Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final needsItem = _kind != 'LATE';
+    final raised = _complaint != null;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
@@ -641,41 +694,51 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
             children: [
               const PageTitle(text: 'Report a', brushed: 'problem', size: 22),
               const SizedBox(height: FreshSpacing.s2),
+              if (raised) ...[
+                const InfoBanner(
+                  key: Key('complaintRaised'),
+                  tone: BannerTone.success,
+                  text: 'We have your report. Send the photos again, or finish without them.',
+                ),
+                const SizedBox(height: FreshSpacing.s2),
+              ],
               Wrap(
                 spacing: FreshSpacing.s2,
                 runSpacing: FreshSpacing.s2,
                 children: [
                   for (final e in _complaintKinds.entries)
                     ChoiceChip(
+                      key: ValueKey('complaintKind-${e.key}'),
                       label: Text(e.value),
                       selected: _kind == e.key,
-                      onSelected: (_) => setState(() => _kind = e.key),
+                      onSelected: raised ? null : (_) => setState(() => _kind = e.key),
                     ),
                 ],
               ),
-              if (needsItem) ...[
-                const SizedBox(height: FreshSpacing.s3),
-                DropdownButtonFormField<String>(
-                  initialValue: _itemId,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Which item?'),
-                  items: [
-                    for (final i in widget.order.items)
-                      DropdownMenuItem(
-                        value: i.id,
-                        child: Text(i.productName, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
-                  ],
-                  onChanged: (v) => setState(() => _itemId = v),
-                ),
-              ],
+              const SizedBox(height: FreshSpacing.s3),
+              DropdownButtonFormField<String>(
+                key: const Key('complaintItem'),
+                initialValue: _itemId,
+                isExpanded: true,
+                decoration: InputDecoration(labelText: 'Which item?', errorText: _itemError),
+                items: [
+                  for (final i in widget.order.items)
+                    DropdownMenuItem(
+                      value: i.id,
+                      child: Text(i.productName, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: raised ? null : (v) => setState(() => _itemId = v),
+              ),
               const SizedBox(height: FreshSpacing.s3),
               TextField(
+                key: const Key('complaintDescription'),
                 controller: _description,
+                enabled: !raised,
                 minLines: 3,
                 maxLines: 6,
-                maxLength: 1000,
-                decoration: InputDecoration(labelText: 'What went wrong?', errorText: _fieldError),
+                maxLength: _maxDescription,
+                decoration: InputDecoration(labelText: 'What went wrong?', errorText: _descriptionError),
               ),
               Wrap(
                 key: const Key('complaintPhotos'),
@@ -710,7 +773,7 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                         ),
                       ],
                     ),
-                  if (_photos.length < _maxPhotos)
+                  if (!raised && _photos.length < _maxPhotos)
                     OutlinedButton.icon(
                       key: const Key('addComplaintPhoto'),
                       onPressed: busy ? null : _addPhoto,
@@ -720,36 +783,20 @@ class _ComplaintSheetState extends ConsumerState<_ComplaintSheet> with _Idempote
                 ],
               ),
               const SizedBox(height: 8),
-              if (error != null) InfoBanner(tone: BannerTone.danger, text: error!),
+              if (error != null) InfoBanner(key: const Key('complaintError'), tone: BannerTone.danger, text: error!),
               const SizedBox(height: FreshSpacing.s3),
               PrimaryButton(
-                label: 'Send',
+                key: const Key('sendComplaint'),
+                label: raised ? 'Send photos' : 'Send',
                 loading: busy,
-                onPressed: () async {
-                  if (needsItem && _itemId == null) {
-                    setState(() => _fieldError = 'Choose the item with the problem.');
-                    return;
-                  }
-                  if (_description.text.trim().isEmpty) {
-                    setState(() => _fieldError = 'Describe the problem.');
-                    return;
-                  }
-                  setState(() => _fieldError = null);
-                  final ok = await submit(
-                    (key) => ref
-                        .read(orderActionsProvider)
-                        .raiseComplaint(
-                          widget.order.id,
-                          orderItemId: needsItem ? _itemId : null,
-                          kind: _kind,
-                          description: _description.text.trim(),
-                          idempotencyKey: key,
-                          photos: List.of(_photos),
-                        ),
-                  );
-                  if (ok && context.mounted) Navigator.pop(context, true);
-                },
+                onPressed: _send,
               ),
+              if (raised)
+                TextButton(
+                  key: const Key('finishComplaint'),
+                  onPressed: busy ? null : () => Navigator.pop(context, true),
+                  child: const Text('Finish without photos'),
+                ),
             ],
           ),
         ),
