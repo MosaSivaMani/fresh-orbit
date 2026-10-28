@@ -637,7 +637,7 @@ when there is a page below, the parts) and `first_run_sign_in_test.dart` (flows)
 
 The owner asked for the real ship in place of the drawn one wherever the app showed it. The owner's generated
 trawler (orange hull, teal stripe, white wheelhouse, masts and nets, on splashing waves; a transparent cut-out) and
-the three gull cut-outs from the website hero (D283) are bundled in the theme package
+the three gull cut-outs from the website hero (D284) are bundled in the theme package
 (`packages/flutter/fresh_theme/assets/scenery/`: `trawler.png` 600 × 571, about 630 KB, the painted sea's bottom
 and side edges faded out so it melts into the drawn sea; `gull_1..3.png`, 160 on the long side) and shown by
 `FreshTrawler` and `FreshGull` (D207).
