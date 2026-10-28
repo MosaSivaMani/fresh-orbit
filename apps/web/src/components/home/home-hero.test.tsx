@@ -45,24 +45,12 @@ describe("HomeHero", () => {
     }
   });
 
-  it("shows the owner's harbour picture instead of the drawn scenery and the Padma picture", () => {
-    const { container } = render(
-      <HomeHero
-        harbour={{
-          src: "/illustrations/harbour.jpg",
-          srcSet: "/home/harbour-1280.jpg 1280w, /illustrations/harbour.jpg 2120w",
-          alt: "Padma at the harbour",
-        }}
-      />,
-    );
+  it("puts the optional background photo behind the hero as a decorative image", () => {
+    const { container } = render(<HomeHero heroBackground="/home/harbour.jpg" />);
 
-    const images = screen.getAllByRole("img");
-    expect(images).toHaveLength(1);
-    expect(images[0]).toHaveAccessibleName("Padma at the harbour");
-    expect(images[0]).toHaveAttribute("srcset", expect.stringContaining("1280w"));
-    expect(container.querySelector("img[src='/home/hero-catch.png']")).toBeNull();
-    // The heading and chips stay HTML text over the picture.
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/Fresh fish\./);
-    expect(screen.getByText("to your kitchen")).toBeInTheDocument();
+    const images = Array.from(container.querySelectorAll("img"));
+    expect(images.some((img) => img.getAttribute("alt") === "")).toBe(true);
+    // Only Padma is announced.
+    expect(screen.getAllByRole("img")).toHaveLength(1);
   });
 });

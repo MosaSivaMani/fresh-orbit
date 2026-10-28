@@ -262,12 +262,6 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
   picture?: ReactNode;
   /** An optional background picture covering the hero (decorative). Without it the harbour sky is drawn. */
   background?: ReactNode;
-  /**
-   * The owner's full harbour picture (D279), which already holds Padma, the sky, the gulls and the trawler: an `<img>`
-   * with alt text that fills its box (`size-full object-cover`, with its own focus point). It replaces `picture`,
-   * `background` and every drawing; only the text is laid over its calm middle. Phones show it above the text.
-   */
-  scene?: ReactNode;
 }
 
 /**
@@ -275,10 +269,6 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
  * (or the background picture), gulls, a trawler at the bottom right, waves curving into the page. From `lg` the
  * picture fills the left 35 % at the page edge and the headline and feature chips start beside it, so text is never
  * under the picture; the handwritten note sits at the top right. Below `lg` the picture stacks above the text.
- *
- * With a `scene` (D279) the owner's picture covers the whole hero from `lg` (at least 440 px, 35 % of the width up to
- * 620 px): the text starts beside Padma and stops short of the trawler, on a soft cream glow so it stays readable;
- * the waves are lower so the picture shows. Below `lg` the picture is a 4:3 (2:1 from `sm`) band above the text.
  */
 export function HarbourHero({
   heading,
@@ -287,7 +277,6 @@ export function HarbourHero({
   tagline,
   picture,
   background,
-  scene,
   className,
   ...props
 }: HarbourHeroProps) {
@@ -295,65 +284,36 @@ export function HarbourHero({
   const note = lines
     ? lines.map((line) => createElement("span", { key: line, className: "block" }, line))
     : tagline;
-  const hasScene = Boolean(scene);
   return (
     <section
       className={cn(
-        "relative isolate overflow-hidden bg-[linear-gradient(180deg,#F8C6A0_0%,#FBDDBE_42%,#FFF3E4_100%)]",
-        hasScene ? "lg:min-h-[clamp(440px,35vw,620px)]" : "lg:h-[500px]",
+        "relative isolate overflow-hidden bg-[linear-gradient(180deg,#F8C6A0_0%,#FBDDBE_42%,#FFF3E4_100%)] lg:h-[500px]",
         className,
       )}
       {...props}
     >
-      {hasScene ? (
-        <div className="relative -z-10 aspect-[4/3] w-full sm:aspect-[2/1] lg:absolute lg:inset-0 lg:aspect-auto">
-          {scene}
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-b from-transparent to-[#F9CFAE] lg:hidden"
-          />
+      {background ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 [&_img]:size-full [&_img]:object-cover"
+        >
+          {background}
         </div>
       ) : (
-        <>
-          {background ? (
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 -z-10 [&_img]:size-full [&_img]:object-cover"
-            >
-              {background}
-            </div>
-          ) : (
-            <HarbourSky className="-z-10" />
-          )}
-
-          <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
-          <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
-          <Trawler className="absolute right-[1%] bottom-16 hidden w-[210px] lg:block" />
-        </>
+        <HarbourSky className="-z-10" />
       )}
 
-      <div
-        className={cn(
-          "relative flex h-full flex-col items-center px-4 pt-6 pb-20 lg:grid lg:grid-cols-[35%_minmax(0,1fr)] lg:items-stretch lg:px-0 lg:pt-0 lg:pb-0",
-          hasScene && "lg:pb-32",
+      <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
+      <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
+      <Trawler className="absolute right-[1%] bottom-16 hidden w-[210px] lg:block" />
+
+      <div className="relative flex h-full flex-col items-center px-4 pt-6 pb-20 lg:grid lg:grid-cols-[35%_minmax(0,1fr)] lg:items-stretch lg:px-0 lg:pt-0 lg:pb-0">
+        {picture && (
+          <div className="relative aspect-[5/4] w-full max-w-[440px] lg:aspect-auto lg:h-full lg:max-w-none">
+            {picture}
+          </div>
         )}
-      >
-        {hasScene ? (
-          <div aria-hidden="true" className="hidden lg:block" />
-        ) : (
-          picture && (
-            <div className="relative aspect-[5/4] w-full max-w-[440px] lg:aspect-auto lg:h-full lg:max-w-none">
-              {picture}
-            </div>
-          )
-        )}
-        <div
-          className={cn(
-            "mt-4 flex flex-col items-center gap-6 text-center lg:mt-0 lg:items-start lg:pt-12 lg:pr-8 lg:pl-[4%] lg:text-left",
-            hasScene &&
-              "lg:bg-[radial-gradient(closest-side,rgb(255_247_236/0.82),rgb(255_247_236/0))] lg:pr-[22%]",
-          )}
-        >
+        <div className="mt-4 flex flex-col items-center gap-6 text-center lg:mt-0 lg:items-start lg:pt-12 lg:pr-8 lg:pl-[4%] lg:text-left">
           {heading}
           {features && (
             <ul
@@ -366,20 +326,14 @@ export function HarbourHero({
         </div>
 
         {tagline && (
-          <p
-            className={cn(
-              "text-accent-coral-text font-script mt-6 -rotate-[8deg] text-center text-[1.625rem] leading-[1.05] font-bold lg:absolute lg:top-10 lg:right-8 lg:mt-0 lg:text-left lg:text-[1.875rem] xl:text-[2.125rem]",
-              hasScene &&
-                "lg:bg-[radial-gradient(closest-side,rgb(255_247_236/0.85),rgb(255_247_236/0))] lg:p-4",
-            )}
-          >
+          <p className="text-accent-coral-text font-script mt-6 -rotate-[8deg] text-center text-[1.625rem] leading-[1.05] font-bold lg:absolute lg:top-10 lg:right-8 lg:mt-0 lg:text-left lg:text-[1.875rem] xl:text-[2.125rem]">
             {note}
             <Swoosh className="text-accent-coral mt-1 h-3 w-40 lg:w-48" />
           </p>
         )}
       </div>
 
-      <HeroWaves className={hasScene ? "lg:h-[72px]" : undefined} />
+      <HeroWaves />
     </section>
   );
 }

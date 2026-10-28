@@ -147,10 +147,8 @@ The five `CATEGORY_*` slots (D248) cover the categories the sample data has no p
 soft shadow). Finals go into the slots at 1024 × 1024. A 512 × 512 WebP copy of each goes to
 `backend/data/sample/images/categories/<slug>.webp` (`fillets-steaks`, `ready-to-cook`, `marinated`, `fish-eggs`,
 `ready-to-eat`) once the owner sends them; until then the website shows the fish mark for those categories.
-`WEB_HOME_HERO_HARBOUR` is a `SCENE` at 20:7, FINAL since D279 (2120 × 742, the owner's picture). The home passes
-it to the hero as `harbour` (`HarbourHero`'s `scene`), with a 1280 px copy in `apps/web/public/home` for `srcset`;
-it replaces the drawn sky, gulls, trawler and the separate Padma picture. While a slot is a placeholder the website
-draws its own scenery. Prompts ready to paste:
+`WEB_HOME_HERO_HARBOUR` is a `SCENE` at 20:7. While it is a placeholder the website draws its own sky; once it is
+FINAL the home passes `/illustrations/<file>` as the hero's `heroBackground`. Prompts ready to paste:
 `docs/design/prompts-web-home-2026-10-28.md`.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
