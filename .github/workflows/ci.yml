@@ -64,13 +64,6 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: TEMP placeholders and formatting diff
-        continue-on-error: true
-        run: |
-          pnpm --filter @fresh/illustrations placeholders
-          for f in category_fillets_steaks category_ready_to_cook category_marinated category_fish_eggs category_ready_to_eat web_home_hero_harbour; do echo "=====$f"; base64 -w0 packages/illustrations/assets/$f.svg; echo; done
-          pnpm format > /dev/null; git --no-pager diff -- apps packages
-          git checkout -- apps packages
       - run: pnpm build
       - run: pnpm typecheck
       - run: pnpm lint
