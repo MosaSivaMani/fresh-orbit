@@ -29,7 +29,7 @@ request the app sends, so the owner does not meet the next refusal on the phone.
 | M5 | `GET /orders` | `sort=-placedAt` | Not a parameter; ignored (newest first anyway) | Removed (D241). Not a refusal |
 | A1 | `GET /serviceability` | `city.stateName` parsed, not shown | D209 | Home city line "City, State" (D238). The demo city has no state name yet, so it shows the city alone |
 | A2 | `GET /serviceability` | `fulfillmentLocation.hasColdStorage` ignored; "Kept cold" always claimed | D212, LOC-R11 | Parsed; claim only when true (D239) |
-| A3 | `GET /products`, `/products/{slug}` | `freshness` ignored | CAT-R25, D212 | Parsed on list items and sizes; "Caught <date>" on the product page (D240) |
+| A3 | `GET /products`, `/products/{slug}` | `freshness` ignored | CAT-R25, D212 | Parsed on list items and sizes; "Caught <date>" on the product page and shop cards (D240) |
 | — | `GET /home` banners | `badge` | D210 | Already shown |
 | — | Cart bar | `totals.estimatedTotalPaise` | D212, CART-R32 | Already used |
 

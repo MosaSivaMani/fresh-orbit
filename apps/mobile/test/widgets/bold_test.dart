@@ -29,7 +29,12 @@ Future<void> _pump(
   );
 }
 
-ProductSummary _product({bool locationRequired = false, bool priced = true}) => ProductSummary.fromJson({
+ProductSummary _product({
+  bool locationRequired = false,
+  bool priced = true,
+  String status = 'IN_STOCK',
+  String? caughtOn,
+}) => ProductSummary.fromJson({
   'id': 'p1',
   'slug': 'seer-fish-vanjaram',
   'name': 'Seer Fish',
@@ -37,8 +42,9 @@ ProductSummary _product({bool locationRequired = false, bool priced = true}) => 
   'sourceType': 'WILD',
   'imageUrl': null,
   'fromPrice': priced ? {'unitPricePaise': 129900, 'compareAtPaise': 149900, 'perUnit': 'KG'} : null,
-  'availability': {'status': 'IN_STOCK', 'message': null},
+  'availability': {'status': status, 'message': null},
   'locationRequired': locationRequired,
+  'freshness': caughtOn == null ? null : {'caughtOn': caughtOn, 'receivedAt': '2026-10-24T00:45:00Z'},
 });
 
 void main() {
@@ -233,6 +239,26 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Add Seer Fish to cart'));
       expect(added, 1);
       handle.dispose();
+    });
+
+    testWidgets('shows the server catch date on the picture, unless a stock chip needs the spot (D240)', (
+      tester,
+    ) async {
+      Widget card(ProductSummary p) => SizedBox(
+        width: 180,
+        height: 250,
+        child: ProductCard(product: p, onTap: () {}, control: const CardAdd(null)),
+      );
+      await _pump(tester, card(_product(caughtOn: '2026-10-23')));
+      expect(find.text('Caught Fri, 23 Oct'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await _pump(tester, card(_product(caughtOn: '2026-10-23', status: 'LOW_STOCK')));
+      expect(find.text('Low stock'), findsOneWidget);
+      expect(find.byKey(const Key('cardCaught')), findsNothing);
+
+      await _pump(tester, card(_product()));
+      expect(find.byKey(const Key('cardCaught')), findsNothing);
     });
 
     testWidgets('in the cart the button is a − n + stepper', (tester) async {

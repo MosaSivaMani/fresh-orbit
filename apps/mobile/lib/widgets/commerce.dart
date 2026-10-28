@@ -239,7 +239,7 @@ class CardInCart extends CardCartControl {
   final VoidCallback onOpen;
 }
 
-/// Shop product card (D88): a tinted picture with an availability chip, an ADD button on the picture's bottom
+/// Shop product card (D88): a tinted picture with an availability chip (or the catch date), an ADD button on the picture's bottom
 /// edge that turns into a − n + stepper once the product is in the cart, then the name, local names and the
 /// server's price per unit with the struck compare-at price. It shows server values only; it never works out a
 /// discount (rule 4).
@@ -277,6 +277,8 @@ class ProductCard extends StatelessWidget {
       'NOT_SOLD_HERE' => 'Not sold here',
       final s => humanizeCode(s),
     };
+    // A stock warning matters more than the catch date, so the date shows only without one (CAT-R25, D240).
+    final caught = product.freshness?.caughtOn;
     const edge = 17.0;
     return Container(
       decoration: BoxDecoration(
@@ -318,6 +320,16 @@ class ProductCard extends StatelessWidget {
                       top: FreshSpacing.s2,
                       left: FreshSpacing.s2,
                       child: _FreshChip(label: chipLabel),
+                    )
+                  else if (caught != null)
+                    Positioned(
+                      top: FreshSpacing.s2,
+                      left: FreshSpacing.s2,
+                      right: FreshSpacing.s2,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: _FreshChip(key: const Key('cardCaught'), label: 'Caught ${formatCalendarDate(caught)}'),
+                      ),
                     ),
                   if (control != null)
                     Positioned(
@@ -372,7 +384,7 @@ class ProductCard extends StatelessWidget {
 }
 
 class _FreshChip extends StatelessWidget {
-  const _FreshChip({required this.label});
+  const _FreshChip({super.key, required this.label});
 
   final String label;
 
@@ -382,6 +394,8 @@ class _FreshChip extends StatelessWidget {
     decoration: BoxDecoration(color: BlockInk.paper, borderRadius: BorderRadius.circular(999)),
     child: Text(
       label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: const TextStyle(fontFamily: AppFonts.body, fontSize: 10, fontWeight: FontWeight.w700, color: BlockInk.ink),
     ),
   );

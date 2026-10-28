@@ -568,5 +568,5 @@ Every call the app sends was checked against the server's validators and the Ren
 | Clear cart | `DELETE /cart` answered 404 `CART_NOT_FOUND` (the cart was ordered or expired) reads as the empty cart (D237) |
 | Home header | The city line is "City, State" when `/serviceability` sends `city.stateName` (D209), else the city alone (D238) |
 | Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Slots to your door", "Fee and minimum order." (D212, D239) |
-| Product page | "Caught Fri, 23 Oct" from the chosen size's `freshness.caughtOn` (CAT-R25); nothing when the server sends none (D240) |
+| Product page, shop cards | "Caught Fri, 23 Oct" from `freshness.caughtOn` (CAT-R25): the chosen size on the product page, the default size as the card's picture chip (a Low stock / Sold out chip takes the spot first); nothing when the server sends none (D240) |
 | Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |
