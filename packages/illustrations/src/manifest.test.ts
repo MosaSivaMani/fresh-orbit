@@ -197,6 +197,34 @@ describe("manifest.json", () => {
     expect(designSize("20:7")).toEqual({ width: 1024, height: 358 });
   });
 
+  it("holds the sign-in avatar and header coast as FINAL transparent PNGs", () => {
+    const slot = (code: string) => manifest.slots.find((s) => s.slot === code)!;
+    expect(slot("LOGIN_OTP")).toMatchObject({
+      status: "FINAL",
+      file: "assets/login_otp.png",
+      background: "TRANSPARENT",
+      character: "HOME_COOK",
+      width: 1024,
+      height: 1024,
+    });
+    expect(slot("SIGN_IN_COAST")).toMatchObject({
+      status: "FINAL",
+      file: "assets/sign_in_coast.png",
+      aspect: "3:2",
+      background: "TRANSPARENT",
+    });
+    expect(slot("SIGN_IN_COAST").character).toBeUndefined();
+    for (const code of ["LOGIN_OTP", "SIGN_IN_COAST"]) {
+      const entry = slot(code);
+      expect(readImageSize(readFileSync(join(root, entry.file)))).toMatchObject({
+        format: "PNG",
+        alpha: true,
+        width: entry.width,
+        height: entry.height,
+      });
+    }
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);
@@ -255,9 +283,11 @@ describe("manifest.json", () => {
     const png = new Uint8Array(24);
     png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
     png.set([0, 0, 4, 0, 0, 0, 4, 0], 16);
+    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST) are read from disk.
+    const faked = (p: string) => p.endsWith(".png") && p.startsWith("assets/") && !disk.size(p);
     const facts: FileFacts = {
-      size: (p) => (p.endsWith(".png") ? 300 * 1024 : disk.size(p)),
-      head: (p) => (p.endsWith(".png") ? png : disk.head(p)),
+      size: (p) => (faked(p) ? 300 * 1024 : disk.size(p)),
+      head: (p) => (faked(p) ? png : disk.head(p)),
     };
     expect(checkManifest(m, facts)).toEqual([]);
     entry.file = "assets/Final Image.png";

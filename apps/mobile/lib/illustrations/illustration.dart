@@ -232,6 +232,8 @@ class IllustrationPlaceholder extends StatelessWidget {
   IllustrationSlot.homeHeroCatch => (CastMember.padma, CastBackdrop.teal, Icons.set_meal_rounded, false),
   IllustrationSlot.homeCardCleaned => (CastMember.chanduva, CastBackdrop.coral, Icons.restaurant_rounded, false),
   IllustrationSlot.homeCardRider => (CastMember.ravi, CastBackdrop.ice, Icons.ac_unit_rounded, false),
+  // The sign-in header passes the drawn coast as its fallback; this is only the last drawn stand-in.
+  IllustrationSlot.signInCoast => (CastMember.chanduva, CastBackdrop.teal, Icons.sailing_rounded, false),
 };
 
 /// The owner's category and offer pictures bundled in the app (D194, D220), used when the server sends no

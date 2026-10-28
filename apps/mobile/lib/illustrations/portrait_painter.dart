@@ -1,7 +1,7 @@
 // Ammamma, the home cook, drawn chest up for round avatars (D281): silver hair in a bun, a red bindi, a warm
-// smile, a mango-yellow saree with a coral sash. Our own stand-in for the LOGIN_OTP picture until the owner's
-// final PNG is bundled (prompt in docs/design/prompts-app-signin-2026-10-29.md). It fills its square; the
-// caller clips it to a circle. Static.
+// smile, a mango-yellow saree with a coral sash. The owner's LOGIN_OTP picture is bundled (D285); this is
+// the sign-in avatar's fallback when that file is missing or fails to load, as every slot has one. It fills its
+// square; the caller clips it to a circle. Static.
 
 import 'package:flutter/widgets.dart';
 

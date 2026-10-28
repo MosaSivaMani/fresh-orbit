@@ -18,6 +18,7 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 - Merged: PR #34 `web/complete-flows` (customer website flow audit, decisions D255–D264, `research/web-flow-audit-2026-10.md`): main (#30, #31, #33) merged in; the home hero "Next slot" now uses the store time zone (D258). Merged to main at 3938b09.
 - **2026-10-29:** branch `mobile/signin-look` (D281–D282): the app's sign-in (phone, welcome and code steps) matches the owner's reference `design/mockups/app-login-reference-2026-10-29.jpg` — coral header with a drawn coast, Ammamma in a ringed avatar on the cream card, +91 phone field, dark "Send code" pill. Send the owner the `LOGIN_OTP` portrait prompt (`design/prompts-app-signin-2026-10-29.md`) once the PR is green.
 - **2026-10-29:** branch `mobile/real-ship` (D287): the app's onboarding page 1 and home harbour show the owner's real trawler and real gulls (pictures in `fresh_theme/assets/scenery/`). The sign-in coast still draws the trawler; when its picture PR lands, `FreshScenery.trawler` can be removed if nothing else uses it.
+- **2026-10-29:** branch `mobile/ammamma-avatar` (D285–D286): the owner's Ammamma portrait is the final `LOGIN_OTP` and the owner's harbour picture (`SIGN_IN_COAST`, new slot) fills the sign-in header; drawn versions are fallbacks only. PR #39 (D284) is merged.
 - After #29 merges: build a new live APK (`gh workflow run mobile-demo.yml --ref main`) and send the link.
 
 ## 0. Owner rules since 2026-10-24 (read first)

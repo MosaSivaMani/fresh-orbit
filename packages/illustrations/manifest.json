@@ -243,15 +243,34 @@
     },
     {
       "slot": "LOGIN_OTP",
-      "file": "assets/login_otp.svg",
+      "file": "assets/login_otp.png",
       "placeholder": "assets/login_otp.svg",
       "alt": "A smiling grandmother with silver hair in a bun, in a mango-yellow saree with a coral sash.",
       "character": "HOME_COOK",
       "scene": "A friendly chest-up portrait of the home cook for a round profile avatar: she faces the viewer with a warm closed-mouth smile, her silver hair in a neat bun on top of her head, a small red bindi, her mango-yellow saree with a coral sash across one shoulder; her head and shoulders fill the middle of the square with a little space around the bun, no hands, no phone and no props",
       "aspect": "1:1",
       "background": "TRANSPARENT",
-      "status": "PLACEHOLDER",
-      "prompt": "A friendly chest-up portrait of the home cook for a round profile avatar: she faces the viewer with a warm closed-mouth smile, her silver hair in a neat bun on top of her head, a small red bindi, her mango-yellow saree with a coral sash across one shoulder; her head and shoulders fill the middle of the square with a little space around the bun, no hands, no phone and no props. Ammamma, the home cook: A grandmother, about 65, with silver hair in a bun, a red bindi and a warm knowing smile; a mango-yellow saree with a coral border over a coral blouse, gold bangles and a thin gold necklace; she carries a steel pot and a ladle; same face, hair and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution."
+      "status": "FINAL",
+      "prompt": "A friendly chest-up portrait of the home cook for a round profile avatar: she faces the viewer with a warm closed-mouth smile, her silver hair in a neat bun on top of her head, a small red bindi, her mango-yellow saree with a coral sash across one shoulder; her head and shoulders fill the middle of the square with a little space around the bun, no hands, no phone and no props. Ammamma, the home cook: A grandmother, about 65, with silver hair in a bun, a red bindi and a warm knowing smile; a mango-yellow saree with a coral border over a coral blouse, gold bangles and a thin gold necklace; she carries a steel pot and a ladle; same face, hair and clothes as in the approved character sheet in every picture. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Square 1:1 image, subject centred, full body or three-quarter view. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1024,
+      "height": 1024,
+      "source": "docs/design/characters/generated/login_otp.png",
+      "sourceBytes": 1917422
+    },
+    {
+      "slot": "SIGN_IN_COAST",
+      "file": "assets/sign_in_coast.png",
+      "placeholder": "assets/sign_in_coast.svg",
+      "alt": "Two orange and teal fishing boats moored at a stone jetty under palms at sunrise, with gulls overhead.",
+      "scene": "A small coastal harbour at sunrise for the right side of a sign-in header: two wooden fishing trawlers painted orange and teal moored side by side at a stone jetty with rope lines, rounded rocks on the left, three coconut palms behind the jetty, a large pale sun behind soft peach clouds, two white gulls in the sky and calm teal water with sun reflections across the bottom of the picture; the top-left corner fades to empty so text can sit there; no people, no characters and no faces",
+      "aspect": "3:2",
+      "background": "TRANSPARENT",
+      "status": "FINAL",
+      "prompt": "A small coastal harbour at sunrise for the right side of a sign-in header: two wooden fishing trawlers painted orange and teal moored side by side at a stone jetty with rope lines, rounded rocks on the left, three coconut palms behind the jetty, a large pale sun behind soft peach clouds, two white gulls in the sky and calm teal water with sun reflections across the bottom of the picture; the top-left corner fades to empty so text can sit there; no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 3:2 image, the subject on the right half with the left third kept empty. No text, no letters, no numbers, no logos, no watermark. High resolution.",
+      "width": 1024,
+      "height": 682,
+      "source": "docs/design/characters/generated/sign_in_coast.png",
+      "sourceBytes": 2246109
     },
     {
       "slot": "ORDER_PLACED",
