@@ -48,6 +48,7 @@ breadcrumbs in.
 | `TextPageShell` (web `ContentPage`) | About, help and the three policies: band, then the text on a paper card (radius 24) with a side card from `lg` (contact, other policies, "Ready to order?") |
 | `CompactProductCard` | Small horizontal product card (radius 20) for saved items: picture, name, the server's price line, a coral note |
 | `OfferRow` | One coupon in the cart's "View offers" list: code, description, terms, Apply |
+| `ProductGallery` (`packages/ui/src/components/product-gallery.tsx`; web `Gallery` passes Next.js `Image`) | Product page: every photo in a 3:2 frame (D193, D216) on a scroll-snap track, so a touch swipe moves between photos; dots below, 64 px thumbnails from `md`, Left/Right arrow keys; first photo loads eagerly, the rest lazily; alt text falls back to the product name; no photos → the fish mark with "No photo of {name} yet" for screen readers |
 | Cards | Small cards radius 20 (D189): wishlist cards, FAQ items, product facts, delivery box, substitutions, offers |
 | Pictures | Owner pictures (FINAL slots) in the band circle: shop and about `ONBOARDING_FRESH`, cart `ONBOARDING_CLEANED`, checkout and help `ONBOARDING_DELIVERY`; empty states keep their EMPTY_* pictures |
 

@@ -124,8 +124,17 @@ alpha kept) and the package keeps all three PLACEHOLDER for the same reason.
 The category pictures (`category_fish`, `category_prawns`, `category_crabs`, `category_squid`,
 `category_shellfish`) and the sample banners (`sample_banner_seer_steaks`, `sample_banner_prawns`, 1774 × 887)
 are data pictures, not app slots: they belong to categories and home offers, which the server sends. The sample
-loader (`backend/data/sample`) only renders placeholders for category and banner `imageKey`s today, so they are
-not wired in yet.
+loader stores the committed WebP copy of a category or banner key (`backend/data/sample/images/<path>`, D201) and
+draws a placeholder only for a key without a file.
+
+Product pictures are data pictures too (D249): photo-real, not cartoon, so they do not follow the character style
+above. The sample loader uploads `backend/data/sample/images/products/<slug>/<n>.webp` (n = 1–4, 1 = main) through
+the normal product image pipeline, each with its own alt text from `images.json`, and falls back to the drawn
+placeholder only for a product with no file. Brief: square ≥ 1024 px, soft daylight, slightly above, warm sand
+`#FBF4E8` or transparent background, no hands or people, no text, the food kept in the middle so the 3:2 frame
+(D193) crops nothing important. The owner hands them to the PM (PNG or JPG is fine); the PM saves them as
+`docs/design/products/<slug>/<n>.png|jpg` (`sips -Z 1280`) and the `Sample images` workflow makes the 1280 px WebP
+(`tools/make_images.py`). Prompts for all 26 sample products: `prompts-product-pictures-2026-10.md`.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 
