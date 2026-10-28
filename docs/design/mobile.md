@@ -617,7 +617,8 @@ The sign-in screen (`features/auth/login_screen.dart`) matches the owner's refer
 | `FreshAuthPage` | The scrolling page: header, then the card's content with 14 px gaps and 24 px side margins. The Scaffold's background is paper, so the card runs to the bottom; the keyboard scrolls the page. |
 | `FreshAuthHeader` | Coral `#E5806A` block: round paper back button (left out when `onBack` is null: first run, or a login opened alone), `FreshAuthTitle`, the coast at the right, the cream card's 34 px rounded top, and the avatar centred on the card's edge (half above, half on the card). Avatar size is 38 % of the width or 22 % of the height, 112–156 px. |
 | `FreshAuthTitle` | Spaced caps eyebrow in white, a white Dancing Script line (40) with mango sparks, the key word in Baloo 2 800 ink (38) on a mango `#F5B544` brush tilted −2°. One header for screen readers. |
-| `FreshCoastScene` | Static, drawn: two gulls, peach clouds, a large pale sun, two palms on a spit of land, two fishing boats (the theme's trawler), deep and light teal sea running under the card. 160 × 200 design box, 42 % of the screen width (140–240 px). |
+| Header picture | `SIGN_IN_COAST` (D286), the owner's harbour at sunrise (transparent PNG, top-left fades out), passed as `FreshAuthPage(scene:)`. Box 3:2, 72 % of the screen width (240–440 px), anchored at the bottom right; its bottom 14 % (the water) runs under the card. Bundled at 800 × 533. |
+| `FreshCoastScene` | Fallback only (no bundled `SIGN_IN_COAST`, or the header used without a `scene`). Static, drawn: two gulls, peach clouds, a large pale sun, two palms on a spit of land, two fishing boats (the theme's trawler), deep and light teal sea running under the card. 160 × 200 design box, 42 % of the screen width (140–240 px). |
 | `FreshAvatarBadge` | Pale mint circle, white ring, dark ink outline, teal chat badge at the bottom right, a teal and a coral dot near the ring; the child is clipped to the circle. |
 | `FreshPhoneField` | Rounded outline (18 px), drawn India flag, `+91`, a chevron (look only: India only), a divider, the number field; error text under it. |
 | `FreshArrowButton` | Full-width ink pill, 56 px, label centred, arrow at the right; spinner and no taps while loading. |
@@ -627,8 +628,12 @@ you."), first-run welcome ("WELCOME", *Sign in or* / **sign up**, "Sign in or cr
 just browse" `skipSignIn`), code ("VERIFY", *Enter the* / **code**, six boxes, Verify, the Change number / Resend
 wrap). Keys `phoneField`, `otpField`, `skipSignIn` are unchanged; terms line at the bottom.
 
-Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282); until the PNG ships the app draws
-`AmmammaPortrait` (`lib/illustrations/portrait_painter.dart`). Prompt: `design/prompts-app-signin-2026-10-29.md`.
+Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282), the owner's final picture since D285:
+`assets/illustrations/login_otp.png` (512 × 512, transparency kept), framed for a circle (head and shoulders,
+face centred, room above the bun) and shown whole on the pale mint backdrop. The signed-out account and orders
+screens show the same file in their `AvatarCircle`. `AmmammaPortrait` (`lib/illustrations/portrait_painter.dart`)
+is only the fallback when the file is missing. Prompts: `design/prompts-app-signin-2026-10-29.md`.
 
 Tests: `test/widgets/sign_in_look_test.dart` (every step at 360 × 640, the code step at 1.3× text, back button only
-when there is a page below, the parts) and `first_run_sign_in_test.dart` (flows).
+when there is a page below, the parts, both pictures bundled and shown, the coast's place under the card edge, the
+drawn fallbacks) and `first_run_sign_in_test.dart` (flows).

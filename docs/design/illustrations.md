@@ -54,8 +54,9 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
 ## 3. Slots
 
-44 slots (32 from the handoff plus 12 onboarding tiles and banners from the owner's onboarding reference; the list in
-`REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of this change: 10 FINAL, 34 PLACEHOLDER.
+54 slots (32 from the handoff, 12 onboarding tiles and banners from the owner's onboarding reference, and later
+additions below; the list in `REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of this change:
+12 FINAL (`LOGIN_OTP` and `SIGN_IN_COAST` since D285–D286), 42 PLACEHOLDER.
 The playground's **Illustrated** tab shows every slot with its alt text and status.
 
 | Slot | Shape | Cast | Website | Admin | Mobile |
@@ -113,6 +114,7 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `CATEGORY_FISH_EGGS` | 1:1 | none (a bowl of orange fish roe) | — | — | Website category circle (D248) |
 | `CATEGORY_READY_TO_EAT` | 1:1 | none (a bowl of Andhra fish curry) | — | — | Website category circle (D248) |
 | `WEB_HOME_HERO_HARBOUR` | 20:7 | `FISHMONGER` (Padma in the left third of a sunrise harbour) | — | — | Website home hero background, optional (D248) |
+| `SIGN_IN_COAST` | 3:2 | none (two trawlers at a stone jetty, palms, sun, gulls, teal water) | — | — | Sign-in header, right side (D286) |
 
 The twelve onboarding pictures are all `TRANSPARENT` PNGs: save them as
 `docs/design/characters/generated/onboarding_tile_<name>.png` / `onboarding_banner_<name>.png`. Until they are
@@ -152,7 +154,21 @@ FINAL the home passes `/illustrations/<file>` as the hero's `heroBackground`. Pr
 `docs/design/prompts-web-home-2026-10-28.md`.
 
 `LOGIN_OTP` is a chest-up portrait of Ammamma for the round sign-in avatar (D282); prompt:
-`docs/design/prompts-app-signin-2026-10-29.md`.
+`docs/design/prompts-app-signin-2026-10-29.md`. The owner's final arrived on 2026-10-29 and is FINAL (D285): the
+original (1254 × 1254) is in `generated/login_otp.png`; the package holds a 1024 × 1024 copy framed for a circle
+(the portrait scaled to 86 % and set on the bottom edge, so the face is centred and the bun clear of the rim) and
+reduced to a 256-colour PNG with transparency (about 250 KB, under the 600 KB limit); the app bundles the same
+framing at 512 × 512 (full colour, about 230 KB). The website (`AvatarCircle`, cover) and the app (`AvatarCircle`,
+`FreshAvatarBadge`, contain) show the whole square in their circle.
+
+`SIGN_IN_COAST` (D286) is the harbour on the right of the app's sign-in header: a `TRANSPARENT` 3:2 object-only
+picture whose top-left fades out. The owner's original (1536 × 1024) is in `generated/sign_in_coast.png`; the
+package holds a 1024 × 682 256-colour PNG (about 200 KB) and the app an 800 × 533 copy (about 130 KB). Until it is
+bundled the header draws `FreshCoastScene`.
+
+These finals were brought under the limit without `pnpm` (company laptop): `sips` resized them and a small
+standard-library Python script framed and colour-reduced them (median cut, dithered), the job `import` and
+`optimize` would do.
 
 Admin uses only `ADMIN_*`, `ERROR_GENERIC` and `NOT_FOUND`, at size `sm` (160 px) so dense screens stay dense.
 

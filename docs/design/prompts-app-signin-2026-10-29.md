@@ -6,15 +6,18 @@ slot's `prompt` in `packages/illustrations/manifest.json`, built from the scene,
 the background and the shape (`illustrations.md` §2), and it ends with the no-text line. Paste it unchanged into an
 image tool whose licence allows commercial use.
 
-The coastal scene in the header is drawn in code (`FreshCoastScene` in `fresh_theme`), so it needs no picture.
+The coastal scene in the header is the owner's harbour picture, slot `SIGN_IN_COAST` (D286); its prompt is below.
+The drawn `FreshCoastScene` in `fresh_theme` is only its fallback.
 
 ## How to deliver
 
-| Slot | Save as (`docs/design/characters/generated/`) | Size | Notes |
-|---|---|---|---|
-| `LOGIN_OTP` | `login_otp.png` (transparent PNG) | 1024 × 1024 | Head and shoulders fill the middle of the square; the app shows it inside a 112–156 px circle on a pale mint backdrop, so keep the bun and the smile away from the corners. The website login and the app's signed-out account and orders screens use the same picture. |
+| Slot | Save as (`docs/design/characters/generated/`) | Size | Notes | Delivered |
+|---|---|---|---|---|
+| `LOGIN_OTP` | `login_otp.png` (transparent PNG) | 1024 × 1024 | Head and shoulders fill the middle of the square; the app shows it inside a 112–156 px circle on a pale mint backdrop, so keep the bun and the smile away from the corners. The website login and the app's signed-out account and orders screens use the same picture. | **Yes, 2026-10-29** (1254 × 1254 original; FINAL, D285) |
+| `SIGN_IN_COAST` | `sign_in_coast.png` (transparent PNG) | 1536 × 1024 | The harbour on the right of the coral header; the top-left fades to transparent so the title can sit there, and the water at the bottom runs under the card. | **Yes, 2026-10-29** (FINAL, D286) |
 
-Until the PNG is bundled the app draws its own chest-up Ammamma (`AmmammaPortrait`) in the ring.
+Both pictures are bundled: the app shows them, and draws its own chest-up Ammamma (`AmmammaPortrait`) and coast
+(`FreshCoastScene`) only if a file is missing.
 
 ## LOGIN_OTP (sign-in avatar)
 
@@ -23,3 +26,11 @@ A friendly chest-up portrait of the home cook for a round profile avatar: she fa
 ```
 
 If the tool adds a steel pot or a ladle from the character sheet, ask again with "no props in her hands".
+
+## SIGN_IN_COAST (sign-in header harbour)
+
+```text
+A small coastal harbour at sunrise for the right side of a sign-in header: two wooden fishing trawlers painted orange and teal moored side by side at a stone jetty with rope lines, rounded rocks on the left, three coconut palms behind the jetty, a large pale sun behind soft peach clouds, two white gulls in the sky and calm teal water with sun reflections across the bottom of the picture; the top-left corner fades to empty so text can sit there; no people, no characters and no faces. Highly detailed, realistic 3D animated-film style character render, soft subsurface skin, natural hair strands and fabric texture, expressive friendly faces, warm cinematic studio lighting with soft shadows, shallow depth of field, clean modern look, warm sand-coloured background (#FBF4E8) unless stated, brand colours sea teal (#0B7D70) and coral (#F07A5A) as accents, set in coastal Andhra Pradesh, India. Background: transparent (or, if transparency is not available, a plain flat white background), the subject isolated with nothing around it so it can be cut out cleanly. Wide 3:2 image, the subject on the right half with the left third kept empty. No text, no letters, no numbers, no logos, no watermark. High resolution.
+```
+
+If the tool draws people on the jetty, ask again with "no people anywhere".

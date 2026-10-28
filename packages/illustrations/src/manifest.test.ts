@@ -197,6 +197,34 @@ describe("manifest.json", () => {
     expect(designSize("20:7")).toEqual({ width: 1024, height: 358 });
   });
 
+  it("holds the sign-in avatar and header coast as FINAL transparent PNGs", () => {
+    const slot = (code: string) => manifest.slots.find((s) => s.slot === code)!;
+    expect(slot("LOGIN_OTP")).toMatchObject({
+      status: "FINAL",
+      file: "assets/login_otp.png",
+      background: "TRANSPARENT",
+      character: "HOME_COOK",
+      width: 1024,
+      height: 1024,
+    });
+    expect(slot("SIGN_IN_COAST")).toMatchObject({
+      status: "FINAL",
+      file: "assets/sign_in_coast.png",
+      aspect: "3:2",
+      background: "TRANSPARENT",
+    });
+    expect(slot("SIGN_IN_COAST").character).toBeUndefined();
+    for (const code of ["LOGIN_OTP", "SIGN_IN_COAST"]) {
+      const entry = slot(code);
+      expect(readImageSize(readFileSync(join(root, entry.file)))).toMatchObject({
+        format: "PNG",
+        alpha: true,
+        width: entry.width,
+        height: entry.height,
+      });
+    }
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);
