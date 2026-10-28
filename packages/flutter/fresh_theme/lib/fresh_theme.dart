@@ -6,7 +6,8 @@
 /// The rich screens' shared parts (D176, D181) are hand-written: the grid ([FreshLayout], [FreshColumns]), the
 /// highlights ([BrushHighlight], [Sparks], [ScriptLine], [SwooshUnderline], [Snowflake]) and the drawn scenery
 /// ([FreshScenery], [HarbourScenePainter], [PalmsPainter]). The sign-in look (D281): [FreshAuthPage],
-/// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene].
+/// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]; the
+/// "Tell us about you" field (D290): [FreshTextField].
 library;
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ export 'src/auth.dart';
 export 'src/blocks.dart';
 export 'src/choices.dart';
 export 'src/feedback.dart';
+export 'src/fields.dart';
 export 'src/gallery.dart';
 export 'src/header.dart';
 export 'src/highlights.dart';

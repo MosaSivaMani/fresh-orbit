@@ -255,13 +255,37 @@ class FakeAccountRepository implements AccountRepository {
   @override
   Future<Profile> profile() async => me ?? _unexpected('profile');
 
+  /// Every PATCH /me sent, in order.
+  final profileUpdates = <({String? fullName, String? email, bool? marketingOptIn, String version})>[];
+
+  /// When set, the next PATCH /me throws it (and it is cleared).
+  Object? failUpdateProfile;
+
   @override
   Future<Profile> updateProfile({
     String? fullName,
     String? email,
     bool? marketingOptIn,
     required String version,
-  }) async => me ?? _unexpected('updateProfile');
+  }) async {
+    profileUpdates.add((fullName: fullName, email: email, marketingOptIn: marketingOptIn, version: version));
+    final fail = failUpdateProfile;
+    if (fail != null) {
+      failUpdateProfile = null;
+      throw fail;
+    }
+    final current = me ?? _unexpected('updateProfile');
+    // null leaves a field unchanged (CUS-R2); the server gives the row a new version.
+    return me = Profile(
+      customerId: current.customerId,
+      phone: current.phone,
+      fullName: fullName ?? current.fullName,
+      email: email ?? current.email,
+      marketingOptIn: marketingOptIn ?? current.marketingOptIn,
+      status: current.status,
+      version: '${current.version}.${profileUpdates.length}',
+    );
+  }
 
   @override
   Future<void> deleteAccount({required String version}) async {
