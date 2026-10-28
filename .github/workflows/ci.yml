@@ -10,8 +10,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Runs a job only when its part of the repository changed, to save Actions minutes (D253). A skipped job counts as
+  # passed. Changes to this workflow, or a push with no usable base, run everything.
+  changes:
+    name: Changed parts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.diff.outputs.backend }}
+      frontend: ${{ steps.diff.outputs.frontend }}
+      openapi: ${{ steps.diff.outputs.openapi }}
+      mobile: ${{ steps.diff.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          all() { for k in backend frontend openapi mobile; do echo "$k=true" >> "$GITHUB_OUTPUT"; done; }
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then all; exit 0; fi
+          files=$(git diff --name-only "$BASE" HEAD)
+          echo "$files"
+          if echo "$files" | grep -q '^\.github/workflows/ci\.yml$'; then all; exit 0; fi
+          has() { echo "$files" | grep -qE "$1" && echo true || echo false; }
+          echo "backend=$(has '^(backend/|global\.json)')" >> "$GITHUB_OUTPUT"
+          echo "frontend=$(has '^(apps/web/|apps/admin/|packages/[^f]|package\.json|pnpm-|tsconfig|\.prettier|eslint)')" >> "$GITHUB_OUTPUT"
+          echo "openapi=$(has '^(backend/src/|packages/api-client/)')" >> "$GITHUB_OUTPUT"
+          echo "mobile=$(has '^(apps/mobile/|packages/flutter/|packages/illustrations/)')" >> "$GITHUB_OUTPUT"
+
   backend:
     name: Backend build and test
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -54,6 +86,8 @@ jobs:
 
   frontend:
     name: Frontend packages build, lint and test
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -74,6 +108,8 @@ jobs:
   # the runner because the dev Mac runs no tools). Download the `api-client` artifact and commit it when it differs.
   openapi:
     name: OpenAPI document and API client types
+    needs: changes
+    if: needs.changes.outputs.openapi == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     services:
@@ -121,6 +157,8 @@ jobs:
 
   mobile:
     name: Mobile app analyze and test
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
