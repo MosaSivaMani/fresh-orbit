@@ -216,13 +216,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onSubmitted: _verify,
               ),
               PrimaryButton(label: 'Verify', loading: _busy, onPressed: _verify),
-              Row(
+              // A wrap, not a row: with a large text size the two links take two lines instead of overflowing.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
                 children: [
                   TextButton(
                     onPressed: _busy ? null : () => setState(() => _challenge = null),
                     child: const Text('Change number'),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: _busy || _resendIn > 0 ? null : _requestOtp,
                     child: Text(_resendIn > 0 ? 'Resend in $_resendIn s' : 'Resend code'),
