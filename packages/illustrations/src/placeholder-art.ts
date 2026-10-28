@@ -421,6 +421,28 @@ export const COMPOSITIONS: Record<string, Composition> = {
     tint: "teal",
     parts: [m("speed", 90, 200), m("scooter", 230, 210, 1.15), f("RIDER", 220, 214, 0.62)],
   },
+  // Website home (D188): category pictures the sample data lacks, and the optional full-width hero scene.
+  CATEGORY_FILLETS_STEAKS: {
+    tint: "coral",
+    parts: [m("cutsBoard", 200, 200, 1.3), m("lemon", 290, 170, 1.4)],
+  },
+  CATEGORY_READY_TO_COOK: {
+    tint: "ice",
+    parts: [m("fish", 196, 170, 1.1), m("fish", 204, 240, 1.1)],
+  },
+  CATEGORY_MARINATED: { tint: "mango", parts: [m("cutsBoard", 200, 200, 1.3)] },
+  CATEGORY_FISH_EGGS: {
+    tint: "coral",
+    parts: [m("bowl", 200, 200, 1.3), m("lemon", 200, 214, 2)],
+  },
+  CATEGORY_READY_TO_EAT: {
+    tint: "mango",
+    parts: [m("bowl", 200, 200, 1.3), m("prawn", 180, 196)],
+  },
+  WEB_HOME_HERO_HARBOUR: {
+    tint: "ice",
+    parts: [m("iceBed", 200, 70), f("FISHMONGER", 80, 140, 0.6), m("lemon", 310, 44, 1.6)],
+  },
 };
 
 const shade = (hex: string, amount: number): string => {

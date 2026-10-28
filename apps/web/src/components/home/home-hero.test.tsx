@@ -12,7 +12,8 @@ describe("HomeHero", () => {
     expect(heading).toHaveTextContent(/At your door, in your slot\./);
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("img", { name: /Padma/ })).toBeInTheDocument();
-    expect(screen.getByText(/From today's catch/)).toBeInTheDocument();
+    expect(screen.getByText("today's catch")).toBeInTheDocument();
+    expect(screen.getByText("to your kitchen")).toBeInTheDocument();
   });
 
   it("lists the three feature chips and asks for a slot at checkout without a server slot", () => {

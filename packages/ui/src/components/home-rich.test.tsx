@@ -46,6 +46,13 @@ describe("HarbourHero", () => {
     await expectNoAxeViolations(container);
   });
 
+  it("sets the handwritten note's line breaks from an array", () => {
+    render(<HarbourHero heading={<h1>Hi</h1>} tagline={["From", "the boat"]} />);
+
+    expect(screen.getByText("From")).toBeInTheDocument();
+    expect(screen.getByText("the boat")).toBeInTheDocument();
+  });
+
   it("puts a background picture behind the hero as decoration", () => {
     const { container } = render(
       <HarbourHero heading={<h1>Hi</h1>} background={<img src="/bg.jpg" alt="" />} />,

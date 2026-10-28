@@ -32,7 +32,7 @@ const dts = `// ${HEADER}
 export type IllustrationSlot =
 ${slots.map((s) => `  | "${s}"`).join("\n")};
 
-export type IllustrationAspect = "1:1" | "4:3" | "2:1" | "3:2";
+export type IllustrationAspect = "1:1" | "4:3" | "2:1" | "3:2" | "20:7";
 /** SAND: sand backdrop. TRANSPARENT: cut-out subject. SCENE: full picture with its own scenery (show it cropped with cover). */
 export type IllustrationBackground = "TRANSPARENT" | "SAND" | "SCENE";
 export type IllustrationStatus = "PLACEHOLDER" | "FINAL";
