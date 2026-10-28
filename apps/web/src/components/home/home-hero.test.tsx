@@ -53,4 +53,15 @@ describe("HomeHero", () => {
     // Only Padma is announced.
     expect(screen.getAllByRole("img")).toHaveLength(1);
   });
+
+  it("uses the owner's harbour picture, ship and three gulls by default", () => {
+    const { container } = render(<HomeHero />);
+
+    const sources = Array.from(container.querySelectorAll("img")).map(
+      (img) => img.getAttribute("src") ?? "",
+    );
+    expect(sources.some((src) => src.includes("hero-harbour.jpg"))).toBe(true);
+    expect(sources.some((src) => src.includes("hero-ship.png"))).toBe(true);
+    expect(sources.filter((src) => src.includes("hero-gull-"))).toHaveLength(3);
+  });
 });
