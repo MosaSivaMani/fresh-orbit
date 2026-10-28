@@ -56,15 +56,15 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
           />
         </>
       }
-      tagline="From today's catch to your kitchen"
+      tagline={["From", "today's catch", "to your kitchen"]}
       picture={
         <Image
           src="/home/hero-catch.png"
           alt="Padma smiling and holding a large fresh seer fish over prawns, crabs and fish on ice"
           fill
           priority
-          sizes="(min-width: 1024px) 46vw, 440px"
-          className="object-cover object-[78%_0%] lg:object-contain lg:object-bottom"
+          sizes="(min-width: 1024px) 35vw, 440px"
+          className="object-cover object-[78%_0%] lg:object-[82%_0%]"
         />
       }
       background={

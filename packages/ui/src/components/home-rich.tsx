@@ -253,19 +253,22 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
   features?: ReactNode;
   /** Accessible name of the feature list. */
   featuresLabel?: string;
-  /** The handwritten line at the top right (phones: under the chips), with a swoosh. */
-  tagline?: ReactNode;
-  /** The character picture: bottom-left on desktop, under the text on phones (an `<img>` filling its box). */
+  /**
+   * The handwritten note at the top right (phones: under the chips), with a swash. Pass an array to set the line
+   * breaks ("From", "today's catch", "to your kitchen").
+   */
+  tagline?: ReactNode | readonly string[];
+  /** The character picture: the left 35 % on desktop, above the text on phones (an `<img>` filling its box). */
   picture?: ReactNode;
   /** An optional background picture covering the hero (decorative). Without it the harbour sky is drawn. */
   background?: ReactNode;
 }
 
 /**
- * The full-bleed harbour hero (D188): 460 px tall from `lg`, a peach-to-cream sky with the drawn sun and water (or the
- * background picture), gulls, a trawler at the right, waves curving into the page; the picture at the bottom left,
- * the headline and feature chips in the middle, the handwritten tagline at the top right. Phones stack text, chips,
- * tagline and picture.
+ * The full-bleed harbour hero (D188, D247): 500 px tall from `lg`, a peach-to-cream sky with the drawn sun and water
+ * (or the background picture), gulls, a trawler at the bottom right, waves curving into the page. From `lg` the
+ * picture fills the left 35 % at the page edge and the headline and feature chips start beside it, so text is never
+ * under the picture; the handwritten note sits at the top right. Below `lg` the picture stacks above the text.
  */
 export function HarbourHero({
   heading,
@@ -277,10 +280,14 @@ export function HarbourHero({
   className,
   ...props
 }: HarbourHeroProps) {
+  const lines = Array.isArray(tagline) ? (tagline as readonly string[]) : null;
+  const note = lines
+    ? lines.map((line) => createElement("span", { key: line, className: "block" }, line))
+    : tagline;
   return (
     <section
       className={cn(
-        "relative isolate overflow-hidden bg-[linear-gradient(180deg,#F8C6A0_0%,#FBDDBE_42%,#FFF3E4_100%)] lg:h-[460px]",
+        "relative isolate overflow-hidden bg-[linear-gradient(180deg,#F8C6A0_0%,#FBDDBE_42%,#FFF3E4_100%)] lg:h-[500px]",
         className,
       )}
       {...props}
@@ -296,12 +303,17 @@ export function HarbourHero({
         <HarbourSky className="-z-10" />
       )}
 
-      <Gulls className="text-outline-ink/45 absolute top-6 left-[46%] hidden w-28 md:block" />
+      <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
       <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
-      <Trawler className="absolute right-[1%] bottom-6 hidden w-[200px] md:block lg:bottom-10 lg:w-[230px]" />
+      <Trawler className="absolute right-[1%] bottom-16 hidden w-[210px] lg:block" />
 
-      <div className="relative mx-auto flex h-full max-w-7xl flex-col items-center px-4 pt-8 lg:block lg:px-8 lg:pt-10">
-        <div className="flex flex-col items-center gap-6 text-center lg:mr-[8%] lg:ml-[36%] lg:items-start lg:text-left">
+      <div className="relative flex h-full flex-col items-center px-4 pt-6 pb-20 lg:grid lg:grid-cols-[35%_minmax(0,1fr)] lg:items-stretch lg:px-0 lg:pt-0 lg:pb-0">
+        {picture && (
+          <div className="relative aspect-[5/4] w-full max-w-[440px] lg:aspect-auto lg:h-full lg:max-w-none">
+            {picture}
+          </div>
+        )}
+        <div className="mt-4 flex flex-col items-center gap-6 text-center lg:mt-0 lg:items-start lg:pt-12 lg:pr-8 lg:pl-[4%] lg:text-left">
           {heading}
           {features && (
             <ul
@@ -314,16 +326,10 @@ export function HarbourHero({
         </div>
 
         {tagline && (
-          <p className="text-accent-coral-text font-script mt-6 max-w-[11em] -rotate-[8deg] text-center text-[1.625rem] leading-[1.05] font-bold lg:absolute lg:top-10 lg:right-8 lg:mt-0 lg:text-left lg:text-[2.125rem]">
-            {tagline}
-            <Swoosh className="text-accent-coral mt-1 h-3 w-40 lg:w-52" />
+          <p className="text-accent-coral-text font-script mt-6 -rotate-[8deg] text-center text-[1.625rem] leading-[1.05] font-bold lg:absolute lg:top-10 lg:right-8 lg:mt-0 lg:text-left lg:text-[1.875rem] xl:text-[2.125rem]">
+            {note}
+            <Swoosh className="text-accent-coral mt-1 h-3 w-40 lg:w-48" />
           </p>
-        )}
-
-        {picture && (
-          <div className="relative mt-4 aspect-[5/4] w-full max-w-[440px] lg:absolute lg:bottom-0 lg:left-[-3%] lg:mt-0 lg:aspect-[3/2] lg:w-[46%] lg:max-w-[700px]">
-            {picture}
-          </div>
         )}
       </div>
 
@@ -347,7 +353,7 @@ export interface CheckBarProps extends ComponentProps<"div"> {
 export function CheckBar({ start, end, className, ...props }: CheckBarProps) {
   return (
     <div
-      className={cn("relative z-10 mx-auto -mt-10 max-w-5xl px-4 lg:-mt-14 lg:px-8", className)}
+      className={cn("relative z-10 mx-auto -mt-16 max-w-5xl px-4 lg:-mt-24 lg:px-8", className)}
       {...props}
     >
       <div className="bg-surface grid gap-3 rounded-3xl p-3 shadow-[0_12px_32px_rgb(10_38_48/0.14)] md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1.2fr)] md:items-start md:gap-4 md:p-4">
@@ -412,7 +418,7 @@ export interface CategoryTileProps extends Omit<ComponentProps<"a">, "children">
   children?: ReactNode;
 }
 
-/** A round category picture (96 px, 120 px from `lg`) on a peach disc, with the label under it. */
+/** A round category picture (96 px, 112 px from `xl`) on a peach disc, with the label under it. */
 export function CategoryTile({
   label,
   picture,
@@ -434,7 +440,7 @@ export function CategoryTile({
       {asChild && <Slot.Slottable>{children}</Slot.Slottable>}
       <span
         aria-hidden="true"
-        className="bg-accent-coral-subtle grid size-24 place-items-center overflow-hidden rounded-full transition-transform group-hover:scale-[1.03] motion-reduce:transition-none lg:size-[120px] [&_img]:size-full [&_img]:object-cover [&_svg]:size-10"
+        className="bg-accent-coral-subtle grid size-24 place-items-center overflow-hidden rounded-full transition-transform group-hover:scale-[1.03] motion-reduce:transition-none xl:size-[112px] [&_img]:size-full [&_img]:object-cover [&_svg]:size-10"
       >
         {picture}
       </span>
@@ -443,7 +449,7 @@ export function CategoryTile({
   );
 }
 
-/** A row of `CategoryTile`s: scrolls sideways inside the page gutters on phones, equal columns from `lg`. */
+/** A row of `CategoryTile`s: one row, scrolling sideways inside the page gutters until it fits (from `xl`). */
 export function CategoryTileRow({
   label,
   children,
@@ -456,9 +462,9 @@ export function CategoryTileRow({
 }) {
   return (
     <nav aria-label={label} className={className}>
-      <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] lg:gap-6 lg:overflow-visible lg:px-0">
+      <ul className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 lg:-mx-8 lg:px-8 xl:mx-0 xl:justify-between xl:gap-2 xl:overflow-visible xl:px-0">
         {Children.map(children, (child) => (
-          <li className="w-24 shrink-0 lg:w-auto">{child}</li>
+          <li className="w-24 shrink-0 xl:w-[120px]">{child}</li>
         ))}
       </ul>
     </nav>
