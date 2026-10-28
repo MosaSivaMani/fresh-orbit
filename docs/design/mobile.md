@@ -105,7 +105,7 @@ above, the page that needed sign-in (`/login?from=/checkout` → over `/checkout
 login. Name (required, trimmed, at most 100 characters) and E-mail (optional) are saved with the existing
 `PATCH /me` and the profile's version in `If-Match` (CUS-R2); "Continue →" pops the step, so the customer is where
 the sign-in was taking them. A customer with a name never sees it. Back pops it without saving and it is not asked
-again until the next sign-in; the name can be added later in Account › Profile. See §21.
+again until the next sign-in; the name can be added later in Account › Profile. See §22.
 
 `*` needs a session. The router redirect sends signed-out users to `/login?from=<path>` for `/checkout`,
 `/orders/…`, `/account/…` (except `/account/help`) and `/wishlist`, and returns them to `from` after sign-in.
@@ -464,7 +464,7 @@ gaps at the sides). Numbers as built (dp, 390-wide phone):
 |---|---|
 | Layout | The page area (above the dots and button) is split: the colour block takes 45% of its height, clamped to 300–400 (and at most 62%); the sheet takes the rest. The block colour runs on under the sheet, whose top is a clean 28 radius curve. Block and sheet always span the full width. No scrolling below a system text scale of 1.5; at 1.5 and up the page scrolls with `ClampingScrollPhysics` (D182) |
 | Colour block | Eyebrow "STEP n OF 3" (Inter 700, 12.5, letter-spaced, 78%) and Skip (Inter 700, 17) in one 48 dp row; a two-line Baloo 2 800 heading, 40 scaled with the width (at least 34), its second line on the yellow brush (`#F5D04A`, −1.5°), a spark after each line (cream on coral and mango, yellow on teal); a Dancing Script tagline (23, two lines, −6°) with a swoosh, left of the circle. 20 dp gutters; gaps 8 |
-| Drawn scene | `BlockScenePainter`, static and excluded from semantics: pale clouds, darker hills behind the circle, the silhouette (coral: the trawler; teal: the cutting board and knife; mango: the scooter with its cold box) fully visible between x 8 and the circle's left edge − 8, scaled to fit below the tagline and sitting in the sea, three birds above it, and two sea bands with a white wave line that end 4 above the sheet (nothing cuts the sheet's edge). Shades: coral `#C65A3F`, teal `#075E54`, mango `#CF8E22` |
+| Drawn scene | `BlockScene` + `BlockScenePainter`, static and excluded from semantics: pale clouds, darker hills behind the circle, the silhouette (coral: the owner's real trawler picture with three real gulls over its deck, D287, §21; teal: the cutting board and knife; mango: the scooter with its cold box) fully visible between x 8 and the circle's left edge − 8, scaled to fit below the tagline and sitting in the sea, three birds above it, and two sea bands with a white wave line that end 4 above the sheet (nothing cuts the sheet's edge). Shades: coral `#C65A3F`, teal `#075E54`, mango `#CF8E22` |
 | Circle and sticker | The `ONBOARDING_*` character in a ringed circle (7 px ink ring inside a 6 px paper ring), 212 on a 390 phone (shrinks with the block, 150–212), centred at 62% of the width, reaching 28 into the sheet. The sticker (Inter 800, 14, ink outline, 3 px ink drop shadow, −8°) sits on the circle's lower-left edge, 64% down (over the apron and the catch, never the face), with a yellow spark above it |
 | Sheet | Grey-teal birds in both top corners; title Inter 800, 22; body Inter 400, 14.5 / 1.4, muted; tiles 16 below; 20 dp gutters. The text starts 36 below the sheet top, clear of the circle. If even the text and tiles do not fit, they are scaled down at full width (`FreshFitWidth`), never narrowed |
 | Feature tiles | The `ONBOARDING_TILE_*` picture (96 × 84) popping out of a 98 × 66 pastel blob (green, blue, peach), a spark on the corner (coral; a blue snowflake on the blue tile; coral or teal), a label (Inter 600, 13.5) and a muted caption (Inter 400, 12), two lines at most each, the three tiles top-aligned, 8 apart. One semantics node: "label, caption". Until the PNG is bundled the blob shows an icon (`Illustration(fallback:)`); all twelve are bundled now |
@@ -511,7 +511,7 @@ content.
 |---|---|
 | Delivery header | Pin, "Delivering to <pincode> ⌄" and the server's city name (`serviceability.cityName`), then 46 dp search and Saved circles. Tap: `/location?change=1`. Key `homeDeliveryTo` |
 | Greeting and heading | "Good morning, <name>" (no name when signed out), then Baloo 2 800 32 "What's cooking *today?*" with "today?" on the yellow brush and coral sparks (one header for screen readers), then a coral Dancing Script line (19, −3°) with a swoosh |
-| Harbour | `HarbourScene` from `fresh_theme` at the top right (x 168–390), soft palms at the left and right edges (`PalmsPainter`). Decoration only |
+| Harbour | `HarbourScene` from `fresh_theme` at the top right (x 168–390): drawn sky, sun, hills, sea and palm with the owner's real trawler, a small far-off one and four real gulls (D287, §21); soft palms at the left and right edges (`PalmsPainter`). Decoration only |
 | Hero | Radius 24, `#075E54`, 194 tall: the next slot chip (server `nextSlot`, hidden when there is none), "Today's catch / is in!" (Baloo 29) with a yellow spark, body 12.5, and the "Shop fresh catch →" pill. The `HOME_HERO_CATCH` picture is anchored bottom-right at 236 / 358 of the width, natural 3:2 aspect, no wavy edge, no fade. Tap: `/shop`. Key `homeHero` |
 | Two cards | Radius 20, 122 tall. Cleaned your way (`#F59B7C`, deep coral pill text, `HOME_CARD_CLEANED` 84 × 84 bottom-right) → `/shop`. Kept cold till your door (`#F7C66B`, teal pill text, `HOME_CARD_RIDER` 100 × 100 at the top-right, popping 16 above the card) → a sheet with the server's delivery terms (service area, next slot, fee, free above, minimum order). One label each |
 | Categories | The first five server categories in 50 dp tinted circles (picture or initial) and More → `/shop`. Keys `homeCategory-<slug>`, `homeCategoryMore` |
@@ -626,7 +626,8 @@ The sign-in screen (`features/auth/login_screen.dart`) matches the owner's refer
 | `FreshAuthPage` | The scrolling page: header, then the card's content with 14 px gaps and 24 px side margins. The Scaffold's background is paper, so the card runs to the bottom; the keyboard scrolls the page. |
 | `FreshAuthHeader` | Coral `#E5806A` block: round paper back button (left out when `onBack` is null: first run, or a login opened alone), `FreshAuthTitle`, the coast at the right, the cream card's 34 px rounded top, and the avatar centred on the card's edge (half above, half on the card). Avatar size is 38 % of the width or 22 % of the height, 112–156 px. |
 | `FreshAuthTitle` | Spaced caps eyebrow in white, a white Dancing Script line (40) with mango sparks, the key word in Baloo 2 800 ink (38) on a mango `#F5B544` brush tilted −2°. One header for screen readers. |
-| `FreshCoastScene` | Static, drawn: two gulls, peach clouds, a large pale sun, two palms on a spit of land, two fishing boats (the theme's trawler), deep and light teal sea running under the card. 160 × 200 design box, 42 % of the screen width (140–240 px). |
+| Header picture | `SIGN_IN_COAST` (D286), the owner's harbour at sunrise (transparent PNG, top-left fades out), passed as `FreshAuthPage(scene:)`. Box 3:2, 72 % of the screen width (240–440 px), anchored at the bottom right; its bottom 14 % (the water) runs under the card. Bundled at 800 × 533. |
+| `FreshCoastScene` | Fallback only (no bundled `SIGN_IN_COAST`, or the header used without a `scene`). Static, drawn: two gulls, peach clouds, a large pale sun, two palms on a spit of land, two fishing boats (the theme's trawler), deep and light teal sea running under the card. 160 × 200 design box, 42 % of the screen width (140–240 px). |
 | `FreshAvatarBadge` | Pale mint circle, white ring, dark ink outline, teal chat badge at the bottom right, a teal and a coral dot near the ring; the child is clipped to the circle. |
 | `FreshPhoneField` | Rounded outline (18 px), drawn India flag, `+91`, a chevron (look only: India only), a divider, the number field; error text under it. |
 | `FreshArrowButton` | Full-width ink pill, 56 px, label centred, arrow at the right; spinner and no taps while loading. |
@@ -636,13 +637,38 @@ you."), first-run welcome ("WELCOME", *Sign in or* / **sign up**, "Sign in or cr
 just browse" `skipSignIn`), code ("VERIFY", *Enter the* / **code**, six boxes, Verify, the Change number / Resend
 wrap). Keys `phoneField`, `otpField`, `skipSignIn` are unchanged; terms line at the bottom.
 
-Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282); until the PNG ships the app draws
-`AmmammaPortrait` (`lib/illustrations/portrait_painter.dart`). Prompt: `design/prompts-app-signin-2026-10-29.md`.
+Avatar: `LOGIN_OTP` (Ammamma, `HOME_COOK`) as a chest-up portrait (D282), the owner's final picture since D285:
+`assets/illustrations/login_otp.png` (512 × 512, transparency kept), framed for a circle (head and shoulders,
+face centred, room above the bun) and shown whole on the pale mint backdrop. The signed-out account and orders
+screens show the same file in their `AvatarCircle`. `AmmammaPortrait` (`lib/illustrations/portrait_painter.dart`)
+is only the fallback when the file is missing. Prompts: `design/prompts-app-signin-2026-10-29.md`.
 
 Tests: `test/widgets/sign_in_look_test.dart` (every step at 360 × 640, the code step at 1.3× text, back button only
-when there is a page below, the parts) and `first_run_sign_in_test.dart` (flows).
+when there is a page below, the parts, both pictures bundled and shown, the coast's place under the card edge, the
+drawn fallbacks) and `first_run_sign_in_test.dart` (flows).
 
-## 21. Tell us about you (D290)
+## 21. Real ship and gulls in the app scenery (D287)
+
+The owner asked for the real ship in place of the drawn one wherever the app showed it. The owner's generated
+trawler (orange hull, teal stripe, white wheelhouse, masts and nets, on splashing waves; a transparent cut-out) and
+the three gull cut-outs from the website hero (D284) are bundled in the theme package
+(`packages/flutter/fresh_theme/assets/scenery/`: `trawler.png` 600 × 571, about 630 KB, the painted sea's bottom
+and side edges faded out so it melts into the drawn sea; `gull_1..3.png`, 160 on the long side) and shown by
+`FreshTrawler` and `FreshGull` (D207).
+
+| Screen | Before | Now |
+|---|---|---|
+| Onboarding, page 1 ("fresh", coral block) | Drawn trawler silhouette in the block's dark shade, three drawn gull marks above it | `BlockScene` places the real trawler left of the circle, its waves ending on the drawn sea 4 px above the sheet, as large as fits under the tagline (at most 140 wide, at least 40, else none; about 75 wide at 360 × 640, 124 at 390 × 844), with three real gulls in the empty sky at its top corners |
+| Home harbour (top right of the home) | Drawn big boat, two faded far boats and four drawn gulls | The real trawler on the sea at the left (84 of the 222 design width), one small far-off copy sailing the other way at 80 % opacity, four real gulls; sky, sun, hills, sea, wave line and palm stay drawn |
+
+Pages 2 and 3 of the onboarding keep their drawn board and scooter. The sign-in coast (`FreshCoastScene`, §20)
+still draws the theme's trawler (`FreshScenery.trawler`, kept for it) until its own picture lands. The pictures
+are decoration: excluded from semantics, nothing moves; while a picture loads, or if it cannot, its box stays
+empty. Tests: `fresh_theme_parts_test.dart` (the harbour shows the real trawler, far boat and four gulls inside its
+box; picture shapes; the pictures are bundled) and `onboarding_screen_test.dart` (page 1 shows the real trawler
+left of the circle and on the sea at 360 × 640 and 390 × 844).
+
+## 22. Tell us about you (D290)
 
 Owner: "for the first-time user we need to ask some details". `features/auth/profile_details_screen.dart`
 (`ProfileDetailsScreen`, route `/about-you`, sign-in required) in the sign-in family (D281): `FreshAuthPage` with

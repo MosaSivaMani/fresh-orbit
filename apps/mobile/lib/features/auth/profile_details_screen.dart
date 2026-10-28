@@ -111,6 +111,22 @@ class _ProfileDetailsScreenState extends ConsumerState<ProfileDetailsScreen> {
               fallback: AmmammaPortrait(size: box.maxWidth),
             ),
           ),
+          // The sign-in's header picture (D286), the drawn coast as its fallback.
+          scene: LayoutBuilder(
+            builder: (context, box) => Illustration(
+              slot: IllustrationSlot.signInCoast,
+              size: box.maxWidth,
+              height: box.maxHeight,
+              excludeFromSemantics: true,
+              fallback: Align(
+                alignment: Alignment.bottomRight,
+                child: AspectRatio(
+                  aspectRatio: FreshCoastScenePainter.designSize.aspectRatio,
+                  child: const FreshCoastScene(),
+                ),
+              ),
+            ),
+          ),
           onBack: context.canPop() ? () => context.pop() : null,
           children: [
             const SheetNote('We use your name on your orders and deliveries. E-mail is optional.'),

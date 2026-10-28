@@ -1,8 +1,9 @@
 // Drawn decoration that only the onboarding pages use, traced from the approved preview (D156,
 // docs/design/mockups/app-onboarding-rich.html, designed at 390 × 873): the scene on the colour block (the
 // cutting board and scooter silhouettes and the sea), the banner waves and arrow, and a drawn stand-in for a
-// banner picture that has not arrived. The shared parts (birds, clouds, hills, the trawler, the sea bands, sparks,
-// the snowflake and the swooshes) live in the theme package (`fresh_theme`, D176). All of it is decoration:
+// banner picture that has not arrived. The shared parts (birds, clouds, hills, the sea bands, sparks, the
+// snowflake and the swooshes, and the owner's real trawler and gull pictures, D287) live in the theme package
+// (`fresh_theme`, D176). All of it is decoration:
 // callers wrap it in ExcludeSemantics, and nothing moves.
 //
 // Coordinates are the preview's, in its 390-wide design space, scaled by the caller's factor.
@@ -24,11 +25,54 @@ const Color _paper = FreshHighlightColors.paper;
 void _bird(Canvas canvas, double x, double y, double k, Color color, {double width = 2.2}) =>
     FreshScenery.bird(canvas, Offset(x, y), span: 20 * k, color: color, strokeWidth: width * k);
 
-/// The scene on the colour block. The painter covers the block exactly (its bottom edge is the sheet's top) and
-/// draws nothing below it: the sea bands end [seaGap] above the sheet, so no wave cuts the sheet's rounded edge.
-/// The silhouette (trawler, board or scooter) sits on the sea between x 8 and [circleLeft] − 8 and below
-/// [sceneTop] (the tagline's bottom), scaled to fit, with three birds above it. The clouds and hills are drawn at
-/// [scale] from the right edge, behind the circle.
+/// The scene on the colour block, as a widget that fills the block: the drawn scene ([BlockScenePainter]) and, on
+/// the fresh page, the owner's real trawler sitting in the sea with three real gulls above its deck (D287) in place
+/// of a drawn silhouette. Decoration: the caller wraps it in ExcludeSemantics.
+class BlockScene extends StatelessWidget {
+  const BlockScene({super.key, required this.painter});
+
+  final BlockScenePainter painter;
+
+  /// Each gull over the trawler picture: top-left and width as fractions of the picture, and the variant. They
+  /// sit in the empty sky at its top corners, inside the picture's box, so they never reach the tagline.
+  static const List<(double, double, double, int)> _gulls = [
+    (0.03, 0.04, 0.2, 0),
+    (0.2, 0.0, 0.1, 2),
+    (0.74, 0.02, 0.12, 1),
+  ];
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final size = box.biggest;
+      final ship = painter.scene == OnboardingScene.fresh ? painter.trawlerRect(size) : null;
+      return Stack(
+        children: [
+          Positioned.fill(child: CustomPaint(painter: painter)),
+          if (ship != null) ...[
+            Positioned.fromRect(
+              rect: ship,
+              child: FreshTrawler(key: const Key('onboardingTrawler'), width: ship.width),
+            ),
+            for (final (x, y, w, variant) in _gulls)
+              Positioned(
+                left: ship.left + x * ship.width,
+                top: ship.top + y * ship.height,
+                child: FreshGull(width: w * ship.width, variant: variant),
+              ),
+          ],
+        ],
+      );
+    },
+  );
+}
+
+/// The drawn scene on the colour block. The painter covers the block exactly (its bottom edge is the sheet's top)
+/// and draws nothing below it: the sea bands end [seaGap] above the sheet, so no wave cuts the sheet's rounded
+/// edge. The silhouette (board or scooter) sits on the sea between x 8 and [circleLeft] − 8 and below [sceneTop]
+/// (the tagline's bottom), scaled to fit, with three birds above it; the fresh page leaves that room to the real
+/// trawler ([trawlerRect], placed by [BlockScene]). The clouds and hills are drawn at [scale] from the right edge,
+/// behind the circle.
 class BlockScenePainter extends CustomPainter {
   const BlockScenePainter({
     required this.scene,
@@ -60,10 +104,31 @@ class BlockScenePainter extends CustomPainter {
   static const double seaHeight = 30;
   static const double seaGap = 4;
 
+  /// The real trawler's widest size, its left edge and the room it keeps under the tagline.
+  static const double trawlerMaxWidth = 140;
+  static const double trawlerLeft = 6;
+  static const double trawlerGap = 6;
+
+  /// The smallest trawler worth showing; below it the page shows only the sea.
+  static const double trawlerMinWidth = 40;
+
   /// The silhouettes' design boxes (preview coordinates).
-  static const _trawlerBox = Rect.fromLTRB(2, 250, 120, 364);
   static const _boardBox = Rect.fromLTRB(4, 250, 136, 364);
   static const _scooterBox = Rect.fromLTRB(12, 282, 131, 365);
+
+  /// Where the real trawler sits in a block of [size]: its faded waves end on the sea's bottom edge (so its hull
+  /// rides in the drawn sea), as large as fits between [sceneTop] and the sea and left of the circle, at most
+  /// [trawlerMaxWidth] wide. Null when the room is too small.
+  Rect? trawlerRect(Size size) {
+    final bottom = size.height - seaGap;
+    final width = math.min(
+      trawlerMaxWidth,
+      math.min(circleLeft - trawlerLeft - 8, (bottom - sceneTop - trawlerGap) * FreshSceneryPictures.trawlerAspect),
+    );
+    if (width < trawlerMinWidth) return null;
+    final height = FreshTrawler.heightFor(width);
+    return Rect.fromLTWH(trawlerLeft, bottom - height, width, height);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -87,12 +152,17 @@ class BlockScenePainter extends CustomPainter {
     FreshScenery.cloud(canvas, const Offset(-14, 150), 0.9, soft);
     canvas.restore();
 
-    // The silhouette: fully visible left of the circle, its base in the water.
+    // The silhouette: fully visible left of the circle, its base in the water. The fresh page has the real
+    // trawler picture instead (BlockScene).
     final box = switch (scene) {
-      OnboardingScene.fresh => _trawlerBox,
+      OnboardingScene.fresh => null,
       OnboardingScene.cleaned => _boardBox,
       OnboardingScene.delivery => _scooterBox,
     };
+    if (box == null) {
+      _sea(canvas, seaTop, size.height - seaGap, circleCenter);
+      return;
+    }
     final base = seaTop + 8;
     final s = math.min(0.9, math.min((circleLeft - 16) / box.width, (base - sceneTop - 18) / box.height));
     if (s >= 0.25) {
@@ -100,13 +170,10 @@ class BlockScenePainter extends CustomPainter {
         ..save()
         ..translate(8 - box.left * s, base - box.bottom * s)
         ..scale(s);
-      switch (scene) {
-        case OnboardingScene.fresh:
-          FreshScenery.trawler(canvas, dark);
-        case OnboardingScene.cleaned:
-          _board(canvas, fill);
-        case OnboardingScene.delivery:
-          _scooter(canvas, fill);
+      if (scene == OnboardingScene.cleaned) {
+        _board(canvas, fill);
+      } else {
+        _scooter(canvas, fill);
       }
       canvas.restore();
       // Three birds just above it.

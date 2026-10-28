@@ -111,6 +111,7 @@ export const REQUIRED_SLOTS = [
   "CATEGORY_FISH_EGGS",
   "CATEGORY_READY_TO_EAT",
   "WEB_HOME_HERO_HARBOUR",
+  "SIGN_IN_COAST",
 ] as const;
 
 export const LIMITS = {

@@ -443,6 +443,11 @@ export const COMPOSITIONS: Record<string, Composition> = {
     tint: "ice",
     parts: [m("iceBed", 200, 70), f("FISHMONGER", 80, 140, 0.6), m("lemon", 310, 44, 1.6)],
   },
+  // App sign-in header (D286): the harbour at sunrise on the right of the coral header.
+  SIGN_IN_COAST: {
+    tint: "coral",
+    parts: [m("sun", 290, 90), m("boat", 250, 200), m("waves", 200, 220)],
+  },
 };
 
 const shade = (hex: string, amount: number): string => {

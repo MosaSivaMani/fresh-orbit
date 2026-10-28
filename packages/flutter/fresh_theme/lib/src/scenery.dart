@@ -1,6 +1,7 @@
-// Drawn coastal scenery for the rich screens (D156, D176, D181): gulls, clouds, hills, the fishing trawler, the
-// sea bands, palms and the home harbour (sky, sun, three boats, birds, a palm). Traced from the approved
-// previews, in their 390-wide design space; callers scale the canvas. Every colour and size is explicit.
+// Coastal scenery for the rich screens (D156, D176, D181): drawn gulls, clouds, hills, the drawn trawler, the
+// sea bands and palms, traced from the approved previews in their 390-wide design space (callers scale the
+// canvas); the owner's real trawler and gull pictures (D287, `FreshTrawler`, `FreshGull`); and the home harbour
+// (drawn sky, sun, hills, sea and palm with the real boats and gulls on top). Every colour and size is explicit.
 // Scenery is decoration: wrap it in ExcludeSemantics (the widgets here do). Nothing moves.
 
 import 'package:flutter/widgets.dart';
@@ -85,7 +86,8 @@ abstract final class FreshScenery {
   }
 
   /// The fishing trawler (curved hull, cabin with a window row, wheelhouse, mast with a flag and rigging), in a
-  /// design box where the hull sits at x 2–120, y 250–364.
+  /// design box where the hull sits at x 2–120, y 250–364. Only the sign-in coast still draws it; the onboarding
+  /// and the home show the owner's real trawler instead ([FreshTrawler], D287).
   static void trawler(Canvas canvas, Color fill, {Color window = const Color(0x47FFFDF8)}) {
     final paint = Paint()..color = fill;
     canvas
@@ -265,9 +267,108 @@ class PalmsPainter extends CustomPainter {
   bool shouldRepaint(PalmsPainter old) => !identical(old.palms, palms);
 }
 
-/// The home harbour (D176 preview, x 168–390 and y 56–206 of the 390-wide screen): a warm sky, the sun, low
-/// hills, the sea with a wave line, three boats, four gulls and a teal palm cut by the right edge. Designed in a
-/// 222 × 150 box ([designSize]) and scaled to the painter's width.
+/// The owner's real scenery pictures (D287), bundled in this package under `assets/scenery/`: the fishing trawler
+/// on its own splashing waves (600 × 571, the sea's cut edges faded out so it melts into any drawn sea) and three
+/// gulls in flight (cut-outs, 160 on the long side). All transparent PNGs, loaded with `package: 'fresh_theme'`.
+abstract final class FreshSceneryPictures {
+  static const String package = 'fresh_theme';
+  static const String trawler = 'assets/scenery/trawler.png';
+
+  /// Width ÷ height of the trawler picture.
+  static const double trawlerAspect = 600 / 571;
+
+  /// The three gulls; [gullAspects] holds each one's width ÷ height.
+  static const List<String> gulls = [
+    'assets/scenery/gull_1.png',
+    'assets/scenery/gull_2.png',
+    'assets/scenery/gull_3.png',
+  ];
+  static const List<double> gullAspects = [160 / 96, 133 / 160, 160 / 139];
+}
+
+/// The real fishing trawler (D287), [width] wide; its height follows the picture. Decoration: the picture is
+/// excluded from semantics. [mirrored] turns it to sail the other way; [opacity] fades a far-off boat.
+class FreshTrawler extends StatelessWidget {
+  const FreshTrawler({super.key, required this.width, this.mirrored = false, this.opacity = 1});
+
+  final double width;
+  final bool mirrored;
+  final double opacity;
+
+  /// The picture's height at [width].
+  static double heightFor(double width) => width / FreshSceneryPictures.trawlerAspect;
+
+  @override
+  Widget build(BuildContext context) => _ScenePicture(
+    asset: FreshSceneryPictures.trawler,
+    width: width,
+    height: heightFor(width),
+    mirrored: mirrored,
+    opacity: opacity,
+  );
+}
+
+/// One of the three real gulls (D287), [width] wide ([variant] 0, 1 or 2, wrapping round). Decoration only.
+class FreshGull extends StatelessWidget {
+  const FreshGull({super.key, required this.width, this.variant = 0, this.mirrored = false});
+
+  final double width;
+  final int variant;
+  final bool mirrored;
+
+  /// The gull's height at [width].
+  static double heightFor(double width, {int variant = 0}) =>
+      width / FreshSceneryPictures.gullAspects[variant % FreshSceneryPictures.gulls.length];
+
+  @override
+  Widget build(BuildContext context) => _ScenePicture(
+    asset: FreshSceneryPictures.gulls[variant % FreshSceneryPictures.gulls.length],
+    width: width,
+    height: heightFor(width, variant: variant),
+    mirrored: mirrored,
+    opacity: 1,
+  );
+}
+
+/// A bundled scenery picture at a fixed size; while it loads, or if it cannot, the box stays empty.
+class _ScenePicture extends StatelessWidget {
+  const _ScenePicture({
+    required this.asset,
+    required this.width,
+    required this.height,
+    required this.mirrored,
+    required this.opacity,
+  });
+
+  final String asset;
+  final double width;
+  final double height;
+  final bool mirrored;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget picture = Image.asset(
+      asset,
+      package: FreshSceneryPictures.package,
+      width: width,
+      height: height,
+      fit: BoxFit.contain,
+      opacity: opacity < 1 ? AlwaysStoppedAnimation(opacity) : null,
+      filterQuality: FilterQuality.medium,
+      excludeFromSemantics: true,
+      gaplessPlayback: true,
+      errorBuilder: (_, _, _) => SizedBox(width: width, height: height),
+    );
+    if (mirrored) picture = Transform.flip(flipX: true, child: picture);
+    return picture;
+  }
+}
+
+/// The home harbour's drawn backdrop (D176 preview, x 168–390 and y 56–206 of the 390-wide screen): a warm sky,
+/// the sun, low hills, the sea with a wave line and a teal palm cut by the right edge. The boats and gulls are the
+/// owner's real pictures, placed on top by [HarbourScene] (D287). Designed in a 222 × 150 box ([designSize]) and
+/// scaled to the painter's width.
 class HarbourScenePainter extends CustomPainter {
   const HarbourScenePainter({
     this.skyTop = const Color(0xFFF7F1E6),
@@ -277,9 +378,6 @@ class HarbourScenePainter extends CustomPainter {
     this.hills = const Color(0x8CE9B79A),
     this.sea = FreshScenery.seaDeep,
     this.wave = FreshHighlightColors.paper,
-    this.boat = FreshHighlightColors.coralDeep,
-    this.farBoat = const Color(0xFFB98571),
-    this.birds = FreshHighlightColors.ink,
     this.palm = const Color(0xFF0B7D70),
   });
 
@@ -292,9 +390,6 @@ class HarbourScenePainter extends CustomPainter {
   final Color hills;
   final Color sea;
   final Color wave;
-  final Color boat;
-  final Color farBoat;
-  final Color birds;
   final Color palm;
 
   @override
@@ -354,80 +449,7 @@ class HarbourScenePainter extends CustomPainter {
           ..strokeWidth = 2
           ..strokeCap = StrokeCap.round,
       );
-
-    // The big boat: hull, cabin, wheelhouse, mast, flag, three windows and rigging.
-    final hull = Paint()..color = boat;
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(28, 114)
-          ..lineTo(94, 114)
-          ..quadraticBezierTo(89, 125, 78, 129)
-          ..lineTo(42, 129)
-          ..quadraticBezierTo(33, 124, 28, 114)
-          ..close(),
-        hull,
-      )
-      ..drawRRect(RRect.fromLTRBR(44, 100, 70, 114, const Radius.circular(2)), hull)
-      ..drawRRect(RRect.fromLTRBR(50, 92, 64, 100, const Radius.circular(1)), hull)
-      ..drawRect(const Rect.fromLTWH(74, 70, 2.6, 44), hull)
-      ..drawPath(
-        Path()
-          ..moveTo(76.6, 72)
-          ..lineTo(87.6, 75)
-          ..lineTo(76.6, 79.5)
-          ..close(),
-        hull,
-      );
-    final glass = Paint()..color = wave.withValues(alpha: 0.35);
-    for (final r in const [Rect.fromLTWH(48, 104, 5, 5), Rect.fromLTWH(56, 104, 5, 5), Rect.fromLTWH(64, 104, 4, 5)]) {
-      canvas.drawRect(r, glass);
-    }
-    final rig = Paint()
-      ..color = boat
-      ..strokeWidth = 1;
-    canvas
-      ..drawLine(const Offset(75, 74), const Offset(94, 114), rig)
-      ..drawLine(const Offset(75, 78), const Offset(30, 114), rig);
-
-    // Two boats further out.
-    final far = Paint()..color = farBoat.withValues(alpha: farBoat.a * 0.8);
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(132, 116)
-          ..lineTo(178, 116)
-          ..quadraticBezierTo(175, 124, 167, 127)
-          ..lineTo(142, 127)
-          ..quadraticBezierTo(135, 123, 132, 116)
-          ..close(),
-        far,
-      )
-      ..drawRRect(RRect.fromLTRBR(144, 106, 160, 116, const Radius.circular(2)), far)
-      ..drawRect(const Rect.fromLTWH(157, 88, 2, 28), far);
-    final farther = Paint()..color = farBoat.withValues(alpha: farBoat.a * 0.55);
-    canvas
-      ..drawPath(
-        Path()
-          ..moveTo(104, 108)
-          ..lineTo(126, 108)
-          ..quadraticBezierTo(124, 113, 120, 115)
-          ..lineTo(109, 115)
-          ..quadraticBezierTo(106, 112, 104, 108)
-          ..close(),
-        farther,
-      )
-      ..drawRect(const Rect.fromLTWH(114, 96, 1.5, 13), farther);
-
     FreshScenery.palm(canvas, const Offset(204, 18), scale: 0.95, color: palm);
-    for (final (at, span) in const [
-      (Offset(28, 48), 16.0),
-      (Offset(48, 36), 12.0),
-      (Offset(118, 40), 12.0),
-      (Offset(94, 62), 10.0),
-    ]) {
-      FreshScenery.bird(canvas, at, span: span, color: birds, strokeWidth: 1.8, rise: 0.3);
-    }
     canvas.restore();
   }
 
@@ -440,24 +462,68 @@ class HarbourScenePainter extends CustomPainter {
       old.hills != hills ||
       old.sea != sea ||
       old.wave != wave ||
-      old.boat != boat ||
-      old.farBoat != farBoat ||
-      old.birds != birds ||
       old.palm != palm;
 }
 
-/// The home harbour as a widget, [width] wide (height follows the 222 × 150 design), excluded from semantics.
+/// The home harbour as a widget, [width] wide (height follows the 222 × 150 design), excluded from semantics:
+/// the drawn backdrop ([painter]) with the owner's real trawler on the sea at the left, a small far-off one
+/// sailing the other way, and four real gulls in the sky (D287). Nothing reaches outside the box.
 class HarbourScene extends StatelessWidget {
   const HarbourScene({super.key, this.width = 222, this.painter = const HarbourScenePainter()});
 
   final double width;
   final HarbourScenePainter painter;
 
+  /// Where the pictures sit in the 222 × 150 design box: the trawler's left edge, bottom and width; the far boat
+  /// likewise; each gull's top-left, width and variant.
+  static const double _shipLeft = 18;
+  static const double _shipBottom = 146;
+  static const double _shipWidth = 84;
+  static const double _farLeft = 132;
+  static const double _farBottom = 128;
+  static const double _farWidth = 30;
+  static const List<(Offset, double, int)> _gulls = [
+    (Offset(10, 30), 20.0, 0),
+    (Offset(104, 30), 13.0, 2),
+    (Offset(126, 50), 11.0, 0),
+    (Offset(88, 10), 12.0, 1),
+  ];
+
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(
-    child: CustomPaint(
-      size: Size(width, width * HarbourScenePainter.designSize.height / HarbourScenePainter.designSize.width),
-      painter: painter,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final k = width / HarbourScenePainter.designSize.width;
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: width,
+        height: HarbourScenePainter.designSize.height * k,
+        child: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: painter)),
+            Positioned(
+              left: _farLeft * k,
+              top: (_farBottom - FreshTrawler.heightFor(_farWidth)) * k,
+              child: FreshTrawler(
+                key: const Key('harbourFarTrawler'),
+                width: _farWidth * k,
+                mirrored: true,
+                opacity: 0.8,
+              ),
+            ),
+            Positioned(
+              left: _shipLeft * k,
+              top: (_shipBottom - FreshTrawler.heightFor(_shipWidth)) * k,
+              child: FreshTrawler(key: const Key('harbourTrawler'), width: _shipWidth * k),
+            ),
+            for (final (at, span, variant) in _gulls)
+              Positioned(
+                left: at.dx * k,
+                top: at.dy * k,
+                child: FreshGull(width: span * k, variant: variant),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+

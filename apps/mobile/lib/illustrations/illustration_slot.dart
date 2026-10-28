@@ -17,6 +17,7 @@ enum IllustrationSlot {
   emptyAddresses('EMPTY_ADDRESSES', 'A small house with an empty doormat'),
   noSearchResults('NO_SEARCH_RESULTS', 'A small fish looking through a magnifying glass'),
   outOfStock('OUT_OF_STOCK', 'A fishmonger showing an empty ice tray'),
+  // The owner's chest-up Ammamma for the round sign-in avatar (D282, final picture D285).
   loginOtp('LOGIN_OTP', 'A smiling grandmother with silver hair in a bun, in a mango-yellow saree'),
   orderPlaced('ORDER_PLACED', 'A fishmonger giving a cheerful thumbs up next to a wrapped parcel'),
   orderPacking('ORDER_PACKING', 'A fishmonger packing fish into a cold box'),
@@ -53,7 +54,11 @@ enum IllustrationSlot {
   // bundled the home shows onboarding pictures as stand-ins.
   homeHeroCatch('HOME_HERO_CATCH', 'Padma holding a large fresh seer fish above ice, prawns and crabs'),
   homeCardCleaned('HOME_CARD_CLEANED', 'Raw seer fish steaks and curry-cut pieces on a round wooden board'),
-  homeCardRider('HOME_CARD_RIDER', 'Ravi riding his coral scooter with the ice-blue cold backpack');
+  homeCardRider('HOME_CARD_RIDER', 'Ravi riding his coral scooter with the ice-blue cold backpack'),
+
+  // Sign-in header (D286): the harbour at sunrise on the right of the coral header, a transparent 3:2 PNG whose
+  // top-left fades out. Until it is bundled the header draws its own coast (`FreshCoastScene`).
+  signInCoast('SIGN_IN_COAST', 'Two fishing boats at a stone jetty under palms at sunrise');
 
   const IllustrationSlot(this.code, this.semanticLabel);
 
