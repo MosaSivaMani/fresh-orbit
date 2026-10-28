@@ -70,6 +70,18 @@ describe("HarbourHero", () => {
     expect(ship).not.toBeNull();
     expect(ship?.closest("[aria-hidden='true']")).not.toBeNull();
   });
+
+  it("shows bird pictures in place of the drawn gulls as decoration", () => {
+    const { container } = render(
+      <HarbourHero
+        heading={<h1>Hi</h1>}
+        gulls={[<img key="a" src="/g1.png" alt="" />, <img key="b" src="/g2.png" alt="" />]}
+      />,
+    );
+
+    const birds = container.querySelectorAll("[data-gull][aria-hidden='true'] img");
+    expect(birds).toHaveLength(2);
+  });
 });
 
 describe("CheckBar", () => {

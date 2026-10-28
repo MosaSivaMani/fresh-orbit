@@ -68,6 +68,10 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
         />
       }
       ship={<Image src="/home/hero-ship.jpg" alt="" fill sizes="360px" className="object-cover" />}
+      gulls={[
+        <Image key="gull-1" src="/home/hero-gull-1.png" alt="" fill sizes="120px" />,
+        <Image key="gull-2" src="/home/hero-gull-2.png" alt="" fill sizes="110px" />,
+      ]}
       background={
         heroBackground ? (
           <Image src={heroBackground} alt="" fill priority sizes="100vw" className="object-cover" />

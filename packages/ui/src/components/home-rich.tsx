@@ -267,6 +267,11 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
    * sky. Without it the drawn trawler is shown (D281).
    */
   ship?: ReactNode;
+  /**
+   * Optional bird pictures for the sky (decorative, cut-out `<img>`s filling their boxes), the first top centre and
+   * the second top right. Without them the drawn gulls are shown (D281).
+   */
+  gulls?: readonly [ReactNode, ReactNode];
 }
 
 const SHIP_FADE = "radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)";
@@ -285,6 +290,7 @@ export function HarbourHero({
   picture,
   background,
   ship,
+  gulls,
   className,
   ...props
 }: HarbourHeroProps) {
@@ -311,8 +317,29 @@ export function HarbourHero({
         <HarbourSky className="-z-10" />
       )}
 
-      <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
-      <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
+      {gulls ? (
+        <>
+          <div
+            aria-hidden="true"
+            data-gull=""
+            className="absolute top-4 left-[50%] hidden aspect-[26/15] w-[120px] lg:block"
+          >
+            {gulls[0]}
+          </div>
+          <div
+            aria-hidden="true"
+            data-gull=""
+            className="absolute top-36 right-[3%] aspect-[23/10] w-20 lg:top-44 lg:w-[110px]"
+          >
+            {gulls[1]}
+          </div>
+        </>
+      ) : (
+        <>
+          <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
+          <Gulls className="text-outline-ink/40 absolute top-24 right-[4%] w-20 lg:w-24" />
+        </>
+      )}
       {ship ? (
         <div
           aria-hidden="true"
