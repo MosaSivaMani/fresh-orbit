@@ -570,3 +570,23 @@ Every call the app sends was checked against the server's validators and the Ren
 | Home "Kept cold" card | Says "Kept cold till your door" and the delivery sheet "Packed on ice in a cold box." only when `fulfillmentLocation.hasColdStorage` is true; otherwise "Slots to your door", "Fee and minimum order." (D212, D239) |
 | Product page, shop cards | "Caught Fri, 23 Oct" from `freshness.caughtOn` (CAT-R25): the chosen size on the product page, the default size as the card's picture chip (a Low stock / Sold out chip takes the spot first); nothing when the server sends none (D240) |
 | Orders list | `GET /orders` sends `page` and `pageSize` only; the list comes newest first from the server (D241) |
+
+## 19. Every flow end to end (flow audit, D261–D271)
+
+Each flow was walked against the server (`docs/research/mobile-flow-audit-2026-10.md`). What changed:
+
+| Where | Behaviour |
+|---|---|
+| Product pictures | `FreshGallery` (fresh_theme): every server picture, swipeable, `PageDots` on a paper pill; one picture alone, none the placeholder; increase / decrease for screen readers (D262). Keys `productGallery`, `productImage-<i>`, `freshGalleryPages`, `freshGalleryDots` |
+| Product facts | Offer line (`productOffer`), serving facts (`productServing`), "Kept cold" only with cold storage (D270) |
+| Sign-in | Pushed by a screen: pops back; from the router's redirect: replaced by the page that needed it (`leaveLogin`, D263) |
+| Checkout address | Edit (`editAddress-<id>`) and Add (`addAddress`) open `/addresses/:id` and `/addresses/new` (full screen, outside the shell); a new address starts with the profile's name and number (D264) |
+| Checkout key | One Idempotency-Key per request body; slot refusals re-read the slots (D265); "Leave it out" substitution (`substitutionNone`, D271) |
+| Report a problem | Item always required, 10–1000 characters; raised once, photos retried alone (`sendComplaint`, `complaintRaised`, `finishComplaint`, D266) |
+| Refusals | Invoice not issued is a note; delete-account refusals in `profileError`; 429 says the wait (D267) |
+| Inbox, preferences | Follow sign-in and sign-out (D268) |
+| Help | "About the store" (`helpStoreDetails`) with legal name, address, GSTIN, FSSAI (D269) |
+
+Tests: `test/widgets/fresh_gallery_test.dart`, `product_gallery_test.dart`, `flow_audit_test.dart`, and new cases
+in `order_tracking_test.dart` and `test/state/checkout_controller_test.dart`. Not run yet (CI blocked by billing).
+
