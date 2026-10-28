@@ -5,6 +5,7 @@ Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `s
 ## Paused 2026-10-28 (owner asleep): resume here
 
 - **Resolved (2026-10-28): GitHub Actions billing block.** The private repo had used its 2,000 free minutes. The owner chose to make the repository **public** (D254) after a history scan found no real secrets; Actions run free again. CI re-run on #30, #31, #32, #33; #34 conflicts with main, so its checks start once main is merged into it.
+- **2026-10-28 evening:** PRs #33, #30, #31, #34, #32 (includes #29) and #35 (sign in right after onboarding) are merged. Latest live APK: `demo-apk-b812718` (https://github.com/MosaSivaMani/fresh-orbit/releases/download/demo-apk-b812718/fresh-orbit-live-b812718.apk). No open PRs.
 - Merged today: #20 web home, #21 mobile screens, #22 web pages, #23 admin, #26 onboarding banner, #27 Shop sort fix, #28 Android back (D214–D234, D242–D246).
 - Latest live APK: release `demo-apk-d13dbe5` (`fresh-orbit-live-d13dbe5.apk`), sent to the owner.
 - Open: PR #29 mobile API audit (session `fresh-orbit-3a`, decisions D235–D241, one mobile test failing at last check).
