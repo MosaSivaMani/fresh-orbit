@@ -47,8 +47,10 @@ class HelpScreen extends ConsumerWidget {
     final profile = ref.watch(businessProfileProvider);
     return Scaffold(
       appBar: const PageHeader(text: 'Help and', brushed: 'support'),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: FreshLayout.sectionGap),
+      // The sea floor ends the page (D289).
+      body: FreshSeaFloorScroll(
+        key: const Key('helpPage'),
+        gap: FreshLayout.sectionGap,
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),

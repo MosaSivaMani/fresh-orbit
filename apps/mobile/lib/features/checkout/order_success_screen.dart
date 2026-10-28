@@ -1,5 +1,7 @@
-// Order placed (D88): a teal block with the ORDER_PLACED character in the ringed circle and the server's order
-// as a paper receipt.
+// Order placed (D288, owner's reference docs/design/mockups/app-order-placed-reference-2026-10-29.png): the teal
+// header with Padma (ORDER_PLACED) at the right, the server's order on a cream ticket, the delivery-code note
+// with the rider, Track order / Continue shopping, and the sea floor at the bottom (D289). The screen only
+// composes `fresh_theme` parts (D207); every value is the server's order, only formatted (rule 4).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,8 +10,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
+import '../../illustrations/illustration.dart';
 import '../../state/orders_state.dart';
-import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 
@@ -27,69 +29,98 @@ class OrderSuccessScreen extends ConsumerWidget {
         if (!didPop) context.go('/home');
       },
       child: Scaffold(
-        backgroundColor: BlockTone.teal.background(c),
-        body: SafeArea(
-          child: AsyncValueView<OrderDetail>(
-            value: ref.watch(orderDetailProvider(orderId)),
-            onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
-            data: (order) => ListView(
-              padding: const EdgeInsets.fromLTRB(FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s5, FreshSpacing.s6),
-              children: [
-                const Center(
-                  child: EntranceMotion(child: AvatarCircle(slot: IllustrationSlot.orderPlaced, size: 180)),
-                ),
-                const SizedBox(height: FreshSpacing.s4),
-                Semantics(
-                  liveRegion: true,
-                  child: Heading(
-                    lines: const [HeadingLine('Order'), HeadingLine('placed', script: true, brush: true)],
-                    color: BlockTone.teal.foreground(c),
-                  ),
-                ),
-                const SizedBox(height: FreshSpacing.s2),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: OrderStatusBadge(status: order.status),
-                ),
-                const SizedBox(height: FreshSpacing.s5),
-                // Every value is the server's order, only formatted (rule 4).
-                ReceiptCard(
-                  title: 'Order ${order.orderNumber}',
-                  rows: [
-                    if (order.slot != null)
-                      ReceiptRow('Delivery', formatSlotWindow(order.slot!.startAt, order.slot!.endAt)),
-                    ReceiptRow('Payment', paymentMethodLabel(order.paymentMethod)),
-                    if (order.address != null) ReceiptRow('Deliver to', order.address!.oneLine),
-                  ],
-                  total: ReceiptRow(
-                    'Estimated total',
-                    formatRupees(order.estimate.totalPaise),
-                    semanticsLabel: 'Estimated total ${formatRupees(order.estimate.totalPaise)}',
-                  ),
-                  note: 'The final total is set when your order is weighed and packed.',
-                ),
-                const SizedBox(height: FreshSpacing.s3),
-                const InfoBanner(
-                  text:
-                      'When your order is out for delivery, a 4-digit delivery code appears in Orders. '
-                      'Share it with the delivery partner when you receive your order.',
-                ),
-                const SizedBox(height: FreshSpacing.s5),
-                FilledButton(onPressed: () => context.go('/orders/${order.id}'), child: const Text('Track order')),
-                const SizedBox(height: FreshSpacing.s2),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: BlockTone.teal.foreground(c),
-                    side: BorderSide(color: BlockTone.teal.foreground(c), width: 1.5),
-                  ),
-                  onPressed: () => context.go('/home'),
-                  child: const Text('Continue shopping'),
-                ),
-              ],
-            ),
-          ),
+        backgroundColor: c.sand,
+        body: AsyncValueView<OrderDetail>(
+          value: ref.watch(orderDetailProvider(orderId)),
+          onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
+          loading: const SafeArea(child: ListSkeleton()),
+          data: (order) => _OrderPlaced(order: order),
         ),
       ),
+    );
+  }
+}
+
+class _OrderPlaced extends StatelessWidget {
+  const _OrderPlaced({required this.order});
+
+  final OrderDetail order;
+
+  @override
+  Widget build(BuildContext context) {
+    final slot = order.slot;
+    final address = order.address;
+    final total = formatRupees(order.estimate.totalPaise);
+    return FreshSeaFloorScroll(
+      key: const Key('orderPlacedPage'),
+      gap: 20,
+      children: [
+        FreshCelebrationHeader(
+          title: 'Order',
+          scriptWord: 'placed',
+          status: orderStatusLabel(order.status),
+          message: 'Thank you! Your fresh seafood is on its way.',
+          character: (size) => Illustration(slot: IllustrationSlot.orderPlaced, size: size),
+          child: FreshTicketCard(
+            title: 'Order ${order.orderNumber}',
+            rows: [
+              if (slot != null)
+                FreshTicketRow(
+                  icon: Icons.calendar_month_outlined,
+                  label: 'Delivery',
+                  value: '${formatDayShort(slot.startAt)}\n${formatTimeRange(slot.startAt, slot.endAt)}',
+                  semanticsLabel: 'Delivery: ${formatSlotWindow(slot.startAt, slot.endAt)}',
+                ),
+              FreshTicketRow(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Payment',
+                value: paymentMethodLabel(order.paymentMethod),
+                tone: FreshTicketTone.coral,
+                strong: 'delivery',
+              ),
+              if (address != null)
+                FreshTicketRow(icon: Icons.location_on_outlined, label: 'Deliver to', value: address.oneLine),
+            ],
+            totalLabel: 'Estimated total',
+            totalValue: total,
+            totalSemanticsLabel: 'Estimated total $total',
+            note: 'The final total is set when your order is weighed and packed.',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            FreshCelebrationHeader.gutter,
+            16,
+            FreshCelebrationHeader.gutter,
+            0,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const FreshNoteCard(
+                key: Key('deliveryCodeNote'),
+                text:
+                    'When your order is out for delivery, a 4-digit delivery code appears in Orders. '
+                    'Share it with the delivery partner when you receive your order.',
+                picture: Illustration(slot: IllustrationSlot.homeCardRider, size: 88, excludeFromSemantics: true),
+              ),
+              const SizedBox(height: 18),
+              FreshArrowButton(
+                key: const Key('trackOrder'),
+                label: 'Track order',
+                onPressed: () => context.go('/orders/${order.id}'),
+              ),
+              const SizedBox(height: 12),
+              FreshOutlineArrowButton(
+                key: const Key('continueShopping'),
+                label: 'Continue shopping',
+                icon: Icons.shopping_basket_outlined,
+                onPressed: () => context.go('/home'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

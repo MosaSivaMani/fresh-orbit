@@ -99,6 +99,7 @@ class _ProfileDetailsScreenState extends ConsumerState<ProfileDetailsScreen> {
       backgroundColor: c.paper,
       body: AutofillGroup(
         child: FreshAuthPage(
+          seaFloor: true,
           eyebrow: 'Welcome',
           scriptLine: 'Tell us',
           brushLine: 'about you',

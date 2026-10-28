@@ -183,6 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: c.paper,
       body: AutofillGroup(
         child: FreshAuthPage(
+          seaFloor: true,
           eyebrow: challenge != null ? 'Verify' : (widget.welcome ? 'Welcome' : 'Sign in'),
           scriptLine: challenge != null ? 'Enter the' : (widget.welcome ? 'Sign in or' : 'Your mobile'),
           brushLine: challenge != null ? 'code' : (widget.welcome ? 'sign up' : 'number'),

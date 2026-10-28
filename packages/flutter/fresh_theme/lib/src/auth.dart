@@ -41,6 +41,7 @@ class FreshAuthPage extends StatelessWidget {
     this.scene,
     this.onBack,
     this.backTooltip = 'Back',
+    this.seaFloor = false,
     this.children = const [],
   });
 
@@ -55,42 +56,55 @@ class FreshAuthPage extends StatelessWidget {
   final Widget? scene;
   final VoidCallback? onBack;
   final String backTooltip;
+
+  /// Ends the page with the sea floor ([FreshSeaFloor], D289): at the bottom of the screen when the card's content
+  /// is short, after it when the page scrolls.
+  final bool seaFloor;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomInset = seaFloor ? 0.0 : MediaQuery.paddingOf(context).bottom;
+    final page = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FreshAuthHeader(
+          eyebrow: eyebrow,
+          scriptLine: scriptLine,
+          brushLine: brushLine,
+          avatar: avatar,
+          scene: scene,
+          onBack: onBack,
+          backTooltip: backTooltip,
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(FreshAuthHeader.gutter, 14, FreshAuthHeader.gutter, 24 + bottomInset),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: 14),
+                children[i],
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FreshAuthHeader(
-              eyebrow: eyebrow,
-              scriptLine: scriptLine,
-              brushLine: brushLine,
-              avatar: avatar,
-              scene: scene,
-              onBack: onBack,
-              backTooltip: backTooltip,
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(FreshAuthHeader.gutter, 14, FreshAuthHeader.gutter, 24 + bottomInset),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < children.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 14),
-                    children[i],
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: seaFloor
+          ? CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(child: page),
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [FreshSeaFloor()]),
+                ),
+              ],
+            )
+          : SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, child: page),
     );
   }
 }

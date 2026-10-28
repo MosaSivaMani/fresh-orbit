@@ -535,6 +535,7 @@ class _NoNotifications extends StatelessWidget {
     heading: const [HeadingLine('All', script: true), HeadingLine('quiet', brush: true)],
     slot: IllustrationSlot.emptyNotifications,
     onBack: onBack,
+    seaFloor: true,
     children: const [
       SheetTitle('Nothing new', header: true),
       SheetNote('We’ll tell you when your order is packed, on the way and delivered.'),

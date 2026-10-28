@@ -26,6 +26,7 @@ class WishlistScreen extends ConsumerWidget {
           heading: const [HeadingLine('Nothing', script: true), HeadingLine('saved yet', brush: true)],
           slot: IllustrationSlot.emptyWishlist,
           onBack: context.canPop() ? () => context.pop() : null,
+          seaFloor: true,
           children: [
             const SheetTitle('Tap the ♥ on any fish', header: true),
             const SheetNote('It waits here for next time.'),

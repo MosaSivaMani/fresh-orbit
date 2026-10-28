@@ -8,13 +8,16 @@
 /// ([FreshScenery], [HarbourScenePainter], [PalmsPainter]) with the owner's real trawler and gull pictures
 /// ([FreshTrawler], [FreshGull], [FreshSceneryPictures]; D287). The sign-in look (D281): [FreshAuthPage],
 /// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]; the
-/// "Tell us about you" field (D290): [FreshTextField].
+/// "Tell us about you" field (D290): [FreshTextField]. The order-placed look (D288): [FreshCelebrationHeader],
+/// [FreshTicketCard], [FreshNoteCard] and [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289):
+/// [FreshSeaFloor] and [FreshSeaFloorScroll].
 library;
 
 import 'package:flutter/material.dart';
 
 export 'src/auth.dart';
 export 'src/blocks.dart';
+export 'src/celebration.dart';
 export 'src/choices.dart';
 export 'src/feedback.dart';
 export 'src/fields.dart';
@@ -28,6 +31,7 @@ export 'src/page.dart';
 export 'src/parts.dart';
 export 'src/prices.dart';
 export 'src/scenery.dart';
+export 'src/sea_floor.dart';
 export 'src/stickers.dart';
 export 'src/titles.dart';
 
