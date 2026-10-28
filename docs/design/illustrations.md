@@ -56,7 +56,7 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
 54 slots (32 from the handoff, 12 onboarding tiles and banners from the owner's onboarding reference, and later
 additions below; the list in `REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of this change:
-12 FINAL (`LOGIN_OTP` and `SIGN_IN_COAST` since D285–D286), 42 PLACEHOLDER.
+13 FINAL (`LOGIN_OTP` and `SIGN_IN_COAST` since D285–D286, `ORDER_PLACED` since D291), 41 PLACEHOLDER.
 The playground's **Illustrated** tab shows every slot with its alt text and status.
 
 | Slot | Shape | Cast | Website | Admin | Mobile |
@@ -74,7 +74,7 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `NO_SEARCH_RESULTS` | 1:1 | Padma, Chanduva | Search / filters with no result | — | Same |
 | `OUT_OF_STOCK` | 1:1 | Padma | Product sold out / Notify me | — | Same |
 | `LOGIN_OTP` | 1:1 | Ammamma | Login and OTP step | — | Login and OTP |
-| `ORDER_PLACED` | 1:1 | Padma, Chanduva | Order success page | — | Order success |
+| `ORDER_PLACED` | 1:1 | Padma (waist-up, thumbs-up, seer fish; FINAL, D291) | Order success page | — | Order-placed header (D288), tracking card, orders list |
 | `ORDER_PACKING` | 1:1 | Padma | Tracking: preparing / packed | — | Same |
 | `ORDER_ON_THE_WAY` | 4:3 | Ravi | Tracking: out for delivery | — | Same |
 | `ORDER_DELIVERED` | 4:3 | Ravi, Ammamma | Tracking: delivered | — | Same |
@@ -165,6 +165,14 @@ framing at 512 × 512 (full colour, about 230 KB). The website (`AvatarCircle`, 
 picture whose top-left fades out. The owner's original (1536 × 1024) is in `generated/sign_in_coast.png`; the
 package holds a 1024 × 682 256-colour PNG (about 200 KB) and the app an 800 × 533 copy (about 130 KB). Until it is
 bundled the header draws `FreshCoastScene`.
+
+`ORDER_PLACED` (D291) is the owner's waist-up Padma: a thumbs-up with one gloved hand, a big seer fish across her
+apron, the picture ending at her waist. The original (1254 × 1254) is in `generated/order_placed.png`; its
+almost-opaque cut-out (94–99 %) was made fully opaque inside the figure and the faint fringe cleared. The package
+holds a 1024 × 1024 256-colour PNG (about 300 KB) and the app a 600 × 600 copy (about 115 KB). No reframing: on the
+app's order-placed header the square stands at the right edge, its bottom 12 px (the cut at her waist) under the
+ticket card, and the status and thank-you line end left of it so her thumbs-up is never under text. The website's
+order-placed page and the app's tracking card and orders list show it in a circle.
 
 These finals were brought under the limit without `pnpm` (company laptop): `sips` resized them and a small
 standard-library Python script framed and colour-reduced them (median cut, dithered), the job `import` and

@@ -352,7 +352,7 @@ characters, stickers and receipts. `packages/flutter/fresh_theme` is not edited;
 | Search and category with no results | `NO_SEARCH_RESULTS` |
 | Product sold out | `OUT_OF_STOCK` |
 | OTP login, signed-out account | `LOGIN_OTP` |
-| Order success (ticket, D288) | `ORDER_PLACED` in the header; `HOME_CARD_RIDER` in the delivery-code note |
+| Order success (ticket, D288) | `ORDER_PLACED` in the header (the owner's Padma, FINAL, D291; status and message end left of her box); `HOME_CARD_RIDER` in the delivery-code note |
 | Tracking status card | `slotForOrderStatus`: placed/confirmed → `ORDER_PLACED`; `PREPARING`, `PACKED` → `ORDER_PACKING`; `OUT_FOR_DELIVERY` → `ORDER_ON_THE_WAY`; `DELIVERED` → `ORDER_DELIVERED`; `CANCELLED`, `PAYMENT_FAILED`, `RETURNED` → `ORDER_CANCELLED`; `DELIVERY_FAILED` → `ERROR_GENERIC` |
 | Complaint sent (dialog) | `COMPLAINT_RECEIVED` |
 | Help | `HELP_SUPPORT` (`HelpHero`) |

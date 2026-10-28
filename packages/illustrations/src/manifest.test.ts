@@ -225,6 +225,29 @@ describe("manifest.json", () => {
     }
   });
 
+  it("holds the order-placed Padma as a FINAL transparent PNG under the size limit", () => {
+    const entry = manifest.slots.find((s) => s.slot === "ORDER_PLACED")!;
+    expect(entry).toMatchObject({
+      status: "FINAL",
+      file: "assets/order_placed.png",
+      background: "TRANSPARENT",
+      character: "FISHMONGER",
+      width: 1024,
+      height: 1024,
+      source: "docs/design/characters/generated/order_placed.png",
+    });
+    expect(entry.prompt).toBe(composePrompt(manifest, entry));
+    const bytes = readFileSync(join(root, entry.file));
+    expect(readImageSize(bytes)).toMatchObject({
+      format: "PNG",
+      alpha: true,
+      width: 1024,
+      height: 1024,
+    });
+    expect(bytes.byteLength).toBeLessThanOrEqual(600 * 1024);
+    expect(toRuntime(entry).src).toBe("order_placed.png");
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);
@@ -283,7 +306,8 @@ describe("manifest.json", () => {
     const png = new Uint8Array(24);
     png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
     png.set([0, 0, 4, 0, 0, 0, 4, 0], 16);
-    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST) are read from disk.
+    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST, ORDER_PLACED)
+    // are read from disk.
     const faked = (p: string) => p.endsWith(".png") && p.startsWith("assets/") && !disk.size(p);
     const facts: FileFacts = {
       size: (p) => (faked(p) ? 300 * 1024 : disk.size(p)),
