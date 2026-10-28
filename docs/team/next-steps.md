@@ -1,8 +1,16 @@
 # Next steps (handoff)
 
-Last updated: 2026-10-24, after the manager merged security round 2 (Track A, `security/round-2`), the sample-data loaders (L1, `backend/sample-loaders`) and the illustrated design system (U1) to `main`: `dotnet test` 999/999, all `pnpm` checks pass, no pending model changes. Start here when work resumes.
+Last updated: 2026-10-29 (see the pause block below). Older note: 2026-10-24, after the manager merged security round 2 (Track A, `security/round-2`), the sample-data loaders (L1, `backend/sample-loaders`) and the illustrated design system (U1) to `main`: `dotnet test` 999/999, all `pnpm` checks pass, no pending model changes. Start here when work resumes.
 
-## Paused 2026-10-28 (owner asleep): resume here
+## Paused 2026-10-29 (owner asleep): resume here
+
+- **State:** every PR is merged; no open PRs. Main is `1ca7b7e`. Live APK: `demo-apk-1ca7b7e` (`fresh-orbit-live-1ca7b7e.apk`). Website and admin auto-deploy on Render from main.
+- **Merged on 2026-10-29:** #37/#39 website hero (owner's ship, three gulls and harbour background, D283–D284; the full-picture hero #36/D279 was rejected and reverted, D280), #38 app sign-in look (D281–D282), #40 owner's Ammamma avatar and sign-in harbour (D285–D286), #41 real ship and gulls in the app scenery (D287), #42 "Tell us about you" after the first sign-in (D290), #43 order-placed look and the sea-floor footer (D288–D289), #44 owner's Padma on order placed (D291).
+- **Owner's process for pictures:** we write a prompt, the owner generates it and sends the PNG (usually transparent); we deliver it into its illustration slot (FINAL) with a 256-colour PNG under 600 KB in `packages/illustrations/assets/` and a smaller copy in `apps/mobile/assets/illustrations/`. The owner wants cut-out parts placed into our layouts, never a whole generated scene replacing a layout.
+- **Next:** wait for the owner's feedback on APK `1ca7b7e` and the live website; five category pictures (Fillets & Steaks, Ready to Cook, Marinated, Fish Eggs, Ready to Eat) are still placeholders (prompts in `design/prompts-web-home-2026-10-28.md`); 78 product-picture prompts are ready (`design/prompts-product-pictures-2026-10.md`); website sign-in could match the app's sign-in (owner not yet answered); owner text for privacy and terms.
+- **Rules learnt:** `FreshScenery.trawler` is still used as the sign-in coast fallback; the next free decision number is below.
+
+## Earlier: paused 2026-10-28
 
 - **Resolved (2026-10-28): GitHub Actions billing block.** The private repo had used its 2,000 free minutes. The owner chose to make the repository **public** (D254) after a history scan found no real secrets; Actions run free again. CI re-run on #30, #31, #32, #33; #34 conflicts with main, so its checks start once main is merged into it.
 - **2026-10-28 evening:** PRs #33, #30, #31, #34, #32 (includes #29) and #35 (sign in right after onboarding) are merged. Latest live APK: `demo-apk-b812718` (https://github.com/MosaSivaMani/fresh-orbit/releases/download/demo-apk-b812718/fresh-orbit-live-b812718.apk). No open PRs.
