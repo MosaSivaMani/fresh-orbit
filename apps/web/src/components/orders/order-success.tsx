@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDayShort, formatRupees, formatTime } from "@fresh/core";
+import { formatRupees } from "@fresh/core";
 import { BillBox, Button, CharacterState, Script, Skeleton } from "@fresh/ui";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { browserHttp } from "@/api/browser";
 import { getOrder } from "@/api/endpoints/orders";
 import { LoadError } from "@/components/states";
 import { queryKeys } from "@/lib/query-keys";
+import { slotText } from "@/lib/slot-text";
 import { paymentMethodLabels } from "@/lib/status-maps";
 import { amountRows } from "./order-detail-view";
 
@@ -53,10 +54,7 @@ export function OrderSuccess({ orderId }: { orderId: string }) {
       <dl className="bg-surface-paper border-border grid gap-3 rounded-[20px] border p-4 text-sm">
         <div className="flex justify-between gap-4">
           <dt className="text-text-muted">Delivery</dt>
-          <dd className="text-text text-right font-bold">
-            {formatDayShort(o.slot.startAt)}, {formatTime(o.slot.startAt)} –{" "}
-            {formatTime(o.slot.endAt)}
-          </dd>
+          <dd className="text-text text-right font-bold">{slotText(o.slot, o.timeZone)}</dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-text-muted">Payment</dt>

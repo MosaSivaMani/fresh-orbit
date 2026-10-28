@@ -31,6 +31,9 @@ export type ProductImage = Schema<"StorefrontImage">;
 
 export type PreparationChargeBasis = Schema<"ChargeBasis">;
 
+/** `GET /preparation-methods`: the cuts offered on the shop (at the visitor's store with `X-Pincode`), CAT-R27. */
+export type PreparationMethod = Schema<"StorefrontPreparationMethod">;
+
 /** `chargeBasis` is PER_KG / PER_ITEM / FLAT; the spec types it as a string. */
 export type Preparation = Omit<Schema<"StorefrontPreparation">, "chargeBasis"> & {
   chargeBasis: PreparationChargeBasis | null;

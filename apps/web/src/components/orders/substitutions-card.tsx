@@ -7,7 +7,7 @@ import { useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { answerSubstitution } from "@/api/endpoints/orders";
 import { type OrderDetail } from "@/api/types/orders";
-import { describeError } from "@/lib/errors";
+import { asApiError, describeError } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 type Substitution = OrderDetail["substitutions"][number];
@@ -49,6 +49,11 @@ export function SubstitutionsCard({ order }: { order: OrderDetail }) {
       });
     } catch (e) {
       toast({ title: describeError(e), tone: "danger" });
+      // A refusal (409/422: the offer expired or was already answered, the order moved on) means our copy is
+      // stale; read the order again so the card shows the server's state.
+      if (asApiError(e)?.status !== 0) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.order(order.id) });
+      }
     } finally {
       setPending(null);
     }
@@ -69,7 +74,8 @@ export function SubstitutionsCard({ order }: { order: OrderDetail }) {
               </p>
               <p className="text-text-muted tabular-nums">
                 {difference(s.priceDifferencePaise)}
-                {s.status === "PROPOSED" && ` · answer by ${formatDateTime(s.expiresAt)}`}
+                {s.status === "PROPOSED" &&
+                  ` · answer by ${formatDateTime(s.expiresAt, order.timeZone)}`}
               </p>
             </div>
             {s.status === "PROPOSED" ? (

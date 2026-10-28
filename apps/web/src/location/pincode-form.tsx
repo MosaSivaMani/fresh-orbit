@@ -1,6 +1,6 @@
 "use client";
 
-import { formatRupees, formatTime, formatDayShort } from "@fresh/core";
+import { formatRupees } from "@fresh/core";
 import { Button, FormField, Input } from "@fresh/ui";
 import { MapPin } from "lucide-react";
 import { type FormEvent, useId, useState } from "react";
@@ -12,6 +12,7 @@ import { useCart, useChangeCartLocation } from "@/cart/use-cart";
 import { isValidPincode } from "@/lib/cookies";
 import { cx } from "@/lib/cx";
 import { asApiError, describeError } from "@/lib/errors";
+import { slotText } from "@/lib/slot-text";
 import { useLocation } from "./location-context";
 
 type Step =
@@ -197,9 +198,7 @@ export function PincodeForm({ onDone, variant = "default" }: PincodeFormProps) {
             </p>
             {step.result.nextSlot && (
               <p>
-                Next delivery slot: {formatDayShort(step.result.nextSlot.startAt)},{" "}
-                {formatTime(step.result.nextSlot.startAt)} –{" "}
-                {formatTime(step.result.nextSlot.endAt)}
+                Next delivery slot: {slotText(step.result.nextSlot, step.result.city?.timeZone)}
               </p>
             )}
           </div>

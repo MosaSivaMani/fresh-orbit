@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { type OrderDetail, type OrderTracking } from "@/api/types/orders";
+import { problem } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
@@ -272,5 +273,151 @@ describe("OrderDetailView", () => {
     await userEvent.click(within(sheet).getByRole("button", { name: "Send" }));
 
     await waitFor(() => expect(photoPosts).toEqual(["file"]));
+  });
+
+  it("re-reads the order when the server refuses a cancel, and hides Cancel when it is no longer allowed", async () => {
+    let reads = 0;
+    const movedOn = order({
+      status: "PREPARING",
+      allowedActions: {
+        cancel: false,
+        raiseComplaint: false,
+        downloadInvoice: false,
+        reorder: false,
+      },
+    });
+    server.use(
+      http.get(`${API}/orders/o1`, () => {
+        reads += 1;
+        return HttpResponse.json(reads === 1 ? order() : movedOn);
+      }),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+      http.post(`${API}/orders/o1/cancel`, () =>
+        HttpResponse.json(problem(409, "INVALID_STATUS_TRANSITION"), { status: 409 }),
+      ),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel order" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Cancel order" }));
+
+    await waitFor(() => expect(reads).toBeGreaterThanOrEqual(2));
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Cancel order" })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("sends a corrected complaint with a new Idempotency-Key after a refusal", async () => {
+    const keys: (string | null)[] = [];
+    server.use(
+      http.get(`${API}/orders/o1`, () =>
+        HttpResponse.json(
+          order({
+            status: "DELIVERED",
+            allowedActions: {
+              cancel: false,
+              raiseComplaint: true,
+              downloadInvoice: false,
+              reorder: false,
+            },
+          }),
+        ),
+      ),
+      http.get(`${API}/orders/o1/tracking`, () =>
+        HttpResponse.json(tracking({ status: "DELIVERED" })),
+      ),
+      http.get(`${API}/orders/o1/complaints`, () => HttpResponse.json([])),
+      http.post(`${API}/orders/o1/complaints`, ({ request }) => {
+        keys.push(request.headers.get("Idempotency-Key"));
+        if (keys.length === 1) {
+          return HttpResponse.json(
+            problem(422, "VALIDATION_FAILED", {
+              errors: {
+                description: [{ code: "VALIDATION_FAILED", message: "Describe the problem." }],
+              },
+            }),
+            { status: 422 },
+          );
+        }
+        return HttpResponse.json({ id: "c1", status: "OPEN", photos: [] }, { status: 201 });
+      }),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Report a problem" }));
+    const sheet = await screen.findByRole("dialog");
+    const details = within(sheet).getByLabelText(/Details/);
+    await userEvent.type(details, "Fish was not fresh.");
+    await userEvent.click(within(sheet).getByRole("button", { name: "Send" }));
+    expect(await within(sheet).findByText("Describe the problem.")).toBeInTheDocument();
+
+    await userEvent.type(details, " It smelled off on arrival.");
+    await userEvent.click(within(sheet).getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(keys).toHaveLength(2));
+    expect(keys[0]).toBeTruthy();
+    expect(keys[1]).toBeTruthy();
+    expect(keys[1]).not.toBe(keys[0]);
+  });
+
+  it("re-reads the order when the server refuses a substitution answer", async () => {
+    const proposed = {
+      id: "s1",
+      orderItemId: "i1",
+      proposedName: "Seer fish steaks",
+      proposedQuantity: { value: 500, unit: "GRAM" },
+      priceDifferencePaise: 4000,
+      status: "PROPOSED",
+      expiresAt: "2026-10-23T07:30:00Z",
+      respondedAt: null,
+      newOrderItemId: null,
+    };
+    let reads = 0;
+    server.use(
+      http.get(`${API}/orders/o1`, () => {
+        reads += 1;
+        return HttpResponse.json(
+          order({
+            substitutions: [reads === 1 ? proposed : { ...proposed, status: "EXPIRED" }],
+          }),
+        );
+      }),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+      http.post(`${API}/orders/o1/substitutions/s1/accept`, () =>
+        HttpResponse.json(problem(409, "SUBSTITUTION_EXPIRED"), { status: 409 }),
+      ),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const card = await screen.findByRole("region", { name: "Substitutions" });
+    await userEvent.click(within(card).getByRole("button", { name: "Accept Seer fish steaks" }));
+
+    await waitFor(() => expect(reads).toBeGreaterThanOrEqual(2));
+    await waitFor(() =>
+      expect(
+        within(card).queryByRole("button", { name: "Accept Seer fish steaks" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows the slot in the store's time zone from the server (W10)", async () => {
+    server.use(
+      http.get(`${API}/orders/o1`, () =>
+        HttpResponse.json(
+          order({
+            // 23:30 UTC on the 23rd is the 24th in India but still the 23rd in UTC.
+            slot: { startAt: "2026-10-23T23:30:00Z", endAt: "2026-10-24T01:30:00Z" },
+            timeZone: "UTC",
+          }),
+        ),
+      ),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const steps = await screen.findByRole("region", { name: "Tracking" });
+    expect(await within(steps).findByText(/23 Oct, 11:30/)).toBeInTheDocument();
+    expect(within(steps).queryByText(/24 Oct/)).not.toBeInTheDocument();
   });
 });

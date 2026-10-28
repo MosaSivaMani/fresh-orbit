@@ -87,7 +87,7 @@ export function OrdersList() {
                   <StatusBadge code={o.status} map={orderStatusMap} />
                 </div>
                 <span className="text-text-muted text-sm">
-                  {`Delivery ${formatDayShort(o.slotStartAt)}, ${formatTime(o.slotStartAt)}`}
+                  {`Delivery ${formatDayShort(o.slotStartAt, o.timeZone)}, ${formatTime(o.slotStartAt, o.timeZone)}`}
                   {` · ${o.itemCount} ${o.itemCount === 1 ? "item" : "items"}`}
                 </span>
               </div>

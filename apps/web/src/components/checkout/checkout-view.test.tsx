@@ -173,4 +173,64 @@ describe("CheckoutView", () => {
     expect(keys).toHaveLength(2);
     expect(keys[1]).not.toBe(keys[0]);
   });
+
+  it("edits the chosen address with If-Match and the server's version", async () => {
+    let put: { ifMatch: string | null; body: Record<string, unknown> } | null = null;
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cartWithSeer)),
+      http.get(`${API}/me/addresses`, () => HttpResponse.json([homeAddress])),
+      http.get(`${API}/delivery-slots`, () => HttpResponse.json(slots)),
+      http.put(`${API}/me/addresses/a1`, async ({ request }) => {
+        put = {
+          ifMatch: request.headers.get("If-Match"),
+          body: (await request.json()) as Record<string, unknown>,
+        };
+        return HttpResponse.json({ ...homeAddress, line1: "14, 3rd Cross Street", version: "12" });
+      }),
+    );
+    renderWithProviders(<CheckoutView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Edit this address" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit delivery address" });
+    const line1 = within(dialog).getByLabelText(/House, flat and street/);
+    await userEvent.clear(line1);
+    await userEvent.type(line1, "14, 3rd Cross Street");
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Save and use this address" }),
+    );
+
+    await waitFor(() => expect(put).not.toBeNull());
+    expect(put!.ifMatch).toContain("11");
+    expect(put!.body).toMatchObject({ line1: "14, 3rd Cross Street", pincode: "600041" });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Edit delivery address" })).toBeNull(),
+    );
+  });
+
+  it("reloads the addresses when the edit quotes a stale version (412)", async () => {
+    let reads = 0;
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cartWithSeer)),
+      http.get(`${API}/me/addresses`, () => {
+        reads += 1;
+        return HttpResponse.json([homeAddress]);
+      }),
+      http.get(`${API}/delivery-slots`, () => HttpResponse.json(slots)),
+      http.put(`${API}/me/addresses/a1`, () =>
+        HttpResponse.json(problem(412, "CONCURRENCY_CONFLICT"), { status: 412 }),
+      ),
+    );
+    renderWithProviders(<CheckoutView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Edit this address" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit delivery address" });
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Save and use this address" }),
+    );
+
+    await waitFor(() => expect(reads).toBeGreaterThanOrEqual(2));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Edit delivery address" })).toBeNull(),
+    );
+  });
 });

@@ -26,7 +26,7 @@ import {
   reorder,
 } from "@/api/endpoints/orders";
 import { type CancelReasonCode, type ComplaintKind, type OrderDetail } from "@/api/types/orders";
-import { describeError, fieldMessage } from "@/lib/errors";
+import { asApiError, describeError, fieldMessage } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
 const CANCEL_REASONS: { value: CancelReasonCode; label: string }[] = [
@@ -76,6 +76,18 @@ function CancelDialog({ order, onClose }: { order: OrderDetail; onClose: () => v
       toast({ title: `Order ${order.orderNumber} cancelled`, tone: "success" });
       onClose();
     } catch (e) {
+      const apiError = asApiError(e);
+      // A retryable failure keeps the key, so trying again cannot cancel twice; a definitive answer ends the action.
+      if (!apiError?.isRetryable) actionKey.done();
+      // Refused because the order moved on (409 INVALID_STATUS_TRANSITION, 422): say so, close, and read the order
+      // again so the page shows the server's state and hides Cancel when it is no longer allowed.
+      if (apiError && (apiError.status === 409 || apiError.status === 422)) {
+        toast({ title: describeError(e), tone: "danger" });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.order(order.id) });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.tracking(order.id) });
+        onClose();
+        return;
+      }
       setError(describeError(e));
     } finally {
       setPending(false);
@@ -101,7 +113,11 @@ function CancelDialog({ order, onClose }: { order: OrderDetail; onClose: () => v
       <RadioGroup
         label="Reason"
         value={reason}
-        onValueChange={(v) => setReason(v as CancelReasonCode)}
+        onValueChange={(v) => {
+          // Another reason is another request body: it needs its own Idempotency-Key.
+          actionKey.done();
+          setReason(v as CancelReasonCode);
+        }}
         options={CANCEL_REASONS}
       />
       {error && (
@@ -161,6 +177,9 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
       toast({ title: "We have your complaint and will get back to you.", tone: "success" });
       onClose();
     } catch (e) {
+      // Only a retryable failure (network, 429, 503, IDEMPOTENCY_IN_PROGRESS) may resend the same key; after a
+      // refusal the customer changes the form, which is a new body and needs a new key (D224).
+      if (!asApiError(e)?.isRetryable) actionKey.done();
       const fields: Record<string, string> = {};
       for (const field of ["orderItemId", "kind", "description"]) {
         const message = fieldMessage(e, field);

@@ -26,6 +26,7 @@ import { GetTheApp } from "@/components/get-the-app";
 import { Container, Section } from "@/components/section";
 import { productJsonLd, serializeJsonLd } from "@/lib/json-ld";
 import { settle } from "@/lib/settle";
+import { slotText } from "@/lib/slot-text";
 import { sourceTypeLabels } from "@/lib/status-maps";
 import { getSiteUrl } from "@/server/config";
 
@@ -92,6 +93,8 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
   const siteUrl = getSiteUrl();
   const canonical = siteUrl ? `${siteUrl}/products/${product.slug}` : null;
   const area = serviceability?.ok ? serviceability.value : null;
+  // Slot times in the store's own zone (W10).
+  const zone = area?.city?.timeZone;
 
   return (
     <Container className="flex flex-col gap-10 py-6 pb-32 sm:py-8 md:pb-8">
@@ -158,7 +161,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
                 <Clock aria-hidden="true" className="size-[18px]" />
               </span>
               {area?.nextSlot
-                ? `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)}`
+                ? `Next slot ${formatDayShort(area.nextSlot.startAt, zone)}, ${formatTime(area.nextSlot.startAt, zone)}`
                 : "Pick a slot at checkout"}
             </li>
           </ul>
@@ -179,8 +182,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
                 </p>
                 {area.nextSlot && (
                   <p className="text-text-muted">
-                    Next available slot: {formatDayShort(area.nextSlot.startAt)},{" "}
-                    {formatTime(area.nextSlot.startAt)} – {formatTime(area.nextSlot.endAt)}
+                    Next available slot: {slotText(area.nextSlot, zone)}
                   </p>
                 )}
                 <p className="text-text-muted">
@@ -223,7 +225,7 @@ export default async function ProductPage(props: PageProps<"/products/[slug]">) 
             products={relatedItems}
             {...(area?.nextSlot
               ? {
-                  freshness: `Next slot ${formatDayShort(area.nextSlot.startAt)}, ${formatTime(area.nextSlot.startAt)} – ${formatTime(area.nextSlot.endAt)}`,
+                  freshness: `Next slot ${slotText(area.nextSlot, zone)}`,
                 }
               : {})}
           />

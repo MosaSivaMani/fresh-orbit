@@ -21,7 +21,7 @@ components; nothing is a separate mobile design.
 | Category circles on shop and category pages (`CategoryRail`, `CategoryCircle`) | Round 88/110 px circles with the category picture, muted label; scrolls sideways on phones. The home uses its own larger row (§11) | `GET /categories` / `GET /home` `featuredCategories` |
 | "Top picks in *city*" | Picture-card grid, 1 column below 480 px, then 2/3/4 | `featuredProducts`; city from `GET /serviceability` `city.name` (rule 7: no city names in code); "Top picks *today*" without a pincode |
 | Picture card (`ShopProductCard` → `FoodCard`) | 16:11 picture, offer line on a dark gradient, name, round teal mark + freshness line, local names, price with struck MRP, ADD → − n + stepper | Offer line only from `GET /promotions` (a banner linking to the product, or on a category page a banner linking to that category); freshness = the item's availability message, else the next slot; nothing invented |
-| ADD | With one size: fetches the product, adds `minOrder` with the default cut through `POST /cart/items`; with several sizes: opens the product page. Becomes a stepper when the cart holds exactly one line of the product (bounds from the product endpoint) | Server cart |
+| ADD | Adds the server's `defaultVariant` (`minOrder`, default cut) through `POST /cart/items` with no extra read (W3, D255); no price here opens the product page. Becomes a stepper when the cart holds exactly one line of the product (bounds from the cart line, W4) | Server cart |
 | Offers, "Filter and *pick*" | Mango offer cards (`OfferStrip`); link chips (price sort and "Under ₹500" only with a pincode, wild, farmed, in stock, newest) over eight more cards | `GET /promotions`, `GET /products?pageSize=8` |
 | Get the app (`GetTheApp`, `AppBand`) | Mango-soft band, store buttons, character circle | Links from `FRESH_PLAY_STORE_URL` / `FRESH_APP_STORE_URL`; unset → "coming soon" text, no invented links |
 | Footer | Dark ink: logo, shop and help links, cities we serve, small print | `GET /cities` |
@@ -95,15 +95,15 @@ prerendered, data fetched in the browser with TanStack Query through the same-or
 | Route | Page | Status | Mode | API calls |
 |---|---|---|---|---|
 | `/` | Home: hero with next slot, pincode prompt, search, categories, offers, featured products, trust row | Done | SSR | `GET /home`, `GET /categories`, `GET /promotions`, `GET /serviceability` |
-| `/shop` | All products, filters (category, source, in stock, price), sort, pagination; URL-synced | Done | SSR | `GET /products`, `GET /categories` |
+| `/shop` | All products, filters (category, source, in stock, cleaned and cut, price), sort, pagination; URL-synced | Done | SSR | `GET /products`, `GET /categories`, `GET /preparation-methods` |
 | `/shop/[category]` | Category listing with sub-category chips | Done | SSR | `GET /categories/{slug}`, `GET /products?category=` |
 | `/search?q=` | Search results; header box has suggestions | Done | SSR (noindex) | `GET /products?q=`; suggestions `GET /search/suggest` (client) |
 | `/products/[slug]` | Gallery, variants, preparation with charge and yield note, quantity/weight stepper, availability, add to cart, in-cart estimate and maximum, delivery box, description/storage/sourcing tabs, related, JSON-LD | Done | SSR + client panel | `GET /products/{slug}` (`?preparation=` from the panel), `GET /serviceability`, `GET /products?category=`, `POST /cart/items`, wishlist |
-| `/cart` | Server-priced lines with a − n + stepper (bounds from the product), remove, coupon strip, slot buttons (carried to checkout as `?slot=`), bill box, blockers, messages, location note, sticky Place order bar | Done | Client (noindex) | `GET /cart`, `PATCH/DELETE /cart/items/{id}`, `PUT/DELETE /cart/coupon`, `GET /products/{slug}` (stepper bounds, one read per line), `GET /delivery-slots?pincode=` |
+| `/cart` | Server-priced lines with a − n + stepper (bounds from the cart line, W4), remove, coupon strip, slot buttons (carried to checkout as `?slot=`), bill box, blockers, messages, location note, sticky Place order bar | Done | Client (noindex) | `GET /cart`, `PATCH/DELETE /cart/items/{id}`, `PUT/DELETE /cart/coupon`, `GET /coupons?pincode=` (the cart's pincode), `GET /delivery-slots?pincode=` |
 | `/login?next=` | Phone → OTP, resend timer, guest cart merge, safe redirect; 429 waits for `Retry-After` (default 30 s) with the buttons disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and "Try sending again" to the same number | Done | SSR shell (reads `next`) + client form (noindex) | `POST /auth/otp/request`; `POST /bff/auth/verify` |
-| `/checkout?slot=` | Address choose/add, slot by day (preselected from the cart's `?slot=`), pay on delivery (COD / UPI on delivery from `paymentMethods`), substitution preference, notes, live preview with blockers, sticky Place order bar with `Idempotency-Key`, `PRICE_CHANGED` confirm, `CART_LOCATION_CHANGED` move | Done | SSR shell (reads `slot`) + client, signed in | `GET /cart`, `GET/POST /me/addresses`, `GET /delivery-slots?pincode=`, `POST /checkout/preview`, `POST /orders`, `PUT /cart/location` |
+| `/checkout?slot=` | Address choose/add/edit (`If-Match`), slot by day (preselected from the cart's `?slot=`), pay on delivery (COD / UPI on delivery from `paymentMethods`), substitution preference, notes, live preview with blockers, sticky Place order bar with `Idempotency-Key`, `PRICE_CHANGED` confirm, `CART_LOCATION_CHANGED` move | Done | SSR shell (reads `slot`) + client, signed in | `GET /cart`, `GET/POST /me/addresses`, `PUT /me/addresses/{id}`, `GET /delivery-slots?pincode=`, `POST /checkout/preview`, `POST /orders`, `PUT /cart/location` |
 | `/orders/[orderId]/success` | Order-placed screen: ORDER_PLACED character, number, slot, payment, bill from the server's estimate | Done | Client, signed in | `GET /orders/{id}` |
-| `/orders/[orderId]` | Coral band with number and status character, status steps, delivery code (only when sent), slot, address, rider, items ordered vs charged, the bill (estimate or final), amount due, cancel (reason, IK), report a problem (JSON, no photos yet — W12, IK), invoice, order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice`, `POST /orders/{id}/reorder` |
+| `/orders/[orderId]` | Coral band with number and status character, status steps, delivery code (only when sent), slot, address, rider, items ordered vs charged, the bill (estimate or final), amount due, cancel (reason, IK), substitutions accept/reject, report a problem (JSON with IK, then photos one by one — W12), invoice, order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST …/complaints/{id}/photos`, `POST …/substitutions/{id}/accept|reject`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice`, `POST /orders/{id}/reorder` |
 | `/account` | Profile (PATCH with `If-Match`) | Done | Client, signed in | `GET/PATCH /me` |
 | `/account/settings` | Contact preferences (moved from notifications), sign out, delete account (typed confirmation, `If-Match`) | Done | Client, signed in | `GET/PUT /me/notification-preferences`, `GET/DELETE /me`, `POST /bff/auth/logout` |
 | `/account/orders` | Order cards with the status character, paginated | Done | Client, signed in | `GET /orders` (no `sort` parameter; server order) |
@@ -112,7 +112,7 @@ prerendered, data fetched in the browser with TanStack Query through the same-or
 | `/account/notifications` | Inbox (mark read / all read, paged); preferences switches (ORDER_UPDATES SMS locked on) are on `/account/settings` | Done | Client, signed in | `GET /me/notifications`, `POST …/read`, `POST …/read-all` |
 | `/about` | About with owner placeholder | Done (placeholder text) | Static/ISR | — |
 | `/support` | FAQ, policy links, contact placeholder | Done (contact placeholder) | Static/ISR | — |
-| `/support/{delivery,cancellation,refund}-policy` | Policy outlines, visibly marked placeholders | Done (placeholder text) | Static/ISR | — |
+| `/support/{delivery,cancellation,refund,privacy}-policy`, `/support/terms` | Policy outlines (OWNER TEXT until the owner and a lawyer approve `docs/legal/`), linked from the footer, the policy side card and the sitemap | Done (placeholder text) | Static/ISR | — |
 | 404, error, global error | Character states (NOT_FOUND, ERROR_GENERIC), retry with trace id | Done | — | — |
 | `/sitemap.xml`, `/robots.txt` | Catalogue sitemap (static pages, categories, up to 2,000 products); robots disallows customer pages, allows all only in production with a site URL | Done | Dynamic | `GET /categories`, `GET /products` (cached 1 h) |
 
@@ -190,20 +190,20 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 |---|---|---|---|
 | W1 | No bestsellers endpoint | CLOSED (`web/api-adoption`) | Home keeps "Top picks in <city>" from `featuredProducts` and adds "Bestsellers in <city>" from `/home` `bestsellers` (CAT-R24); the section is left out when the list is empty, never filled |
 | W2 | No price quote for a chosen weight before it is in the cart | ADOPTED (PR #22): the product panel shows `GET /price-quote` (estimate, and the maximum for weighed items) | Adopted in the website |
-| W3 | Product list items carry no variant ids | STILL OPEN | ADD on a card first reads the product (one extra request), then adds when there is one size; with several it opens the product page. Closes with the default variant id (and its order rules) on `ProductListItem` |
-| W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | STILL OPEN | Each line's − n + stepper reads its product (`GET /products/{slug}`, cached 60 s) for the bounds and stays disabled until they arrive: one read per line. Closes with the three fields on `CartLineView` |
+| W3 | Product list items carry no variant ids | CLOSED (`web/complete-flows`, D255) | ADD on a card puts the server's `defaultVariant` (CAT-R23, the size behind the card's "from" price) in the cart with its `defaultPreparationCode` and `minOrder`, with no product read. A list item without one falls back to reading the product (one size is added, several open the product page); an item with no price here opens the product page |
+| W4 | Cart lines lack `minOrder` / `maxOrder` / `orderStep` | CLOSED (`web/complete-flows`, D256) | Cart-page and card steppers use the cart line's own `minOrder` / `maxOrder` / `orderStep` (`src/cart/line-bounds.ts`); no product read per line. A line without them keeps its stepper disabled |
 | W5 | `GET /me/wishlist` returns ids only | ADOPTED (PR #22): saved items are cards with picture, name, server price and a link | Adopted in the website |
 | W6 | Shapes not shown in docs/api | CLOSED | All in the spec now; `/promotions`, `/products`, `/orders` are paged, `/cities`, `/suggest`, `/me/addresses`, `/me/wishlist`, complaints are bare arrays. `GET /home` `banners` is still `object[]`, so banners come from `/promotions` |
 | W7 | No public business profile (support phone, email, hours) | ADOPTED (PR #22): help page contact card | Adopted in the website |
-| W8 | No public list of preparation methods for filtering | STILL OPEN | Preparation filter omitted on `/shop`. Closes with a public `GET /preparation-methods` |
-| W9 | API must trust `X-Forwarded-For` from the web host | STILL OPEN | Proxy sends it. Closes with forwarded-headers config for the web host (security review SEC-2) |
-| W10 | Time zone for display | STILL OPEN | `@fresh/core` formats in IST. Closes with the location's `timeZone` in slot and order responses |
-| W11 | Banner `imageKey` is a storage key, not a URL | NEW, OPEN | Offer strip shows text only. Closes with a resolved image URL on `BannerInfo` |
+| W8 | No public list of preparation methods for filtering | CLOSED (`web/complete-flows`, D257) | "More filters" has a "Cleaned and cut" group from `GET /preparation-methods` (with `X-Pincode`, CAT-R27). URL key `prep` (UPPER_SNAKE codes only), sent as `preparation`; chosen methods show as removable chips. Left out when the list is empty or fails |
+| W9 | API must trust `X-Forwarded-For` from the web host | CLOSED (backend `ForwardedHeaders:KnownNetworks`, one hop) | The proxy and the server-side client forward the shopper's `X-Forwarded-For`; nothing to change in the website |
+| W10 | Time zone for display | CLOSED (`web/complete-flows`, D258) | `@fresh/core` `formatDate` / `formatTime` / `formatDateTime` / `formatDayShort` take an optional IANA zone (IST when missing or unknown). Slots use the slots response `timeZone`; serviceability lines use `city.timeZone`; order detail, success, list, tracking timeline and substitution deadlines use the order's `timeZone`. Still IST: the home hero's next slot (`app/page.tsx`, owned by PR #30) |
+| W11 | Banner `imageKey` is a storage key, not a URL | CLOSED (`web/complete-flows`, D259) | The offer strip shows the banner's resolved `imageUrl` (CAT-R28) and its `badge` (else "Offer"); nothing is built from `imageKey` |
 | W12 | Complaint create is JSON with no attachments | ADOPTED (PR #22): photos go one by one to `POST …/complaints/{id}/photos` after the complaint is created | Adopted in the website |
 
 | W13 | List items carry no weight, pieces or serves | CLOSED (`web/api-adoption`) | Picture cards show the default variant's `serving` as "1 kg · 10–14 pcs · serves 4" (`lib/product-facts.ts` `servingLine`, per the server's basis, never scaled), else the local names; the product page adds the chosen size's line under pack and piece weight |
 | W14 | A CATEGORY banner's `linkTarget` is the category id, not its slug | CLOSED (`web/api-adoption`) | Offer strip links CATEGORY banners by `linkSlug` (featured-category id → slug map as fallback) and PRODUCT banners by `linkSlug` only (they linked to `/products/<id>` before, a broken page); `offersBySlug` keys product offers by `linkSlug` (it keyed by the id and never matched a card) |
-| W15 | Image URLs are paths on the API origin (`/media/...`) | NEW, OPEN | The website serves them through `/media/*` (route handler). Closes with absolute public image URLs, or keeps the route |
+| W15 | Image URLs are paths on the API origin (`/media/...`) | CLOSED (backend CAT-R18; the live demo sends absolute `https://…/media/…` URLs) | Absolute server URLs are used as sent; the `/media/*` route handler stays for a relative URL from a development API |
 | W16 | No product-specific offer or freshness ("caught 5:40 am") fields | CLOSED (`web/api-adoption`) | Card offer line = item `offer.text` (CAT-R26), else a banner title; freshness = availability message, else "Caught <date>" from `freshness.caughtOn` (CAT-R25), else the next slot; `PriceTag` shows "<n>% off" from `discountBp` (CAT-R22) on cards and on the product page. Nothing is computed in the browser |
 
 **Backend Track E (2026-10-24).** These gaps are closed in the backend: on `main` through #5, or on draft PR #6 (`backend/api-gaps-2`, not merged). The website has not adopted them yet; the rows above stay as the front-end status until it does. The generated client is not committed yet, because the new `timeZone` fields break `apps/web/test/fixtures.ts` and that fix belongs to the web owner. The CI `openapi` job uploads the regenerated client as the `api-client` artifact.
@@ -225,6 +225,29 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 | W16 | `offer` (CAT-R26), `freshness` (CAT-R25) and `discountBp` (CAT-R22) | main |
 | W14 | Banner `linkSlug` for CATEGORY and PRODUCT links (PROMO-R28); `linkTarget` stays the id | main (PR #12) |
 | W15 | Production refuses a relative or non-https `FileStorage:PublicBaseUrl`, so server image URLs are absolute (CAT-R18) | main (PR #12) |
+
+All of these are on `main` now and the website has adopted them (2026-10-28, `web/complete-flows`); the front-end
+rows above carry the status.
+
+### 6a. Customer flow audit (2026-10-28)
+
+Every route in `src/app` was walked by reading the code and compared with the backend endpoints, validators and
+`docs/product/*.md` (full table: `research/web-flow-audit-2026-10.md`). Besides W3, W4, W8–W11 above, it fixed:
+
+- **Idempotency-Key per action (D260).** Cancel and complaint replace the key after a definitive refusal, and cancel
+  also when the reason changes, as checkout does (§5, D224); before, a corrected complaint resent the old key with a
+  new body. A 409/422 on cancel or on a substitution answer reads the order again, so the page shows the server's
+  state.
+- **Stale versions (D261).** `CONCURRENT_SAVE` (409) is handled like `CONCURRENCY_CONFLICT` (412) on the profile,
+  delete account, addresses and the checkout address edit: reload, then ask the customer to check and save again.
+  The profile notice sits outside the version-keyed form, so it survives the reload.
+- **Checkout address edit (D262).** "Edit this address" opens the address form for the chosen address and saves it
+  with `PUT /me/addresses/{id}` and `If-Match`; a changed pincode clears the slot and the preview is read again.
+- **Coupon offers for the cart's city (D263).** "View offers" asks `GET /coupons?pincode=` with the cart's pincode,
+  else the pincode being browsed.
+- **Privacy policy and terms of use (D264).** Outline pages `/support/privacy-policy` and `/support/terms` (OWNER TEXT,
+  like the other policies), linked from the footer, the policy side card and the sitemap.
+- **Smaller ones.** "Mark read" on a notification shows a refusal instead of failing silently.
 
 ## 7. API types (generated)
 
@@ -274,13 +297,20 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 |---|---|
 | `src/location/pincode-form.test.tsx` | Serviceable pincode stored + pages refreshed; unserviceable not stored; malformed refused locally; `CART_LOCATION_CHANGED` asks before `force=true` |
 | `src/components/product/purchase-panel.test.tsx` | Add to cart sends variant, preparation, quantity and `X-Pincode`; estimate and maximum come from the server line; field error from the server; no pincode → picker |
-| `src/components/cart/cart-view.test.tsx` | Server line totals, bill and sticky total rendered as sent; stepper steps by the product's `orderStep` and shows the server's new line; below minimum removes the line; chosen slot button carried to checkout (`?slot=`, through sign-in for a guest); coupon refusal under the field; empty-cart character; error state with trace id |
+| `src/components/cart/cart-view.test.tsx` | Server line totals, bill and sticky total rendered as sent; stepper steps by the cart line's `orderStep` with no product read, stops at its maximum, stays disabled without bounds, and shows the server's new line; "View offers" asks for the cart's pincode; below minimum removes the line; chosen slot button carried to checkout (`?slot=`, through sign-in for a guest); coupon refusal under the field; empty-cart character; error state with trace id |
 | `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect |
-| `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled; cart's slot priced from `?slot=`; server-disabled ONLINE tile disabled; UPI on delivery re-prices |
-| `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; status steps up to the server's status; bill uses the server's final total; not-found character for an unknown order; cancel only when allowed, with reason and key |
+| `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled; cart's slot priced from `?slot=`; server-disabled ONLINE tile disabled; UPI on delivery re-prices; editing the chosen address sends `PUT` with `If-Match`; a 412 on that edit reloads the addresses |
+| `src/components/checkout/slot-picker.test.tsx` | Slot times shown in the slots response's `timeZone` (W10) |
+| `src/components/catalog/shop-product-card.test.tsx` | ADD sends the server's `defaultVariant`, cut and minimum with no product read (W3); no price → product page, nothing added; fallback read for a list item without a default size; card stepper from the cart line |
+| `src/components/catalog/offer-strip.test.tsx` | Banner links by slug; the server's `imageUrl` and `badge` shown, nothing built from `imageKey` (W11) |
+| `src/components/shop/shop-filters.test.tsx` | "Cleaned and cut" lists the server's methods, puts `prep=<CODE>` in the URL, shows chosen ones checked, is left out without methods (W8) |
+| `src/lib/shop-params.test.ts` | `?prep=` keeps only UPPER_SNAKE codes, de-duplicated, sent as `preparation` |
+| `src/components/site-footer.test.tsx` | Cities from the API (cached ≤ 5 min); every policy page linked, privacy and terms included |
+| `packages/core/src/format/format.test.ts` | Dates and times in a given IANA zone; IST when the zone is missing or unknown |
+| `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; status steps up to the server's status; bill uses the server's final total; not-found character for an unknown order; cancel only when allowed, with reason and key; a refused cancel or substitution answer re-reads the order; a corrected complaint gets a new key; slot shown in the order's `timeZone` |
 | `src/components/orders/order-success.test.tsx` | ORDER_PLACED character, number, payment and the server's estimate bill |
-| `src/components/account/account-pages.test.tsx` | Account chips mark the current section; settings: locked order SMS switch, sign out through the BFF; addresses empty character and list; order cards link to tracking with the server's total; empty-orders character |
-| `src/lib/order-progress.test.ts` | Status → steps (usual path, delivered, off-path timeline) and status → character |
+| `src/components/account/account-pages.test.tsx` | Account chips mark the current section; settings: locked order SMS switch, sign out through the BFF; addresses empty character and list; order cards link to tracking with the server's total; empty-orders character; profile reloads after `CONCURRENT_SAVE` and keeps the notice; delete account re-reads the profile after `CONCURRENCY_CONFLICT` |
+| `src/lib/order-progress.test.ts` | Status → steps (usual path, delivered, off-path timeline, times in the store's zone) and status → character |
 | `src/app/not-found.test.tsx` | 404 and route error character states, reference and retry |
 | `e2e/smoke.spec.ts` (Playwright) | Home shell renders, skip link first in tab order, 404 page |
 
@@ -292,7 +322,7 @@ header and dark footer. Same components at phone and desktop widths; the only wi
 | Page | Look |
 |---|---|
 | Every inner page | `PageBand` (coral band, Baloo 2 heading with one Dancing Script word via `Script`), then the page in `Container` |
-| Cart | `StepCard` "n items" with rows: rounded picture, name, variant · cut, the server's line total (and "at most"), unit price, `QuantityStepper` (− n +, bounds from the product, below min removes), remove. `StepCard` "Delivery slot" with `SlotPicker` (day `FilterChip`s, `OptionTile look="ink"` slot buttons). Right column: `CouponStrip` / dashed mango coupon form, `BillBox`, blockers. `StickyActionBar` at the bottom: server's estimated total and Place order |
+| Cart | `StepCard` "n items" with rows: rounded picture, name, variant · cut, the server's line total (and "at most"), unit price, `QuantityStepper` (− n +, bounds from the cart line, below min removes), remove. `StepCard` "Delivery slot" with `SlotPicker` (day `FilterChip`s, `OptionTile look="ink"` slot buttons). Right column: `CouponStrip` / dashed mango coupon form, `BillBox`, blockers. `StickyActionBar` at the bottom: server's estimated total and Place order |
 | Checkout | `StepCard` 1 address (`OptionTile` per address, unserviceable disabled), 2 slot (`SlotPicker`), 3 pay on delivery (`OptionTile` per server `paymentMethods`, disabled when the server says so) and substitution tiles, notes. Right column: `BillBox` from the preview. `StickyActionBar` "Place order · ₹…" |
 | Order placed | `CharacterState` ORDER_PLACED (md circle), slot and payment, `BillBox` from the estimate, Track / Continue |
 | Sign in | Coral band "Welcome back", white card with the LOGIN_OTP circle on its top edge; 429 / 503 notices above the form |

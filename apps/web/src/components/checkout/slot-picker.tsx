@@ -72,13 +72,15 @@ export function SlotPicker({
     days.find((d) => byDay.get(d)?.some((s) => s.status === "AVAILABLE")) ??
     days[0]!;
   const daySlots = byDay.get(selectedDay) ?? [];
+  // Slot times in the store's own zone (W10).
+  const zone = slots.data.timeZone;
 
   return (
     <div className="flex flex-col gap-3">
       <div role="group" aria-label="Delivery day" className="flex gap-2 overflow-x-auto pb-1">
         {days.map((d) => (
           <FilterChip key={d} pressed={d === selectedDay} onClick={() => setDay(d)}>
-            {formatDayShort(byDay.get(d)![0]!.startAt)}
+            {formatDayShort(byDay.get(d)![0]!.startAt, zone)}
           </FilterChip>
         ))}
       </div>
@@ -98,9 +100,9 @@ export function SlotPicker({
               checked={slot.id === value}
               disabled={!available}
               onChange={() => onChange(slot.id)}
-              label={`${formatTime(slot.startAt)} – ${formatTime(slot.endAt)}`}
+              label={`${formatTime(slot.startAt, zone)} – ${formatTime(slot.endAt, zone)}`}
               description={
-                available ? `Order by ${formatTime(slot.cutoffAt)}` : STATUS_TEXT[slot.status]
+                available ? `Order by ${formatTime(slot.cutoffAt, zone)}` : STATUS_TEXT[slot.status]
               }
             />
           );

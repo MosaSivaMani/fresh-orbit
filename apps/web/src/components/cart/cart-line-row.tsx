@@ -2,47 +2,21 @@
 
 import { formatQuantity, formatRupees } from "@fresh/core";
 import { IconButton, QuantityStepper, StatusBadge } from "@fresh/ui";
-import { useQuery } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { browserHttp } from "@/api/browser";
-import { getProduct } from "@/api/endpoints/catalog";
 import { type CartLine } from "@/api/types/cart";
+import { lineBounds } from "@/cart/line-bounds";
 import { ProductImage } from "@/components/catalog/product-card";
 import { useChangeCartItem, useRemoveCartItem } from "@/cart/use-cart";
 import { describeError, fieldMessage } from "@/lib/errors";
-import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
-import { useLocation } from "@/location/location-context";
-
-/**
- * The variant's order bounds (min, max, step) for the line's stepper. The cart line does not carry them (W4,
- * docs/design/web.md §6), so they are read from the product rather than guessed; until they arrive the stepper is
- * disabled. The server still validates every change.
- */
-function useLineBounds(line: CartLine) {
-  const { pincode } = useLocation();
-  const product = useQuery({
-    queryKey: queryKeys.product(line.productSlug, line.preparation?.code, pincode),
-    queryFn: () => getProduct(browserHttp(), line.productSlug, line.preparation?.code),
-    enabled: line.isSellable,
-    staleTime: 60_000,
-  });
-  const variant = product.data?.variants.find((v) => v.id === line.variantId);
-  if (!variant) return null;
-  return {
-    min: variant.minOrder.value,
-    max: variant.availability?.maxOrderableNow?.value ?? variant.maxOrder.value,
-    step: variant.orderStep.value,
-  };
-}
 
 /** One cart line: picture, name, the server's line total, a − n + stepper and remove. */
 export function CartLineRow({ line }: { line: CartLine }) {
   const change = useChangeCartItem();
   const remove = useRemoveCartItem();
-  const bounds = useLineBounds(line);
+  const bounds = lineBounds(line);
   const [error, setError] = useState<string | null>(null);
   const weighed = line.maxLineTotalPaise > line.estimatedLineTotalPaise;
   const formatValue = (v: number) => formatQuantity({ value: v, unit: line.quantity.unit });
