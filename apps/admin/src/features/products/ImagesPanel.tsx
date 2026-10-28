@@ -1,12 +1,12 @@
 import { Button, Dialog, DialogContent, EmptyState, FormField, IconButton, Input } from "@fresh/ui";
-import { ArrowDown, ArrowUp, ImageOff, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ImageOff, Star, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useDeleteImage, useReorderImages, useUploadImage } from "../../api/catalog";
 import { type AdminImage, type AdminProduct } from "../../api/types/catalog";
 import { Section } from "../../components/page";
 import { notifySaved, reportError } from "../../lib/feedback";
 
-/** Photos of one product: upload (alt text required), reorder, delete. The first photo is the cover. */
+/** Photos of one product: upload (alt text required), make main, reorder, delete. First = main. */
 export function ImagesPanel({
   product,
   onConflict,
@@ -19,11 +19,11 @@ export function ImagesPanel({
   const [deleting, setDeleting] = useState<AdminImage | null>(null);
   const images = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
 
-  const move = (index: number, by: -1 | 1) => {
+  const move = (index: number, to: number) => {
     const ids = images.map((i) => i.id);
     const [moved] = ids.splice(index, 1);
     if (moved === undefined) return;
-    ids.splice(index + by, 0, moved);
+    ids.splice(to, 0, moved);
     reorder.mutate(
       { imageIds: ids, version: product.version },
       { onError: (error) => reportError(error, { onConflict, title: "Photos not reordered" }) },
@@ -33,7 +33,10 @@ export function ImagesPanel({
   return (
     <div className="flex flex-col gap-4">
       <UploadForm product={product} />
-      <Section title="Photos" description="The first photo is the cover on the website and app.">
+      <Section
+        title="Photos"
+        description="The main photo is the cover on the website and app; the others follow in this order in the product gallery."
+      >
         {images.length === 0 ? (
           <EmptyState
             icon={<ImageOff aria-hidden="true" />}
@@ -50,25 +53,31 @@ export function ImagesPanel({
                 <img
                   src={image.url}
                   alt={image.altText}
-                  className="aspect-[4/3] w-full rounded-md object-cover"
+                  className="aspect-[3/2] w-full rounded-md object-cover"
                 />
                 <p className="text-sm">{image.altText}</p>
                 <p className="text-text-muted text-xs">
-                  {i === 0 ? "Cover · " : ""}
+                  {i === 0 ? "Main photo · " : ""}
                   {image.width}×{image.height} px
                 </p>
                 <div className="flex gap-1">
                   <IconButton
+                    label={`Make photo ${i + 1} the main photo`}
+                    icon={<Star aria-hidden="true" />}
+                    disabled={i === 0 || reorder.isPending}
+                    onClick={() => move(i, 0)}
+                  />
+                  <IconButton
                     label={`Move photo ${i + 1} earlier`}
                     icon={<ArrowUp aria-hidden="true" />}
                     disabled={i === 0 || reorder.isPending}
-                    onClick={() => move(i, -1)}
+                    onClick={() => move(i, i - 1)}
                   />
                   <IconButton
                     label={`Move photo ${i + 1} later`}
                     icon={<ArrowDown aria-hidden="true" />}
                     disabled={i === images.length - 1 || reorder.isPending}
-                    onClick={() => move(i, 1)}
+                    onClick={() => move(i, i + 1)}
                   />
                   <IconButton
                     label={`Delete photo ${i + 1}`}

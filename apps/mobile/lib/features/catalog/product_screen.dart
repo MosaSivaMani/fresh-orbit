@@ -233,7 +233,16 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               borderRadius: BorderRadius.circular(FreshLayout.heroRadius),
               child: Stack(
                 children: [
-                  Positioned.fill(child: _Gallery(images: detail.images)),
+                  // Every picture, swiped or picked by its dot; the dots move right when the sticker sits left.
+                  Positioned.fill(
+                    child: FreshImageGallery(
+                      key: const Key('productGallery'),
+                      images: [
+                        for (final image in detail.images) FreshGalleryImage(url: image.url, alt: image.altText),
+                      ],
+                      dotsAlignment: heroSticker == null ? Alignment.bottomCenter : Alignment.bottomRight,
+                    ),
+                  ),
                   if (heroSticker != null) Positioned(left: 14, bottom: 12, child: heroSticker),
                 ],
               ),
@@ -521,58 +530,6 @@ class _AddAction extends StatelessWidget {
     }
     return TealActionButton(key: const Key('addToCart'), label: 'Add to cart', loading: adding, onPressed: onAdd);
   }
-}
-
-class _Gallery extends StatefulWidget {
-  const _Gallery({required this.images});
-
-  final List<ProductImage> images;
-
-  @override
-  State<_Gallery> createState() => _GalleryState();
-}
-
-class _GalleryState extends State<_Gallery> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final images = widget.images;
-    if (images.length <= 1) {
-      return ProductImageView(
-        url: images.firstOrNull?.url,
-        alt: images.firstOrNull?.altText,
-        aspectRatio: FreshLayout.pictureAspect,
-      );
-    }
-    return Semantics(
-      label: 'Image ${_index + 1} of ${images.length}',
-      child: PageView.builder(
-        itemCount: images.length,
-        onPageChanged: (i) => setState(() => _index = i),
-        itemBuilder: (_, i) =>
-            ProductImageView(url: images[i].url, alt: images[i].altText, aspectRatio: FreshLayout.pictureAspect),
-      ),
-    );
-  }
-}
-
-/// Large product image with alt text from the server.
-class ProductImageView extends StatelessWidget {
-  const ProductImageView({super.key, required this.url, this.alt, this.aspectRatio = 4 / 3});
-
-  final String? url;
-  final String? alt;
-  final double aspectRatio;
-
-  @override
-  Widget build(BuildContext context) => ProductPhoto(
-    url: url,
-    semanticLabel: alt == null || alt!.isEmpty ? null : alt,
-    aspectRatio: aspectRatio,
-    radius: 0,
-    transparent: true,
-  );
 }
 
 /// Sold out (or not sold at the store for this pincode) for the chosen size: the OUT_OF_STOCK character and

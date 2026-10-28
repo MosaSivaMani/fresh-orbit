@@ -13,8 +13,9 @@ namespace FreshOrbit.Catalog.Infrastructure.Seeding;
 
 /// <summary>
 /// Sample <c>catalog.json</c> and <c>images.json</c> (order 30), through the Catalog services: categories (with the
-/// committed picture of <see cref="SampleImageFiles"/>, else a rendered placeholder), products, variants, one rendered placeholder per product uploaded through
-/// <see cref="ProductImageService"/> (CAT-R16 renditions), then publish (<c>targetStatus: ACTIVE</c>, CAT-R3).
+/// committed picture of <see cref="SampleImageFiles"/>, else a rendered placeholder), products, variants, the committed
+/// product pictures of <see cref="SampleProductPictures"/> (else one rendered placeholder) uploaded through
+/// <see cref="ProductImageService"/> (CAT-R16 renditions, like an admin upload), then publish (<c>targetStatus: ACTIVE</c>, CAT-R3).
 /// Also writes the banner image files of images.json, real pictures where committed (the Promotions loader links them).
 /// Existing slugs are skipped.
 /// </summary>
@@ -120,12 +121,25 @@ public sealed partial class CatalogSampleDataLoader(
                 insertedVariants++;
             }
 
+            // D249: the committed pictures in number order (1 = main), else the rendered placeholder.
             var picture = pictures.Products.FirstOrDefault(p => p.ProductSlug == row.Slug);
-            foreach (var image in (picture?.Images ?? []).OrderBy(i => i.SortOrder))
+            var committed = SampleProductPictures.Find(context.DirectoryPath, row.Slug, (picture?.Pictures ?? []).ToDictionary(p => p.Number, p => p.AltText));
+            var uploads = new List<(byte[] Bytes, string AltText)>();
+            foreach (var committedPicture in committed)
             {
-                var bytes = SamplePlaceholderRenderer.Render(image.Placeholder.Width, image.Placeholder.Height, SamplePlaceholderRenderer.ShapeFor(row.CategorySlug, row.Slug), SKEncodedImageFormat.Png);
+                uploads.Add((await File.ReadAllBytesAsync(committedPicture.FilePath, cancellationToken), committedPicture.AltText));
+            }
+
+            if (uploads.Count == 0 && picture is not null)
+            {
+                var placeholder = picture.Placeholder;
+                uploads.Add((SamplePlaceholderRenderer.Render(placeholder.Width, placeholder.Height, SamplePlaceholderRenderer.ShapeFor(row.CategorySlug, row.Slug), SKEncodedImageFormat.Png), placeholder.AltText));
+            }
+
+            foreach (var (bytes, altText) in uploads)
+            {
                 using var stream = new MemoryStream(bytes, writable: false);
-                var (uploaded, productVersion) = await images.UploadAsync(product.Id, stream, image.AltText, cancellationToken);
+                var (uploaded, productVersion) = await images.UploadAsync(product.Id, stream, altText, cancellationToken);
                 context.Track<ProductImage>(db, uploaded.Id);
                 version = productVersion;
             }
@@ -198,9 +212,13 @@ public sealed partial class CatalogSampleDataLoader(
 
     private sealed record ImagesFile(IReadOnlyList<ProductPictures> Products, IReadOnlyList<CategoryPicture> Categories, IReadOnlyList<BannerPicture> Banners);
 
-    private sealed record ProductPictures(string ProductSlug, IReadOnlyList<ProductPicture> Images);
+    private sealed record ProductPictures(string ProductSlug, ProductPlaceholder Placeholder, IReadOnlyList<ProductPicture>? Pictures);
 
-    private sealed record ProductPicture(int SortOrder, string AltText, Placeholder Placeholder);
+    /// <summary>The drawing uploaded when the product has no committed picture, with its own alt text.</summary>
+    private sealed record ProductPlaceholder(string AltText, int Width, int Height);
+
+    /// <summary>Alt text of committed picture <c>images/products/{slug}/{Number}.webp</c>.</summary>
+    private sealed record ProductPicture(int Number, string AltText);
 
     private sealed record CategoryPicture(string CategorySlug, string ImageKey, Placeholder Placeholder);
 
