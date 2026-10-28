@@ -9,8 +9,7 @@ export interface HomeHeroProps {
    */
   nextSlot?: string | null;
   /**
-   * An optional photo behind the hero (a path or URL). Null draws the harbour scenery instead. Reserved for a real
-   * background picture later (D188).
+   * A photo behind the hero (a path or URL). Null uses the owner's sunrise harbour picture (D284).
    */
   heroBackground?: string | null;
 }
@@ -67,15 +66,21 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
           className="object-cover object-[78%_0%] lg:object-[82%_0%]"
         />
       }
-      ship={<Image src="/home/hero-ship.jpg" alt="" fill sizes="360px" className="object-cover" />}
+      ship={<Image src="/home/hero-ship.png" alt="" fill sizes="300px" className="object-contain" />}
       gulls={[
         <Image key="gull-1" src="/home/hero-gull-1.png" alt="" fill sizes="120px" />,
-        <Image key="gull-2" src="/home/hero-gull-2.png" alt="" fill sizes="110px" />,
+        <Image key="gull-2" src="/home/hero-gull-2.png" alt="" fill sizes="70px" />,
+        <Image key="gull-3" src="/home/hero-gull-3.png" alt="" fill sizes="96px" />,
       ]}
       background={
-        heroBackground ? (
-          <Image src={heroBackground} alt="" fill priority sizes="100vw" className="object-cover" />
-        ) : null
+        <Image
+          src={heroBackground ?? "/home/hero-harbour.jpg"}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[50%_60%]"
+        />
       }
     />
   );

@@ -263,18 +263,22 @@ export interface HarbourHeroProps extends ComponentProps<"section"> {
   /** An optional background picture covering the hero (decorative). Without it the harbour sky is drawn. */
   background?: ReactNode;
   /**
-   * An optional ship picture for the bottom right (decorative, an `<img>` filling its box); its edges fade into the
-   * sky. Without it the drawn trawler is shown (D283).
+   * An optional cut-out ship picture for the bottom right (decorative, a transparent `<img>` filling its box).
+   * Without it the drawn trawler is shown (D283, D284).
    */
   ship?: ReactNode;
   /**
-   * Optional bird pictures for the sky (decorative, cut-out `<img>`s filling their boxes), the first top centre and
-   * the second top right. Without them the drawn gulls are shown (D283).
+   * Optional cut-out bird pictures for the sky (decorative, transparent `<img>`s filling their boxes), placed at up
+   * to three fixed spots across the top. Without them the drawn gulls are shown (D283, D284).
    */
-  gulls?: readonly [ReactNode, ReactNode];
+  gulls?: readonly ReactNode[];
 }
 
-const SHIP_FADE = "radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)";
+const GULL_SPOTS = [
+  "top-3 left-[44%] hidden aspect-[5/3] w-[120px] lg:block",
+  "top-4 right-[30%] hidden aspect-[5/6] w-[70px] lg:block",
+  "top-32 right-[3%] aspect-[8/7] w-16 lg:top-40 lg:w-[96px]",
+] as const;
 
 /**
  * The full-bleed harbour hero (D188, D247): 500 px tall from `lg`, a peach-to-cream sky with the drawn sun and water
@@ -318,22 +322,16 @@ export function HarbourHero({
       )}
 
       {gulls ? (
-        <>
+        gulls.slice(0, GULL_SPOTS.length).map((gull, index) => (
           <div
+            key={GULL_SPOTS[index]}
             aria-hidden="true"
             data-gull=""
-            className="absolute top-4 left-[50%] hidden aspect-[26/15] w-[120px] lg:block"
+            className={cn("absolute", GULL_SPOTS[index])}
           >
-            {gulls[0]}
+            {gull}
           </div>
-          <div
-            aria-hidden="true"
-            data-gull=""
-            className="absolute top-36 right-[3%] aspect-[23/10] w-20 lg:top-44 lg:w-[110px]"
-          >
-            {gulls[1]}
-          </div>
-        </>
+        ))
       ) : (
         <>
           <Gulls className="text-outline-ink/45 absolute top-6 left-[52%] hidden w-28 lg:block" />
@@ -344,8 +342,7 @@ export function HarbourHero({
         <div
           aria-hidden="true"
           data-ship=""
-          className="absolute right-0 bottom-10 hidden aspect-[30/19] w-[320px] lg:block xl:w-[360px]"
-          style={{ maskImage: SHIP_FADE, WebkitMaskImage: SHIP_FADE }}
+          className="absolute right-[1%] bottom-6 hidden aspect-square w-[260px] lg:block xl:w-[300px]"
         >
           {ship}
         </div>

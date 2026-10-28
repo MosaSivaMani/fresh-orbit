@@ -75,12 +75,16 @@ describe("HarbourHero", () => {
     const { container } = render(
       <HarbourHero
         heading={<h1>Hi</h1>}
-        gulls={[<img key="a" src="/g1.png" alt="" />, <img key="b" src="/g2.png" alt="" />]}
+        gulls={[
+          <img key="a" src="/g1.png" alt="" />,
+          <img key="b" src="/g2.png" alt="" />,
+          <img key="c" src="/g3.png" alt="" />,
+        ]}
       />,
     );
 
     const birds = container.querySelectorAll("[data-gull][aria-hidden='true'] img");
-    expect(birds).toHaveLength(2);
+    expect(birds).toHaveLength(3);
   });
 });
 
