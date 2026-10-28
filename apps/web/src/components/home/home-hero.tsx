@@ -66,7 +66,9 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
           className="object-cover object-[78%_0%] lg:object-[82%_0%]"
         />
       }
-      ship={<Image src="/home/hero-ship.png" alt="" fill sizes="300px" className="object-contain" />}
+      ship={
+        <Image src="/home/hero-ship.png" alt="" fill sizes="300px" className="object-contain" />
+      }
       gulls={[
         <Image key="gull-1" src="/home/hero-gull-1.png" alt="" fill sizes="120px" />,
         <Image key="gull-2" src="/home/hero-gull-2.png" alt="" fill sizes="70px" />,
