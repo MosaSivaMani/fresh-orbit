@@ -89,7 +89,12 @@ class FreshColumns extends StatelessWidget {
 }
 
 /// Lays every child out at its natural height in one column, then again at the tallest height, so the columns
-/// match without relying on intrinsic sizes. A child must not need a bounded height on the first pass.
+/// match without relying on intrinsic sizes. A child must not need a bounded height on either pass.
+///
+/// The second pass gives the tallest height as a minimum, not as a tight height: a child laid out with tight
+/// constraints becomes its own relayout boundary, so when its content later grows (a server answer changes a
+/// card's words) only the child would lay out again, inside the old height, and overflow. With a minimum and
+/// `parentUsesSize` every change in a child measures all the columns again.
 class _EqualHeightColumns extends MultiChildRenderObjectWidget {
   const _EqualHeightColumns({required this.gap, required super.children});
 
@@ -145,13 +150,18 @@ class _RenderEqualHeightColumns extends RenderBox
       height = math.max(height, child.size.height);
     }
     height = constraints.constrainHeight(height);
+    var tallest = 0.0;
     var x = 0.0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
-      child.layout(BoxConstraints.tightFor(width: column, height: height));
+      child.layout(
+        BoxConstraints(minWidth: column, maxWidth: column, minHeight: height, maxHeight: constraints.maxHeight),
+        parentUsesSize: true,
+      );
+      tallest = math.max(tallest, child.size.height);
       (child.parentData! as _ColumnParentData).offset = Offset(x, 0);
       x += column + gap;
     }
-    size = constraints.constrain(Size(width, height));
+    size = constraints.constrain(Size(width, tallest));
   }
 
   @override

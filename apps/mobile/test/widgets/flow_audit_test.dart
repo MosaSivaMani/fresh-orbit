@@ -48,7 +48,13 @@ Future<GoRouter> _pumpRouter(WidgetTester tester) async {
   return router;
 }
 
-String _location(GoRouter r) => r.routerDelegate.currentConfiguration.uri.toString();
+/// The page the customer sees. A pushed page does not change the router's base URI (go_router keeps the URI of
+/// the last `go`), so the test reads the page on top of the navigator; the pages below it are offstage.
+String _location(WidgetTester tester) {
+  final pages = tester.widgetList<Text>(find.textContaining('page:')).map((t) => t.data!).toList();
+  expect(pages, hasLength(1), reason: 'exactly one page is on top');
+  return pages.single.substring('page:'.length);
+}
 
 Profile _profile() => Profile.fromJson({
   'customerId': 'cus1',
@@ -70,7 +76,7 @@ void main() {
       await tester.tap(find.byKey(const Key('signedIn')));
       await tester.pumpAndSettle();
 
-      expect(_location(router), '/a');
+      expect(_location(tester), '/a');
     });
 
     testWidgets('a redirect login replaces itself with the page that needed sign-in; Back keeps the page below', (
@@ -82,11 +88,11 @@ void main() {
 
       await tester.tap(find.byKey(const Key('signedIn')));
       await tester.pumpAndSettle();
-      expect(_location(router), '/b');
+      expect(_location(tester), '/b');
 
       router.pop();
       await tester.pumpAndSettle();
-      expect(_location(router), '/a');
+      expect(_location(tester), '/a');
     });
 
     testWidgets('a login opened alone goes to the page it was asked for', (tester) async {
@@ -97,7 +103,7 @@ void main() {
       await tester.tap(find.byKey(const Key('signedIn')));
       await tester.pumpAndSettle();
 
-      expect(_location(router), '/b');
+      expect(_location(tester), '/b');
     });
 
     testWidgets('a login opened alone without a target goes home', (tester) async {
@@ -108,7 +114,7 @@ void main() {
       await tester.tap(find.byKey(const Key('signedIn')));
       await tester.pumpAndSettle();
 
-      expect(_location(router), '/home');
+      expect(_location(tester), '/home');
     });
   });
 
