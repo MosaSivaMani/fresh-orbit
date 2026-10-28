@@ -3,7 +3,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fresh_orbit_app/api/models/account.dart';
 import 'package:fresh_orbit_app/features/account/help_screen.dart';
+import 'package:fresh_orbit_app/features/auth/login_screen.dart';
+import 'package:fresh_orbit_app/features/auth/profile_details_screen.dart';
 import 'package:fresh_orbit_app/features/cart/cart_screen.dart';
 import 'package:fresh_orbit_app/features/onboarding/location_screen.dart';
 import 'package:fresh_orbit_app/theme/app_theme.dart';
@@ -154,6 +157,40 @@ void main() {
 
       expect(tester.takeException(), isNull);
       await tester.drag(find.byKey(const Key('helpPage')), const Offset(0, -4000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FreshSeaFloor), findsOneWidget);
+      expect(tester.getBottomLeft(find.byType(FreshSeaFloor)).dy, closeTo(640, 0.5));
+    });
+
+    testWidgets('sign in ends with the band', (tester) async {
+      await _pumpSmall(tester, TestDeps(), const LoginScreen());
+
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FreshSeaFloor), findsOneWidget);
+      expect(tester.getBottomLeft(find.byType(FreshSeaFloor)).dy, closeTo(640, 0.5));
+      // Leave the screen so no timer outlives the test.
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('tell us about you ends with the band', (tester) async {
+      final deps = TestDeps(signedIn: true);
+      deps.account.me = Profile.fromJson({
+        'customerId': 'cus1',
+        'phone': '+919876543210',
+        'fullName': null,
+        'email': null,
+        'marketingOptIn': false,
+        'status': 'ACTIVE',
+        'version': '7',
+      });
+      await _pumpSmall(tester, deps, const ProfileDetailsScreen());
+
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.byType(FreshSeaFloor), findsOneWidget);

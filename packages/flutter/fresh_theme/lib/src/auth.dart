@@ -1,8 +1,9 @@
 // The sign-in look (D281, owner's reference docs/design/mockups/app-login-reference-2026-10-29.jpg): a coral
 // header with a round back button, a spaced caps eyebrow, a handwritten line with mango sparks and a key word on
-// a mango brush, a drawn coastal scene at the right (birds, clouds, a pale sun, palms, two fishing boats, the
-// sea); a cream card with large rounded top corners rising over it; a ringed avatar on the card's top edge with
-// a teal chat badge; a phone field with the India flag and +91; a dark pill button with an arrow.
+// a mango brush, a coastal scene at the right (the owner's harbour picture passed by the app, D286, or else a
+// drawn one: birds, clouds, a pale sun, palms, two fishing boats, the sea); a cream card with large rounded top
+// corners rising over it; a ringed avatar on the card's top edge with a teal chat badge; a phone field with the
+// India flag and +91; a dark pill button with an arrow.
 // The parts lay out what they are given; nothing here computes a business value. Nothing moves.
 
 import 'package:flutter/material.dart';
@@ -37,8 +38,10 @@ class FreshAuthPage extends StatelessWidget {
     required this.scriptLine,
     required this.brushLine,
     required this.avatar,
+    this.scene,
     this.onBack,
     this.backTooltip = 'Back',
+    this.seaFloor = false,
     this.children = const [],
   });
 
@@ -48,43 +51,60 @@ class FreshAuthPage extends StatelessWidget {
 
   /// The picture inside the avatar ring (sized by [FreshAuthHeader.avatarSizeFor]).
   final Widget avatar;
+
+  /// See [FreshAuthHeader.scene].
+  final Widget? scene;
   final VoidCallback? onBack;
   final String backTooltip;
+
+  /// Ends the page with the sea floor ([FreshSeaFloor], D289): at the bottom of the screen when the card's content
+  /// is short, after it when the page scrolls.
+  final bool seaFloor;
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomInset = seaFloor ? 0.0 : MediaQuery.paddingOf(context).bottom;
+    final page = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FreshAuthHeader(
+          eyebrow: eyebrow,
+          scriptLine: scriptLine,
+          brushLine: brushLine,
+          avatar: avatar,
+          scene: scene,
+          onBack: onBack,
+          backTooltip: backTooltip,
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(FreshAuthHeader.gutter, 14, FreshAuthHeader.gutter, 24 + bottomInset),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: 14),
+                children[i],
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FreshAuthHeader(
-              eyebrow: eyebrow,
-              scriptLine: scriptLine,
-              brushLine: brushLine,
-              avatar: avatar,
-              onBack: onBack,
-              backTooltip: backTooltip,
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(FreshAuthHeader.gutter, 14, FreshAuthHeader.gutter, 24 + bottomInset),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < children.length; i++) ...[
-                    if (i > 0) const SizedBox(height: 14),
-                    children[i],
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: seaFloor
+          ? CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverToBoxAdapter(child: page),
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [FreshSeaFloor()]),
+                ),
+              ],
+            )
+          : SingleChildScrollView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, child: page),
     );
   }
 }
@@ -98,6 +118,7 @@ class FreshAuthHeader extends StatelessWidget {
     required this.scriptLine,
     required this.brushLine,
     required this.avatar,
+    this.scene,
     this.onBack,
     this.backTooltip = 'Back',
   });
@@ -106,6 +127,11 @@ class FreshAuthHeader extends StatelessWidget {
   final String scriptLine;
   final String brushLine;
   final Widget avatar;
+
+  /// The harbour picture at the right of the header (D286): it fills a [pictureAspect] box sized by
+  /// [pictureSizeFor], anchored at the bottom right, and its bottom [pictureUnderCard] runs under the card so the
+  /// water meets the card's edge. Null draws [FreshCoastScene] instead.
+  final Widget? scene;
   final VoidCallback? onBack;
   final String backTooltip;
 
@@ -114,6 +140,18 @@ class FreshAuthHeader extends StatelessWidget {
 
   /// The card's top corners.
   static const double cardRadius = 34;
+
+  /// Width over height of the [scene] picture's box.
+  static const double pictureAspect = 3 / 2;
+
+  /// Share of the [scene] picture's height below the card's top edge (the water under the boats).
+  static const double pictureUnderCard = 0.14;
+
+  /// The [scene] picture's box for a screen: about 72 % of the width (240–440 wide), [pictureAspect].
+  static Size pictureSizeFor(Size screen) {
+    final width = (screen.width * 0.72).clamp(240.0, 440.0);
+    return Size(width, width / pictureAspect);
+  }
 
   /// The avatar diameter for a screen: about 38 % of the width, smaller on short screens (112–156).
   static double avatarSizeFor(Size screen) {
@@ -128,10 +166,15 @@ class FreshAuthHeader extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
     final avatarSize = avatarSizeFor(screen);
     final cap = avatarSize / 2;
-    final sceneWidth = (screen.width * 0.42).clamp(140.0, 240.0);
-    final sceneHeight = sceneWidth * FreshCoastScenePainter.designSize.height / FreshCoastScenePainter.designSize.width;
+    final picture = pictureSizeFor(screen);
+    final sceneWidth = scene != null ? picture.width : (screen.width * 0.42).clamp(140.0, 240.0);
+    final sceneHeight = scene != null
+        ? picture.height
+        : sceneWidth * FreshCoastScenePainter.designSize.height / FreshCoastScenePainter.designSize.width;
     // The scene's sea runs under the card's rounded corner.
-    final sceneBelowCardTop = sceneWidth * FreshCoastScenePainter.underCard / FreshCoastScenePainter.designSize.width;
+    final sceneBelowCardTop = scene != null
+        ? picture.height * pictureUnderCard
+        : sceneWidth * FreshCoastScenePainter.underCard / FreshCoastScenePainter.designSize.width;
 
     return ColoredBox(
       color: FreshAuthColors.coral,
@@ -143,7 +186,7 @@ class FreshAuthHeader extends StatelessWidget {
             bottom: cap - sceneBelowCardTop,
             width: sceneWidth,
             height: sceneHeight,
-            child: const FreshCoastScene(),
+            child: scene ?? const FreshCoastScene(),
           ),
           Positioned(
             left: 0,

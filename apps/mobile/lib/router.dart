@@ -14,6 +14,7 @@ import 'features/account/address_screens.dart';
 import 'features/account/help_screen.dart';
 import 'features/account/settings_screen.dart';
 import 'features/auth/login_screen.dart';
+import 'features/auth/profile_details_screen.dart';
 import 'features/cart/cart_screen.dart';
 import 'features/catalog/home_screen.dart';
 import 'features/catalog/product_screen.dart';
@@ -28,6 +29,7 @@ import 'features/onboarding/splash_screen.dart';
 import 'features/orders/order_tracking_screen.dart';
 import 'features/orders/orders_screen.dart';
 import 'state/cart_state.dart';
+import 'state/first_run.dart';
 import 'state/session.dart';
 import 'widgets/bold.dart';
 import 'widgets/states.dart';
@@ -38,7 +40,8 @@ bool _needsLogin(String path) =>
     path.startsWith('/orders/') ||
     path.startsWith('/account/') && !path.startsWith('/account/help') && !path.startsWith('/account/settings') ||
     path.startsWith('/wishlist') ||
-    path.startsWith('/addresses');
+    path.startsWith('/addresses') ||
+    path == aboutYouPath;
 
 final routerProvider = Provider<GoRouter>((ref) {
   final sessionChanges = ValueNotifier<bool>(ref.read(sessionProvider).signedIn);
@@ -53,7 +56,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     }
   };
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: sessionChanges,
     errorBuilder: (context, state) => NotFoundScreen(onHome: () => context.go('/home')),
@@ -89,6 +92,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           welcome: state.uri.queryParameters['welcome'] == '1',
         ),
       ),
+      // "Tell us about you" (D290): pushed over the first page after a sign-in whose account has no name.
+      GoRoute(path: aboutYouPath, builder: (_, _) => const ProfileDetailsScreen()),
       GoRoute(path: '/checkout', builder: (_, _) => const CheckoutScreen()),
       // The address form over checkout (D268): full-screen routes outside the tab shell, so checkout pushes them
       // and gets the saved address back without opening a second shell.
@@ -162,6 +167,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.onDispose(
+    askAboutYouAfterSignIn(
+      router,
+      isDue: () => ref.read(aboutYouDueProvider),
+      onAsked: () => ref.read(aboutYouDueProvider.notifier).set(false),
+    ),
+  );
+  return router;
 });
 
 /// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it

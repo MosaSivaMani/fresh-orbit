@@ -340,7 +340,11 @@ void main() {
     await _pump(tester);
 
     expect(find.byKey(const ValueKey('illustration-placeholder-ONBOARDING_FRESH')), findsOneWidget);
-    expect(find.byType(Image), findsNothing);
+    // The only pictures are the harbour's real boats and gulls, bundled in the theme package (D287).
+    final images = find.byType(Image);
+    final scenery = find.descendant(of: find.byKey(const Key('homeHarbour')), matching: find.byType(Image));
+    expect(images.evaluate().length, scenery.evaluate().length);
+    expect(scenery, findsNWidgets(6));
     expect(tester.takeException(), isNull);
   });
 

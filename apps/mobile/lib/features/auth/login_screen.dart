@@ -6,8 +6,10 @@
 // serviceable pincode, else to the Location screen (D278).
 //
 // Look (D281, owner's reference docs/design/mockups/app-login-reference-2026-10-29.jpg): the theme's
-// FreshAuthPage (coral header with the drawn coast, Ammamma in a ringed avatar on the cream card's edge, the
-// India +91 phone field and the dark Send code pill). The OTP step keeps the same shell.
+// FreshAuthPage (coral header with the owner's harbour picture, SIGN_IN_COAST (D286), Ammamma's portrait,
+// LOGIN_OTP (D285), in a ringed avatar on the cream card's edge, the India +91 phone field and the dark Send code
+// pill). The OTP step keeps the same shell. Both pictures are bundled; the drawn coast and the drawn portrait are
+// only their fallbacks, as for every slot.
 
 import 'dart:async';
 
@@ -181,6 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       backgroundColor: c.paper,
       body: AutofillGroup(
         child: FreshAuthPage(
+          seaFloor: true,
           eyebrow: challenge != null ? 'Verify' : (widget.welcome ? 'Welcome' : 'Sign in'),
           scriptLine: challenge != null ? 'Enter the' : (widget.welcome ? 'Sign in or' : 'Your mobile'),
           brushLine: challenge != null ? 'code' : (widget.welcome ? 'sign up' : 'number'),
@@ -191,6 +194,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               inCircle: true,
               excludeFromSemantics: true,
               fallback: AmmammaPortrait(size: box.maxWidth),
+            ),
+          ),
+          scene: LayoutBuilder(
+            builder: (context, box) => Illustration(
+              slot: IllustrationSlot.signInCoast,
+              size: box.maxWidth,
+              height: box.maxHeight,
+              excludeFromSemantics: true,
+              fallback: Align(
+                alignment: Alignment.bottomRight,
+                child: AspectRatio(
+                  aspectRatio: FreshCoastScenePainter.designSize.aspectRatio,
+                  child: const FreshCoastScene(),
+                ),
+              ),
             ),
           ),
           onBack: context.canPop() ? () => context.pop() : null,

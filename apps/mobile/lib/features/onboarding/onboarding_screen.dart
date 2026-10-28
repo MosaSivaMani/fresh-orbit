@@ -574,7 +574,7 @@ class _Block extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ExcludeSemantics(
-              child: CustomPaint(
+              child: BlockScene(
                 painter: BlockScenePainter(
                   scene: page.scene,
                   dark: page.dark,

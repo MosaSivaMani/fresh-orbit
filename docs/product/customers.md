@@ -38,7 +38,7 @@ Owner: E1. Schema `customers`. Uses `Identity.Public` (and `Catalog.Public`, not
 | Key | Rule |
 |---|---|
 | CUS-R1 | A DELETED customer gets 403 `CUSTOMER_DELETED` on every `/me` endpoint (the token may still be valid for 15 min). |
-| CUS-R2 | `PATCH /me` changes only the fields sent (`null` = unchanged); `fullName` 1–100 chars, `email` valid and ≤ 254. If-Match required. |
+| CUS-R2 | `PATCH /me` changes only the fields sent (`null` = unchanged); `fullName` 1–100 chars, `email` valid and ≤ 254. If-Match required. The app asks a new account (no name after sign-in) for `fullName` and an optional `email` once, through this endpoint (D290). |
 | CUS-R3 | At most 20 active addresses → 422 `ADDRESS_LIMIT_REACHED`. |
 | CUS-R4 | Exactly one default among active addresses when there is at least one: the first address becomes default; `isDefault=true` or `POST …/default` moves the default; deleting the default promotes the newest remaining address. The partial unique index `(customer_id) where is_default and is_active` is the last line. |
 | CUS-R5 | Address fields: label HOME/WORK/OTHER, recipientName, phone (E.164), line1, locality, cityName, stateCode (2 letters), pincode (6 digits) required; latitude −90..90, longitude −180..180 when given. Non-serviceable pincodes are accepted; `isServiceable` is null until Customers may use `Locations.Public` (see report). |
