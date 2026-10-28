@@ -22,13 +22,14 @@ const ticket = <TicketPercent />;
  * server's minimum order and end date, and an Apply button. Whether it applies is the server's answer.
  */
 function CouponOffers({
+  pincode,
   onApply,
   applying,
 }: {
+  pincode: string | null;
   onApply: (code: string) => void;
   applying: string | null;
 }) {
-  const { pincode } = useLocation();
   const coupons = useQuery({
     queryKey: queryKeys.coupons(pincode),
     queryFn: () => listCoupons(browserHttp(), pincode!),
@@ -82,10 +83,18 @@ function CouponOffers({
 
 /**
  * The coupon strip (D88): apply or remove a coupon. Validity and discount are the server's (CART-R23); the strip
- * shows the server's message as given. Guests are asked to sign in.
+ * shows the server's message as given. Guests are asked to sign in. "View offers" lists the coupons for the city
+ * the cart is priced for (`pincode`, the cart's), else the pincode being browsed.
  */
-export function CouponForm({ coupon }: { coupon: CartCoupon | null }) {
+export function CouponForm({
+  coupon,
+  pincode = null,
+}: {
+  coupon: CartCoupon | null;
+  pincode?: string | null;
+}) {
   const { status } = useSession();
+  const { pincode: browsing } = useLocation();
   const apply = useApplyCoupon();
   const remove = useRemoveCoupon();
   const [code, setCode] = useState("");
@@ -211,7 +220,13 @@ export function CouponForm({ coupon }: { coupon: CartCoupon | null }) {
       >
         {showOffers ? "Hide offers" : "View offers"}
       </Button>
-      {showOffers && <CouponOffers onApply={(c) => void applyOffer(c)} applying={applying} />}
+      {showOffers && (
+        <CouponOffers
+          pincode={pincode ?? browsing}
+          onApply={(c) => void applyOffer(c)}
+          applying={applying}
+        />
+      )}
     </div>
   );
 }

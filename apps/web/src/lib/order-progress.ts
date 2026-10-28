@@ -20,10 +20,15 @@ function label(status: string): string {
 
 /**
  * Steps for `StatusSteps`. On the usual path every step is shown, those before the server's status done, the
- * status itself current (done once delivered), with the time from the timeline where the server recorded one.
+ * status itself current (done once delivered), with the time from the timeline where the server recorded one, in
+ * the store's time zone (W10).
  * Off the path (cancelled, returned, failed, awaiting payment) the steps are the timeline as recorded.
  */
-export function orderSteps(status: OrderStatus, timeline: readonly TrackingEvent[]): StatusStep[] {
+export function orderSteps(
+  status: OrderStatus,
+  timeline: readonly TrackingEvent[],
+  timeZone?: string | null,
+): StatusStep[] {
   const at = new Map<string, string>();
   for (const event of timeline) at.set(event.status, event.at);
   const reached = HAPPY_PATH.indexOf(status);
@@ -33,7 +38,7 @@ export function orderSteps(status: OrderStatus, timeline: readonly TrackingEvent
       return {
         key: s,
         label: label(s),
-        ...(time ? { time: formatDateTime(time) } : {}),
+        ...(time ? { time: formatDateTime(time, timeZone) } : {}),
         state:
           i < reached || (i === reached && status === "DELIVERED")
             ? "done"
@@ -46,7 +51,7 @@ export function orderSteps(status: OrderStatus, timeline: readonly TrackingEvent
   return timeline.map((event, i) => ({
     key: `${event.status}-${event.at}`,
     label: label(event.status),
-    time: formatDateTime(event.at),
+    time: formatDateTime(event.at, timeZone),
     state: i === timeline.length - 1 ? "current" : "done",
   }));
 }

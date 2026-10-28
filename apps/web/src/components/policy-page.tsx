@@ -6,6 +6,8 @@ const policies = [
   { href: "/support/delivery-policy", label: "Delivery policy" },
   { href: "/support/cancellation-policy", label: "Cancellation policy" },
   { href: "/support/refund-policy", label: "Refund policy" },
+  { href: "/support/privacy-policy", label: "Privacy policy" },
+  { href: "/support/terms", label: "Terms of use" },
 ] as const;
 
 /**

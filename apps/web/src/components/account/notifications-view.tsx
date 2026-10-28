@@ -115,6 +115,7 @@ function Inbox() {
   const markRead = useMutation({
     mutationFn: (id: string) => markNotificationRead(browserHttp(), id),
     onSuccess: invalidate,
+    onError: (e) => toast({ title: describeError(e), tone: "danger" }),
   });
   const markAll = useMutation({
     mutationFn: () => markAllNotificationsRead(browserHttp()),
@@ -182,6 +183,7 @@ function Inbox() {
               <Button
                 size="sm"
                 variant="ghost"
+                loading={markRead.isPending && markRead.variables === m.messageId}
                 onClick={() => markRead.mutate(m.messageId)}
                 aria-label={`Mark "${m.title ?? "message"}" as read`}
               >

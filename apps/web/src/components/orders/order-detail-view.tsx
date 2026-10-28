@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  formatDateTime,
-  formatDayShort,
-  formatQuantity,
-  formatRupees,
-  formatTime,
-} from "@fresh/core";
+import { formatDateTime, formatQuantity, formatRupees } from "@fresh/core";
 import {
   AvatarCircle,
   BillBox,
@@ -30,6 +24,7 @@ import { LoadError } from "@/components/states";
 import { asApiError } from "@/lib/errors";
 import { orderSlot, orderSteps } from "@/lib/order-progress";
 import { queryKeys } from "@/lib/query-keys";
+import { slotText } from "@/lib/slot-text";
 import { complaintStatusMap, orderStatusMap, paymentMethodLabels } from "@/lib/status-maps";
 import { OrderActions } from "./order-actions";
 import { SubstitutionsCard } from "./substitutions-card";
@@ -110,7 +105,7 @@ function Items({ order }: { order: OrderDetail }) {
 function Band({ order, aside }: { order?: OrderDetail; aside?: ReactNode }) {
   return (
     <ThemeBand
-      eyebrow={order ? `Placed ${formatDateTime(order.placedAt)}` : undefined}
+      eyebrow={order ? `Placed ${formatDateTime(order.placedAt, order.timeZone)}` : undefined}
       title={
         order ? (
           <>
@@ -192,6 +187,8 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const t = tracking.data;
   const status = t?.status ?? o.status;
   const amounts = o.final ?? o.estimate;
+  // Times in the store's own zone (W10, ORD-R65).
+  const zone = t?.timeZone ?? o.timeZone;
   return (
     <>
       <Band
@@ -224,15 +221,12 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
               {tracking.isPending ? (
                 <Skeleton className="h-16" />
               ) : t ? (
-                <StatusSteps steps={orderSteps(t.status, t.timeline)} />
+                <StatusSteps steps={orderSteps(t.status, t.timeline, zone)} />
               ) : (
                 <p className="text-text-muted text-sm">Tracking is not available right now.</p>
               )}
               <div className="bg-surface-sand grid gap-1 rounded-2xl p-3 text-sm">
-                <p className="text-text font-bold">
-                  {formatDayShort(o.slot.startAt)}, {formatTime(o.slot.startAt)} –{" "}
-                  {formatTime(o.slot.endAt)}
-                </p>
+                <p className="text-text font-bold">{slotText(o.slot, zone)}</p>
                 <address className="text-text-muted not-italic">
                   {o.address.recipientName}, {o.address.line1}
                   {o.address.line2 && `, ${o.address.line2}`}, {o.address.locality},{" "}

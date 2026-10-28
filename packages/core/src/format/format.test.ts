@@ -3,6 +3,7 @@ import {
   formatCalendarDate,
   formatDate,
   formatDateTime,
+  formatDayShort,
   formatPercentFromBp,
   formatQuantity,
   formatRupees,
@@ -84,6 +85,26 @@ describe("IST dates", () => {
     expect(plain(formatTimeOfDay("07:00")).toLowerCase()).toBe("7:00 am");
     expect(plain(formatTimeOfDay("18:30")).toLowerCase()).toBe("6:30 pm");
     expect(plain(formatTimeRange("07:00", "09:00")).toLowerCase()).toBe("7:00 am – 9:00 am");
+  });
+});
+
+describe("dates in a store's time zone (W10)", () => {
+  const instant = "2026-10-23T05:30:00Z";
+
+  it("shows the instant in the zone the server sends", () => {
+    expect(plain(formatTime(instant, "Asia/Dubai")).toLowerCase()).toBe("9:30 am");
+    expect(plain(formatDateTime(instant, "UTC")).toLowerCase()).toBe("23 oct 2026, 5:30 am");
+    // 19:00 UTC is the next day in IST but the same day in UTC.
+    expect(formatDate("2026-10-23T19:00:00Z", "UTC")).toBe("23 Oct 2026");
+    expect(formatDayShort("2026-10-23T19:00:00Z", "UTC")).toBe(
+      formatDayShort("2026-10-23T12:00:00Z"),
+    );
+  });
+
+  it("falls back to IST when the zone is missing or unknown", () => {
+    expect(formatTime(instant, null)).toBe(formatTime(instant));
+    expect(formatTime(instant, "")).toBe(formatTime(instant));
+    expect(formatTime(instant, "Not/A_Zone")).toBe(formatTime(instant));
   });
 });
 

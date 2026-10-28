@@ -14,7 +14,7 @@ import {
 import { SlidersHorizontal, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";
-import { type CategoryRef } from "@/api/types/catalog";
+import { type CategoryRef, type PreparationMethod } from "@/api/types/catalog";
 import { SORT_OPTIONS, type ShopFilters as Filters } from "@/lib/shop-params";
 import { sourceTypeLabels } from "@/lib/status-maps";
 
@@ -22,6 +22,8 @@ export interface ShopFiltersProps {
   filters: Filters;
   /** Top-level categories for the category filter; omitted on a category page. */
   categories?: CategoryRef[];
+  /** The server's cleaning and cutting methods (W8); the filter is left out when empty. */
+  preparations?: PreparationMethod[];
   hasLocation: boolean;
 }
 
@@ -46,7 +48,7 @@ function toggle(params: URLSearchParams, key: string, value: string, on: boolean
   for (const v of on ? [...values, value] : values) params.append(key, v);
 }
 
-function FilterPanel({ filters, categories, hasLocation }: ShopFiltersProps) {
+function FilterPanel({ filters, categories, preparations, hasLocation }: ShopFiltersProps) {
   const { update } = useUrlUpdater();
   const [min, setMin] = useState(filters.minRupees?.toString() ?? "");
   const [max, setMax] = useState(filters.maxRupees?.toString() ?? "");
@@ -73,6 +75,22 @@ function FilterPanel({ filters, categories, hasLocation }: ShopFiltersProps) {
               checked={filters.categories.includes(c.slug)}
               onCheckedChange={(checked) =>
                 update((p) => toggle(p, "category", c.slug, checked === true))
+              }
+            />
+          ))}
+        </fieldset>
+      )}
+      {preparations && preparations.length > 0 && (
+        <fieldset className="flex flex-col gap-2.5">
+          <legend className="text-text mb-2 text-sm font-semibold">Cleaned and cut</legend>
+          {preparations.map((m) => (
+            <Checkbox
+              key={m.code}
+              label={m.name}
+              {...(m.description ? { description: m.description } : {})}
+              checked={filters.preparations.includes(m.code)}
+              onCheckedChange={(checked) =>
+                update((p) => toggle(p, "prep", m.code, checked === true))
               }
             />
           ))}
@@ -109,7 +127,10 @@ function FilterPanel({ filters, categories, hasLocation }: ShopFiltersProps) {
   );
 }
 
-/** "More filters" chip opening a bottom sheet with categories and price (same on phone and desktop). */
+/**
+ * "More filters" chip opening a bottom sheet with categories, cleaning and cutting, and price (same on phone and
+ * desktop).
+ */
 export function ShopFilters(props: ShopFiltersProps) {
   return (
     <Sheet>
@@ -136,12 +157,14 @@ export function ShopToolbar({
   hasLocation,
   hasQuery,
   categories,
+  preparations,
 }: {
   chips: ActiveChip[];
   filters: Filters;
   hasLocation: boolean;
   hasQuery: boolean;
   categories?: CategoryRef[];
+  preparations?: PreparationMethod[];
 }) {
   const { update, pending } = useUrlUpdater();
   const options = SORT_OPTIONS.filter((o) => !o.needsQuery || hasQuery).map((o) => ({
@@ -186,6 +209,7 @@ export function ShopToolbar({
           filters={filters}
           hasLocation={hasLocation}
           {...(categories ? { categories } : {})}
+          {...(preparations ? { preparations } : {})}
         />
       </div>
       {removable.length > 0 && (

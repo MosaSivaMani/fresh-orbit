@@ -122,7 +122,7 @@ export function CartView() {
       </div>
 
       <div className="flex flex-col gap-4 lg:sticky lg:top-20">
-        <CouponForm coupon={data.coupon} />
+        <CouponForm coupon={data.coupon} pincode={data.pincode} />
         <OrderSummary totals={data.totals} coupon={data.coupon} />
         {data.checkoutBlockers.length > 0 && (
           <ul className="flex flex-col gap-1" aria-label="Before you check out">

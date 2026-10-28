@@ -35,8 +35,10 @@ export default async function HomePage() {
   const nextSlot = area?.nextSlot ?? null;
   const city = area?.serviceable ? (area.city?.name ?? null) : null;
   const pincodeRefused = home.ok && home.value.pincodeRefused;
+  // Slot times read in the store's time zone (D258).
+  const zone = area?.city?.timeZone;
   const slotText = nextSlot
-    ? `${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
+    ? `${formatDayShort(nextSlot.startAt, zone)}, ${formatTime(nextSlot.startAt, zone)} – ${formatTime(nextSlot.endAt, zone)}`
     : null;
   const banners = offers.ok ? offers.value.data : [];
   const offerLines = offersBySlug(banners);

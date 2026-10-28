@@ -1,7 +1,11 @@
-import { formatDayShort, formatTime } from "@fresh/core";
 import { Button, CharacterState } from "@fresh/ui";
 import Link from "next/link";
-import { getPromotions, getServiceability, listProducts } from "@/api/endpoints/catalog";
+import {
+  getPreparationMethods,
+  getPromotions,
+  getServiceability,
+  listProducts,
+} from "@/api/endpoints/catalog";
 import { type RequestApi, loadWithLocation } from "@/api/server";
 import { type CategoryRef } from "@/api/types/catalog";
 import { CategoryRail } from "@/components/catalog/category-rail";
@@ -15,6 +19,7 @@ import {
   toListParams,
 } from "@/lib/shop-params";
 import { settle } from "@/lib/settle";
+import { slotText } from "@/lib/slot-text";
 import { sourceTypeLabels } from "@/lib/status-maps";
 import { LinkPagination } from "./link-pagination";
 import { type ActiveChip, ShopToolbar } from "./shop-filters";
@@ -47,20 +52,24 @@ export async function ProductListing({
   offerCategoryIds?: string[];
 }) {
   const hasLocation = api.pincode !== null;
-  const [result, promotions, serviceability] = await Promise.all([
+  const [result, promotions, serviceability, methods] = await Promise.all([
     settle(loadWithLocation(api, (http) => listProducts(http, toListParams(filters, hasLocation)))),
     settle(loadWithLocation(api, getPromotions)),
     api.pincode ? settle(getServiceability(api.anonymous, api.pincode)) : null,
+    settle(loadWithLocation(api, getPreparationMethods)),
   ]);
+  // Without the list the filter is left out; a code already in the URL still filters and shows as its code.
+  const preparations = methods.ok ? methods.value.data : [];
+  const preparationNames = Object.fromEntries(preparations.map((m) => [m.code, m.name]));
   const offers = promotions.ok ? offersBySlug(promotions.value.data) : {};
   const sharedOffer =
     promotions.ok && offerCategoryIds
       ? categoryOffer(promotions.value.data, offerCategoryIds)
       : undefined;
   const nextSlot = serviceability?.ok ? serviceability.value.nextSlot : null;
-  const freshness = nextSlot
-    ? `Next slot ${formatDayShort(nextSlot.startAt)}, ${formatTime(nextSlot.startAt)} – ${formatTime(nextSlot.endAt)}`
-    : undefined;
+  // Slot times in the store's own zone (W10).
+  const zone = serviceability?.ok ? serviceability.value.city?.timeZone : null;
+  const freshness = nextSlot ? `Next slot ${slotText(nextSlot, zone)}` : undefined;
   const located = result.ok && !result.value.pincodeRefused && hasLocation;
 
   const chips: ActiveChip[] = [
@@ -75,6 +84,11 @@ export async function ProductListing({
       key: "source",
       value: s,
       label: sourceTypeLabels[s] ?? s,
+    })),
+    ...filters.preparations.map((code) => ({
+      key: "prep",
+      value: code,
+      label: preparationNames[code] ?? code,
     })),
     ...(filters.inStock ? [{ key: "inStock", label: "In stock" }] : []),
     ...(located && filters.minRupees !== undefined
@@ -101,6 +115,7 @@ export async function ProductListing({
           hasLocation={located}
           hasQuery={filters.q !== undefined}
           {...(filterCategories ? { categories: filterCategories } : {})}
+          preparations={preparations}
         />
         {!result.ok ? (
           <SectionError message={result.message} traceId={result.traceId} />

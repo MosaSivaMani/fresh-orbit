@@ -31,11 +31,10 @@ const slots = {
   ],
 };
 
-/** The reads a priced cart page makes: the cart, the product (for stepper bounds) and the slots. */
+/** The reads a priced cart page makes: the cart and the slots. Stepper bounds come on the cart line (W4). */
 function cartReads(cart = cartWithSeer) {
   return [
     http.get(`${API}/cart`, () => HttpResponse.json(cart)),
-    http.get(`${API}/products/:slug`, () => HttpResponse.json(seerFish)),
     http.get(`${API}/delivery-slots`, () => HttpResponse.json(slots)),
   ];
 }
@@ -59,10 +58,15 @@ describe("CartView", () => {
     );
   });
 
-  it("steps the quantity by the product's order step and shows the server's new line", async () => {
+  it("steps the quantity by the cart line's order step and shows the server's new line", async () => {
     let patched: unknown;
+    let productReads = 0;
     server.use(
       ...cartReads(),
+      http.get(`${API}/products/:slug`, () => {
+        productReads += 1;
+        return HttpResponse.json(seerFish);
+      }),
       http.patch(`${API}/cart/items/line1`, async ({ request }) => {
         patched = await request.json();
         return HttpResponse.json({
@@ -85,10 +89,35 @@ describe("CartView", () => {
     await waitFor(() => expect(increase).toBeEnabled());
     await userEvent.click(increase);
 
-    // 500 g + the variant's 250 g step; the new total is whatever the server returned.
+    // 500 g + the line's 250 g step; the new total is whatever the server returned.
     await waitFor(() => expect(patched).toEqual({ quantity: { value: 750, unit: "GRAM" } }));
     const items = screen.getByRole("list", { name: "Items in your cart" });
     expect(await within(items).findByText("₹1,004.25")).toBeInTheDocument();
+    // W4: the bounds came with the cart; the product is never read for them.
+    expect(productReads).toBe(0);
+  });
+
+  it("keeps the stepper disabled for a line the server sends without bounds", async () => {
+    const unbounded = { ...seerLine, minOrder: null, maxOrder: null, orderStep: null };
+    server.use(...cartReads({ ...cartWithSeer, lines: [unbounded] }));
+    renderWithProviders(<CartView />);
+
+    expect(
+      await screen.findByRole("button", { name: "Increase quantity of Seer Fish (Vanjaram)" }),
+    ).toBeDisabled();
+  });
+
+  it("stops at the line's maximum", async () => {
+    const atMax = { ...seerLine, quantity: { value: 5000, unit: "GRAM" as const } };
+    server.use(...cartReads({ ...cartWithSeer, lines: [atMax] }));
+    renderWithProviders(<CartView />);
+
+    expect(
+      await screen.findByRole("button", { name: "Increase quantity of Seer Fish (Vanjaram)" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Decrease quantity of Seer Fish (Vanjaram)" }),
+    ).toBeEnabled();
   });
 
   it("removes the line when stepping below the minimum", async () => {
@@ -188,6 +217,23 @@ describe("CartView", () => {
 
     await waitFor(() => expect(applied).toEqual({ code: "FISH50" }));
     expect(askedPincode).toBe("600041");
+  });
+
+  it("lists the offers for the cart's pincode when the visitor browses another one", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "530017");
+    let askedPincode: string | null = null;
+    server.use(
+      ...cartReads(),
+      http.get(`${API}/coupons`, ({ request }) => {
+        askedPincode = new URL(request.url).searchParams.get("pincode");
+        return HttpResponse.json({ items: [], page: 1, pageSize: 20, totalCount: 0 });
+      }),
+    );
+    renderWithProviders(<CartView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "View offers" }));
+
+    await waitFor(() => expect(askedPincode).toBe("600041"));
   });
 
   it("shows the empty-cart character state for an empty cart", async () => {

@@ -15,6 +15,8 @@ const STATIC_PATHS = [
   "/support/delivery-policy",
   "/support/cancellation-policy",
   "/support/refund-policy",
+  "/support/privacy-policy",
+  "/support/terms",
 ];
 const PRODUCT_PAGE_SIZE = 100;
 const MAX_PRODUCT_PAGES = 20;

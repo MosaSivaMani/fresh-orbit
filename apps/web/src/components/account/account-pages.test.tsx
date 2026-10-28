@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import { sessionStore } from "@/auth/session-store";
-import { homeAddress } from "../../../test/fixtures";
+import { homeAddress, problem } from "../../../test/fixtures";
 import { API, BFF } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
@@ -11,6 +11,7 @@ import { navigationState, routerMock } from "../../../test/router-mock";
 import { AccountNav } from "./account-nav";
 import { AddressesView } from "./addresses-view";
 import { OrdersList } from "./orders-list";
+import { ProfileView } from "./profile-view";
 import { SettingsView } from "./settings-view";
 
 const profile = {
@@ -125,5 +126,61 @@ describe("OrdersList", () => {
     );
     renderWithProviders(<OrdersList />, { session: signedIn });
     expect(await screen.findByRole("heading", { name: "No orders yet" })).toBeInTheDocument();
+  });
+});
+
+describe("ProfileView", () => {
+  it("saves with If-Match and reloads the profile after a lost race (409 CONCURRENT_SAVE)", async () => {
+    let reads = 0;
+    let ifMatch: string | null = null;
+    server.use(
+      http.get(`${API}/me`, () => {
+        reads += 1;
+        return HttpResponse.json(reads === 1 ? profile : { ...profile, version: "8" });
+      }),
+      http.patch(`${API}/me`, ({ request }) => {
+        ifMatch = request.headers.get("If-Match");
+        return HttpResponse.json(problem(409, "CONCURRENT_SAVE"), { status: 409 });
+      }),
+    );
+    const { container } = renderWithProviders(<ProfileView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(reads).toBeGreaterThanOrEqual(2));
+    expect(ifMatch).toContain("7");
+    // The notice survives the form starting again with the new version.
+    await waitFor(() =>
+      expect(container.querySelector('[data-code="CONCURRENCY_CONFLICT"]')).not.toBeNull(),
+    );
+  });
+});
+
+describe("DeleteAccount", () => {
+  it("re-reads the profile when the delete quotes a stale version (412)", async () => {
+    let reads = 0;
+    let deletes = 0;
+    server.use(
+      http.get(`${API}/me`, () => {
+        reads += 1;
+        return HttpResponse.json(profile);
+      }),
+      http.get(`${API}/me/notification-preferences`, () => HttpResponse.json(preferences)),
+      http.delete(`${API}/me`, () => {
+        deletes += 1;
+        return HttpResponse.json(problem(412, "CONCURRENCY_CONFLICT"), { status: 412 });
+      }),
+    );
+    renderWithProviders(<SettingsView />, { session: signedIn });
+
+    await userEvent.click(await screen.findByRole("button", { name: "Delete my account" }));
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.type(within(dialog).getByRole("textbox"), "DELETE");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete account" }));
+
+    await waitFor(() => expect(deletes).toBe(1));
+    await waitFor(() => expect(reads).toBeGreaterThanOrEqual(2));
+    expect(within(dialog).getByRole("alert")).toBeInTheDocument();
+    expect(routerMock.replace).not.toHaveBeenCalled();
   });
 });

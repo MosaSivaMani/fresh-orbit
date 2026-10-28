@@ -2,7 +2,7 @@
 
 import { formatQuantity } from "@fresh/core";
 import { FoodCard, type FoodCardTone, PriceTag, toast } from "@fresh/ui";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Fish } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { getProduct } from "@/api/endpoints/catalog";
-import { type ProductListItem } from "@/api/types/catalog";
+import { type AddCartItemRequest } from "@/api/types/cart";
+import { type ProductDetail, type ProductListItem } from "@/api/types/catalog";
+import { lineBounds } from "@/cart/line-bounds";
 import { useAddToCart, useCart, useChangeCartItem, useRemoveCartItem } from "@/cart/use-cart";
 import { describeError, hasCode } from "@/lib/errors";
 import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
@@ -19,6 +21,38 @@ import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
 
 const tones: FoodCardTone[] = ["ice", "teal", "coral", "mango"];
+
+/**
+ * What ADD on a card puts in the cart, or null to open the product page instead. With the server's default variant
+ * (CAT-R23, gap W3 closed: the size behind the card's "from" price) it is that size, its default cut and its minimum
+ * quantity, with no extra request. A list item without one (an older API) falls back to reading the product: one
+ * size is added the same way, several open the product page. A product with no price here is never added.
+ */
+export async function addRequestFor(
+  product: ProductListItem,
+  readProduct: () => Promise<ProductDetail>,
+): Promise<AddCartItemRequest | null> {
+  if (!product.fromPrice) return null;
+  const preferred = product.defaultVariant;
+  if (preferred) {
+    return {
+      variantId: preferred.id,
+      ...(preferred.defaultPreparationCode
+        ? { preparationCode: preferred.defaultPreparationCode }
+        : {}),
+      quantity: { value: preferred.minOrder.value, unit: preferred.minOrder.unit },
+    };
+  }
+  const full = await readProduct();
+  const only = full.variants.length === 1 ? full.variants[0] : undefined;
+  if (!only || only.unitPricePaise === null) return null;
+  const prep = only.preparations.find((p) => p.isDefault) ?? only.preparations[0];
+  return {
+    variantId: only.id,
+    ...(prep ? { preparationCode: prep.code } : {}),
+    quantity: { value: only.minOrder.value, unit: only.minOrder.unit },
+  };
+}
 
 export interface ShopProductCardProps {
   product: ProductListItem;
@@ -33,10 +67,9 @@ export interface ShopProductCardProps {
 }
 
 /**
- * The website's picture card (D95) for a list item. ADD asks the server for the product: with one size it adds
- * the smallest allowed quantity with the default cut; otherwise it opens the product page to choose. Once the cart
- * holds exactly one line of this product, ADD becomes a − n + stepper for that line. Bounds, prices and the cart
- * are always the server's (rule 4).
+ * The website's picture card (D95) for a list item. ADD puts the server's default size in the cart (see
+ * `addRequestFor`, D255). Once the cart holds exactly one line of this product, ADD becomes a − n + stepper for that
+ * line with the line's own bounds (W4). Bounds, prices and the cart are always the server's (rule 4).
  */
 export function ShopProductCard({
   product,
@@ -55,13 +88,8 @@ export function ShopProductCard({
   const [adding, setAdding] = useState(false);
   const lines = cart.data?.lines.filter((l) => l.productId === product.id) ?? [];
   const line = lines.length === 1 ? lines[0] : undefined;
-  const detail = useQuery({
-    queryKey: queryKeys.product(product.slug, line?.preparation?.code, pincode),
-    queryFn: () => getProduct(browserHttp(), product.slug, line?.preparation?.code),
-    enabled: line !== undefined,
-    staleTime: 60_000,
-  });
-  const variant = line ? detail.data?.variants.find((v) => v.id === line.variantId) : undefined;
+  // The stepper's bounds come on the cart line itself (W4); none means no stepper.
+  const bounds = line ? lineBounds(line) : null;
 
   const status = product.availability?.status;
   const soldOut = status === "OUT_OF_STOCK" || status === "NOT_SOLD_HERE";
@@ -79,25 +107,18 @@ export function ShopProductCard({
     }
     setAdding(true);
     try {
-      const full = await queryClient.fetchQuery({
-        queryKey: queryKeys.product(product.slug, undefined, pincode),
-        queryFn: () => getProduct(browserHttp(), product.slug),
-        staleTime: 60_000,
-      });
-      const only = full.variants.length === 1 ? full.variants[0] : undefined;
-      if (!only || only.unitPricePaise === null) {
+      const body = await addRequestFor(product, () =>
+        queryClient.fetchQuery({
+          queryKey: queryKeys.product(product.slug, undefined, pincode),
+          queryFn: () => getProduct(browserHttp(), product.slug),
+          staleTime: 60_000,
+        }),
+      );
+      if (!body) {
         router.push(href);
         return;
       }
-      const prep = only.preparations.find((p) => p.isDefault) ?? only.preparations[0];
-      await add.mutateAsync({
-        body: {
-          variantId: only.id,
-          ...(prep ? { preparationCode: prep.code } : {}),
-          quantity: { value: only.minOrder.value, unit: only.minOrder.unit },
-        },
-        pincode,
-      });
+      await add.mutateAsync({ body, pincode });
       toast({ title: `${product.name} added to your cart`, tone: "success" });
     } catch (e) {
       if (hasCode(e, "LOCATION_REQUIRED", "PINCODE_NOT_SERVICEABLE")) setPickerOpen(true);
@@ -160,10 +181,10 @@ export function ShopProductCard({
       }
       unavailableLabel={soldOut && status ? availabilityMap[status]?.label : undefined}
       {...(lines.length > 1 ? { addHref: href } : { onAdd: () => void onAdd() })}
-      quantity={line && variant ? line.quantity.value : 0}
-      min={variant?.minOrder.value}
-      max={variant?.availability?.maxOrderableNow?.value ?? variant?.maxOrder.value}
-      step={variant?.orderStep.value}
+      quantity={line && bounds ? line.quantity.value : 0}
+      min={bounds?.min}
+      max={bounds?.max}
+      step={bounds?.step}
       formatQuantity={
         line ? (v) => formatQuantity({ value: v, unit: line.quantity.unit }) : undefined
       }

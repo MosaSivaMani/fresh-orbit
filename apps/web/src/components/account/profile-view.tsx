@@ -22,7 +22,7 @@ import { LoadError } from "@/components/states";
 import { describeError, fieldMessage, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 
-function ProfileForm({ profile }: { profile: Profile }) {
+function ProfileForm({ profile, onStale }: { profile: Profile; onStale: () => void }) {
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState(profile.fullName ?? "");
   const [email, setEmail] = useState(profile.email ?? "");
@@ -49,8 +49,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
       queryClient.setQueryData(queryKeys.profile, updated);
       toast({ title: "Profile saved", tone: "success" });
     } catch (e) {
-      if (hasCode(e, "CONCURRENCY_CONFLICT")) {
-        setFormError("Your profile was changed elsewhere. We have loaded the latest version.");
+      if (hasCode(e, "CONCURRENCY_CONFLICT", "CONCURRENT_SAVE")) {
+        // The form is keyed by version and starts again with the server's values; the notice lives above it.
+        onStale();
         void queryClient.invalidateQueries({ queryKey: queryKeys.profile });
         return;
       }
@@ -106,6 +107,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
 
 export function DeleteAccount({ profile }: { profile: Profile }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +121,13 @@ export function DeleteAccount({ profile }: { profile: Profile }) {
       await signOut();
       router.replace("/");
     } catch (e) {
-      setError(describeError(e));
+      if (hasCode(e, "CONCURRENCY_CONFLICT", "CONCURRENT_SAVE")) {
+        // The profile changed since this page read it: read the new version so confirming again quotes it.
+        setError("Your account was changed elsewhere. Please confirm again.");
+        void queryClient.invalidateQueries({ queryKey: queryKeys.profile });
+      } else {
+        setError(describeError(e));
+      }
       setPending(false);
     }
   }
@@ -168,6 +176,7 @@ export function ProfileView() {
     queryKey: queryKeys.profile,
     queryFn: () => getProfile(browserHttp()),
   });
+  const [stale, setStale] = useState(false);
 
   if (profile.isPending) return <Skeleton className="h-80 rounded-[22px]" />;
   if (profile.isError) {
@@ -184,8 +193,22 @@ export function ProfileView() {
     <div className="flex max-w-2xl flex-col gap-5">
       <h1 className="font-display text-text text-3xl font-extrabold">Profile</h1>
       <StepCard title="Your details">
+        {stale && (
+          <p
+            role="status"
+            data-code="CONCURRENCY_CONFLICT"
+            className="bg-warning-subtle text-warning-text rounded-xl p-3 text-sm"
+          >
+            Your profile was changed elsewhere. We have loaded the latest version; check it and save
+            again.
+          </p>
+        )}
         {/* Keyed by version so a reload after a conflict resets the form to the server's values. */}
-        <ProfileForm key={profile.data.version} profile={profile.data} />
+        <ProfileForm
+          key={profile.data.version}
+          profile={profile.data}
+          onStale={() => setStale(true)}
+        />
       </StepCard>
     </div>
   );
