@@ -96,7 +96,10 @@ public sealed partial class OutboxDispatcher
                     db.Add(new DeadLetter(message.Id, handler, error, now));
                 }
 
-                LogDeadLettered(message.Id, message.EventType, message.Attempts, string.Join(", ", failures.Select(f => f.Handler)));
+                if (_logger.IsEnabled(LogLevel.Critical))
+                {
+                    LogDeadLettered(message.Id, message.EventType, message.Attempts, string.Join(", ", failures.Select(f => f.Handler)));
+                }
             }
             else
             {
