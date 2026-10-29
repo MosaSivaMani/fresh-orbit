@@ -33,6 +33,7 @@ import 'state/cart_state.dart';
 import 'state/first_run.dart';
 import 'state/session.dart';
 import 'widgets/bold.dart';
+import 'widgets/refresh_on_resume.dart';
 import 'widgets/states.dart';
 
 /// Paths that need a signed-in customer.
@@ -237,7 +238,8 @@ class _AppShellState extends ConsumerState<AppShell> {
       canPop: false,
       onPopInvokedWithResult: _onBack,
       child: Scaffold(
-        body: shell,
+        // Back from the background after a while: the tabs read the server again (D313).
+        body: RefreshOnResume(child: shell),
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

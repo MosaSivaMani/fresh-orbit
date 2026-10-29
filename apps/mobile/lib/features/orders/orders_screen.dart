@@ -49,7 +49,11 @@ class OrdersScreen extends ConsumerWidget {
     if (orders.value?.items.isEmpty ?? false) {
       return Scaffold(
         backgroundColor: BlockTone.mango.background(c),
-        body: ColorBlockScreen(
+        // Pull down to read again: a first order placed on the website shows up here (MO-15).
+        body: RefreshIndicator(
+          key: const Key('ordersEmptyRefresh'),
+          onRefresh: () => ref.refresh(ordersProvider.future),
+          child: ColorBlockScreen(
           tone: BlockTone.mango,
           eyebrow: 'Your orders',
           heading: const [HeadingLine('No orders'), HeadingLine('yet', script: true, brush: true)],
@@ -68,6 +72,7 @@ class OrdersScreen extends ConsumerWidget {
               child: FilledButton(onPressed: () => context.go('/shop'), child: const Text('Start shopping')),
             ),
           ],
+        ),
         ),
       );
     }
