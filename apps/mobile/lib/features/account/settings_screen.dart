@@ -1,6 +1,6 @@
-// Settings (D88): notification toggles (the server's preferences), language, theme, privacy and log out. Works
-// signed out for language and theme. Only English copy exists so far: Telugu and Hindi are remembered and the
-// screen says so.
+// Settings (D88): notification toggles (the server's preferences), language, theme, log out, and the policy pages
+// on the website (D299). Works signed out for language and theme. Only English copy exists so far: Telugu and Hindi
+// are remembered and the screen says so.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +11,9 @@ import '../../api/models/account.dart';
 import '../../app.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
+import '../../state/core_providers.dart';
 import '../../state/session.dart';
+import '../../widgets/policy_links.dart';
 import '../../widgets/states.dart';
 
 const languageNames = {'en': 'EN', 'te': 'తెలుగు', 'hi': 'हिं'};
@@ -99,11 +101,6 @@ class SettingsScreen extends ConsumerWidget {
                     onSelected: (m) => ref.read(themeModeProvider.notifier).set(m),
                   ),
                 ),
-                MenuRow(
-                  icon: Icons.description_outlined,
-                  title: 'Privacy and terms',
-                  onTap: () => context.push('/account/help'),
-                ),
                 if (signedIn)
                   MenuRow(
                     key: const Key('logOut'),
@@ -118,6 +115,11 @@ class SettingsScreen extends ConsumerWidget {
                   ),
               ],
             ),
+            // The policy pages on the website (D299); left out when the website address is not configured.
+            if (ref.watch(policyLinksProvider).isNotEmpty) ...[
+              const MenuLabel('Privacy and policies'),
+              const PolicyMenuCard(key: Key('settingsPolicies')),
+            ],
             if (signedIn)
               Padding(
                 padding: const EdgeInsets.only(top: 10),

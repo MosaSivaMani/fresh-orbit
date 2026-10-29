@@ -20,6 +20,7 @@ const schema = z.object({
     .regex(/^\+[1-9]\d{6,14}$/, "Enter the support phone with country code, e.g. +919876543210."),
   supportEmail: z.string().trim().pipe(z.email("Enter a valid support email address.")),
   timeZone: z.string().trim().min(1, "Enter the time zone, e.g. Asia/Kolkata."),
+  supportHours: z.string().trim().max(200, "Keep the support hours under 200 characters."),
 });
 type Values = z.infer<typeof schema>;
 const FIELDS = Object.keys(schema.shape);
@@ -65,13 +66,20 @@ function ProfileForm({
       supportPhone: profile?.supportPhone ?? "",
       supportEmail: profile?.supportEmail ?? "",
       timeZone: profile?.timeZone ?? "Asia/Kolkata",
+      supportHours: profile?.supportHours ?? "",
     },
   });
 
   const onSubmit = form.handleSubmit((v) =>
     save.mutate(
       {
-        body: { ...v, gstin: v.gstin || null, fssaiLicenseNo: v.fssaiLicenseNo || null },
+        // Every field on every save (AD-8): the API clears a field the body leaves out, support hours included.
+        body: {
+          ...v,
+          gstin: v.gstin || null,
+          fssaiLicenseNo: v.fssaiLicenseNo || null,
+          supportHours: v.supportHours || null,
+        },
         version: profile?.version ?? null,
       },
       {
@@ -111,6 +119,13 @@ function ProfileForm({
           <TextField form={form} name="supportPhone" label="Support phone" type="tel" required />
           <TextField form={form} name="supportEmail" label="Support email" type="email" required />
           <TextField form={form} name="timeZone" label="Time zone" required />
+          <TextField
+            form={form}
+            name="supportHours"
+            label="Support hours"
+            hint="Shown to customers next to the support phone, e.g. 7 am to 9 pm, every day."
+            className="md:col-span-2"
+          />
         </div>
         <div className="flex justify-end">
           <Button type="submit" loading={save.isPending}>

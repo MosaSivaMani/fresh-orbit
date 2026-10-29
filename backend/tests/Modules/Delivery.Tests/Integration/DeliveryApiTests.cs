@@ -6,6 +6,7 @@ using FreshOrbit.Delivery.Application.Handlers;
 using FreshOrbit.Delivery.Domain.Slots;
 using FreshOrbit.Delivery.Public;
 using FreshOrbit.Delivery.Tests.Support;
+using FreshOrbit.Ordering.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -324,6 +325,49 @@ public sealed class DeliveryApiTests(DeliveryDatabase database) : IAsyncLifetime
             problem.GetProperty("code").GetString().Should().Be("VALIDATION_FAILED");
             problem.GetProperty("errors").TryGetProperty("sort", out _).Should().BeTrue();
         }
+    }
+
+    [Fact]
+    public async Task AD1_AD2_shipment_reads_and_command_responses_carry_the_order_facts()
+    {
+        var location = _factory.Locations.AddLocation();
+        var client = Staff(location.Id);
+        var (codShipment, codOrder) = await PlacedAndPackedShipmentAsync(location.Id);
+        var (prepaidShipment, prepaidOrder) = await PlacedAndPackedShipmentAsync(location.Id);
+        var (unknownShipment, _) = await PlacedAndPackedShipmentAsync(location.Id);
+        _factory.Ordering.AddOrder(new OrderDeliveryFacts(codOrder, "FO-26-000101", "Lakshmi K", "+919800000101", "12 Beach Road, Flat 3B, Near the temple, Shore Lane, Test City", "600090", PaymentMethod.Cod, 66950));
+        _factory.Ordering.AddOrder(new OrderDeliveryFacts(prepaidOrder, "FO-26-000102", "Arun P", "+919800000102", "4 Lake View, Hill Street, Test City", "600020", PaymentMethod.Online, 0));
+
+        var list = await client.GetAsync($"{Admin}/shipments?fulfillmentLocationId={location.Id}&pageSize=100", Ct);
+        list.StatusCode.Should().Be(HttpStatusCode.OK);
+        var rows = (await JsonAsync(list)).GetProperty("items").EnumerateArray().ToDictionary(i => i.GetProperty("id").GetGuid());
+
+        var cod = rows[codShipment];
+        cod.GetProperty("orderNumber").GetString().Should().Be("FO-26-000101");
+        cod.GetProperty("recipientName").GetString().Should().Be("Lakshmi K");
+        cod.GetProperty("phone").GetString().Should().Be("+919800000101");
+        cod.GetProperty("addressLine").GetString().Should().Be("12 Beach Road, Flat 3B, Near the temple, Shore Lane, Test City");
+        cod.GetProperty("pincode").GetString().Should().Be("600090");
+        cod.GetProperty("paymentMethod").GetString().Should().Be("COD");
+        cod.GetProperty("amountToCollectPaise").GetInt64().Should().Be(66950);
+
+        rows[prepaidShipment].GetProperty("paymentMethod").GetString().Should().Be("ONLINE");
+        rows[prepaidShipment].GetProperty("amountToCollectPaise").GetInt64().Should().Be(0);
+
+        // An order Ordering cannot read leaves the order fields null; the shipment still lists.
+        rows[unknownShipment].GetProperty("orderNumber").ValueKind.Should().Be(JsonValueKind.Null);
+        rows[unknownShipment].GetProperty("amountToCollectPaise").ValueKind.Should().Be(JsonValueKind.Null);
+
+        var detail = await client.GetAsync($"{Admin}/shipments/{codShipment}", Ct);
+        detail.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await JsonAsync(detail)).GetProperty("orderNumber").GetString().Should().Be("FO-26-000101");
+
+        var riderId = await CreateRiderAsync(client, location.Id);
+        var assigned = await SendAsync(client, HttpMethod.Post, $"{Admin}/shipments/{codShipment}/assign", new { riderId }, detail.Headers.ETag!.Tag);
+        assigned.StatusCode.Should().Be(HttpStatusCode.OK);
+        var assignedBody = await JsonAsync(assigned);
+        assignedBody.GetProperty("orderNumber").GetString().Should().Be("FO-26-000101");
+        assignedBody.GetProperty("amountToCollectPaise").GetInt64().Should().Be(66950);
     }
 
     private static async Task<List<Guid>> IdsAsync(HttpClient client, string url)

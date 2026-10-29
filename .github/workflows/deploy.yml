@@ -17,6 +17,12 @@
 #                         its public URL (NEXT_PUBLIC_SITE_URL) at build time, so images are built per environment:
 #                         production builds get a `-prod` suffix and only `-prod` tags may go to production.
 # Images: ghcr.io/mosasivamani/fresh-orbit-{api,worker,migrations,web,admin}:<tag>
+#
+# Green CI first (L-34, D319): a build (tag push, or a manual run without `tag`) waits for the CI workflow (ci.yml) on
+# that exact commit and stops unless CI passed there. A commit with no CI run (a tag on a commit that never reached
+# main or a pull request) is refused; if CI on main was cancelled by a newer push, re-run it, then deploy. A redeploy
+# of an existing tag skips the wait: that image was built only after its own check.
+# Third-party actions are pinned to commit SHAs (L-35); Dependabot (github-actions) proposes the updates.
 
 name: Deploy
 
@@ -56,6 +62,7 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
       build: ${{ steps.tag.outputs.build }}
       site_url: ${{ steps.tag.outputs.site_url }}
+      app_environment: ${{ steps.tag.outputs.app_environment }}
     steps:
       - id: tag
         env:
@@ -77,6 +84,7 @@ jobs:
           fi
           if [[ "$TARGET" == production ]]; then
             site_url="$SITE_URL_PRODUCTION"
+            app_environment=Production
             [[ $build == false || "$tag" == *-prod ]] || tag="$tag-prod"
             if [[ "$tag" != *-prod ]]; then
               echo "::error::Only -prod images (built with the production site URL) can be deployed to production."
@@ -84,6 +92,7 @@ jobs:
             fi
           else
             site_url="$SITE_URL_STAGING"
+            app_environment=Staging
             if [[ "$tag" == *-prod ]]; then
               echo "::error::A -prod image carries the production site URL; build the ref for staging instead."
               exit 1
@@ -101,13 +110,51 @@ jobs:
             echo "tag=$tag"
             echo "build=$build"
             echo "site_url=$site_url"
+            echo "app_environment=$app_environment"
           } >> "$GITHUB_OUTPUT"
           echo "Release tag: $tag (build: $build)" >> "$GITHUB_STEP_SUMMARY"
 
-  images:
-    name: Build ${{ matrix.image }}
+  ci:
+    name: CI passed on this commit
     needs: release
     if: needs.release.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+    steps:
+      - name: Wait for CI on ${{ github.sha }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # Up to 40 minutes: CI may still be running for a commit that was just merged and tagged.
+          for attempt in $(seq 1 80); do
+            runs=$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?head_sha=$SHA&per_page=50" \
+              --jq '[.workflow_runs[] | {status, conclusion}]')
+            if jq -e 'any(.[]; .status == "completed" and .conclusion == "success")' <<< "$runs" > /dev/null; then
+              echo "CI passed on $SHA." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if jq -e 'length > 0 and all(.[]; .status == "completed")' <<< "$runs" > /dev/null; then
+              echo "::error::CI did not pass on $SHA ($(jq -c 'map(.conclusion)' <<< "$runs")). Fix it or re-run CI first."
+              exit 1
+            fi
+            if [[ $attempt -ge 6 ]] && jq -e 'length == 0' <<< "$runs" > /dev/null; then
+              echo "::error::No CI run exists for $SHA. Deploy only commits that passed CI on main or in a pull request."
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "::error::CI on $SHA did not finish within 40 minutes."
+          exit 1
+
+  images:
+    name: Build ${{ matrix.image }}
+    needs: [release, ci]
+    if: needs.release.outputs.build == 'true' && needs.ci.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -118,19 +165,19 @@ jobs:
       matrix:
         image: [api, worker, migrations, web, admin]
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: infra/docker/${{ matrix.image }}.Dockerfile
@@ -144,17 +191,23 @@ jobs:
             org.opencontainers.image.version=${{ needs.release.outputs.tag }}
           # The website's public URL, inlined at build time by Next.js (ignored by the other images). The admin needs
           # none: it calls the API on its own origin through Caddy.
+          # APP_ENVIRONMENT: only -prod website images prerender indexable pages (L-45, D301).
           build-args: |
             NEXT_PUBLIC_SITE_URL=${{ needs.release.outputs.site_url }}
+            APP_ENVIRONMENT=${{ needs.release.outputs.app_environment }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
   deploy:
     name: Deploy to ${{ inputs.environment || 'staging' }}
-    needs: [release, images]
+    needs: [release, ci, images]
+    # A build deploys only after CI passed and every image was pushed; a redeploy (build false) skips both.
     if: >-
       always() && needs.release.result == 'success' &&
-      (needs.images.result == 'success' || needs.images.result == 'skipped')
+      ((needs.release.outputs.build == 'true' && needs.ci.result == 'success' &&
+        needs.images.result == 'success') ||
+       (needs.release.outputs.build == 'false' && needs.ci.result == 'skipped' &&
+        needs.images.result == 'skipped'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
@@ -170,7 +223,7 @@ jobs:
       DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/freshorbit' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Configure SSH
         env:

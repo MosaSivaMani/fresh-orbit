@@ -248,6 +248,42 @@ describe("manifest.json", () => {
     expect(toRuntime(entry).src).toBe("order_placed.png");
   });
 
+  it("holds four owner category pictures as FINAL transparent PNGs; marinated stays a placeholder", () => {
+    const slot = (code: string) => manifest.slots.find((s) => s.slot === code)!;
+    for (const code of [
+      "CATEGORY_FILLETS_STEAKS",
+      "CATEGORY_READY_TO_COOK",
+      "CATEGORY_FISH_EGGS",
+      "CATEGORY_READY_TO_EAT",
+    ]) {
+      const entry = slot(code);
+      const stem = code.toLowerCase();
+      expect(entry, code).toMatchObject({
+        status: "FINAL",
+        file: `assets/${stem}.png`,
+        background: "TRANSPARENT",
+        width: 1024,
+        height: 1024,
+        source: `docs/design/characters/generated/${stem}.png`,
+      });
+      expect(entry.character, code).toBeUndefined();
+      expect(entry.prompt, code).toBe(composePrompt(manifest, entry));
+      const bytes = readFileSync(join(root, entry.file));
+      expect(readImageSize(bytes), code).toMatchObject({
+        format: "PNG",
+        alpha: true,
+        width: 1024,
+        height: 1024,
+      });
+      expect(bytes.byteLength, code).toBeLessThanOrEqual(600 * 1024);
+      expect(toRuntime(entry).src, code).toBe(`${stem}.png`);
+    }
+    expect(slot("CATEGORY_MARINATED")).toMatchObject({
+      status: "PLACEHOLDER",
+      file: "assets/category_marinated.svg",
+    });
+  });
+
   it("uses the five named characters and never names a studio", () => {
     const text = JSON.stringify(manifest.characters).toLowerCase();
     expect(text).not.toMatch(/pixar|disney|hoodie/);
@@ -306,8 +342,8 @@ describe("manifest.json", () => {
     const png = new Uint8Array(24);
     png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
     png.set([0, 0, 4, 0, 0, 0, 4, 0], 16);
-    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST, ORDER_PLACED)
-    // are read from disk.
+    // Only this slot's file is faked; the real FINAL PNGs (LOGIN_OTP, SIGN_IN_COAST, ORDER_PLACED and four
+    // CATEGORY_* pictures) are read from disk.
     const faked = (p: string) => p.endsWith(".png") && p.startsWith("assets/") && !disk.size(p);
     const facts: FileFacts = {
       size: (p) => (faked(p) ? 300 * 1024 : disk.size(p)),

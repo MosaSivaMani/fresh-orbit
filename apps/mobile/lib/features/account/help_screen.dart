@@ -9,7 +9,9 @@ import 'package:fresh_theme/fresh_theme.dart';
 import '../../api/models/catalog.dart';
 import '../../core/launch.dart';
 import '../../state/catalog_state.dart';
+import '../../state/core_providers.dart';
 import '../../widgets/illustrated.dart';
+import '../../widgets/policy_links.dart';
 
 const _faq = <(String, String)>[
   (
@@ -103,6 +105,16 @@ class HelpScreen extends ConsumerWidget {
               _ => const SkeletonBox(height: 56),
             },
           ),
+          // The policy pages on the website (D299); left out when the website address is not configured.
+          if (ref.watch(policyLinksProvider).isNotEmpty) ...[
+            const SizedBox(height: FreshLayout.sectionGap),
+            const Padding(
+              padding: FreshLayout.page,
+              child: PageTitle(text: 'Our', brushed: 'policies', size: 20),
+            ),
+            const SizedBox(height: 8),
+            const PolicyMenuCard(key: Key('helpPolicies')),
+          ],
           if (profile.value case final p? when _StoreDetails.hasAny(p)) ...[
             const SizedBox(height: FreshLayout.sectionGap),
             const Padding(

@@ -36,6 +36,7 @@ Owner: E4. Schema `ordering`. Sources: `docs/database/README.md` (ordering, §4)
 | `HasQualifyingOrder(customerId)` | First-order coupons (Cart, checkout): any order not in `CANCELLED`/`PAYMENT_FAILED` |
 | `GetOrderPaymentFacts(orderId)` | Payments online initiate (payments.md Q1): customerId, status, paymentMethod, orderNumber, amountDuePaise, paymentDueAt |
 | `GetOrderStatus(orderId)` | Payments cash collection check |
+| `GetOrderDeliveryFacts(orderIds)` | Delivery admin shipment reads (D302): order number, recipient name and phone, address line (line 1, line 2, landmark, locality, city), pincode, payment method and amount to collect (`amountDuePaise` for COD and UPI on delivery, 0 for ONLINE); one query for the batch, unknown ids left out |
 
 ## 2. States
 

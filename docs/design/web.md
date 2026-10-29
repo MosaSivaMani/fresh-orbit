@@ -159,7 +159,10 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
   allows cross-origin) and check `Origin` / `Sec-Fetch-Site` are same-origin. `SameSite=Strict` is the third layer.
   The proxy carries bearer tokens, not cookies, for customer auth.
 - **Refresh:** single flight per tab plus a Web Lock across tabs, because refresh tokens rotate and two tabs racing
-  would trip reuse detection. A failed refresh ends the session (`fo_rt` and `fo_session` cleared).
+  would trip reuse detection. Only a refused refresh (401 `REFRESH_TOKEN_INVALID` or reuse) ends the session (`fo_rt`
+  and `fo_session` cleared). A 429, a 5xx or no answer keeps the session: the request that needed the refresh fails
+  with that error, and a page load that could not restore the session shows "We could not reach the shop" with Try
+  again (session state `unavailable`, retried every 10 s) instead of sending the customer to sign in (W-6, D317).
 - **Proxy:** `/api/v1/[...path]` forwards to `FRESH_API_ORIGIN`, adds `X-Pincode` from the cookie and
   `X-Forwarded-For`, and refuses `admin/*`, `auth/otp/verify`, `auth/refresh`, `auth/logout`, `payments/webhooks/*`,
   `dev/*` (404). The API must trust `X-Forwarded-For` only from the website host for per-IP rate limits.
@@ -175,9 +178,20 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
 - Client components: `browserHttp()` (`src/api/browser.ts`) → same-origin proxy, bearer from memory, refresh on 401.
 - Typed endpoint functions live in `src/api/endpoints/*.ts`; components never build URLs.
 - Writes that need `Idempotency-Key` (place order, cancel, complaint) keep **one key per user action**: reused when
-  the same action is retried after a retryable failure (network, 429, 503, `IDEMPOTENCY_IN_PROGRESS`), replaced after
-  a definitive answer. After `PRICE_CHANGED` the customer confirms the new total with a **new** key and the new
-  `expectedTotalPaise`.
+  the same action is retried after an unknown outcome (`ApiError.isOutcomeUnknown`: no answer or timeout, any 5xx,
+  429, `IDEMPOTENCY_IN_PROGRESS`, `CONCURRENT_SAVE`), replaced after a definite 4xx answer (W-4, D315). Checkout also
+  takes a new key when the order body changes: address, slot, payment, substitution, notes or the cart (lines,
+  quantities, preparations, coupon). After `PRICE_CHANGED` the customer confirms the new total with a **new** key and
+  the new `expectedTotalPaise`.
+- The invoice opens in a tab opened inside the click and sent to the PDF once the server answers, so popup blockers
+  allow it (W-10, D315).
+- Images: `images.unoptimized` stays on (the API already serves WebP renditions). The home hero uses WebP copies at
+  their drawn size in `public/home/*.webp`; the product gallery renders the server's `sources` as `srcset` through
+  `ProductGallery` (`next/image` drops `srcset` in this mode); cards use the 640 px `imageUrl` (W-8, W-9, D318).
+- Error monitoring (W-7, D316): `src/server/monitoring.ts` (`ErrorReporter`, no-op default). `ERROR_REPORTING_DSN`
+  (a GlitchTip or self-hosted Sentry DSN) turns it on; `src/instrumentation.ts` reports server errors and the error
+  boundaries post to `POST /bff/monitoring/errors` (same origin, 16 KB cap). Reports carry the Reference digest, the
+  API `traceId`, the path without query, `APP_ENVIRONMENT` and `APP_RELEASE`; no personal data.
 - Errors: logic branches on `code`; the text shown is the server's message (`errors[field][0].message` under the
   field, otherwise `detail`), with our own copy only for transport failures. Error states show the `traceId`.
 
@@ -287,6 +301,16 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 
 - Metadata per page; product pages have canonical, Open Graph image and schema.org `Product` JSON-LD whose offers use
   only server prices and availability (`src/lib/json-ld.ts`; `<` escaped). Customer pages are `noindex`.
+- Only the production server is indexable (D301): `isIndexable()` in `src/server/config.ts` needs a production build,
+  `APP_ENVIRONMENT=Production` (the API's own variable; compose passes it at runtime, `deploy.yml` as a build argument)
+  and `NEXT_PUBLIC_SITE_URL`. Anywhere else `robots.txt` disallows `/` and the root layout adds `noindex, nofollow`.
+- Legal block (D300): the footer shows the business profile's `legalName`, `address`, `gstin`, `fssaiLicenseNo`,
+  `supportPhone` and `supportEmail` (`GET /business-profile`), each only when the server sends it, and links every policy
+  page and "Contact us" (`/support#contact`). The grievance officer (`/support#grievance`, footer link) is shown only
+  when `FRESH_GRIEVANCE_OFFICER_NAME`, `FRESH_GRIEVANCE_OFFICER_EMAIL` and `FRESH_GRIEVANCE_RESPONSE_TIME` are set
+  (designation optional); the business profile has no grievance fields yet.
+- Sign-in consent (D300): "By continuing you agree to our Terms and Privacy policy" sits above "Send code" and "Verify
+  and sign in"; both links open in a new tab, so the form keeps what was typed.
 - Skip link, landmarks, labelled form fields with field-level errors (`aria-invalid`, described by), keyboard-usable
   dialogs/sheets (Radix), visible focus rings from `@fresh/ui`, text colours from the WCAG-AA token set (D32).
 - Lighthouse (target ≥ 90 for performance, accessibility, best practices, SEO) is not measured yet: it needs a running
@@ -299,14 +323,16 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 | `src/location/pincode-form.test.tsx` | Serviceable pincode stored + pages refreshed; unserviceable not stored; malformed refused locally; `CART_LOCATION_CHANGED` asks before `force=true` |
 | `src/components/product/purchase-panel.test.tsx` | Add to cart sends variant, preparation, quantity and `X-Pincode`; estimate and maximum come from the server line; field error from the server; no pincode → picker |
 | `src/components/cart/cart-view.test.tsx` | Server line totals, bill and sticky total rendered as sent; stepper steps by the cart line's `orderStep` with no product read, stops at its maximum, stays disabled without bounds, and shows the server's new line; "View offers" asks for the cart's pincode; below minimum removes the line; chosen slot button carried to checkout (`?slot=`, through sign-in for a guest); coupon refusal under the field; empty-cart character; error state with trace id |
-| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect |
+| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect; Terms and Privacy policy linked in a new tab before each button (D300) |
 | `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled; cart's slot priced from `?slot=`; server-disabled ONLINE tile disabled; UPI on delivery re-prices; editing the chosen address sends `PUT` with `If-Match`; a 412 on that edit reloads the addresses |
 | `src/components/checkout/slot-picker.test.tsx` | Slot times shown in the slots response's `timeZone` (W10) |
 | `src/components/catalog/shop-product-card.test.tsx` | ADD sends the server's `defaultVariant`, cut and minimum with no product read (W3); no price → product page, nothing added; fallback read for a list item without a default size; card stepper from the cart line |
 | `src/components/catalog/offer-strip.test.tsx` | Banner links by slug; the server's `imageUrl` and `badge` shown, nothing built from `imageKey` (W11) |
 | `src/components/shop/shop-filters.test.tsx` | "Cleaned and cut" lists the server's methods, puts `prep=<CODE>` in the URL, shows chosen ones checked, is left out without methods (W8) |
 | `src/lib/shop-params.test.ts` | `?prep=` keeps only UPPER_SNAKE codes, de-duplicated, sent as `preparation` |
-| `src/components/site-footer.test.tsx` | Cities from the API (cached ≤ 5 min); every policy page linked, privacy and terms included |
+| `src/components/site-footer.test.tsx` | Cities from the API (cached ≤ 5 min); every policy page linked, privacy and terms included; legal block shows the business profile's fields in order and leaves out missing or blank ones, none when the API is down; contact link, grievance link only when configured (D300) |
+| `src/components/grievance-officer.test.tsx` | Grievance officer name, e-mail and response time from configuration; nothing until all three are set (D300) |
+| `src/app/robots.test.ts` | Crawlers allowed with the sitemap only for `APP_ENVIRONMENT=Production` in a production build with a site URL; Staging, Demo, Testing, lower-case or unset environment, no URL or a dev build are disallowed (D301) |
 | `packages/core/src/format/format.test.ts` | Dates and times in a given IANA zone; IST when the zone is missing or unknown |
 | `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; status steps up to the server's status; bill uses the server's final total; not-found character for an unknown order; cancel only when allowed, with reason and key; a refused cancel or substitution answer re-reads the order; a corrected complaint gets a new key; slot shown in the order's `timeZone` |
 | `src/components/orders/order-success.test.tsx` | ORDER_PLACED character, number, payment and the server's estimate bill |
@@ -354,7 +380,7 @@ and `PromoCardGrid`; it reuses the theme marks and headers from `theme.tsx` (`Sp
 
 | Block | Desktop (`lg`, ≥ 1024 px) | Phone (390 px) | Data |
 |---|---|---|---|
-| Hero (`HomeHero`) | Full-bleed (no page container), 500 px tall (D247). Sky gradient peach → cream; drawn sun with glow, far shore, soft water (`HarbourSky`), gulls, an orange-teal trawler on a wave at the bottom right (`Trawler`, 210 px), waves curving into the page at the bottom (`HeroWaves`, 110 px). Two columns: Padma (`public/home/hero-catch.png`, 1200 px wide, transparent) fills the left 35 % at the page edge (`object-cover`, focus 82 %); the text column starts beside it (4 % inset), so text is never under the picture: "Fresh fish." (Dancing Script, up to 76 px, coral sparks), "Cleaned your way." (script on the yellow brush), "At your door, in your slot." (Baloo 2 800, up to 42 px); three feature chips (48 px teal-tint circle icon + three lines), one row from about 1280 px, wrapping only as whole items. Top right: "From / today's catch / to your kitchen" on three lines in coral script, rotated −8°, with a swash | Below 1024 px: Padma first in a 5:4 crop (max 440 px), then the text centred, the chips wrapping as whole items, then the handwritten note; waves 72 px; trawler and one flock hidden | Fixed marketing copy; the delivery chip shows the server's next slot ("Next slot …") when `GET /serviceability` has one, else "Pick a slot at checkout" |
+| Hero (`HomeHero`) | Full-bleed (no page container), 500 px tall (D247). Sky gradient peach → cream; drawn sun with glow, far shore, soft water (`HarbourSky`), gulls, an orange-teal trawler on a wave at the bottom right (`Trawler`, 210 px), waves curving into the page at the bottom (`HeroWaves`, 110 px). Two columns: Padma (`public/home/hero-catch.webp`, 880 px wide, transparent; master `hero-catch.png`, D318) fills the left 35 % at the page edge (`object-cover`, focus 82 %); the text column starts beside it (4 % inset), so text is never under the picture: "Fresh fish." (Dancing Script, up to 76 px, coral sparks), "Cleaned your way." (script on the yellow brush), "At your door, in your slot." (Baloo 2 800, up to 42 px); three feature chips (48 px teal-tint circle icon + three lines), one row from about 1280 px, wrapping only as whole items. Top right: "From / today's catch / to your kitchen" on three lines in coral script, rotated −8°, with a swash | Below 1024 px: Padma first in a 5:4 crop (max 440 px), then the text centred, the chips wrapping as whole items, then the handwritten note; waves 72 px; trawler and one flock hidden | Fixed marketing copy; the delivery chip shows the server's next slot ("Next slot …") when `GET /serviceability` has one, else "Pick a slot at checkout" |
 | Background slot | `heroBackground` prop (path or URL). The home passes `/illustrations/<file>` once the `WEB_HOME_HERO_HARBOUR` slot (20:7, 2400 × 840, Padma in the left third of a sunrise harbour) is FINAL, else `null`; when set, it covers the hero and the drawn sky is left out (waves stay) | Same | Owner picture (D248) |
 | Check bar (`HomeCheckBar`) | White card, radius 24, 16 px padding, pulled 96 px up so it straddles the hero's bottom wave (D247), max 1024 px wide: pincode field ("Enter pincode, e.g. 533001") + "Check" (`PincodeForm variant="hero"`), 1 px divider, search with suggestions | Stacked, overlaps by 64 px | `GET /serviceability` (the server decides); `/search/suggest` |
 | "What's on your *mind?*" (`HomeCategories`) | Theme `SectionHeader` (Baloo heading, "mind?" in teal script, coral sparks); "View all →" outline pill to `/shop`. From 1280 px all nine in one row (120 px tiles, 112 px peach `accent-coral-subtle` discs, spaced evenly); narrower screens scroll the row sideways, never wrap (D247). Five categories show the fish mark until their `CATEGORY_*` pictures arrive (D248) | 96 px circles in a sideways scroll row inside the 16 px gutters | `GET /home` `featuredCategories` (name, slug, `imageUrl`; fish mark when no picture). No category names in code (rule 7) |

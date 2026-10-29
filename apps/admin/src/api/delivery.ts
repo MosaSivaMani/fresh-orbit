@@ -1,6 +1,7 @@
 import { type Page } from "@fresh/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useHttp } from "../app/services";
+import { WORK_LIST_POLL_MS } from "./orders";
 import { type Id, type Version } from "./types/common";
 import {
   type AssignRiderRequest,
@@ -72,6 +73,8 @@ export function useShipments(query: Query, enabled = true) {
     queryFn: ({ signal }) =>
       http.get<Page<Shipment>>("/admin/delivery/shipments", { query, signal }),
     placeholderData: keepPreviousData,
+    // AD-7: new and changed shipments appear while the board is open.
+    refetchInterval: WORK_LIST_POLL_MS,
     enabled,
   });
 }
@@ -82,6 +85,24 @@ export function useShipment(id: Id) {
     queryKey: deliveryKeys.shipment(id),
     queryFn: ({ signal }) => http.get<Shipment>(`/admin/delivery/shipments/${id}`, { signal }),
   });
+}
+
+/**
+ * Re-reads one shipment after a 412 (AD-10): the fresh copy goes into the detail cache and the board is refreshed,
+ * and the caller gets it to retry with its new version.
+ */
+export function useReloadShipment() {
+  const http = useHttp();
+  const qc = useQueryClient();
+  return async (id: Id): Promise<Shipment> => {
+    const fresh = await qc.fetchQuery({
+      queryKey: deliveryKeys.shipment(id),
+      queryFn: ({ signal }) => http.get<Shipment>(`/admin/delivery/shipments/${id}`, { signal }),
+      staleTime: 0,
+    });
+    await qc.invalidateQueries({ queryKey: ["delivery", "shipments"] });
+    return fresh;
+  };
 }
 
 function useDeliveryWrite<TVars, TResult>(

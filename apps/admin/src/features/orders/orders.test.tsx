@@ -1,14 +1,18 @@
+import { formatRupees } from "@fresh/core";
 import { screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
+import { WORK_LIST_POLL_MS } from "../../api/orders";
 import {
   type AdminOrderDetailResponse,
   type AdminOrderSummary,
+  type ComplaintDetail,
   type CustomerOrderDetail,
+  type Invoice,
 } from "../../api/types/orders";
 import { page } from "../../test/fixtures";
 import { AdminLayout } from "../../app/AdminLayout";
 import { LOCATION_A, type RenderAppOptions, renderApp as renderWith } from "../../test/render";
-import { API, problem, server } from "../../test/server";
+import { API, API_ORIGIN, problem, server } from "../../test/server";
 import { ordersRoutes } from "./routes";
 
 // Only the shell and the orders routes, so these tests do not load other features.
@@ -291,5 +295,191 @@ describe("order detail: cancel", () => {
     expect(await screen.findByRole("heading", { name: "FO-HYD-000123" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel order" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Start preparing" })).not.toBeInTheDocument();
+  });
+});
+
+describe("orders list: new orders (AD-7)", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("re-reads the list every 30 seconds while it is open", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let calls = 0;
+    server.use(
+      http.get(`${API}/admin/orders`, () => {
+        calls += 1;
+        return HttpResponse.json(page([summary()]));
+      }),
+    );
+    renderApp({ path: "/orders", permissions: ["orders.view"] });
+
+    expect(await screen.findByRole("link", { name: "FO-HYD-000123" })).toBeInTheDocument();
+    const before = calls;
+    await vi.advanceTimersByTimeAsync(WORK_LIST_POLL_MS);
+    await waitFor(() => expect(calls).toBeGreaterThan(before));
+  });
+});
+
+const COMPLAINT_ID = "0192d100-0000-7000-8000-000000000001";
+const PHOTO_PATH = `/api/v1/admin/complaints/${COMPLAINT_ID}/photos/0192d200-0000-7000-8000-000000000001`;
+
+function complaint(overrides: Partial<ComplaintDetail> = {}): ComplaintDetail {
+  return {
+    id: COMPLAINT_ID,
+    version: "3",
+    orderId: ORDER_ID,
+    orderNumber: "FO-HYD-000123",
+    orderItemId: null,
+    fulfillmentLocationId: LOCATION_A,
+    kind: "DAMAGED",
+    description: "The pack was torn.",
+    status: "RESOLVED",
+    resolution: "NONE",
+    refundAmountPaise: null,
+    decisionNote: null,
+    raisedAt: "2026-10-24T09:00:00Z",
+    decidedAt: null,
+    resolvedAt: null,
+    attachmentUrls: [PHOTO_PATH],
+    productName: null,
+    variantName: null,
+    preparationName: null,
+    maxRefundPaise: 0,
+    photos: [],
+    ...overrides,
+  };
+}
+
+describe("complaint photos (AD-3)", () => {
+  beforeEach(() => {
+    // jsdom has no object URLs.
+    URL.createObjectURL = vi.fn(() => "blob:photo-1");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  it("fetches each photo with the staff token and shows it from an object URL, revoked on leave", async () => {
+    let authorization: string | null = null;
+    server.use(
+      http.get(`${API}/admin/complaints/${COMPLAINT_ID}`, () => HttpResponse.json(complaint())),
+      http.get(`${API_ORIGIN}${PHOTO_PATH}`, ({ request }) => {
+        authorization = request.headers.get("Authorization");
+        return new HttpResponse(new Uint8Array([137, 80, 78, 71]), {
+          headers: { "Content-Type": "image/png" },
+        });
+      }),
+    );
+    const { unmount } = renderApp({
+      path: `/complaints/${COMPLAINT_ID}`,
+      permissions: ["complaints.manage"],
+    });
+
+    const photo = await screen.findByRole("img", { name: "Photo 1 of 1 from the customer" });
+    expect(photo).toHaveAttribute("src", "blob:photo-1");
+    expect(authorization).toMatch(/^Bearer /);
+
+    unmount();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:photo-1");
+  });
+
+  it("shows a photo the server refuses as not loaded", async () => {
+    server.use(
+      http.get(`${API}/admin/complaints/${COMPLAINT_ID}`, () => HttpResponse.json(complaint())),
+      http.get(`${API_ORIGIN}${PHOTO_PATH}`, () => problem(404, "NOT_FOUND")),
+    );
+    renderApp({ path: `/complaints/${COMPLAINT_ID}`, permissions: ["complaints.manage"] });
+
+    expect(
+      await screen.findByRole("img", {
+        name: "Photo 1 of 1 from the customer could not be loaded",
+      }),
+    ).toBeInTheDocument();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+});
+
+const INVOICE: Invoice = {
+  id: "0192d400-0000-7000-8000-000000000001",
+  orderId: ORDER_ID,
+  orderNumber: "FO-HYD-000123",
+  invoiceNumber: "INV-26-000042",
+  issuedAt: "2026-10-24T09:30:00Z",
+  sellerLegalName: "Fresh Orbit Foods Private Limited",
+  sellerGstin: "36ABCDE1234F1Z5",
+  lines: [
+    {
+      lineNo: 1,
+      description: "Seer fish · Steaks · Cleaned",
+      hsnCode: "0302",
+      quantity: { value: 520, unit: "GRAM" },
+      unitPricePaise: 120000,
+      taxablePaise: 59429,
+      taxRateBp: 500,
+      taxPaise: 2971,
+      cgstPaise: 1486,
+      sgstPaise: 1485,
+      totalPaise: 62400,
+    },
+  ],
+  taxablePaise: 59429,
+  taxPaise: 2971,
+  totalPaise: 62400,
+  pdfUrl: null,
+};
+
+describe("order invoice (AD-5)", () => {
+  it("links the issued invoice from the Payment tab", async () => {
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () =>
+        HttpResponse.json(
+          orderDetail({
+            status: "DELIVERED",
+            invoice: {
+              id: INVOICE.id,
+              invoiceNumber: INVOICE.invoiceNumber,
+              issuedAt: INVOICE.issuedAt,
+            },
+          }),
+        ),
+      ),
+    );
+    const { user } = renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
+
+    await user.click(await screen.findByRole("tab", { name: "Payment" }));
+    expect(
+      await screen.findByRole("link", { name: /INV-26-000042 · View and print/ }),
+    ).toHaveAttribute("href", `/orders/${ORDER_ID}/invoice`);
+  });
+
+  it("shows the server's invoice lines and totals and prints it", async () => {
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () => HttpResponse.json(INVOICE)),
+    );
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    const { user } = renderApp({
+      path: `/orders/${ORDER_ID}/invoice`,
+      permissions: ["orders.view"],
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "Invoice INV-26-000042" }),
+    ).toBeInTheDocument();
+    const lines = screen.getByRole("table", { name: "Invoice lines" });
+    expect(within(lines).getByText("Seer fish · Steaks · Cleaned")).toBeInTheDocument();
+    expect(within(lines).getByText("0302")).toBeInTheDocument();
+    expect(screen.getByText("36ABCDE1234F1Z5", { exact: false })).toBeInTheDocument();
+    expect(screen.getAllByText(formatRupees(62400)).length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: "Print" }));
+    expect(print).toHaveBeenCalledTimes(1);
+    print.mockRestore();
+  });
+
+  it("shows not found before the invoice is issued", async () => {
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () => problem(404, "NOT_FOUND")),
+    );
+    renderApp({ path: `/orders/${ORDER_ID}/invoice`, permissions: ["orders.view"] });
+
+    expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Print" })).not.toBeInTheDocument();
   });
 });

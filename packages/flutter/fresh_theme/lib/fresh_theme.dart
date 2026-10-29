@@ -6,12 +6,13 @@
 /// The rich screens' shared parts (D176, D181) are hand-written: the grid ([FreshLayout], [FreshColumns]), the
 /// highlights ([BrushHighlight], [Sparks], [ScriptLine], [SwooshUnderline], [Snowflake]) and the drawn scenery
 /// ([FreshScenery], [HarbourScenePainter], [PalmsPainter]) with the owner's real trawler and gull pictures
-/// ([FreshTrawler], [FreshGull], [FreshSceneryPictures]; D287). The sign-in look (D281): [FreshAuthPage],
+/// ([FreshTrawler], [FreshGull], [FreshSceneryPictures]; D287); the home harbour picture and its boat
+/// ([HarbourScene], [HarbourBoat]; D320). The sign-in look (D281): [FreshAuthPage],
 /// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]; the
 /// "Tell us about you" field (D290): [FreshTextField]. The order-placed look (D288): [FreshCelebrationHeader],
 /// [FreshTicketCard], [FreshNoteCard] and [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289):
 /// [FreshSeaFloor] and [FreshSeaFloorScroll]. The home's scrolling sections (D293): [FreshSectionHeader],
-/// [FreshStepTile] and [FreshHelpCard].
+/// [FreshStepTile] and [FreshHelpCard]. Inline links in a sentence (D299): [FreshLinkText] with [FreshTextPart].
 library;
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,7 @@ export 'src/gallery.dart';
 export 'src/header.dart';
 export 'src/highlights.dart';
 export 'src/layout.dart';
+export 'src/links.dart';
 export 'src/look.dart';
 export 'src/motion.dart';
 export 'src/page.dart';

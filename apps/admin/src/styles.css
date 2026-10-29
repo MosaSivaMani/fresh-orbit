@@ -10,6 +10,26 @@
 /* The admin's own source. */
 @source "./";
 
+/*
+ * Printing a document (invoice, AD-5): only the element marked `fo-print-area` prints; the shell, menus and
+ * buttons around it are hidden.
+ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .fo-print-area,
+  .fo-print-area * {
+    visibility: visible;
+  }
+  .fo-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}
+
 @layer base {
   /* Headings use the display font token; body text keeps the sans token from the preset. */
   h1,

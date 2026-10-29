@@ -24,6 +24,12 @@ public interface IOrderingApi
         => throw new NotSupportedException("Not implemented by this test double.");
 
     /// <summary>
+    /// What the delivery board shows about each shipment's order (AD-1, AD-2), in one query; missing ids are absent.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, OrderDeliveryFacts>> GetOrderDeliveryFactsAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
+
+    /// <summary>
     /// One page of a customer's orders, newest first (admin customer detail, G6). <paramref name="fulfillmentLocationIds"/>
     /// null = every location; otherwise only orders of those locations (staff location scope).
     /// </summary>
@@ -107,3 +113,16 @@ public sealed record OrderPaymentFacts(
     long AmountDuePaise,
     DateTimeOffset? PaymentDueAt,
     Guid FulfillmentLocationId);
+
+/// <summary>The order facts a dispatcher needs on a shipment row (AD-1, AD-2).</summary>
+/// <param name="AddressLine">The delivery address without the pincode: line 1, line 2, landmark, locality and city, comma separated.</param>
+/// <param name="AmountToCollectPaise">What the rider collects at the door: the amount due for COD and UPI on delivery, 0 for prepaid orders.</param>
+public sealed record OrderDeliveryFacts(
+    Guid OrderId,
+    string OrderNumber,
+    string RecipientName,
+    string Phone,
+    string AddressLine,
+    string Pincode,
+    PaymentMethod PaymentMethod,
+    long AmountToCollectPaise);

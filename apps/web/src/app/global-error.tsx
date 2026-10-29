@@ -1,9 +1,14 @@
 "use client";
 
 import { Button, CharacterState } from "@fresh/ui";
+import { useEffect } from "react";
+import { reportBrowserError } from "@/lib/report-error";
 import "./globals.css";
 
-/** Last-resort boundary when the root layout itself fails; renders its own html/body (D181 character state on the harbour sky). */
+/**
+ * Last-resort boundary when the root layout itself fails; renders its own html/body (D181 character state on the
+ * harbour sky). What it caught goes to error monitoring (W-7, D316).
+ */
 export default function GlobalError({
   error,
   reset,
@@ -11,6 +16,9 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    reportBrowserError(error, { boundary: "global" });
+  }, [error]);
   return (
     <html lang="en-IN">
       <body className="fo-sky flex min-h-dvh items-center justify-center p-6">

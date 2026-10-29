@@ -58,7 +58,7 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
       tagline={["From", "today's catch", "to your kitchen"]}
       picture={
         <Image
-          src="/home/hero-catch.png"
+          src="/home/hero-catch.webp"
           alt="Padma smiling and holding a large fresh seer fish over prawns, crabs and fish on ice"
           fill
           priority
@@ -67,16 +67,16 @@ export function HomeHero({ nextSlot = null, heroBackground = null }: HomeHeroPro
         />
       }
       ship={
-        <Image src="/home/hero-ship.png" alt="" fill sizes="300px" className="object-contain" />
+        <Image src="/home/hero-ship.webp" alt="" fill sizes="300px" className="object-contain" />
       }
       gulls={[
-        <Image key="gull-1" src="/home/hero-gull-1.png" alt="" fill sizes="120px" />,
-        <Image key="gull-2" src="/home/hero-gull-2.png" alt="" fill sizes="70px" />,
-        <Image key="gull-3" src="/home/hero-gull-3.png" alt="" fill sizes="96px" />,
+        <Image key="gull-1" src="/home/hero-gull-1.webp" alt="" fill sizes="120px" />,
+        <Image key="gull-2" src="/home/hero-gull-2.webp" alt="" fill sizes="70px" />,
+        <Image key="gull-3" src="/home/hero-gull-3.webp" alt="" fill sizes="96px" />,
       ]}
       background={
         <Image
-          src={heroBackground ?? "/home/hero-harbour.jpg"}
+          src={heroBackground ?? "/home/hero-harbour.webp"}
           alt=""
           fill
           priority

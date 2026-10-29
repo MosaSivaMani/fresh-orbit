@@ -242,6 +242,16 @@ services:
       FRESH_API_ORIGIN: http://api:8080
       # Inlined at build time (deploy.yml build argument); repeated here for server code read at runtime.
       NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?DOMAIN is required}
+      # The same environment as the API and Worker: only Production is indexed by search engines (L-45, D301).
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
+      # The grievance officer on /support (L-7, D300); shown only when name, e-mail and response time are all set.
+      FRESH_GRIEVANCE_OFFICER_NAME: ${FRESH_GRIEVANCE_OFFICER_NAME:-}
+      FRESH_GRIEVANCE_OFFICER_DESIGNATION: ${FRESH_GRIEVANCE_OFFICER_DESIGNATION:-}
+      FRESH_GRIEVANCE_OFFICER_EMAIL: ${FRESH_GRIEVANCE_OFFICER_EMAIL:-}
+      FRESH_GRIEVANCE_RESPONSE_TIME: ${FRESH_GRIEVANCE_RESPONSE_TIME:-}
+      # Error monitoring (W-7, D316): a GlitchTip / Sentry DSN; empty = off. Reports carry the image tag as release.
+      ERROR_REPORTING_DSN: ${ERROR_REPORTING_DSN:-}
+      APP_RELEASE: ${IMAGE_TAG}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
       interval: 15s

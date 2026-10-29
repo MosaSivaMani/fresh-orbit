@@ -77,6 +77,16 @@ export class ApiError extends Error {
       this.code === "CONCURRENT_SAVE"
     );
   }
+
+  /**
+   * True when a write may have happened although no success came back: no response (network, timeout), any 5xx
+   * (an edge 502/504 can hide a commit) or a retryable refusal. A write that fails this way keeps its
+   * `Idempotency-Key` for the next attempt, so the server replays the first result instead of running it twice
+   * (D315). False for a definite 4xx answer, after which the next attempt is a new action with a new key.
+   */
+  get isOutcomeUnknown(): boolean {
+    return this.isRetryable || this.status >= 500;
+  }
 }
 
 export function isApiError(value: unknown): value is ApiError {

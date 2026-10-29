@@ -1,7 +1,10 @@
 import { Combobox, FormField, Select } from "@fresh/ui";
-import { usePreparationMethods, useProduct, useProducts, useVariantLookup } from "../api/catalog";
+import { useState } from "react";
+import { usePreparationMethods, useProduct, useProducts } from "../api/catalog";
 import { type StockUnit } from "../api/types/catalog";
 import { useCan } from "../app/services";
+import { useDebouncedValue } from "../lib/debounce";
+import { VariantSearch } from "./VariantSearch";
 
 export interface VariantChoice {
   productId: string | null;
@@ -36,30 +39,26 @@ export function VariantPicker({
 }) {
   const can = useCan();
   const canBrowse = can("catalog.manage");
-  const products = useProducts({ status: "ACTIVE", pageSize: 100 }, canBrowse);
+  // AD-4: products are searched on the server too (`q`), so a catalogue past one page stays pickable.
+  const [productSearch, setProductSearch] = useState("");
+  const productQ = useDebouncedValue(productSearch).trim();
+  const products = useProducts(
+    { status: "ACTIVE", pageSize: 20, ...(productQ ? { q: productQ } : {}) },
+    canBrowse,
+  );
   const product = useProduct(value.productId ?? "", canBrowse && Boolean(value.productId));
-  const lookup = useVariantLookup(!canBrowse);
   const methods = usePreparationMethods(!canBrowse);
 
   if (!canBrowse) {
-    const found = lookup.data?.items ?? [];
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <FormField label="Variant" required error={errors.variantId}>
-          <Combobox
-            options={found.map((v) => ({
-              value: v.variantId,
-              label: `${v.productName} · ${v.variantName} (${v.sku})`,
-              keywords: [v.sku],
-            }))}
-            value={value.variantId || null}
-            placeholder={lookup.isPending ? "Loading variants…" : "Choose a variant"}
-            searchPlaceholder="Search product, variant or SKU"
-            onValueChange={(id) => {
-              const next = found.find((v) => v.variantId === id) ?? null;
+          <VariantSearch
+            value={value.variantId}
+            onChange={(next) => {
               onChange({
                 productId: next?.productId ?? null,
-                variantId: id ?? "",
+                variantId: next?.variantId ?? "",
                 preparationCode: "",
               });
               onVariant?.(next ? { stockUnit: next.stockUnit } : null);
@@ -92,8 +91,12 @@ export function VariantPicker({
             keywords: [p.slug],
           }))}
           value={value.productId}
+          {...(product.data ? { selectedLabel: product.data.name } : {})}
+          onSearchChange={setProductSearch}
+          loading={products.isFetching}
           placeholder={products.isPending ? "Loading products…" : "Choose a product"}
           searchPlaceholder="Search products"
+          emptyText="No active product matches."
           onValueChange={(id) => {
             onChange({ productId: id, variantId: "", preparationCode: "" });
             onVariant?.(null);
