@@ -8,7 +8,17 @@ import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import '../support/fixtures.dart';
 import '../support/harness.dart';
 
-HomeData _home({bool banners = true, int categories = 6}) => HomeData.fromJson({
+Map<String, Object?> _product(int i) => {
+  'id': 'p$i',
+  'slug': 'product-$i',
+  'name': 'Product $i',
+  'localNames': <Object?>[],
+  'fromPrice': {'unitPricePaise': 50000 + i, 'compareAtPaise': null, 'perUnit': 'KG'},
+  'availability': {'status': 'IN_STOCK', 'message': null},
+  'locationRequired': false,
+};
+
+HomeData _home({bool banners = true, int categories = 6, int products = 0}) => HomeData.fromJson({
   'banners': banners
       ? [
           {
@@ -32,7 +42,7 @@ HomeData _home({bool banners = true, int categories = 6}) => HomeData.fromJson({
     for (final name in ['Fish', 'Prawns', 'Crabs', 'Squid', 'Shellfish', 'Lobster'].take(categories))
       {'id': name, 'slug': name.toLowerCase(), 'name': name, 'imageUrl': null},
   ],
-  'featuredProducts': <Object?>[],
+  'featuredProducts': [for (var i = 1; i <= products; i++) _product(i)],
   'locationRequired': false,
 });
 
@@ -46,7 +56,7 @@ Future<TestDeps> _pump(
   final deps = TestDeps(pincode: '600041');
   deps.location.onServiceability = (_) async => service ?? serviceable();
   deps.catalog.onHome = () async => home ?? _home();
-  await pumpScreen(tester, deps, const HomeScreen(), otherPaths: const ['/shop', '/search', '/wishlist']);
+  await pumpScreen(tester, deps, const HomeScreen(), otherPaths: const ['/shop', '/search', '/wishlist', '/account/help']);
   tester.view.physicalSize = size * tester.view.devicePixelRatio;
   tester.platformDispatcher.textScaleFactorTestValue = textScale;
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -61,6 +71,9 @@ double _scale(WidgetTester tester) {
   final page = tester.getSize(find.descendant(of: fit, matching: find.byType(SizedBox)).first);
   return tester.getSize(fit).width / page.width;
 }
+
+/// The sections below the first screen are laid out but off screen until scrolled to.
+Finder _below(String key) => find.byKey(Key(key), skipOffstage: false);
 
 final _verticalScroll = find.byWidgetPredicate(
   (w) => w is Scrollable && axisDirectionToAxis(w.axisDirection) == Axis.vertical,
@@ -130,21 +143,127 @@ void main() {
     expect(left(firstOffer), moreOrLessEquals(16, epsilon: 0.5));
   });
 
-  testWidgets('fits one screen with no vertical scroll at 390×844 and text scale 1.0', (tester) async {
+  testWidgets('the first screen fills the screen as before and the page scrolls on into the sections (D292)', (
+    tester,
+  ) async {
     await _pump(tester);
 
-    expect(find.byKey(const Key('homeFit')), findsOneWidget);
-    expect(find.descendant(of: find.byType(HomeScreen), matching: _verticalScroll), findsNothing);
-    expect(find.byType(RefreshIndicator), findsNothing);
     final fit = tester.getRect(find.byKey(const Key('homeFit')));
-    expect(fit.bottom, lessThanOrEqualTo(844));
-  });
-
-  testWidgets('scrolls with clamping physics only at a large system text scale', (tester) async {
-    await _pump(tester, textScale: 1.5);
-
+    expect(fit.top, 0);
+    expect(fit.bottom, moreOrLessEquals(844, epsilon: 0.01));
+    expect(find.descendant(of: find.byType(HomeScreen), matching: _verticalScroll), findsOneWidget);
     final scroll = tester.widget<SingleChildScrollView>(find.byKey(const Key('homeScroll')));
     expect(scroll.physics, isA<ClampingScrollPhysics>());
+    expect(find.byType(RefreshIndicator), findsNothing);
+    // The sections start below the first screen.
+    final sections = tester.getRect(_below('homeSections'));
+    expect(sections.top, moreOrLessEquals(fit.bottom, epsilon: 0.01));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('at a large system text scale the first screen keeps its natural size and still scrolls', (
+    tester,
+  ) async {
+    await _pump(tester, textScale: 1.5);
+
+    expect(find.byKey(const Key('homeFit')), findsNothing);
+    final scroll = tester.widget<SingleChildScrollView>(find.byKey(const Key('homeScroll')));
+    expect(scroll.physics, isA<ClampingScrollPhysics>());
+    expect(_below('homeSections'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('"Popular today" shows the server featured products, at most six, and See all opens the shop', (
+    tester,
+  ) async {
+    await _pump(tester, home: _home(products: 8));
+
+    expect(_below('homePopular'), findsOneWidget);
+    for (var i = 1; i <= homePopularCount; i++) {
+      expect(find.text('Product $i', skipOffstage: false), findsOneWidget, reason: 'product $i');
+    }
+    expect(find.text('Product 7', skipOffstage: false), findsNothing);
+    final seeAll = _below('homePopularSeeAll');
+    await tester.ensureVisible(seeAll);
+    await tester.pumpAndSettle();
+    await tester.tap(seeAll);
+    await tester.pumpAndSettle();
+    expect(find.text('route:/shop'), findsOneWidget);
+  });
+
+  testWidgets('"Popular today" is hidden when the server sends no featured products (D186)', (tester) async {
+    await _pump(tester);
+
+    expect(_below('homePopular'), findsNothing);
+    expect(_below('homePopularSeeAll'), findsNothing);
+    expect(_below('homeSteps'), findsOneWidget);
+  });
+
+  testWidgets('the steps, the promise, the help card and the sea floor follow in order', (tester) async {
+    await _pump(tester, home: _home(products: 2));
+
+    double top(String key) => tester.getRect(_below(key)).top;
+    expect(top('homePopular'), lessThan(top('homeSteps')));
+    expect(top('homeSteps'), lessThan(top('homePromise')));
+    expect(top('homePromise'), lessThan(top('homeHelp')));
+    expect(top('homeHelp'), lessThan(top('homeSeaFloor')));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the section headings and tiles are labelled for screen readers', (tester) async {
+    final handle = tester.ensureSemantics();
+    await _pump(tester);
+
+    await tester.ensureVisible(_below('homeSteps'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Fresh in three steps'), findsOneWidget);
+    expect(find.bySemanticsLabel('Step 1, Pick your cut, Whole, steaks, curry or fillet'), findsOneWidget);
+    await tester.ensureVisible(_below('homePromise'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Our promise'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pay net weight, Weighed after cleaning'), findsOneWidget);
+    await tester.ensureVisible(_below('homeHelp'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel(RegExp(r'^Need a hand\?')), findsOneWidget);
+    handle.dispose();
+  });
+
+  testWidgets('the promise says "Kept chilled" only when the serving store has cold storage (D212)', (tester) async {
+    await _pump(tester);
+    expect(find.text('Kept chilled', skipOffstage: false), findsOneWidget);
+    expect(find.text('Cash or UPI', skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('without cold storage the promise names how to pay instead', (tester) async {
+    final json = serviceableJson()
+      ..['fulfillmentLocation'] = {'id': 'l1', 'code': 'LOC1', 'name': 'Sample Store', 'hasColdStorage': false};
+    await _pump(tester, service: Serviceability.fromJson(json));
+
+    expect(find.text('Kept chilled', skipOffstage: false), findsNothing);
+    expect(find.text('Cash or UPI', skipOffstage: false), findsOneWidget);
+  });
+
+  testWidgets('the help card opens Help', (tester) async {
+    await _pump(tester);
+
+    final help = _below('homeHelp');
+    await tester.ensureVisible(help);
+    await tester.pumpAndSettle();
+    await tester.tap(help);
+    await tester.pumpAndSettle();
+    expect(find.text('route:/account/help'), findsOneWidget);
+  });
+
+  testWidgets('a step tile shows its picture once bundled and its icon until then', (
+    tester,
+  ) async {
+    IllustrationAssets.debugSetAvailable(const {'assets/illustrations/onboarding_tile_your_cut.png'});
+    await _pump(tester);
+
+    final picture = find.byKey(const ValueKey('illustration-image-ONBOARDING_TILE_YOUR_CUT'), skipOffstage: false);
+    final icon = find.byKey(const ValueKey('homeTile-fallback-ONBOARDING_TILE_CLEANED_BY_HAND'), skipOffstage: false);
+    expect(picture, findsOneWidget);
+    expect(icon, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -154,7 +273,6 @@ void main() {
         await _pump(tester, size: size, textScale: scale);
 
         expect(tester.takeException(), isNull);
-        expect(find.descendant(of: find.byType(HomeScreen), matching: _verticalScroll), findsNothing);
         final fit = tester.getRect(find.byKey(const Key('homeFit')));
         expect(fit.bottom, lessThanOrEqualTo(size.height + 0.01));
         // Always the full width: scaling to fit never leaves side gaps.
