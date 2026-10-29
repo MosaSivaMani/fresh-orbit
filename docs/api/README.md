@@ -37,7 +37,7 @@ and `docs/database/README.md`. Swagger is generated from code and must match thi
 | Refresh reuse | Presenting an already-rotated token revokes the whole family → 401 `REFRESH_TOKEN_REUSED` |
 | Customer login | Phone + OTP (`/auth/otp/request`, `/auth/otp/verify`); account is created on first verify |
 | Staff login | Email + password (`/admin/auth/login`) |
-| Refresh flow | On 401 `TOKEN_EXPIRED` the client calls `POST /api/v1/auth/refresh` once, then retries; a second 401 → sign-in screen |
+| Refresh flow | An expired or invalid access token gets 401 `UNAUTHENTICATED` (the server does not tell expired from invalid). A client holding a refresh token calls `POST /api/v1/auth/refresh` once, then retries; a second 401 → sign-in screen (D307). Other 401 codes (`LOGIN_REQUIRED`) are refusals, not token problems |
 | Customer token on `/admin` | 403 `FORBIDDEN` |
 | Staff location scope | Staff without all-locations access acting on another location → 403 `LOCATION_ACCESS_DENIED`; lists are filtered silently |
 
@@ -193,7 +193,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | VALIDATION_FAILED | 422 | One or more fields invalid; see `errors` |
 | MALFORMED_REQUEST | 400 | Body or parameter cannot be read |
 | UNAUTHENTICATED | 401 | No or invalid token |
-| TOKEN_EXPIRED | 401 | Access token expired; refresh |
+| TOKEN_EXPIRED | 401 | Reserved, not sent today: an expired token gets `UNAUTHENTICATED` (D307). Clients treat both the same |
 | LOGIN_REQUIRED | 401 | Customer login needed (checkout with guest cart) |
 | FORBIDDEN | 403 | Missing permission |
 | LOCATION_ACCESS_DENIED | 403 | Staff not allowed at this fulfillment location |

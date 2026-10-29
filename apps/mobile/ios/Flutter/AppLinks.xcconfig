@@ -1,0 +1,4 @@
+// Universal Links host (D308, MB-4): set to the website's domain (for example shop.example.in) before an App Store
+// build. The reserved .invalid name never verifies, so until then no link opens the app (rule 7: nothing guessed).
+// Steps: docs/runbooks/mobile-release.md, "App links".
+APP_LINK_HOST = app-links-not-configured.invalid

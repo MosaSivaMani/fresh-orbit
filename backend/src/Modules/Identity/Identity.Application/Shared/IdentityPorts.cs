@@ -22,7 +22,11 @@ public sealed class IdentitySettings
 
     public int OtpPerPhonePerDay { get; set; } = 10;
 
-    public int OtpPerIpPerHour { get; set; } = 20;
+    /// <summary>
+    /// IDN-R4: codes per client IP per hour. High because many customers share one carrier NAT address (ME-8 / MB-5);
+    /// <see cref="OtpPerPhonePer10Minutes"/> and <see cref="OtpPerPhonePerDay"/> are the main guard.
+    /// </summary>
+    public int OtpPerIpPerHour { get; set; } = 300;
 
     public int CustomerRefreshTokenDays { get; set; } = 30;
 

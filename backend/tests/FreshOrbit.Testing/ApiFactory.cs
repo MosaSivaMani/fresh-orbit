@@ -23,6 +23,9 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
     /// <summary>Every rate-limit rule of the Api (section <c>RateLimiting</c>); tests raise them because they share one client IP.</summary>
     public static readonly IReadOnlyList<string> RateLimitRules = ["OtpRequest", "OtpVerify", "Login", "Refresh", "Checkout", "Search", "Public", "Coupon", "Upload"];
 
+    /// <summary>The rules that also give each signed-in caller its own budget (<c>RateLimiting:&lt;Rule&gt;:PerUserPermitLimit</c>).</summary>
+    public static readonly IReadOnlyList<string> UserPartitionedRateLimitRules = ["Search", "Public"];
+
     public TestClock Clock { get; } = new();
 
     public HttpClient CreateClientFor(AccessTokenSubject subject)
@@ -57,6 +60,11 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
         foreach (var rule in RateLimitRules)
         {
             builder.UseSetting($"RateLimiting:{rule}:PermitLimit", "100000");
+        }
+
+        foreach (var rule in UserPartitionedRateLimitRules)
+        {
+            builder.UseSetting($"RateLimiting:{rule}:PerUserPermitLimit", "100000");
         }
 
         builder.ConfigureTestServices(services =>

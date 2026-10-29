@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/models/common.dart';
 import 'package:fresh_orbit_app/core/format.dart';
@@ -88,5 +89,35 @@ void main() {
     expect(isPincodeShape('600041'), isTrue);
     expect(isPincodeShape('060041'), isFalse);
     expect(isPincodeShape('60004'), isFalse);
+  });
+
+  group('pasted and autofilled Indian numbers (ME-4)', () {
+    test('strip +91, a 12-digit 91 and the trunk 0', () {
+      expect(indianMobileDigits('+91 98765 43210'), '9876543210');
+      expect(indianMobileDigits('919876543210'), '9876543210');
+      expect(indianMobileDigits('09876543210'), '9876543210');
+      expect(indianMobileDigits('+91-91234-56789'), '9123456789');
+      expect(toIndianE164('09876543210'), '+919876543210');
+      expect(toIndianE164('919876543210'), '+919876543210');
+    });
+
+    test('a 10-digit number that starts with 91 is kept', () {
+      expect(indianMobileDigits('9123456789'), '9123456789');
+      expect(toIndianE164('9123456789'), '+919123456789');
+    });
+
+    test('the field formatter turns a paste into the right 10 digits', () {
+      const formatter = IndianMobileInputFormatter();
+      for (final paste in ['+91 98765 43210', '09876543210', '919876543210']) {
+        final out = formatter.formatEditUpdate(TextEditingValue.empty, TextEditingValue(text: paste));
+        expect(out.text, '9876543210', reason: paste);
+        expect(out.selection.baseOffset, 10);
+      }
+      final typed = formatter.formatEditUpdate(
+        const TextEditingValue(text: '9876543210'),
+        const TextEditingValue(text: '98765432101'),
+      );
+      expect(typed.text, '9876543210');
+    });
   });
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Universal Links (D308, MB-4). APP_LINK_HOST comes from ios/Flutter/AppLinks.xcconfig (build configuration, not
+     code); the website serves /.well-known/apple-app-site-association. Steps: docs/runbooks/mobile-release.md. -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:$(APP_LINK_HOST)</string>
+	</array>
+</dict>
+</plist>

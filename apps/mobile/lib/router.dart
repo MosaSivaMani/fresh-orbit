@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/app_links.dart';
 import 'core/format.dart';
 import 'features/account/account_screens.dart';
 import 'features/account/address_screens.dart';
@@ -61,6 +62,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: sessionChanges,
     errorBuilder: (context, state) => NotFoundScreen(onHome: () => context.go('/home')),
     redirect: (context, state) {
+      // A website link (App Links / Universal Links, D308) uses the website's paths.
+      final link = appRouteForWebsitePath(state.uri);
+      if (link != null) return link;
       final signedIn = ref.read(sessionProvider).signedIn;
       final path = state.uri.path;
       if (!signedIn && _needsLogin(path)) {
