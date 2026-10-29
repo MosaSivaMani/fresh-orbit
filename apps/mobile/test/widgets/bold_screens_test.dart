@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/models/catalog.dart';
+import 'package:fresh_orbit_app/app.dart';
 import 'package:fresh_orbit_app/features/account/settings_screen.dart';
 import 'package:fresh_orbit_app/features/auth/login_screen.dart';
 import 'package:fresh_orbit_app/features/catalog/product_grid.dart';
@@ -134,7 +135,7 @@ void main() {
   });
 
   group('settings', () {
-    testWidgets('theme and language are stored; other languages say they are coming', (tester) async {
+    testWidgets('theme is stored; the language choice is hidden until translations exist (D312)', (tester) async {
       final deps = TestDeps();
       await pumpScreen(tester, deps, const SettingsScreen());
       await tester.pumpAndSettle();
@@ -146,10 +147,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(deps.prefs.themeMode, 'dark');
 
-      await tester.tap(find.text('తెలుగు'));
-      await tester.pumpAndSettle();
-      expect(deps.prefs.language, 'te');
-      expect(find.text('Coming soon. The app stays in English for now.'), findsOneWidget);
+      expect(availableLanguages, {'en'});
+      expect(find.byKey(const Key('languagePicker')), findsNothing);
+      expect(find.text('తెలుగు'), findsNothing);
+    });
+
+    test('a language stored by an earlier version without translations reads as English', () {
+      final deps = TestDeps()..prefs.language = 'te';
+      final container = deps.container();
+      addTearDown(container.dispose);
+      expect(container.read(languageProvider), 'en');
     });
 
     testWidgets('signed in: notification switches and log out', (tester) async {

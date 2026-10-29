@@ -66,19 +66,22 @@ class PreviewAddress {
 }
 
 class PreviewSlot {
-  const PreviewSlot({required this.id, required this.startAt, required this.endAt, this.cutoffAt, this.status});
+  const PreviewSlot({required this.id, this.startAt, this.endAt, this.cutoffAt, this.status});
 
   factory PreviewSlot.fromJson(Json j) => PreviewSlot(
     id: reqString(j, 'id'),
-    startAt: reqInstant(j, 'startAt'),
-    endAt: reqInstant(j, 'endAt'),
+    startAt: optInstant(j, 'startAt'),
+    endAt: optInstant(j, 'endAt'),
     cutoffAt: optInstant(j, 'cutoffAt'),
     status: optString(j, 'status'),
   );
 
   final String id;
-  final DateTime startAt;
-  final DateTime endAt;
+
+  /// Null when the server does not know the slot here (empty cart, slot not at this store; MO-2): the preview's
+  /// blockers say why.
+  final DateTime? startAt;
+  final DateTime? endAt;
   final DateTime? cutoffAt;
   final String? status;
 }

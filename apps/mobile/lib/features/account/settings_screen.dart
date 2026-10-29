@@ -1,6 +1,6 @@
 // Settings (D88): notification toggles (the server's preferences), language, theme, log out, and the policy pages
-// on the website (D299). Works signed out for language and theme. Only English copy exists so far: Telugu and Hindi
-// are remembered and the screen says so.
+// on the website (D299). Works signed out for language and theme. Only English copy exists so far, so the language
+// choice is hidden until a second language has its translations (D312, MA-8).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,18 +78,22 @@ class SettingsScreen extends ConsumerWidget {
             const MenuLabel('App'),
             MenuCard(
               children: [
-                MenuRow(
-                  icon: Icons.language_rounded,
-                  title: 'Language',
-                  subtitle: language == 'en' ? null : 'Coming soon. The app stays in English for now.',
-                  trailing: SegmentedPills<String>(
-                    key: const Key('languagePicker'),
-                    semanticLabel: 'Language',
-                    options: languageNames,
-                    selected: language,
-                    onSelected: (code) => ref.read(languageProvider.notifier).set(code),
+                // Shown only once a second language has its translations (D312).
+                if (availableLanguages.length > 1)
+                  MenuRow(
+                    icon: Icons.language_rounded,
+                    title: 'Language',
+                    trailing: SegmentedPills<String>(
+                      key: const Key('languagePicker'),
+                      semanticLabel: 'Language',
+                      options: {
+                        for (final e in languageNames.entries)
+                          if (availableLanguages.contains(e.key)) e.key: e.value,
+                      },
+                      selected: language,
+                      onSelected: (code) => ref.read(languageProvider.notifier).set(code),
+                    ),
                   ),
-                ),
                 MenuRow(
                   icon: Icons.dark_mode_outlined,
                   title: 'Theme',
