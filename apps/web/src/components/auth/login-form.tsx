@@ -3,6 +3,7 @@
 import { Button, FormField, Input } from "@fresh/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquareWarning, TimerReset } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { browserHttp } from "@/api/browser";
@@ -21,6 +22,33 @@ export function safeNext(next: string | null | undefined): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/";
   return next;
 }
+
+/**
+ * Verifying the code creates the account, so the terms and the privacy policy are linked before each button (W-3,
+ * D300). They open in a new tab, so the number and the code typed so far stay in this form.
+ */
+function ConsentNote() {
+  return (
+    <p className="text-text-muted text-sm">
+      By continuing you agree to our{" "}
+      <Link href="/support/terms" target="_blank" rel="noopener noreferrer" className={linkClass}>
+        Terms
+      </Link>{" "}
+      and{" "}
+      <Link
+        href="/support/privacy-policy"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
+      >
+        Privacy policy
+      </Link>
+      .
+    </p>
+  );
+}
+
+const linkClass = "text-accent-text font-semibold underline-offset-4 hover:underline";
 
 type Step =
   { kind: "phone" } | { kind: "code"; phone: string; challenge: OtpChallenge; resendAt: number };
@@ -237,6 +265,7 @@ export function LoginForm({ next }: { next: string | null }) {
             startAdornment={<span className="text-text-muted text-sm">+91</span>}
           />
         </FormField>
+        <ConsentNote />
         <Button type="submit" size="lg" loading={pending} disabled={rateLimited}>
           Send code
         </Button>
@@ -272,6 +301,7 @@ export function LoginForm({ next }: { next: string | null }) {
           ref={codeRef}
         />
       </FormField>
+      <ConsentNote />
       <Button type="submit" size="lg" loading={pending} disabled={rateLimited}>
         Verify and sign in
       </Button>

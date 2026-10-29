@@ -3,7 +3,7 @@ import { type ReactNode } from "react";
 import { DemoBanner } from "@/components/demo-banner";
 import { SiteHeader } from "@/components/header/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { getSiteUrl, isDemoMode } from "@/server/config";
+import { getSiteUrl, isDemoMode, isIndexable } from "@/server/config";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -27,6 +27,8 @@ export const metadata: Metadata = {
   applicationName: "Fresh Orbitt",
   openGraph: { type: "website", siteName: "Fresh Orbitt", locale: "en_IN" },
   formatDetection: { telephone: false },
+  // Outside the production server every page carries `noindex, nofollow` as well as robots.txt (L-45, D301).
+  ...(isIndexable() ? {} : { robots: { index: false, follow: false } }),
 };
 
 export const viewport: Viewport = {

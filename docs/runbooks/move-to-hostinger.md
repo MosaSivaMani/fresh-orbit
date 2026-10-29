@@ -47,9 +47,10 @@ ssh deploy@<old-ip> 'cat /opt/freshorbit/infra/compose/rclone.conf' | \
   ssh deploy@<new-ip> 'umask 077; cat > /opt/freshorbit/infra/compose/rclone.conf'
 ```
 
-Edit `.env.prod` on the new server if anything differs: `APP_ENVIRONMENT=Production` and `SEED_SAMPLE_DATA=false`
-for production, `BACKUP_REMOTE=offsite:production`, `COMPOSE_PROFILES` (monitoring is optional on 8 GB; see the
-memory budget at the top of the compose file). Security settings: `security-configuration.md`.
+Edit `.env.prod` on the new server if anything differs: `APP_ENVIRONMENT=Production` (the template's value since
+D301; a staging `.env.prod` copied across still says `Staging`, so check it) and `SEED_SAMPLE_DATA=false` for
+production, `BACKUP_REMOTE=offsite:production`, `COMPOSE_PROFILES` (monitoring is optional on 8 GB; see the memory
+budget at the top of the compose file). Security settings: `security-configuration.md`.
 
 Log in to GHCR (`docker login ghcr.io -u <github-user>`, token with `read:packages`) and pull the images:
 `cd /opt/freshorbit && IMAGE_TAG=<tag> docker compose --env-file infra/compose/.env.prod -f infra/compose/docker-compose.prod.yml pull`.

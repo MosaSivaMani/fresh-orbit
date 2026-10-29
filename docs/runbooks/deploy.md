@@ -56,7 +56,9 @@ start, then about every 90 days), is expected
    **Repository** variables (Settings → Secrets and variables → Actions → Variables): `SITE_URL_STAGING` and
    `SITE_URL_PRODUCTION` (e.g. `https://staging.freshorbit.in`, `https://freshorbit.in`). The website inlines its
    public URL (`NEXT_PUBLIC_SITE_URL`: canonical links, sitemap, robots) at build time, so the build job needs it
-   before any environment is chosen. The admin image needs no URL (see §7).
+   before any environment is chosen. The admin image needs no URL (see §7). The website image is also built with
+   `APP_ENVIRONMENT` (`Production` for `-prod` images, `Staging` otherwise), and the web container gets the server's
+   `APP_ENVIRONMENT` at runtime: only Production is indexable by search engines; everything else is `noindex` (D301).
 3. Application secrets (database password, JWT key, SMTP, SMS) never go to GitHub: they live only in
    `/opt/freshorbit/infra/compose/.env.prod` on the server (template: `infra/compose/.env.prod.example`).
 4. GHCR packages are private with the repository. The workflow logs the server in with its short-lived token for each
