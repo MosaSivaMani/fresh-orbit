@@ -111,8 +111,9 @@ class FreshProductGridDelegate extends SliverGridDelegate {
   static const maxCrossAxisExtent = 240.0;
   static const childAspectRatio = 0.72;
 
-  /// Extra card height per 1.0 of text scale above 1.0 (the text part's three lines plus room for the price).
-  static const extraHeightPerScale = 120.0;
+  /// Extra card height per 1.0 of text scale above 1.0: the name, local names and price grow, and at 2.0 the price
+  /// row wraps on a narrow card, so the text part needs about 180 dp more there (measured in CI at 360 dp).
+  static const extraHeightPerScale = 200.0;
 
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {
