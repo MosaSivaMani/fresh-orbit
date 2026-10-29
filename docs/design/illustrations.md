@@ -56,7 +56,8 @@ The full descriptions copied into every prompt are the `characters` entries in t
 
 54 slots (32 from the handoff, 12 onboarding tiles and banners from the owner's onboarding reference, and later
 additions below; the list in `REQUIRED_SLOTS`, `src/manifest.ts`, is the source of truth). Status as of this change:
-13 FINAL (`LOGIN_OTP` and `SIGN_IN_COAST` since D285–D286, `ORDER_PLACED` since D291), 41 PLACEHOLDER.
+17 FINAL (`LOGIN_OTP` and `SIGN_IN_COAST` since D285–D286, `ORDER_PLACED` since D291, four `CATEGORY_*` since D294),
+37 PLACEHOLDER.
 The playground's **Illustrated** tab shows every slot with its alt text and status.
 
 | Slot | Shape | Cast | Website | Admin | Mobile |
@@ -108,11 +109,11 @@ The playground's **Illustrated** tab shows every slot with its alt text and stat
 | `HOME_HERO_CATCH` | 3:2 | `FISHMONGER` (Padma with the morning catch) | — | — | Home hero "Today's catch is in!", bottom-right |
 | `HOME_CARD_CLEANED` | 1:1 | none (cleaned cuts on a board) | — | — | Home card "Cleaned your way" |
 | `HOME_CARD_RIDER` | 1:1 | `RIDER` (Ravi with the cold box) | — | — | Home card "Kept cold till your door"; order-placed delivery-code note (D288) |
-| `CATEGORY_FILLETS_STEAKS` | 1:1 | none (seer steaks, salmon fillet slices, lemon) | — | — | Website category circle (D248) |
-| `CATEGORY_READY_TO_COOK` | 1:1 | none (cleaned, scored sardines and mackerel) | — | — | Website category circle (D248) |
-| `CATEGORY_MARINATED` | 1:1 | none (masala-marinated fish pieces, curry leaves) | — | — | Website category circle (D248) |
-| `CATEGORY_FISH_EGGS` | 1:1 | none (a bowl of orange fish roe) | — | — | Website category circle (D248) |
-| `CATEGORY_READY_TO_EAT` | 1:1 | none (a bowl of Andhra fish curry) | — | — | Website category circle (D248) |
+| `CATEGORY_FILLETS_STEAKS` | 1:1 | none (seer steaks, salmon fillet pieces, lemon on a banana leaf; FINAL, D294) | — | — | Website category circle (D248); app home by slug |
+| `CATEGORY_READY_TO_COOK` | 1:1 | none (four cleaned, scored mackerel on a banana leaf; FINAL, D294) | — | — | Website category circle (D248); app home by slug |
+| `CATEGORY_MARINATED` | 1:1 | none (masala-marinated fish pieces, curry leaves; to regenerate, D294) | — | — | Website category circle (D248) |
+| `CATEGORY_FISH_EGGS` | 1:1 | none (a bowl of orange fish roe; FINAL, D294) | — | — | Website category circle (D248); app home by slug |
+| `CATEGORY_READY_TO_EAT` | 1:1 | none (a teal bowl of Andhra fish curry; FINAL, D294) | — | — | Website category circle (D248); app home by slug |
 | `WEB_HOME_HERO_HARBOUR` | 20:7 | `FISHMONGER` (Padma in the left third of a sunrise harbour) | — | — | Website home hero background, optional (D248) |
 | `SIGN_IN_COAST` | 3:2 | none (two trawlers at a stone jetty, palms, sun, gulls, teal water) | — | — | Sign-in header, right side (D286) |
 
@@ -149,6 +150,16 @@ The five `CATEGORY_*` slots (D248) cover the categories the sample data has no p
 soft shadow). Finals go into the slots at 1024 × 1024. A 512 × 512 WebP copy of each goes to
 `backend/data/sample/images/categories/<slug>.webp` (`fillets-steaks`, `ready-to-cook`, `marinated`, `fish-eggs`,
 `ready-to-eat`) once the owner sends them; until then the website shows the fish mark for those categories.
+Four arrived on 2026-10-29 and are FINAL (D294): fillets and steaks, ready to cook, fish eggs and ready to eat. Two
+of them (fillets and steaks, ready to cook) came with a grey and white checkerboard painted into the pixels instead
+of transparency; the checkerboard was cut away (a flood fill from the border over the two checker tones, one
+enclosed pocket by the ready-to-cook tail cleared by hand, the 1 px blended rim dropped and the edge softened), and
+the cut-outs were checked on dark and light backgrounds. The two with real transparency were made fully opaque
+inside (alpha 215 and over) and their faint fringe (alpha under 40) cleared. `generated/` holds the cleaned
+1024 × 1024 cut-outs; the package holds 256-colour PNGs (260–400 KB); the sample set and the app hold 512 × 512
+WebPs (43–60 KB). The app's home picks them by slug words (`BundledPictures.category`, D220). `CATEGORY_MARINATED`
+stays a placeholder: the owner's picture has the checkerboard painted inside the top fish steak's masala too, which
+no cut-out can remove, so it must be regenerated with real transparency (or a plain white background).
 `WEB_HOME_HERO_HARBOUR` is a `SCENE` at 20:7. While it is a placeholder the website draws its own sky; once it is
 FINAL the home passes `/illustrations/<file>` as the hero's `heroBackground`. Prompts ready to paste:
 `docs/design/prompts-web-home-2026-10-28.md`.
