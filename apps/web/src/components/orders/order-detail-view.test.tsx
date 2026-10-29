@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { type OrderDetail, type OrderTracking } from "@/api/types/orders";
 import { problem } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
@@ -419,5 +419,66 @@ describe("OrderDetailView", () => {
     const steps = await screen.findByRole("region", { name: "Tracking" });
     expect(await within(steps).findByText(/23 Oct, 11:30/)).toBeInTheDocument();
     expect(within(steps).queryByText(/24 Oct/)).not.toBeInTheDocument();
+  });
+  describe("Invoice (W-10)", () => {
+    const withInvoice = () =>
+      order({
+        status: "DELIVERED",
+        allowedActions: {
+          cancel: false,
+          raiseComplaint: false,
+          downloadInvoice: true,
+          reorder: false,
+        },
+      });
+
+    function fakeTab() {
+      return {
+        closed: false,
+        opener: {} as unknown,
+        location: { href: "about:blank" },
+        close: vi.fn(),
+      };
+    }
+
+    it("opens the tab inside the click and then sends it to the invoice PDF", async () => {
+      const tab = fakeTab();
+      const open = vi.spyOn(window, "open").mockReturnValue(tab as unknown as Window);
+      let openedBeforeAnswer = false;
+      server.use(
+        http.get(`${API}/orders/o1`, () => HttpResponse.json(withInvoice())),
+        http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+        http.get(`${API}/orders/o1/invoice`, () => {
+          openedBeforeAnswer = open.mock.calls.length === 1;
+          return HttpResponse.json({ id: "i1", pdfUrl: "https://media.test/invoices/i1.pdf" });
+        }),
+      );
+      renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+      await userEvent.click(await screen.findByRole("button", { name: "Invoice" }));
+
+      await waitFor(() => expect(tab.location.href).toBe("https://media.test/invoices/i1.pdf"));
+      expect(openedBeforeAnswer).toBe(true);
+      expect(tab.opener).toBeNull();
+      expect(tab.close).not.toHaveBeenCalled();
+      open.mockRestore();
+    });
+
+    it("closes the empty tab when the invoice is not ready yet", async () => {
+      const tab = fakeTab();
+      const open = vi.spyOn(window, "open").mockReturnValue(tab as unknown as Window);
+      server.use(
+        http.get(`${API}/orders/o1`, () => HttpResponse.json(withInvoice())),
+        http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+        http.get(`${API}/orders/o1/invoice`, () => HttpResponse.json({ id: "i1", pdfUrl: null })),
+      );
+      renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+      await userEvent.click(await screen.findByRole("button", { name: "Invoice" }));
+
+      await waitFor(() => expect(tab.close).toHaveBeenCalled());
+      expect(tab.location.href).toBe("about:blank");
+      open.mockRestore();
+    });
   });
 });

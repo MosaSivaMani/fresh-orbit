@@ -247,6 +247,9 @@ services:
       FRESH_GRIEVANCE_OFFICER_DESIGNATION: ${FRESH_GRIEVANCE_OFFICER_DESIGNATION:-}
       FRESH_GRIEVANCE_OFFICER_EMAIL: ${FRESH_GRIEVANCE_OFFICER_EMAIL:-}
       FRESH_GRIEVANCE_RESPONSE_TIME: ${FRESH_GRIEVANCE_RESPONSE_TIME:-}
+      # Error monitoring (W-7, D316): a GlitchTip / Sentry DSN; empty = off. Reports carry the image tag as release.
+      ERROR_REPORTING_DSN: ${ERROR_REPORTING_DSN:-}
+      APP_RELEASE: ${IMAGE_TAG}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
       interval: 15s

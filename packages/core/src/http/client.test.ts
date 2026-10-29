@@ -126,6 +126,23 @@ describe("createHttpClient", () => {
     expect(error.isRetryable).toBe(true);
   });
 
+  it("treats no response and every 5xx as an unknown outcome, and a 4xx refusal as known (W-4)", () => {
+    const unknown = [
+      new ApiError({ status: 0, code: "NETWORK_ERROR" }),
+      new ApiError({ status: 500, code: "INTERNAL_ERROR" }),
+      new ApiError({ status: 502, code: "HTTP_502" }),
+      new ApiError({ status: 504, code: "HTTP_504" }),
+      new ApiError({ status: 409, code: "IDEMPOTENCY_IN_PROGRESS" }),
+    ];
+    for (const error of unknown) expect(error.isOutcomeUnknown).toBe(true);
+    const known = [
+      new ApiError({ status: 409, code: "PRICE_CHANGED" }),
+      new ApiError({ status: 422, code: "VALIDATION_FAILED" }),
+      new ApiError({ status: 404, code: "NOT_FOUND" }),
+    ];
+    for (const error of known) expect(error.isOutcomeUnknown).toBe(false);
+  });
+
   it("returns null data for 204", async () => {
     const client = createHttpClient({
       baseUrl: BASE,
@@ -207,6 +224,39 @@ describe("refresh on 401", () => {
     const error = (await client.get("/me").catch((e: unknown) => e)) as ApiError;
     expect(error.code).toBe("TOKEN_EXPIRED");
     expect(onAuthFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the session and surfaces the refresh's own error when the refresh cannot run (W-6)", async () => {
+    const onAuthFailure = vi.fn();
+    const client = createHttpClient({
+      baseUrl: BASE,
+      fetch: async () => expired(),
+      getAccessToken: () => "t",
+      refresh: async () => {
+        throw new ApiError({ status: 503, code: "SERVICE_UNAVAILABLE", retryAfterSeconds: 5 });
+      },
+      onAuthFailure,
+    });
+    const error = (await client.get("/me").catch((e: unknown) => e)) as ApiError;
+    expect(error.status).toBe(503);
+    expect(error.code).toBe("SERVICE_UNAVAILABLE");
+    expect(error.isRetryable).toBe(true);
+    expect(onAuthFailure).not.toHaveBeenCalled();
+  });
+
+  it("createRefreshHandler keeps the stored tokens and throws on 429 and 5xx", async () => {
+    for (const status of [429, 500, 503]) {
+      const store = createMemoryTokenStore({ accessToken: "a1", refreshToken: "r1" });
+      const handler = createRefreshHandler({
+        baseUrl: BASE,
+        tokenStore: store,
+        fetch: async () => json(status, { status, code: `CODE_${status}` }, { "Retry-After": "3" }),
+      });
+      const error = (await handler().catch((e: unknown) => e)) as ApiError;
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error.status).toBe(status);
+      expect(store.getRefreshToken()).toBe("r1");
+    }
   });
 
   it("createRefreshHandler rotates tokens in the store and clears it on refusal", async () => {
