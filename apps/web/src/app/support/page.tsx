@@ -199,7 +199,10 @@ export default async function SupportPage() {
           </Link>
         </li>
         <li>
-          <Link href="/support/terms" className="text-accent-text underline-offset-4 hover:underline">
+          <Link
+            href="/support/terms"
+            className="text-accent-text underline-offset-4 hover:underline"
+          >
             Terms of use
           </Link>
         </li>
