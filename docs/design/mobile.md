@@ -136,7 +136,7 @@ Theme mode is `themeModeProvider` in `lib/app.dart`, saved in shared_preferences
 | File | What it does |
 |---|---|
 | `api_client.dart` | `createDio()`: base URL `<API_BASE_URL>/api/v1/`, JSON, timeouts, interceptors. `ContextHeadersInterceptor` adds `X-Pincode` (unless the request already has a `pincode` query) and `X-Cart-Token` (guest only; a new token from the response header or the cart body is saved). `ApiClient` turns every failure into `ApiError`. Helpers: `newIdempotencyKey()` (UUID v4), `ifMatch(version)` |
-| `auth_interceptor.dart` | Adds `Authorization: Bearer`. Refreshes **before** a request when the access token is missing or expires within 30 s, and **after** a `401 TOKEN_EXPIRED`, then retries once. Refresh is single-flight: concurrent requests share one `POST auth/refresh`. A 401/403 from refresh ends the session; a network error keeps it |
+| `auth_interceptor.dart` | Adds `Authorization: Bearer`. Refreshes **before** a request when the access token is missing or expires within 30 s, and **after** a `401 UNAUTHENTICATED` or `TOKEN_EXPIRED` (D307), then retries once. Refresh is single-flight: concurrent requests share one `POST auth/refresh`. A 401/403 from refresh ends the session; a network error keeps it |
 | `token_store.dart` | Access token in memory only. Refresh token and guest cart token in `flutter_secure_storage` (Keychain on iOS, EncryptedSharedPreferences/Keystore on Android) |
 | `api_error.dart` | RFC 7807 Problem Details → `ApiError {status, code, title, detail, errors (field → messages), traceId, retryAfterSeconds, extensions}`. Network failures get `NETWORK_ERROR` / `TIMEOUT` (status 0). Screens branch on `code`, never on wording |
 | `repositories.dart` | One interface + HTTP implementation per area (auth, locations, catalog, cart, orders, account) |
@@ -227,7 +227,7 @@ The app now uses the price quote, the business profile and stock alerts (§17); 
   Cart and Ordering are merged.
 - Complaint photos: the complaint is sent as multipart without images; an image picker is still to add.
 - Final illustrations are not in yet: every slot draws its placeholder until the owner's PNGs land (§14).
-- FCM is not added (below).
+- FCM is not added (below). The Android 13 `POST_NOTIFICATIONS` permission is already declared (MA-6).
 
 ## 10. Push notifications (FCM)
 
@@ -767,3 +767,32 @@ From the October gap audit (`research/gap-audit-2026-10/`: MA-1, MA-2, MA-3, MA-
 it to record the address) are in `lib/state/core_providers.dart`. Tests: `test/widgets/policy_links_test.dart`
 (addresses built from the configured origin; links and rows open the right page; all hidden when not configured;
 `FreshLinkText` runs only the link's tap).
+
+## 26. High gaps: entry, browse, buy, account (D306–D314)
+
+From the October gap audit (`research/gap-audit-2026-10/` mobile-entry, mobile-browse, mobile-buy,
+mobile-account-app).
+
+| Item | What the app does | Where | Tests |
+|---|---|---|---|
+| Token refresh (ME-2, D307) | A 401 `UNAUTHENTICATED` (what the server sends) or `TOKEN_EXPIRED` refreshes once and retries; a second 401 signs out; `LOGIN_REQUIRED` and guests never refresh | `api/auth_interceptor.dart` | `test/api/auth_interceptor_test.dart` |
+| Resend errors (ME-3) | A failed resend on the code step shows under the code boxes | `features/auth/login_screen.dart` | `test/widgets/sign_in_edges_test.dart` |
+| Pasted numbers (ME-4) | `IndianMobileInputFormatter`: "+91 98765 43210", "919876543210", "09876543210" all become 9876543210 (sign-in and address form) | `core/format.dart` | `test/core/format_test.dart` |
+| Back on the code step (ME-5) | `PopScope` and the header back return to the phone step | `login_screen.dart` | `sign_in_edges_test.dart` |
+| Launch never blank (ME-6, D309) | Unreadable preferences → memory; unreadable keystore → wiped, signed out; `allowBackup="false"` and data-extraction rules | `main.dart`, `api/token_store.dart`, `AndroidManifest.xml`, `res/xml/data_extraction_rules.xml` | `test/core/crash_reporter_test.dart` |
+| Crash reports (ME-7, MA-5, D309) | `CrashReporter`: log only by default; `CRASH_REPORT_DSN` sends scrubbed errors to GlitchTip / Sentry; global error handlers | `core/crash_reporter.dart`, `crashReporterProvider` | `crash_reporter_test.dart` |
+| Size order and card ADD (MB-1, MB-2, MB-3, MB-9, D310) | Sizes come smallest first from the server; ADD uses the list's `defaultVariant` and names the size; "View cart" instead of "Change cut"; the page opens on the card's size (`?variant=`) or the first orderable one | `api/models/catalog.dart` (`ListVariant`), `state/cart_state.dart`, `features/catalog/product_grid.dart`, `product_screen.dart` (`initialVariant`) | `bold_screens_test.dart`, `browse_sizes_test.dart` |
+| App links (MB-4, D308) | Website paths mapped to app routes; Android intent filter and iOS associated domains from build configuration | `core/app_links.dart`, `router.dart`, `runbooks/mobile-release.md` | `test/core/app_links_test.dart` |
+| Cards and text size (MB-6, D310) | `productGridDelegateOf(context)` grows cards with the text scale | `fresh_theme` `feedback.dart` | `browse_sizes_test.dart` (360 × 640 at 1.0, 1.3, 1.5, 2.0) |
+| Pictures (MB-7, D310) | `FreshNetworkImage`: 7-day disk cache, decoded at the shown width | `fresh_theme` `network_picture*.dart` | `test/core/picture_cache_test.dart` |
+| Load more (MB-8) | Only the grid's own vertical scroll loads the next page | `product_grid.dart` (`isGridScrollNearEnd`) | `browse_sizes_test.dart` |
+| Checkout (MO-1 to MO-5, D311) | "Deliver this cart to …"; empty-cart preview read, "Back to cart"; Back while placing stays; pending Idempotency-Key kept (`pendingPlaceProvider`); order-placed shows the `POST /orders` answer (`placedOrdersProvider`); only COD and UPI on delivery offered | `features/checkout/`, `state/checkout_state.dart`, `api/models/checkout.dart` | `test/widgets/checkout_edges_test.dart` |
+| Push prep (MA-6) | `POST_NOTIFICATIONS` declared; push stays `NoopPushService` until the Firebase project exists (§10) | `AndroidManifest.xml` | — |
+| Store build (MA-7, D309) | Manual signed AAB with obfuscation and kept symbols | `.github/workflows/mobile-release.yml` | — |
+| Languages (MA-8, D312) | Language choice hidden while only English exists | `app.dart` (`availableLanguages`), `settings_screen.dart`, `account_screens.dart` | `bold_screens_test.dart` |
+| Home text size (D306) | Above text scale 1.0 the first screen keeps its natural size and the page scrolls; at 1.0 it still fits | `features/catalog/home_screen.dart` (`homeFitMaxTextScale`) | `home_screen_test.dart` |
+| Refresh (MB-20, MO-12, MO-15, D313) | Home pull-to-refresh; after 5 minutes in the background the home, lists, cart, slots and orders are read again; the empty orders block can be pulled | `home_screen.dart`, `widgets/refresh_on_resume.dart`, `orders_screen.dart` | `home_screen_test.dart`, `test/widgets/refresh_test.dart` |
+
+Still open: MA-4 (needs the owner's Apple team), MA-6 push itself (needs the Firebase project), MA-9 map pin / "use
+my location" (needs a location plugin and a map choice; not started), and the admin's `createAuthFetch` refresh rule
+(D307).

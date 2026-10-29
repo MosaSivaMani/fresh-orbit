@@ -157,13 +157,13 @@ Webhooks use the provider event id instead (§7).
 | Policy | Applies to | Limit | Key |
 |---|---|---|---|
 | `otp-request` | `POST /auth/otp/request` | 3 / 10 min and 10 / day | phone |
-| `otp-request-ip` | same | 20 / hour | IP |
-| `otp-verify` | `POST /auth/otp/verify` | 5 attempts per challenge (then `OTP_TOO_MANY_ATTEMPTS`), 30 / 10 min | challenge; IP |
+| `otp-request-ip` | same | 300 / hour (D314: carrier NAT puts many customers on one IP; the per-phone limits are the main guard) | IP |
+| `otp-verify` | `POST /auth/otp/verify` | 5 attempts per challenge (then `OTP_TOO_MANY_ATTEMPTS`), 300 / 10 min (D314) | challenge; IP |
 | `staff-login` | `POST /admin/auth/login` | 10 / 5 min per IP (HTTP limiter); 5 failed logins / 15 min per email + IP (Identity, IDN-R20); account `LOCKED` for 15 min after 10 consecutive failures, doubling per repeat lock up to 24 h (D33) | IP; email + IP |
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
-| `search` | `GET /products`, `/search/*` | 60 / min | IP |
-| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
+| `search` | `GET /products`, `/search/*` | 120 / min per signed-in customer, else 600 / min per IP (D314) | customer, else IP |
+| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 240 / min per signed-in customer, else 1200 / min per IP (D314) | customer, else IP |
 | `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
 | `upload` | `POST /orders/{orderId}/complaints/{complaintId}/photos` | 20 / hour | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
