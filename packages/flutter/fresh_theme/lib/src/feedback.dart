@@ -2,6 +2,7 @@
 // snack bar, badges, the primary button and the product photo frame.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 /// Grey placeholder block. Hidden from screen readers; the container announces "Loading".

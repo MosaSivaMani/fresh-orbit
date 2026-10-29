@@ -13,6 +13,7 @@ import 'package:fresh_orbit_app/features/checkout/order_success_screen.dart';
 import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import 'package:fresh_orbit_app/state/checkout_state.dart';
 
+import '../support/fakes.dart';
 import '../support/fixtures.dart';
 import '../support/harness.dart';
 

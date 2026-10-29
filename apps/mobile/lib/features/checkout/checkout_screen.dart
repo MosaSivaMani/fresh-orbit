@@ -66,7 +66,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   bool _movingCart = false;
 
-  /// "Deliver this cart to <pincode>" (MO-1): moves the cart to the store that serves the chosen address. When
+  /// "Deliver this cart to (pincode)" (MO-1): moves the cart to the store that serves the chosen address. When
   /// some items are not sold there (409 CART_LOCATION_CHANGED), the customer is asked before they are removed.
   /// Then the server prices the order again.
   Future<void> _moveCart(String pincode) async {
