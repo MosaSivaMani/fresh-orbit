@@ -124,7 +124,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
       _startResendTimer(challenge.resendAfterSeconds);
     } on ApiError catch (e) {
-      setState(() => _phoneError = e.fieldMessage('phone') ?? _waitMessage(e) ?? e.message);
+      final message = e.fieldMessage('phone') ?? _waitMessage(e) ?? e.message;
+      // On the code step the phone field is not shown: a failed resend (429, SMS provider down) shows under the
+      // code boxes instead (ME-3).
+      setState(() => _challenge != null ? _codeError = message : _phoneError = message);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -180,7 +183,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final c = illustratedColors(context);
     final challenge = _challenge;
     // The sign-in look (D281): coral header with the coast, Ammamma on the card's edge, the card below.
-    return Scaffold(
+    // Back on the code step returns to the phone step (ME-5); the first-run sign-in has no page below it, so a
+    // plain pop would close the app.
+    return PopScope(
+      canPop: challenge == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _backToPhone();
+      },
+      child: Scaffold(
       backgroundColor: c.paper,
       body: AutofillGroup(
         child: FreshAuthPage(
@@ -212,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-          onBack: context.canPop() ? () => context.pop() : null,
+          onBack: challenge != null ? _backToPhone : (context.canPop() ? () => context.pop() : null),
           children: [
             if (widget.welcome && challenge == null) const SheetTitle('Sign in or create your account', header: true),
             SheetNote(
@@ -228,7 +238,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 controller: _phone,
                 errorText: _phoneError,
                 autofillHints: const [AutofillHints.telephoneNumberNational],
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                inputFormatters: const [IndianMobileInputFormatter()],
                 onSubmitted: (_) => _requestOtp(),
               ),
               FreshArrowButton(label: 'Send code', loading: _busy, onPressed: _requestOtp),
@@ -246,7 +256,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 alignment: WrapAlignment.spaceBetween,
                 children: [
                   TextButton(
-                    onPressed: _busy ? null : () => setState(() => _challenge = null),
+                    onPressed: _busy ? null : _backToPhone,
                     child: const Text('Change number'),
                   ),
                   TextButton(
@@ -267,7 +277,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
         ),
       ),
+      ),
     );
+  }
+
+  void _backToPhone() {
+    if (_busy) return;
+    setState(() {
+      _challenge = null;
+      _codeError = null;
+    });
   }
 }
 

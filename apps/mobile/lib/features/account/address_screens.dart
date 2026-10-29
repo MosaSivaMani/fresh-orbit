@@ -327,7 +327,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
                 'Mobile number',
                 keyboard: TextInputType.phone,
                 prefix: '+91 ',
-                formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+                formatters: const [IndianMobileInputFormatter()],
                 check: (v) => toIndianE164(v) == null ? 'Enter a 10-digit mobile number.' : null,
                 autofill: const [AutofillHints.telephoneNumberNational],
               ),

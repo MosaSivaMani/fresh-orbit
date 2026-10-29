@@ -1,7 +1,8 @@
 // Bearer auth with single-flight refresh (docs/api/README.md §1.2):
 // - before a request, if we hold a refresh token but the access token is missing/expiring, refresh first
 //   (after an app restart the access token is gone: it lives in memory only);
-// - on 401 TOKEN_EXPIRED, refresh once and retry the request once;
+// - on a 401 UNAUTHENTICATED (what the server sends for an expired or invalid access token; D307, ME-2) or
+//   TOKEN_EXPIRED, refresh once and retry the request once, so a phone whose clock is slow still recovers;
 // - concurrent callers share one refresh call (the refresh token rotates, so two parallel refreshes would
 //   trip REFRESH_TOKEN_REUSED and revoke the family);
 // - a failed refresh (401) or a second 401 ends the session → [onSessionEnded] (app shows sign-in).
@@ -69,7 +70,7 @@ class AuthInterceptor extends Interceptor {
       await _endSession();
       return handler.next(err);
     }
-    if (code != 'TOKEN_EXPIRED' || !tokens.hasSession) return handler.next(err);
+    if (!_refreshCodes.contains(code) || !tokens.hasSession) return handler.next(err);
 
     final refreshed = await refresh();
     if (!refreshed) return handler.next(err);
@@ -116,6 +117,10 @@ class AuthInterceptor extends Interceptor {
     await tokens.clearSession();
     onSessionEnded?.call();
   }
+
+  /// 401 codes that mean "the access token did not work". Other 401s (LOGIN_REQUIRED for a guest cart) are
+  /// business refusals, not token problems.
+  static const _refreshCodes = {'UNAUTHENTICATED', 'TOKEN_EXPIRED'};
 
   static String? _code(Object? data) => data is Map && data['code'] is String ? data['code'] as String : null;
 }

@@ -95,12 +95,13 @@ class AccountScreen extends ConsumerWidget {
                         : null,
                     onTap: () => context.go('/account/notifications'),
                   ),
-                MenuRow(
-                  icon: Icons.language_rounded,
-                  title: 'Language',
-                  subtitle: languageLongNames[language] ?? language,
-                  onTap: () => context.go('/account/settings'),
-                ),
+                if (availableLanguages.length > 1)
+                  MenuRow(
+                    icon: Icons.language_rounded,
+                    title: 'Language',
+                    subtitle: languageLongNames[language] ?? language,
+                    onTap: () => context.go('/account/settings'),
+                  ),
                 MenuRow(
                   icon: Icons.help_outline_rounded,
                   title: 'Help and support',

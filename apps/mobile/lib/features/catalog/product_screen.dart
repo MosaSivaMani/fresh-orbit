@@ -26,10 +26,23 @@ import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 
+/// The size the product page opens on (MB-3): the card's default size ([preferred], the list item's server
+/// `defaultVariant`) when it can be ordered, else the first size that can be ordered here, else the first size.
+/// Never a sold-out size while another one is in stock.
+Variant initialVariant(ProductDetail d, String? preferred) {
+  bool orderable(Variant v) => v.unitPricePaise != null && (v.availability?.canAdd ?? true);
+  return d.variants.where((v) => v.id == preferred && orderable(v)).firstOrNull ??
+      d.variants.where(orderable).firstOrNull ??
+      d.variants.first;
+}
+
 class ProductScreen extends ConsumerStatefulWidget {
-  const ProductScreen({super.key, required this.slug});
+  const ProductScreen({super.key, required this.slug, this.variantId});
 
   final String slug;
+
+  /// The size to open on (`?variant=` from a product card); null opens on the first orderable size.
+  final String? variantId;
 
   @override
   ConsumerState<ProductScreen> createState() => _ProductScreenState();
@@ -50,7 +63,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   /// Sizes the customer asked to hear about in this visit.
   final Set<String> _alerted = {};
 
-  Variant _variant(ProductDetail d) => d.variants.firstWhere((v) => v.id == _variantId, orElse: () => d.variants.first);
+  Variant _variant(ProductDetail d) =>
+      d.variants.firstWhere((v) => v.id == _variantId, orElse: () => initialVariant(d, widget.variantId));
 
   String? _prep(Variant v) {
     final chosen = v.preparations.where((p) => p.code == _prepCode && p.chargePaise != null);

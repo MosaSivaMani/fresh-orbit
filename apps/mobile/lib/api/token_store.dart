@@ -69,12 +69,31 @@ class TokenStore {
   bool accessExpired(DateTime now, {Duration skew = const Duration(seconds: 30)}) =>
       _accessToken == null || _accessExpiresAt == null || !now.toUtc().add(skew).isBefore(_accessExpiresAt!);
 
+  /// Reads the stored tokens. A keystore that cannot be read (for example files restored onto a new phone whose
+  /// key does not match, ME-6) never blocks the launch: the unreadable secrets are wiped and the app starts
+  /// signed out with a new guest cart.
   Future<void> load() async {
     if (_loaded) return;
-    _refreshToken = await _secrets.read(_refreshKey);
-    _guestCartToken = await _secrets.read(_cartKey);
+    try {
+      _refreshToken = await _secrets.read(_refreshKey);
+      _guestCartToken = await _secrets.read(_cartKey);
+    } catch (_) {
+      _refreshToken = null;
+      _guestCartToken = null;
+      loadFailed = true;
+      for (final key in [_refreshKey, _cartKey]) {
+        try {
+          await _secrets.delete(key);
+        } catch (_) {
+          // Nothing more to do: the next save overwrites it.
+        }
+      }
+    }
     _loaded = true;
   }
+
+  /// True when [load] could not read the keystore and started signed out.
+  bool loadFailed = false;
 
   Future<void> saveTokens(TokenPair pair) async {
     _accessToken = pair.accessToken;

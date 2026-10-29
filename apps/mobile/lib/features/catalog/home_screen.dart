@@ -10,7 +10,9 @@
 // than that gives the room left to the offer pictures. The page then scrolls on (D292, owner 2026-10-29), with
 // clamping physics (no bounce), into the sections below it (D293): "Popular today" (the server's featured
 // products, hidden when it sends none, D186), "Fresh in three steps", "Our promise", the help card and the sea
-// floor. At a system text scale of 1.5 or more the first screen keeps its natural size instead of shrinking. The chip, cards, category tiles and offer cards
+// floor. Above the default system text scale (1.0) the first screen keeps its natural size instead of shrinking
+// (D306), and the page scrolls further. Pull-to-refresh reads the home again (D313). The chip, cards, category
+// tiles and offer cards
 // are the theme package's parts (D207); categories and offers without a server picture show the owner's bundled
 // pictures (D220).
 //
@@ -100,8 +102,17 @@ abstract final class HomeColors {
   static const List<Color> offerTints = [Color(0xFFE7F2EE), Color(0xFFFBE6DC)];
 }
 
-/// At this system text scale and above the home's first screen keeps its natural size instead of shrinking to fit.
-const double homeScrollTextScale = 1.5;
+/// The home's first screen is scaled down to fit one screen only at the phone's default text size (this scale or
+/// less). With any larger text it keeps its natural size and the page scrolls further (D306, MB-16): the customer's
+/// text is never shrunk back.
+const double homeFitMaxTextScale = 1.0;
+
+/// Reads the home again (pull-to-refresh, D313): the pincode's service details and the home blocks.
+Future<void> refreshHome(WidgetRef ref) async {
+  ref.invalidate(currentServiceabilityProvider);
+  ref.invalidate(homeProvider);
+  await ref.read(homeProvider.future);
+}
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -122,7 +133,7 @@ class HomeScreen extends ConsumerWidget {
           data: (data) => LayoutBuilder(
             builder: (context, box) {
               final Widget first;
-              if (MediaQuery.textScalerOf(context).scale(1) >= homeScrollTextScale) {
+              if (MediaQuery.textScalerOf(context).scale(1) > homeFitMaxTextScale) {
                 first = _HomePage(data: data, minHeight: 0);
               } else {
                 // Full width always: a first screen taller than the space is laid out wider and scaled down,
@@ -150,14 +161,20 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               }
-              return SingleChildScrollView(
-                key: const Key('homeScroll'),
-                physics: const ClampingScrollPhysics(),
-                child: SizedBox(
-                  width: box.maxWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [first, _HomeSections(products: data.featuredProducts)],
+              // Pull down at the top to read the prices, offers and next slot again (D313, MB-20).
+              return RefreshIndicator(
+                key: const Key('homeRefresh'),
+                onRefresh: () => refreshHome(ref),
+                child: SingleChildScrollView(
+                  key: const Key('homeScroll'),
+                  // The page is always taller than the screen (first screen plus sections), so the pull is caught.
+                  physics: const ClampingScrollPhysics(),
+                  child: SizedBox(
+                    width: box.maxWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [first, _HomeSections(products: data.featuredProducts)],
+                    ),
                   ),
                 ),
               );
@@ -767,7 +784,7 @@ Widget _categoryPicture(Category category) {
   final bundled = path == null ? initial : BundledPicture(path: path, fallback: initial);
   final url = category.imageUrl;
   if (url == null || url.isEmpty) return bundled;
-  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
+  return FreshNetworkImage(url, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
 
 /// "Today's special" with the brush on "special" and a coral spark, and "See all →".
@@ -949,7 +966,7 @@ Widget _specialPicture(HomeBanner banner, int index, Color tint) {
   final bundled = BundledPicture(path: BundledPictures.special(banner.linkSlug, index), fallback: soft);
   final url = banner.imageUrl;
   if (url == null || url.isEmpty) return bundled;
-  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
+  return FreshNetworkImage(url, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
 
 /// The most featured products "Popular today" shows: three rows of two on a phone.
@@ -995,7 +1012,7 @@ class _HomeSections extends ConsumerWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: FreshLayout.page,
-            gridDelegate: productGridDelegate,
+            gridDelegate: productGridDelegateOf(context),
             itemCount: popular.length,
             itemBuilder: (context, i) => ShopProductCard(product: popular[i], index: i),
           ),

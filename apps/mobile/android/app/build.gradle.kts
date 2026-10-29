@@ -71,6 +71,13 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // App Links host (D308, MB-4): the website's domain, from -PfreshOrbitAppLinkHost=shop.example.in or the
+        // FRESH_ORBIT_APP_LINK_HOST environment variable. Unset, a reserved .invalid name: no link opens the app and
+        // nothing is guessed (rule 7). Steps: docs/runbooks/mobile-release.md, "App links".
+        manifestPlaceholders["appLinkHost"] =
+            (project.findProperty("freshOrbitAppLinkHost") as String?)?.takeIf { it.isNotBlank() }
+                ?: System.getenv("FRESH_ORBIT_APP_LINK_HOST")?.takeIf { it.isNotBlank() }
+                ?: "app-links-not-configured.invalid"
     }
 
     signingConfigs {

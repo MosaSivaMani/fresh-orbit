@@ -30,6 +30,7 @@ export 'src/layout.dart';
 export 'src/links.dart';
 export 'src/look.dart';
 export 'src/motion.dart';
+export 'src/network_picture.dart';
 export 'src/page.dart';
 export 'src/parts.dart';
 export 'src/prices.dart';
