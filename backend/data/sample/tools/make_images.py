@@ -31,6 +31,10 @@ PICTURES = {
     "category_prawns.png": ("categories/prawns-shrimp.webp", 512),
     "category_crabs.png": ("categories/crabs.webp", 512),
     "category_shellfish.png": ("categories/shellfish.webp", 512),
+    "category_fillets_steaks.png": ("categories/fillets-steaks.webp", 512),
+    "category_ready_to_cook.png": ("categories/ready-to-cook.webp", 512),
+    "category_fish_eggs.png": ("categories/fish-eggs.webp", 512),
+    "category_ready_to_eat.png": ("categories/ready-to-eat.webp", 512),
     "sample_banner_seer_steaks.png": ("banners/welcome.webp", 1200),
     "sample_banner_prawns.png": ("banners/prawn-week.webp", 1200),
 }
