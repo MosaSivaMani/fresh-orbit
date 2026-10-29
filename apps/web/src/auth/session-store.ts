@@ -4,7 +4,11 @@ import { ApiError, apiErrorFromResponse, readBody } from "@fresh/core";
 import { type BrowserSession, type SessionUser } from "@/api/types/auth";
 import { SESSION_HINT_COOKIE, readBrowserCookie } from "@/lib/cookies";
 
-export type SessionStatus = "unknown" | "signedIn" | "signedOut";
+/**
+ * `unavailable`: the page could not restore the session because the shop did not answer (429, 5xx, offline). The
+ * refresh cookie may still be good, so the customer is not signed out; RequireAuth offers a retry (D317).
+ */
+export type SessionStatus = "unknown" | "signedIn" | "signedOut" | "unavailable";
 
 export interface SessionState {
   status: SessionStatus;
@@ -56,40 +60,64 @@ async function withCrossTabLock<T>(work: () => Promise<T>): Promise<T> {
   return locks.request("fresh-orbit-refresh", work) as Promise<T>;
 }
 
-/** One refresh at a time per tab (single flight) and across tabs (Web Locks). Resolves true when signed in. */
+/**
+ * One refresh at a time per tab (single flight) and across tabs (Web Locks). Resolves true when signed in and false
+ * only when the BFF says the refresh token is no good (401): that, and nothing else, ends the session. A rate limit,
+ * a 5xx or no answer throws an `ApiError` and keeps the session, so a busy or restarting shop never signs the
+ * customer out in the middle of checkout (W-6, D317).
+ */
 export function refreshSession(): Promise<boolean> {
   inflight ??= withCrossTabLock(async () => {
+    let response: Response;
     try {
-      const response = await fetch(bffUrl("/bff/auth/refresh"), {
+      response = await fetch(bffUrl("/bff/auth/refresh"), {
         method: "POST",
         headers: BFF_HEADERS,
         credentials: "same-origin",
       });
-      if (!response.ok) {
-        endSession();
-        return false;
-      }
-      startSession((await response.json()) as BrowserSession);
-      return true;
-    } catch {
-      // Network failure: keep the current state; the next call tries again.
-      if (state.status === "unknown") setState({ status: "signedOut", user: null });
+    } catch (cause) {
+      throw new ApiError({
+        status: 0,
+        code: "NETWORK_ERROR",
+        message: "The server could not be reached.",
+        cause,
+      });
+    }
+    if (response.status === 401) {
+      endSession();
       return false;
     }
+    if (!response.ok) throw apiErrorFromResponse(response, await readBody(response));
+    startSession((await response.json()) as BrowserSession);
+    return true;
   }).finally(() => {
     inflight = null;
   });
   return inflight;
 }
 
-/** Called once on page load: restores the session when the hint cookie says a refresh cookie exists. */
+/**
+ * Called once on page load: restores the session when the hint cookie says a refresh cookie exists. When the shop
+ * does not answer, the state becomes `unavailable` (not signed out) until {@link retrySession} gets through.
+ */
 export async function bootstrapSession(): Promise<void> {
   if (state.status !== "unknown") return;
   if (readBrowserCookie(SESSION_HINT_COOKIE) !== "1") {
     setState({ status: "signedOut", user: null });
     return;
   }
-  await refreshSession();
+  await retrySession();
+}
+
+/** Tries to restore the session again (RequireAuth's retry). Never signs out unless the BFF answers 401. */
+export async function retrySession(): Promise<void> {
+  try {
+    await refreshSession();
+  } catch {
+    if (state.status === "unknown" || state.status === "unavailable") {
+      setState({ status: "unavailable", user: null });
+    }
+  }
 }
 
 /**

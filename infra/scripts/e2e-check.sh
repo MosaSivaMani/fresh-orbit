@@ -405,7 +405,8 @@ step_smoke() {
   domain=$(env_value DOMAIN)
   [[ $MODE == testing ]] || stop=true
   [[ -f $WORK_DIR/.curlrc ]] || write_curl_config
-  CURL_HOME="$WORK_DIR" API_URL="https://api.$domain" SMOKE_STOP_BEFORE_OTP=$stop \
+  # The fo-e2e stack is thrown away after the run, so smoke.sh may create its city there (L-47, D319).
+  CURL_HOME="$WORK_DIR" API_URL="https://api.$domain" SMOKE_STOP_BEFORE_OTP=$stop SMOKE_ALLOW_WRITES=true \
     ADMIN_EMAIL="$(env_value E2E_ADMIN_EMAIL)" ADMIN_PASSWORD="$(env_value E2E_ADMIN_PASSWORD)" \
     "$INFRA_DIR/scripts/smoke.sh" | tee "$WORK_DIR/smoke-$MODE.log" || code=$?
   ((code == 0)) || die "smoke.sh failed (exit $code; $WORK_DIR/smoke-$MODE.log; compose logs api worker)."

@@ -56,8 +56,11 @@
 		respond 404
 	}
 
-	# Uploads. Product image: Catalog accepts up to 5 MB (ImageFormats.MaxBytes) plus multipart overhead.
-	# Complaint: up to 4 photos (docs/api); 4 x 5 MB assumed until Ordering states its own limit.
+	# Uploads. Product image: Catalog accepts up to 5 MiB (ImageLimits.MaxBytes) plus multipart overhead.
+	# Complaint photo: one photo per request to .../complaints/{id}/photos; the API caps that route at 5 MiB + 64 KiB
+	# (ComplaintPhotoRules.MaxRequestBytes) and answers 413 PAYLOAD_TOO_LARGE above it. The edge allows a little
+	# more (6 MB = 6,000,000 bytes) so that the API, not Caddy, gives the refusal (D316). The complaint itself is JSON
+	# and stays under the 1 MB default.
 	@imageUpload {
 		method POST
 		path_regexp ^/api/v1/admin/products/[^/]+/images$
@@ -72,11 +75,11 @@
 	}
 	@complaintUpload {
 		method POST
-		path_regexp ^/api/v1/orders/[^/]+/complaints$
+		path_regexp ^/api/v1/orders/[^/]+/complaints/[^/]+/photos$
 	}
 	handle @complaintUpload {
 		request_body {
-			max_size 21MB
+			max_size 6MB
 		}
 		reverse_proxy api:8080 {
 			import client_ip_header
@@ -102,14 +105,14 @@
 	# gateway's origins here when online payments go live (Phase 11).
 	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.{$DOMAIN}; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
 
-	# Complaint photos pass through the website's /api/v1 proxy.
+	# Complaint photos pass through the website's /api/v1 proxy: same route and limit as the api. origin (D316).
 	@complaintUpload {
 		method POST
-		path_regexp ^/api/v1/orders/[^/]+/complaints$
+		path_regexp ^/api/v1/orders/[^/]+/complaints/[^/]+/photos$
 	}
 	handle @complaintUpload {
 		request_body {
-			max_size 21MB
+			max_size 6MB
 		}
 		reverse_proxy web:3000 {
 			import client_ip_header

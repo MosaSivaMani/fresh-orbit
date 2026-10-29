@@ -257,8 +257,10 @@ export {
 } from "./components/pagination";
 export {
   ProductGallery,
+  srcSetOf,
   type ProductGalleryImage,
   type ProductGalleryImageRenderProps,
+  type ProductGalleryImageSource,
   type ProductGalleryProps,
 } from "./components/product-gallery";
 export { Select, type SelectOption, type SelectProps } from "./components/select";

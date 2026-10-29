@@ -17,8 +17,11 @@ Notes from that check that matter on a server:
 - In Production, OTP SMS go through the DLT sender and the Fast2SMS adapter (E2E-1). Before the first deploy, the
   owner completes the DLT registration in `security-configuration.md` §2.1 and fills every `SMS_DLT_*` value
   (including the 13 `SMS_DLT_TEMPLATE_*` ids); without them the Api and Worker exit 1 at start-up. A failed send
-  answers 503 `SMS_PROVIDER_UNAVAILABLE`. `smoke.sh` against a Production server still needs
-  `SMOKE_STOP_BEFORE_OTP=true`, because it cannot read the SMS.
+  answers 503 `SMS_PROVIDER_UNAVAILABLE`. Against a live server (Production or Staging) run `smoke.sh` only with
+  `SMOKE_READ_ONLY=true` (health, cities, product list and, with `SMOKE_PINCODE`, serviceability; nothing is
+  written). The full run creates and activates a "Smoke SMK…" city, store, pincode and product that are not sample
+  data and cannot be purged, so the script refuses it on any stack without the development SMS outbox unless
+  `SMOKE_ALLOW_WRITES=true`, which only the throwaway e2e stack sets (L-47, D319).
 - `smoke.sh` follows the absolute image URLs the API returns behind Caddy (`FileStorage__PublicBaseUrl`).
 - `deploy.sh` now prunes only `${IMAGE_REGISTRY}/fresh-orbit-*` images (`SKIP_IMAGE_PRUNE=true` to skip pruning);
   `FO_PROJECT` / `FO_COMPOSE_OVERRIDE` exist only for the e2e check, leave them unset on servers.
@@ -183,7 +186,8 @@ Rules for app changes:
 - Any new third-party origin (fonts, analytics, maps, payment gateway) must be added to the site's CSP in
   `infra/caddy/Caddyfile` and agreed with the manager; the admin's CSP should stay without third-party scripts.
 - Upload paths with bigger bodies need a matching `request_body` rule in the Caddyfile (product images 6 MB, complaint
-  photos 21 MB, everything else 1 MB).
+  photos 6 MB on `…/complaints/{id}/photos` on both the website and `api.` origins, a little above the API's own
+  5 MiB + 64 KiB so the API answers 413 `PAYLOAD_TOO_LARGE` (D316), everything else 1 MB).
 - Both images are built with `turbo prune <package> --docker` and `pnpm install --frozen-lockfile`; keep
   `pnpm-lock.yaml` current. Package names/folders can be overridden with build args (`WEB_PACKAGE`/`WEB_DIR`,
   `ADMIN_PACKAGE`/`ADMIN_DIR`).

@@ -23,7 +23,7 @@ export function useCart() {
     queryKey: queryKeys.cart,
     queryFn: () => getCart(browserHttp()),
     // Wait until we know whether the visitor is signed in: a customer's cart and a guest cart differ.
-    enabled: session.status !== "unknown",
+    enabled: session.status === "signedIn" || session.status === "signedOut",
     staleTime: 10_000,
   });
 }

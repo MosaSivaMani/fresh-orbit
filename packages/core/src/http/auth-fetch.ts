@@ -1,3 +1,4 @@
+import { apiErrorFromResponse, readBody } from "./api-error";
 import { type AuthTokens, type TokenStore } from "./token-store";
 
 export type FetchLike = (input: Request | string | URL, init?: RequestInit) => Promise<Response>;
@@ -6,7 +7,9 @@ export interface AuthFetchOptions {
   /** Returns the current access token, or null when signed out. */
   getAccessToken: () => string | null | Promise<string | null>;
   /**
-   * Obtains a new access token (normally `POST /api/v1/auth/refresh`). Resolve true on success.
+   * Obtains a new access token (normally `POST /api/v1/auth/refresh`). Resolve true on success and false only when
+   * the server refused the refresh token (401: the session is over). Throw when the refresh could not run now
+   * (429, 5xx, network): the session is kept and the request fails with that error (D317).
    * Concurrent 401s share one call (single flight).
    */
   refresh?: () => Promise<boolean>;
@@ -43,7 +46,6 @@ export function createAuthFetch(options: AuthFetchOptions): FetchLike {
     if (!refresh) return Promise.resolve(false);
     inflight ??= Promise.resolve()
       .then(refresh)
-      .catch(() => false)
       .finally(() => {
         inflight = null;
       });
@@ -69,6 +71,8 @@ export function createAuthFetch(options: AuthFetchOptions): FetchLike {
 
     // Another request may already have rotated the token while this one was in flight.
     const current = await options.getAccessToken();
+    // A thrown refresh (rate limited, server down, offline) propagates: the caller sees that error and the
+    // session stays, because the refresh token may still be good.
     const refreshed = current !== null && current !== usedToken ? true : await refreshOnce();
     if (!refreshed) {
       await options.onAuthFailure?.();
@@ -92,7 +96,8 @@ export interface RefreshHandlerOptions {
 
 /**
  * Builds the `refresh` callback for {@link createAuthFetch}: posts the stored refresh token, stores the
- * rotated pair, and clears the store when the server refuses (REFRESH_TOKEN_INVALID / _REUSED).
+ * rotated pair, and clears the store only when the server refuses it with 401 (REFRESH_TOKEN_INVALID / _REUSED).
+ * Any other failure (429, 5xx, network) throws and leaves the stored tokens alone (D317).
  */
 export function createRefreshHandler(options: RefreshHandlerOptions): () => Promise<boolean> {
   const baseFetch: FetchLike = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
@@ -105,10 +110,11 @@ export function createRefreshHandler(options: RefreshHandlerOptions): () => Prom
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
-    if (!response.ok) {
+    if (response.status === 401) {
       await options.tokenStore.clear();
       return false;
     }
+    if (!response.ok) throw apiErrorFromResponse(response, await readBody(response));
     await options.tokenStore.setTokens((await response.json()) as AuthTokens);
     return true;
   };

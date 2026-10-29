@@ -1,4 +1,10 @@
-import { ApiError, CLIENT_ERROR_CODES, apiErrorFromResponse, readBody } from "./api-error";
+import {
+  ApiError,
+  CLIENT_ERROR_CODES,
+  apiErrorFromResponse,
+  isApiError,
+  readBody,
+} from "./api-error";
 import { type AuthFetchOptions, type FetchLike, createAuthFetch } from "./auth-fetch";
 import { parseETag, toETag } from "./headers";
 
@@ -115,6 +121,8 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         ...(opts.signal ? { signal: opts.signal } : {}),
       });
     } catch (cause) {
+      // A refresh that could not run (429, 5xx) arrives here as its own ApiError; keep its status and code.
+      if (isApiError(cause)) throw cause;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";
       throw new ApiError({
         status: 0,

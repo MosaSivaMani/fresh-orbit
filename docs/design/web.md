@@ -159,7 +159,10 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
   allows cross-origin) and check `Origin` / `Sec-Fetch-Site` are same-origin. `SameSite=Strict` is the third layer.
   The proxy carries bearer tokens, not cookies, for customer auth.
 - **Refresh:** single flight per tab plus a Web Lock across tabs, because refresh tokens rotate and two tabs racing
-  would trip reuse detection. A failed refresh ends the session (`fo_rt` and `fo_session` cleared).
+  would trip reuse detection. Only a refused refresh (401 `REFRESH_TOKEN_INVALID` or reuse) ends the session (`fo_rt`
+  and `fo_session` cleared). A 429, a 5xx or no answer keeps the session: the request that needed the refresh fails
+  with that error, and a page load that could not restore the session shows "We could not reach the shop" with Try
+  again (session state `unavailable`, retried every 10 s) instead of sending the customer to sign in (W-6, D317).
 - **Proxy:** `/api/v1/[...path]` forwards to `FRESH_API_ORIGIN`, adds `X-Pincode` from the cookie and
   `X-Forwarded-For`, and refuses `admin/*`, `auth/otp/verify`, `auth/refresh`, `auth/logout`, `payments/webhooks/*`,
   `dev/*` (404). The API must trust `X-Forwarded-For` only from the website host for per-IP rate limits.
@@ -175,9 +178,20 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
 - Client components: `browserHttp()` (`src/api/browser.ts`) → same-origin proxy, bearer from memory, refresh on 401.
 - Typed endpoint functions live in `src/api/endpoints/*.ts`; components never build URLs.
 - Writes that need `Idempotency-Key` (place order, cancel, complaint) keep **one key per user action**: reused when
-  the same action is retried after a retryable failure (network, 429, 503, `IDEMPOTENCY_IN_PROGRESS`), replaced after
-  a definitive answer. After `PRICE_CHANGED` the customer confirms the new total with a **new** key and the new
-  `expectedTotalPaise`.
+  the same action is retried after an unknown outcome (`ApiError.isOutcomeUnknown`: no answer or timeout, any 5xx,
+  429, `IDEMPOTENCY_IN_PROGRESS`, `CONCURRENT_SAVE`), replaced after a definite 4xx answer (W-4, D315). Checkout also
+  takes a new key when the order body changes: address, slot, payment, substitution, notes or the cart (lines,
+  quantities, preparations, coupon). After `PRICE_CHANGED` the customer confirms the new total with a **new** key and
+  the new `expectedTotalPaise`.
+- The invoice opens in a tab opened inside the click and sent to the PDF once the server answers, so popup blockers
+  allow it (W-10, D315).
+- Images: `images.unoptimized` stays on (the API already serves WebP renditions). The home hero uses WebP copies at
+  their drawn size in `public/home/*.webp`; the product gallery renders the server's `sources` as `srcset` through
+  `ProductGallery` (`next/image` drops `srcset` in this mode); cards use the 640 px `imageUrl` (W-8, W-9, D318).
+- Error monitoring (W-7, D316): `src/server/monitoring.ts` (`ErrorReporter`, no-op default). `ERROR_REPORTING_DSN`
+  (a GlitchTip or self-hosted Sentry DSN) turns it on; `src/instrumentation.ts` reports server errors and the error
+  boundaries post to `POST /bff/monitoring/errors` (same origin, 16 KB cap). Reports carry the Reference digest, the
+  API `traceId`, the path without query, `APP_ENVIRONMENT` and `APP_RELEASE`; no personal data.
 - Errors: logic branches on `code`; the text shown is the server's message (`errors[field][0].message` under the
   field, otherwise `detail`), with our own copy only for transport failures. Error states show the `traceId`.
 
@@ -366,7 +380,7 @@ and `PromoCardGrid`; it reuses the theme marks and headers from `theme.tsx` (`Sp
 
 | Block | Desktop (`lg`, ≥ 1024 px) | Phone (390 px) | Data |
 |---|---|---|---|
-| Hero (`HomeHero`) | Full-bleed (no page container), 500 px tall (D247). Sky gradient peach → cream; drawn sun with glow, far shore, soft water (`HarbourSky`), gulls, an orange-teal trawler on a wave at the bottom right (`Trawler`, 210 px), waves curving into the page at the bottom (`HeroWaves`, 110 px). Two columns: Padma (`public/home/hero-catch.png`, 1200 px wide, transparent) fills the left 35 % at the page edge (`object-cover`, focus 82 %); the text column starts beside it (4 % inset), so text is never under the picture: "Fresh fish." (Dancing Script, up to 76 px, coral sparks), "Cleaned your way." (script on the yellow brush), "At your door, in your slot." (Baloo 2 800, up to 42 px); three feature chips (48 px teal-tint circle icon + three lines), one row from about 1280 px, wrapping only as whole items. Top right: "From / today's catch / to your kitchen" on three lines in coral script, rotated −8°, with a swash | Below 1024 px: Padma first in a 5:4 crop (max 440 px), then the text centred, the chips wrapping as whole items, then the handwritten note; waves 72 px; trawler and one flock hidden | Fixed marketing copy; the delivery chip shows the server's next slot ("Next slot …") when `GET /serviceability` has one, else "Pick a slot at checkout" |
+| Hero (`HomeHero`) | Full-bleed (no page container), 500 px tall (D247). Sky gradient peach → cream; drawn sun with glow, far shore, soft water (`HarbourSky`), gulls, an orange-teal trawler on a wave at the bottom right (`Trawler`, 210 px), waves curving into the page at the bottom (`HeroWaves`, 110 px). Two columns: Padma (`public/home/hero-catch.webp`, 880 px wide, transparent; master `hero-catch.png`, D318) fills the left 35 % at the page edge (`object-cover`, focus 82 %); the text column starts beside it (4 % inset), so text is never under the picture: "Fresh fish." (Dancing Script, up to 76 px, coral sparks), "Cleaned your way." (script on the yellow brush), "At your door, in your slot." (Baloo 2 800, up to 42 px); three feature chips (48 px teal-tint circle icon + three lines), one row from about 1280 px, wrapping only as whole items. Top right: "From / today's catch / to your kitchen" on three lines in coral script, rotated −8°, with a swash | Below 1024 px: Padma first in a 5:4 crop (max 440 px), then the text centred, the chips wrapping as whole items, then the handwritten note; waves 72 px; trawler and one flock hidden | Fixed marketing copy; the delivery chip shows the server's next slot ("Next slot …") when `GET /serviceability` has one, else "Pick a slot at checkout" |
 | Background slot | `heroBackground` prop (path or URL). The home passes `/illustrations/<file>` once the `WEB_HOME_HERO_HARBOUR` slot (20:7, 2400 × 840, Padma in the left third of a sunrise harbour) is FINAL, else `null`; when set, it covers the hero and the drawn sky is left out (waves stay) | Same | Owner picture (D248) |
 | Check bar (`HomeCheckBar`) | White card, radius 24, 16 px padding, pulled 96 px up so it straddles the hero's bottom wave (D247), max 1024 px wide: pincode field ("Enter pincode, e.g. 533001") + "Check" (`PincodeForm variant="hero"`), 1 px divider, search with suggestions | Stacked, overlaps by 64 px | `GET /serviceability` (the server decides); `/search/suggest` |
 | "What's on your *mind?*" (`HomeCategories`) | Theme `SectionHeader` (Baloo heading, "mind?" in teal script, coral sparks); "View all →" outline pill to `/shop`. From 1280 px all nine in one row (120 px tiles, 112 px peach `accent-coral-subtle` discs, spaced evenly); narrower screens scroll the row sideways, never wrap (D247). Five categories show the fish mark until their `CATEGORY_*` pictures arrive (D248) | 96 px circles in a sideways scroll row inside the 16 px gutters | `GET /home` `featuredCategories` (name, slug, `imageUrl`; fish mark when no picture). No category names in code (rule 7) |
