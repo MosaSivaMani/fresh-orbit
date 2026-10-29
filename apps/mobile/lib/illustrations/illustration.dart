@@ -245,6 +245,13 @@ abstract final class BundledPictures {
   /// The category picture for [slug], or null.
   static String? category(String slug) {
     final s = slug.toLowerCase();
+    // The five object categories (D248, pictures D294) come first: "fish-eggs" must not get the fish picture.
+    // Marinated has no picture yet, so it keeps its letter.
+    if (s.contains('roe') || s.contains('egg')) return '$_dir/category_fish_eggs.webp';
+    if (s.contains('fillet') || s.contains('steak')) return '$_dir/category_fillets_steaks.webp';
+    if (s.contains('ready') && s.contains('cook')) return '$_dir/category_ready_to_cook.webp';
+    if (s.contains('ready') && s.contains('eat')) return '$_dir/category_ready_to_eat.webp';
+    if (s.contains('marinat')) return null;
     if (s.contains('prawn') || s.contains('shrimp')) return '$_dir/category_prawns.webp';
     if (s.contains('crab')) return '$_dir/category_crabs.webp';
     if (s.contains('shellfish') || s.contains('squid') || s.contains('lobster') || s.contains('mussel')) {
