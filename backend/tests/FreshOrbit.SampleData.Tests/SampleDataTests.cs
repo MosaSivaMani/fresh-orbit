@@ -95,7 +95,7 @@ public sealed class SampleDataTests(SampleDatabase database) : IAsyncDisposable
         File.Exists(Path.Combine(_mediaRoot, "sample", "banners", "prawn-week.webp")).Should().BeTrue();
         var committed = await File.ReadAllBytesAsync(Path.Combine(DataPath("sample"), "images", "categories", "fish.webp"), Ct);
         (await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, "sample", "categories", "fish.webp"), Ct)).Should().Equal(committed, "a committed sample picture is stored as it is, not drawn");
-        var drawn = await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, "sample", "categories", "fish-eggs.webp"), Ct);
+        var drawn = await File.ReadAllBytesAsync(Path.Combine(_mediaRoot, "sample", "categories", "marinated.webp"), Ct);
         System.Text.Encoding.ASCII.GetString(drawn, 0, 4).Should().Be("RIFF", "a key without a committed picture is drawn as a WebP placeholder");
         (await ScalarAsync("SELECT count(*) FROM promotions.promotions WHERE link_type = 'CATEGORY' AND link_target = (SELECT id::text FROM catalog.categories WHERE slug = 'prawns-shrimp')")).Should().Be(1);
 

@@ -146,8 +146,11 @@ Oracle's `ubuntu` user keeps working (it has sudo); the `deploy` user is for dep
    cp .env.prod.example .env.prod && chmod 600 .env.prod
    openssl rand -hex 24   # → POSTGRES_PASSWORD
    openssl rand -hex 32   # → JWT_SIGNING_KEY
-   nano .env.prod         # DOMAIN, ACME_EMAIL, secrets, APP_ENVIRONMENT=Staging, SEED_SAMPLE_DATA=true for staging
+   nano .env.prod         # DOMAIN, ACME_EMAIL, secrets; staging only: APP_ENVIRONMENT=Staging, SEED_SAMPLE_DATA=true
    ```
+
+   The template sets `APP_ENVIRONMENT=Production` (D301), so a server copied from it runs as Production: sample data
+   refused, Fake payments off, website indexable. Change it to `Staging` only on the staging server.
 
    The security settings (SMS DLT credentials `SMS_DLT_*`, and the compose subnet `DOCKER_SUBNET` that the API trusts
    for forwarded headers) are explained in `security-configuration.md`. The API and Worker refuse to start outside

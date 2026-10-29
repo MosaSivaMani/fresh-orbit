@@ -414,6 +414,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  test('the object categories get their own bundled pictures; marinated keeps its letter (D294)', () {
+    const dir = 'assets/illustrations';
+    expect(BundledPictures.category('fillets-steaks'), '$dir/category_fillets_steaks.webp');
+    expect(BundledPictures.category('ready-to-cook'), '$dir/category_ready_to_cook.webp');
+    expect(BundledPictures.category('fish-eggs'), '$dir/category_fish_eggs.webp');
+    expect(BundledPictures.category('ready-to-eat'), '$dir/category_ready_to_eat.webp');
+    expect(BundledPictures.category('marinated'), isNull);
+    expect(BundledPictures.category('sea-fish'), '$dir/category_fish.webp');
+    expect(BundledPictures.category('prawns-shrimp'), '$dir/category_prawns.webp');
+  });
+
   testWidgets('category names keep one size and wrap to two lines at most', (tester) async {
     final home = HomeData.fromJson({
       'banners': <Object?>[],

@@ -287,6 +287,16 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 
 - Metadata per page; product pages have canonical, Open Graph image and schema.org `Product` JSON-LD whose offers use
   only server prices and availability (`src/lib/json-ld.ts`; `<` escaped). Customer pages are `noindex`.
+- Only the production server is indexable (D301): `isIndexable()` in `src/server/config.ts` needs a production build,
+  `APP_ENVIRONMENT=Production` (the API's own variable; compose passes it at runtime, `deploy.yml` as a build argument)
+  and `NEXT_PUBLIC_SITE_URL`. Anywhere else `robots.txt` disallows `/` and the root layout adds `noindex, nofollow`.
+- Legal block (D300): the footer shows the business profile's `legalName`, `address`, `gstin`, `fssaiLicenseNo`,
+  `supportPhone` and `supportEmail` (`GET /business-profile`), each only when the server sends it, and links every policy
+  page and "Contact us" (`/support#contact`). The grievance officer (`/support#grievance`, footer link) is shown only
+  when `FRESH_GRIEVANCE_OFFICER_NAME`, `FRESH_GRIEVANCE_OFFICER_EMAIL` and `FRESH_GRIEVANCE_RESPONSE_TIME` are set
+  (designation optional); the business profile has no grievance fields yet.
+- Sign-in consent (D300): "By continuing you agree to our Terms and Privacy policy" sits above "Send code" and "Verify
+  and sign in"; both links open in a new tab, so the form keeps what was typed.
 - Skip link, landmarks, labelled form fields with field-level errors (`aria-invalid`, described by), keyboard-usable
   dialogs/sheets (Radix), visible focus rings from `@fresh/ui`, text colours from the WCAG-AA token set (D32).
 - Lighthouse (target ≥ 90 for performance, accessibility, best practices, SEO) is not measured yet: it needs a running
@@ -299,14 +309,16 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
 | `src/location/pincode-form.test.tsx` | Serviceable pincode stored + pages refreshed; unserviceable not stored; malformed refused locally; `CART_LOCATION_CHANGED` asks before `force=true` |
 | `src/components/product/purchase-panel.test.tsx` | Add to cart sends variant, preparation, quantity and `X-Pincode`; estimate and maximum come from the server line; field error from the server; no pincode → picker |
 | `src/components/cart/cart-view.test.tsx` | Server line totals, bill and sticky total rendered as sent; stepper steps by the cart line's `orderStep` with no product read, stops at its maximum, stays disabled without bounds, and shows the server's new line; "View offers" asks for the cart's pincode; below minimum removes the line; chosen slot button carried to checkout (`?slot=`, through sign-in for a guest); coupon refusal under the field; empty-cart character; error state with trace id |
-| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect |
+| `src/components/auth/login-form.test.tsx` | OTP request with +91, verify through BFF with `X-Fresh-Client`, token in memory only, redirect to `next`; `OTP_INVALID` under the field; malformed number; 429 waits for `Retry-After` with Send disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and resends to the same number; safe redirect; Terms and Privacy policy linked in a new tab before each button (D300) |
 | `src/components/checkout/checkout-view.test.tsx` | `PRICE_CHANGED` → dialog with old/new server totals → confirm with new key and new `expectedTotalPaise`; network failure retry reuses the key; FULL slot disabled; cart's slot priced from `?slot=`; server-disabled ONLINE tile disabled; UPI on delivery re-prices; editing the chosen address sends `PUT` with `If-Match`; a 412 on that edit reloads the addresses |
 | `src/components/checkout/slot-picker.test.tsx` | Slot times shown in the slots response's `timeZone` (W10) |
 | `src/components/catalog/shop-product-card.test.tsx` | ADD sends the server's `defaultVariant`, cut and minimum with no product read (W3); no price → product page, nothing added; fallback read for a list item without a default size; card stepper from the cart line |
 | `src/components/catalog/offer-strip.test.tsx` | Banner links by slug; the server's `imageUrl` and `badge` shown, nothing built from `imageKey` (W11) |
 | `src/components/shop/shop-filters.test.tsx` | "Cleaned and cut" lists the server's methods, puts `prep=<CODE>` in the URL, shows chosen ones checked, is left out without methods (W8) |
 | `src/lib/shop-params.test.ts` | `?prep=` keeps only UPPER_SNAKE codes, de-duplicated, sent as `preparation` |
-| `src/components/site-footer.test.tsx` | Cities from the API (cached ≤ 5 min); every policy page linked, privacy and terms included |
+| `src/components/site-footer.test.tsx` | Cities from the API (cached ≤ 5 min); every policy page linked, privacy and terms included; legal block shows the business profile's fields in order and leaves out missing or blank ones, none when the API is down; contact link, grievance link only when configured (D300) |
+| `src/components/grievance-officer.test.tsx` | Grievance officer name, e-mail and response time from configuration; nothing until all three are set (D300) |
+| `src/app/robots.test.ts` | Crawlers allowed with the sitemap only for `APP_ENVIRONMENT=Production` in a production build with a site URL; Staging, Demo, Testing, lower-case or unset environment, no URL or a dev build are disallowed (D301) |
 | `packages/core/src/format/format.test.ts` | Dates and times in a given IANA zone; IST when the zone is missing or unknown |
 | `src/components/orders/order-detail-view.test.tsx` | Delivery code only when sent; status steps up to the server's status; bill uses the server's final total; not-found character for an unknown order; cancel only when allowed, with reason and key; a refused cancel or substitution answer re-reads the order; a corrected complaint gets a new key; slot shown in the order's `timeZone` |
 | `src/components/orders/order-success.test.tsx` | ORDER_PLACED character, number, payment and the server's estimate bill |

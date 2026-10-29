@@ -4,7 +4,13 @@
   "tasks": {
     "build": {
       "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["FRESH_API_ORIGIN", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_DEMO_MODE"]
+      "env": [
+        "FRESH_API_ORIGIN",
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_DEMO_MODE",
+        "APP_ENVIRONMENT",
+        "FRESH_GRIEVANCE_*"
+      ]
     }
   }
 }
