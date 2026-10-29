@@ -224,28 +224,66 @@ void main() {
   });
 
   group('scenery', () {
-    testWidgets('HarbourScene keeps the 222 × 150 shape and is excluded from semantics', (tester) async {
-      await _pump(tester, const HarbourScene(width: 111));
+    testWidgets('HarbourScene keeps the picture\'s 2 : 1 shape and is excluded from semantics', (tester) async {
+      await _pump(tester, const HarbourScene(width: 120));
 
-      expect(tester.getSize(find.byType(HarbourScene)), const Size(111, 75));
+      expect(tester.getSize(find.byType(HarbourScene)), const Size(120, 60));
+      expect(HarbourScene.heightFor(240), 120);
       expect(find.descendant(of: find.byType(HarbourScene), matching: find.byType(ExcludeSemantics)), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('HarbourScene shows the real trawler, a far boat and four real gulls inside its box', (tester) async {
+    testWidgets('HarbourScene shows the owner\'s harbour picture faded by two masks, no drawn boat (D320)', (
+      tester,
+    ) async {
       await _pump(tester, const HarbourScene());
 
+      final scene = find.byType(HarbourScene);
+      final image = tester.widget<Image>(find.byKey(const Key('harbourPicture')));
+      expect(image.image, isA<AssetImage>());
+      expect((image.image as AssetImage).assetName, FreshSceneryPictures.harbour);
+      expect((image.image as AssetImage).package, FreshSceneryPictures.package);
+      expect(image.fit, BoxFit.cover);
+      expect(find.descendant(of: scene, matching: find.byType(ShaderMask)), findsNWidgets(2));
+      expect(find.descendant(of: scene, matching: find.byType(FittedBox)), findsNothing);
+      // The boat and gulls are a separate part now; the drawn backdrop waits for an error.
+      expect(find.descendant(of: scene, matching: find.byType(FreshTrawler)), findsNothing);
+      expect(find.descendant(of: scene, matching: find.byType(FreshGull)), findsNothing);
+      expect(find.byKey(const Key('harbourDrawn')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('HarbourScene shows the drawn backdrop, still faded, when the picture fails to load', (tester) async {
+      await _pump(tester, const HarbourScene(picture: _BrokenImage()));
+      await tester.pump();
+      await tester.pump();
+
+      final drawn = find.byKey(const Key('harbourDrawn'));
+      expect(drawn, findsOneWidget);
+      expect(find.ancestor(of: drawn, matching: find.byType(ShaderMask)), findsNWidgets(2));
       final box = tester.getRect(find.byType(HarbourScene));
+      final r = tester.getRect(drawn);
+      // The whole 222 × 150 drawing fits the scene's height, against its right edge.
+      expect(r.height, moreOrLessEquals(box.height, epsilon: 0.01));
+      expect(r.right, moreOrLessEquals(box.right, epsilon: 0.01));
+      expect(r.width / r.height, moreOrLessEquals(222 / 150, epsilon: 0.01));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('HarbourBoat shows the real trawler and three real gulls inside its box', (tester) async {
+      await _pump(tester, const HarbourBoat());
+
+      final box = tester.getRect(find.byType(HarbourBoat));
+      expect(box.size, HarbourBoat.sizeFor(44));
       final ship = find.byKey(const Key('harbourTrawler'));
       expect(ship, findsOneWidget);
-      expect(find.byKey(const Key('harbourFarTrawler')), findsOneWidget);
-      expect(find.byType(FreshGull), findsNWidgets(4));
+      expect(find.byType(FreshGull), findsNWidgets(3));
+      expect(find.descendant(of: find.byType(HarbourBoat), matching: find.byType(ExcludeSemantics)), findsWidgets);
       final picture = tester.widget<Image>(find.descendant(of: ship, matching: find.byType(Image))).image;
-      expect(picture, isA<AssetImage>());
       expect((picture as AssetImage).assetName, FreshSceneryPictures.trawler);
-      expect(picture.package, FreshSceneryPictures.package);
-      // The big boat sits on the sea in the lower half; nothing reaches outside the scene.
-      expect(tester.getRect(ship).bottom, greaterThan(box.top + box.height * 0.75));
+      // The ship fills the right of the box; the gulls fly in the room left of it; nothing reaches outside.
+      expect(tester.getRect(ship).right, box.right);
+      expect(tester.getRect(ship).bottom, box.bottom);
       for (final part in [find.byType(FreshTrawler), find.byType(FreshGull)]) {
         for (var i = 0; i < part.evaluate().length; i++) {
           final r = tester.getRect(part.at(i));
@@ -270,7 +308,7 @@ void main() {
     });
 
     testWidgets('the scenery pictures are bundled with the theme package', (tester) async {
-      for (final asset in [FreshSceneryPictures.trawler, ...FreshSceneryPictures.gulls]) {
+      for (final asset in [FreshSceneryPictures.harbour, FreshSceneryPictures.trawler, ...FreshSceneryPictures.gulls]) {
         final data = await tester.runAsync(() => rootBundle.load('packages/${FreshSceneryPictures.package}/$asset'));
         expect(data!.lengthInBytes, greaterThan(1000), reason: asset);
       }
@@ -301,4 +339,16 @@ void main() {
       expect(const BrushPainter(Colors.red).shouldRepaint(const BrushPainter(Colors.red)), isFalse);
     });
   });
+}
+
+/// A picture that always fails to load, to show the harbour's drawn fallback.
+class _BrokenImage extends ImageProvider<_BrokenImage> {
+  const _BrokenImage();
+
+  @override
+  Future<_BrokenImage> obtainKey(ImageConfiguration configuration) => Future.value(this);
+
+  @override
+  ImageStreamCompleter loadImage(_BrokenImage key, ImageDecoderCallback decode) =>
+      OneFrameImageStreamCompleter(Future<ImageInfo>.error(StateError('The harbour picture is missing.')));
 }

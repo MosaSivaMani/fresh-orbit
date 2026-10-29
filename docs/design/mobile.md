@@ -515,7 +515,7 @@ content.
 |---|---|
 | Delivery header | Pin, "Delivering to <pincode> ⌄" and the server's city name (`serviceability.cityName`), then 46 dp search and Saved circles. Tap: `/location?change=1`. Key `homeDeliveryTo` |
 | Greeting and heading | "Good morning, <name>" (no name when signed out), then Baloo 2 800 32 "What's cooking *today?*" with "today?" on the yellow brush and coral sparks (one header for screen readers), then a coral Dancing Script line (19, −3°) with a swoosh |
-| Harbour | `HarbourScene` from `fresh_theme` at the top right (x 168–390): drawn sky, sun, hills, sea and palm with the owner's real trawler, a small far-off one and four real gulls (D287, §21); soft palms at the left and right edges (`PalmsPainter`). Decoration only |
+| Harbour | `HarbourScene` from `fresh_theme` at the top right (240 × 120 from the top, behind the header and the greeting): the owner's sunrise harbour picture, its left, top and bottom edges faded into the sand (D320, §21); the drawn sky, sun, hills, sea and palm show only if the picture fails to load. The real trawler and three gulls (`HarbourBoat`, key `homeHarbourBoat`) end the greeting line in room of their own, 10 dp above its bottom, so they never cover the heading, its sparks or the script line. Soft palms at the left and right edges (`PalmsPainter`). Decoration only |
 | Hero | Radius 24, `#075E54`, 194 tall: the next slot chip (server `nextSlot`, hidden when there is none), "Today's catch / is in!" (Baloo 29) with a yellow spark, body 12.5, and the "Shop fresh catch →" pill. The `HOME_HERO_CATCH` picture is anchored bottom-right at 236 / 358 of the width, natural 3:2 aspect, no wavy edge, no fade. Tap: `/shop`. Key `homeHero` |
 | Two cards | Radius 20, 122 tall. Cleaned your way (`#F59B7C`, deep coral pill text, `HOME_CARD_CLEANED` 84 × 84 bottom-right) → `/shop`. Kept cold till your door (`#F7C66B`, teal pill text, `HOME_CARD_RIDER` 100 × 100 at the top-right, popping 16 above the card) → a sheet with the server's delivery terms (service area, next slot, fee, free above, minimum order). One label each |
 | Categories | The first five server categories in 50 dp tinted circles (picture or initial) and More → `/shop`. Keys `homeCategory-<slug>`, `homeCategoryMore` |
@@ -671,6 +671,23 @@ are decoration: excluded from semantics, nothing moves; while a picture loads, o
 empty. Tests: `fresh_theme_parts_test.dart` (the harbour shows the real trawler, far boat and four gulls inside its
 box; picture shapes; the pictures are bundled) and `onboarding_screen_test.dart` (page 1 shows the real trawler
 left of the circle and on the sea at 360 × 640 and 390 × 844).
+
+**The home harbour picture (D320).** The owner's phone screenshot showed the harbour trawler on top of "kitchen"
+and crowding the heading, and the drawn backdrop ending in a hard rectangle. Now:
+
+| Part | How |
+|---|---|
+| Picture | The website's sunrise harbour (`apps/web/public/home/hero-harbour.jpg`, D284) cropped with `sips` to x 300–1500, y 142–742 (the sun at about 41 % across, the open sea and waves at the right, the far boats and temple at the left edge) and saved 800 × 400 JPEG, about 80 KB: `fresh_theme/assets/scenery/harbour.jpg` (`FreshSceneryPictures.harbour`) |
+| `HarbourScene` | 240 × 120 at the top right of the home (top 0), behind the header and the greeting; `BoxFit.cover`, two `ShaderMask` gradients: left 0–42 % fades in, top 0–12 % fades in, 55–100 % fades out, so the corner blends into the sand with a soft, rounded fall-off and no edge. If the picture fails to load the drawn `HarbourScenePainter` (sky, sun, hills, sea, palm) shows at the scene's height against its right edge, in the same masks |
+| `HarbourBoat` | The real trawler, 44 wide, with three small real gulls in a 26 dp room left of its bow. The home lays it out at the end of the greeting line (`Row`: the greeting `Expanded`, then the boat with 8 left and 10 bottom padding); the greeting sits at the line's bottom. The 10 dp keeps it above the heading's sparks, which reach 10 above the heading. The boat takes its own room, so at any width or text size it cannot cover the heading, "today?", its sparks, the script line, the greeting or the search and Saved buttons; the first screen grows about 30 dp |
+
+Tests: `home_screen_test.dart` (at 320, 360, 390 and 430 dp wide and text scale 1.0 and 1.3, each boat and gull
+picture's on-screen box, from all four corners, overlaps none of the heading box, "today?", the sparks, the
+script line text, the greeting, Search and Saved, and the trawler ends above the sparks; the harbour shows the
+picture asset in two masks and no FittedBox; Search and Saved stay hit-testable; one harbour picture and four boat
+pictures are the page's only images) and `fresh_theme_parts_test.dart` (2 : 1 shape; the asset, `cover`, two masks
+and no boat inside the scene; the drawn fallback on a load error; `HarbourBoat` holds the trawler and three
+gulls inside its box; the picture is bundled).
 
 ## 22. Tell us about you (D290)
 
