@@ -1,7 +1,8 @@
 // Coastal scenery for the rich screens (D156, D176, D181): drawn gulls, clouds, hills, the drawn trawler, the
 // sea bands and palms, traced from the approved previews in their 390-wide design space (callers scale the
 // canvas); the owner's real trawler and gull pictures (D287, `FreshTrawler`, `FreshGull`); and the home harbour
-// (drawn sky, sun, hills, sea and palm with the real boats and gulls on top). Every colour and size is explicit.
+// (the owner's sunrise harbour picture faded into the page, the drawn sky, sun, hills, sea and palm as its
+// fallback, and the real boat with its gulls as a separate part, D320). Every colour and size is explicit.
 // Scenery is decoration: wrap it in ExcludeSemantics (the widgets here do). Nothing moves.
 
 import 'package:flutter/widgets.dart';
@@ -274,6 +275,13 @@ abstract final class FreshSceneryPictures {
   static const String package = 'fresh_theme';
   static const String trawler = 'assets/scenery/trawler.png';
 
+  /// The owner's sunrise harbour (D284, D320): the website hero picture cropped to the sun and the open sea
+  /// (x 300–1500, y 142–742 of the 2119 × 742 original) and saved 800 × 400, about 80 KB. The home's corner.
+  static const String harbour = 'assets/scenery/harbour.jpg';
+
+  /// Width ÷ height of the harbour picture.
+  static const double harbourAspect = 800 / 400;
+
   /// Width ÷ height of the trawler picture.
   static const double trawlerAspect = 600 / 571;
 
@@ -366,9 +374,9 @@ class _ScenePicture extends StatelessWidget {
 }
 
 /// The home harbour's drawn backdrop (D176 preview, x 168–390 and y 56–206 of the 390-wide screen): a warm sky,
-/// the sun, low hills, the sea with a wave line and a teal palm cut by the right edge. The boats and gulls are the
-/// owner's real pictures, placed on top by [HarbourScene] (D287). Designed in a 222 × 150 box ([designSize]) and
-/// scaled to the painter's width.
+/// the sun, low hills, the sea with a wave line and a teal palm cut by the right edge. Since D320 it is only the
+/// fallback [HarbourScene] shows when the owner's harbour picture cannot load. Designed in a 222 × 150 box
+/// ([designSize]) and scaled to the painter's width.
 class HarbourScenePainter extends CustomPainter {
   const HarbourScenePainter({
     this.skyTop = const Color(0xFFF7F1E6),
@@ -465,60 +473,131 @@ class HarbourScenePainter extends CustomPainter {
       old.palm != palm;
 }
 
-/// The home harbour as a widget, [width] wide (height follows the 222 × 150 design), excluded from semantics:
-/// the drawn backdrop ([painter]) with the owner's real trawler on the sea at the left, a small far-off one
-/// sailing the other way, and four real gulls in the sky (D287). Nothing reaches outside the box.
+/// The home harbour as a widget (D320), [width] wide and half as tall, excluded from semantics: the owner's
+/// sunrise harbour picture ([FreshSceneryPictures.harbour]: the sun and the open sea, the boats at the far left)
+/// whose left, top and bottom edges fade into the page through two gradient masks, so it has no hard edge. If
+/// the picture cannot load, the drawn backdrop ([fallback]) shows in the same faded box instead. It holds no boat
+/// and no gull: the screen places [HarbourBoat] in room of its own, so nothing covers text. Nothing moves.
 class HarbourScene extends StatelessWidget {
-  const HarbourScene({super.key, this.width = 222, this.painter = const HarbourScenePainter()});
+  const HarbourScene({
+    super.key,
+    this.width = defaultWidth,
+    this.picture,
+    this.fallback = const HarbourScenePainter(),
+  });
+
+  static const double defaultWidth = 240;
 
   final double width;
-  final HarbourScenePainter painter;
 
-  /// Where the pictures sit in the 222 × 150 design box: the trawler's left edge, bottom and width; the far boat
-  /// likewise; each gull's top-left, width and variant.
-  static const double _shipLeft = 18;
-  static const double _shipBottom = 146;
-  static const double _shipWidth = 84;
-  static const double _farLeft = 132;
-  static const double _farBottom = 128;
-  static const double _farWidth = 30;
-  static const List<(Offset, double, int)> _gulls = [
-    (Offset(10, 30), 20.0, 0),
-    (Offset(104, 30), 13.0, 2),
-    (Offset(126, 50), 11.0, 0),
-    (Offset(88, 10), 12.0, 1),
-  ];
+  /// The picture to show; null shows the bundled harbour. Tests pass a broken one to see the fallback.
+  final ImageProvider? picture;
+
+  /// The drawn backdrop shown when the picture fails to load.
+  final HarbourScenePainter fallback;
+
+  /// The scene's height at [width] (the picture's 2 : 1 shape).
+  static double heightFor(double width) => width / FreshSceneryPictures.harbourAspect;
+
+  /// Where the fades end: the left 42 % fades in from nothing, the top 12 % too, and the lower 45 % fades out.
+  static const double leftFade = 0.42;
+  static const double topFade = 0.12;
+  static const double bottomFadeStart = 0.55;
 
   @override
   Widget build(BuildContext context) {
-    final k = width / HarbourScenePainter.designSize.width;
+    final height = heightFor(width);
+    final drawnWidth = height * HarbourScenePainter.designSize.width / HarbourScenePainter.designSize.height;
+    final drawn = Align(
+      alignment: Alignment.centerRight,
+      child: CustomPaint(
+        key: const Key('harbourDrawn'),
+        size: Size(drawnWidth, height),
+        painter: fallback,
+      ),
+    );
     return ExcludeSemantics(
       child: SizedBox(
         width: width,
-        height: HarbourScenePainter.designSize.height * k,
-        child: Stack(
-          children: [
-            Positioned.fill(child: CustomPaint(painter: painter)),
-            Positioned(
-              left: _farLeft * k,
-              top: (_farBottom - FreshTrawler.heightFor(_farWidth)) * k,
-              child: FreshTrawler(
-                key: const Key('harbourFarTrawler'),
-                width: _farWidth * k,
-                mirrored: true,
-                opacity: 0.8,
+        height: height,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (rect) => const LinearGradient(
+            colors: [Color(0x00000000), Color(0xFF000000)],
+            stops: [0, leftFade],
+          ).createShader(rect),
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (rect) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x00000000), Color(0xFF000000), Color(0xFF000000), Color(0x00000000)],
+              stops: [0, topFade, bottomFadeStart, 1],
+            ).createShader(rect),
+            child: ClipRect(
+              child: Image(
+                key: const Key('harbourPicture'),
+                image: picture ?? const AssetImage(FreshSceneryPictures.harbour, package: FreshSceneryPictures.package),
+                width: width,
+                height: height,
+                fit: BoxFit.cover,
+                alignment: Alignment.centerRight,
+                filterQuality: FilterQuality.medium,
+                excludeFromSemantics: true,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => drawn,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The home harbour's boat (D287, D320): the owner's real trawler, [shipWidth] wide, with three small real gulls
+/// ahead of its bow, excluded from semantics. It is laid out in the page's flow (the home puts it at the end of
+/// the greeting line, [headingClearance] above the line's bottom), so it reserves its own room and never covers
+/// the heading, its sparks or the handwritten line at any width or text size.
+class HarbourBoat extends StatelessWidget {
+  const HarbourBoat({super.key, this.shipWidth = 44});
+
+  final double shipWidth;
+
+  /// The room left of the ship that the gulls fly in.
+  static const double gullRoom = 26;
+
+  /// How far the heading's sparks reach above the heading's box (Sparks at top −16 inside its 6 dp top padding):
+  /// keep at least this much between the boat's bottom and the line below it.
+  static const double headingClearance = 10;
+
+  /// The gulls in the [gullRoom]: each one's top-left, width and variant.
+  static const List<(Offset, double, int)> _gulls = [
+    (Offset(4, 0), 14.0, 0),
+    (Offset(16, 11), 10.0, 2),
+    (Offset(1, 18), 9.0, 1),
+  ];
+
+  /// The boat's size for [shipWidth].
+  static Size sizeFor(double shipWidth) => Size(shipWidth + gullRoom, FreshTrawler.heightFor(shipWidth));
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: SizedBox.fromSize(
+        size: sizeFor(shipWidth),
+        child: Stack(
+          children: [
             Positioned(
-              left: _shipLeft * k,
-              top: (_shipBottom - FreshTrawler.heightFor(_shipWidth)) * k,
-              child: FreshTrawler(key: const Key('harbourTrawler'), width: _shipWidth * k),
+              right: 0,
+              bottom: 0,
+              child: FreshTrawler(key: const Key('harbourTrawler'), width: shipWidth),
             ),
             for (final (at, span, variant) in _gulls)
               Positioned(
-                left: at.dx * k,
-                top: at.dy * k,
-                child: FreshGull(width: span * k, variant: variant),
+                left: at.dx,
+                top: at.dy,
+                child: FreshGull(width: span, variant: variant),
               ),
           ],
         ),

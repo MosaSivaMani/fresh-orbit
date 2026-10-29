@@ -200,8 +200,9 @@ class _HomePage extends ConsumerWidget {
             ),
           ),
         ),
-        // The harbour in the top-right corner (preview x 168–390, y 56–206).
-        const Positioned(top: 12, right: 0, child: HarbourScene(key: Key('homeHarbour'))),
+        // The owner's harbour picture in the top-right corner, behind the header and the greeting, faded into the
+        // page (D320). The boat sits in the greeting line's own room below, so nothing covers text.
+        const Positioned(top: 0, right: 0, child: HarbourScene(key: Key('homeHarbour'))),
         FreshGrowTail(
           minHeight: minHeight,
           head: Padding(
@@ -211,10 +212,22 @@ class _HomePage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _DeliveryHeader(service: service),
-                Text(
-                  name == null || name.isEmpty ? hello : '$hello, $name',
-                  key: const Key('homeGreeting'),
-                  style: _inter(c.muted, 15, FontWeight.w500),
+                // The real boat and its gulls end the greeting line, clear of the heading's sparks (D320).
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name == null || name.isEmpty ? hello : '$hello, $name',
+                        key: const Key('homeGreeting'),
+                        style: _inter(c.muted, 15, FontWeight.w500),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8, bottom: HarbourBoat.headingClearance),
+                      child: HarbourBoat(key: Key('homeHarbourBoat')),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 _Heading(color: c.ink),
