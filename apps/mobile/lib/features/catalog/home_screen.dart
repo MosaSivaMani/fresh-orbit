@@ -754,7 +754,7 @@ Widget _categoryPicture(Category category) {
   final bundled = path == null ? initial : BundledPicture(path: path, fallback: initial);
   final url = category.imageUrl;
   if (url == null || url.isEmpty) return bundled;
-  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
+  return FreshNetworkImage(url, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
 
 /// "Today's special" with the brush on "special" and a coral spark, and "See all →".
@@ -936,7 +936,7 @@ Widget _specialPicture(HomeBanner banner, int index, Color tint) {
   final bundled = BundledPicture(path: BundledPictures.special(banner.linkSlug, index), fallback: soft);
   final url = banner.imageUrl;
   if (url == null || url.isEmpty) return bundled;
-  return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
+  return FreshNetworkImage(url, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
 
 /// The most featured products "Popular today" shows: three rows of two on a phone.
@@ -982,7 +982,7 @@ class _HomeSections extends ConsumerWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: FreshLayout.page,
-            gridDelegate: productGridDelegate,
+            gridDelegate: productGridDelegateOf(context),
             itemCount: popular.length,
             itemBuilder: (context, i) => ShopProductCard(product: popular[i], index: i),
           ),

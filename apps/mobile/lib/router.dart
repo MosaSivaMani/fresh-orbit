@@ -85,7 +85,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/product/:slug',
-        builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!),
+        builder: (_, state) =>
+            ProductScreen(slug: state.pathParameters['slug']!, variantId: state.uri.queryParameters['variant']),
       ),
       GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
       GoRoute(

@@ -635,7 +635,7 @@ class _CartThumbs extends StatelessWidget {
           for (var i = 0; i < urls.length; i++)
             Positioned(
               left: i * (size - 8),
-              child: Image.network(
+              child: FreshNetworkImage(
                 urls[i],
                 key: ValueKey('cartThumb-$i'),
                 width: size,

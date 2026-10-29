@@ -95,11 +95,30 @@ class CartController extends AsyncNotifier<Cart> {
     return changeQuantity(line.id, line.quantity.withValue(next));
   }
 
-  /// The ADD button on a product card: adds the product's first orderable size with its default preparation
-  /// and the server's minimum quantity. Returns the choice made, or null when nothing can be added from the
-  /// card (the caller then opens the product page). The server prices the line.
-  Future<QuickAddChoice?> quickAdd(String slug) async {
-    final detail = await ref.read(catalogRepositoryProvider).product(slug);
+  /// The ADD button on a product card: adds the server's default size of the list item (the size behind the card's
+  /// "from" price, MB-2) with its default cut and minimum quantity, with no extra detail call. Without one (older
+  /// list shape) it reads the detail and adds the first orderable size. Returns the choice made, or null when
+  /// nothing can be added from the card (the caller then opens the product page). The server prices the line.
+  Future<QuickAddChoice?> quickAdd(ProductSummary product) async {
+    final listed = product.defaultVariant;
+    if (listed != null) {
+      final cart = await add(
+        AddCartItem(variantId: listed.id, preparationCode: listed.defaultPreparationCode, quantity: listed.minOrder),
+      );
+      final line = cart.lines
+          .where(
+            (l) =>
+                l.variantId == listed.id &&
+                (listed.defaultPreparationCode == null || l.preparation?.code == listed.defaultPreparationCode),
+          )
+          .lastOrNull;
+      return QuickAddChoice(
+        sizeName: listed.name,
+        preparationName: line?.preparation?.name,
+        quantity: line?.quantity ?? listed.minOrder,
+      );
+    }
+    final detail = await ref.read(catalogRepositoryProvider).product(product.slug);
     final variant = detail.variants
         .where((v) => v.unitPricePaise != null && (v.availability?.canAdd ?? true))
         .firstOrNull;
@@ -109,7 +128,11 @@ class CartController extends AsyncNotifier<Cart> {
         ? null
         : (orderable.where((p) => p.isDefault).firstOrNull ?? orderable.firstOrNull);
     if (variant.preparations.isNotEmpty && preparation == null) return null;
-    final choice = QuickAddChoice(variant: variant, preparation: preparation, quantity: variant.minOrder);
+    final choice = QuickAddChoice(
+      sizeName: variant.name,
+      preparationName: preparation?.name,
+      quantity: variant.minOrder,
+    );
     await add(AddCartItem(variantId: variant.id, preparationCode: preparation?.code, quantity: variant.minOrder));
     return choice;
   }
@@ -125,10 +148,11 @@ class CartController extends AsyncNotifier<Cart> {
 
 /// What [CartController.quickAdd] put in the cart.
 class QuickAddChoice {
-  const QuickAddChoice({required this.variant, required this.preparation, required this.quantity});
+  const QuickAddChoice({required this.sizeName, required this.preparationName, required this.quantity});
 
-  final Variant variant;
-  final Preparation? preparation;
+  /// The size added (the snack bar names it, MB-2).
+  final String sizeName;
+  final String? preparationName;
   final Quantity quantity;
 }
 

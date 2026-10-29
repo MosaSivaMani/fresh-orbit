@@ -439,7 +439,7 @@ class CategoryBubble extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: imageUrl == null
                     ? Icon(icon, color: c.tealDeep, size: 28)
-                    : Image.network(
+                    : FreshNetworkImage(
                         imageUrl!,
                         fit: BoxFit.cover,
                         excludeFromSemantics: true,

@@ -11,7 +11,7 @@ import 'package:fresh_orbit_app/illustrations/illustration.dart';
 import '../support/fixtures.dart';
 import '../support/harness.dart';
 
-ProductSummary _seer() => ProductSummary.fromJson({
+const _seerJson = <String, Object?>{
   'id': 'p1',
   'slug': 'seer-fish-vanjaram',
   'name': 'Seer Fish (Vanjaram)',
@@ -19,7 +19,9 @@ ProductSummary _seer() => ProductSummary.fromJson({
   'fromPrice': {'unitPricePaise': 129900, 'compareAtPaise': null, 'perUnit': 'KG'},
   'availability': {'status': 'IN_STOCK', 'message': null},
   'locationRequired': false,
-});
+};
+
+ProductSummary _seer() => ProductSummary.fromJson(_seerJson);
 
 void main() {
   setUp(() => IllustrationAssets.debugSetAvailable(const {}));
@@ -60,7 +62,58 @@ void main() {
       expect(item.quantity.unit, 'GRAM');
       expect(find.text('ADD'), findsNothing);
       expect(find.text('500 g'), findsOneWidget);
-      expect(find.text('Added 500 g, Steaks (1 cm).'), findsOneWidget);
+      // The snack names the size added (MB-2) and opens the cart, not the product page (MB-9).
+      expect(find.byKey(const ValueKey('quickAddSnack')), findsOneWidget);
+      expect(find.textContaining('Medium (3-5 kg fish)'), findsOneWidget);
+      expect(find.byKey(const ValueKey('quickAddViewCart')), findsOneWidget);
+    });
+
+    testWidgets('with the list item\'s defaultVariant, ADD adds that size without reading the detail (MB-2)', (
+      tester,
+    ) async {
+      deps.catalog.onProduct = null;
+      deps.cart.afterWrite = () => cart(lines: [cartLineJson()]);
+      await pumpScreen(
+        tester,
+        deps,
+        Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 180,
+              height: 260,
+              child: ShopProductCard(
+                product: ProductSummary.fromJson({
+                  ..._seerJson,
+                  'defaultVariant': {
+                    'id': 'v1',
+                    'name': 'Medium (3-5 kg fish)',
+                    'sellUnit': 'KG',
+                    'minOrder': {'value': 500, 'unit': 'GRAM'},
+                    'maxOrder': {'value': 5000, 'unit': 'GRAM'},
+                    'orderStep': {'value': 250, 'unit': 'GRAM'},
+                    'defaultPreparationCode': 'STEAK',
+                  },
+                }),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('ADD'));
+      await tester.pumpAndSettle();
+
+      final item = deps.cart.added.single;
+      expect(item.variantId, 'v1');
+      expect(item.preparationCode, 'STEAK');
+      expect(item.quantity.value, 500);
+      expect(find.textContaining('Medium (3-5 kg fish)'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('quickAddViewCart')));
+      await tester.pumpAndSettle();
+      expect(find.text('route:/cart'), findsOneWidget);
+      expect(deps.cart.added, hasLength(1));
     });
 
     testWidgets('+ proposes the next server step; − below the minimum removes the line', (tester) async {
