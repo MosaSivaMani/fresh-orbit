@@ -21,6 +21,7 @@ import { errorMessage } from "../../lib/errors";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { ACTIVE_FLAG, CITY_STATUS, LOCATION_STATUS } from "../../lib/status";
 import { CreateLocationDialog, CreateServiceAreaDialog } from "./dialogs";
+import { STATE_NAME_HINT, stateNameField } from "./schemas";
 import { FormAlert, READINESS_ITEMS, problemItems, reportWriteError } from "./shared";
 
 export function CityDetailPage() {
@@ -325,6 +326,7 @@ const editCitySchema = z.object({
     .trim()
     .regex(/^[A-Z]{2}$/, "Enter the two-letter state code, e.g. TG."),
   timeZone: z.string().trim().min(1, "Enter the IANA time zone, e.g. Asia/Kolkata."),
+  stateName: stateNameField,
 });
 
 function EditCityDialog({
@@ -339,17 +341,26 @@ function EditCityDialog({
   const update = useUpdateCity(city.id);
   const form = useForm<z.infer<typeof editCitySchema>>({
     resolver: zodResolver(editCitySchema),
-    defaultValues: { name: city.name, stateCode: city.stateCode, timeZone: city.timeZone },
+    defaultValues: {
+      name: city.name,
+      stateCode: city.stateCode,
+      stateName: city.stateName ?? "",
+      timeZone: city.timeZone,
+    },
   });
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await update.mutateAsync({ body: values, version: city.version });
+      // AD-9: the PUT replaces the city, so the state name is always sent (null when blank) or it is cleared.
+      await update.mutateAsync({
+        body: { ...values, stateName: values.stateName || null },
+        version: city.version,
+      });
       notifySaved("City saved");
       onClose();
     } catch (error) {
       reportWriteError(error, {
         setError: form.setError,
-        fields: ["name", "stateCode", "timeZone"],
+        fields: ["name", "stateCode", "stateName", "timeZone"],
         onConflict: () => {
           onClose();
           onReload();
@@ -376,6 +387,7 @@ function EditCityDialog({
         <form id="edit-city" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
           <TextField form={form} name="name" label="Name" required />
           <TextField form={form} name="stateCode" label="State code" required />
+          <TextField form={form} name="stateName" label="State name" hint={STATE_NAME_HINT} />
           <TextField form={form} name="timeZone" label="Time zone" required />
         </form>
       </DialogContent>

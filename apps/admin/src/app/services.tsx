@@ -15,6 +15,8 @@ export interface AppServices {
   session: SessionStore;
   http: HttpClient;
   queryClient: QueryClient;
+  /** Absolute API base (`…/api/v1`), for paths the API returns whole (complaint photos, invoice PDFs). */
+  apiBaseUrl: string;
 }
 
 export interface AppServicesOptions {
@@ -53,7 +55,7 @@ export function createAppServices(options: AppServicesOptions = {}): AppServices
     mutationCache: new MutationCache({ onError }),
   });
 
-  return { session, http, queryClient };
+  return { session, http, queryClient, apiBaseUrl: baseUrl };
 }
 
 function absolute(url: string): string {

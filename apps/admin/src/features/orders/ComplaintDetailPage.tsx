@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDateTime, formatRupees, humanizeCode } from "@fresh/core";
-import { Button, StatusBadge } from "@fresh/ui";
-import { CheckCircle2 } from "lucide-react";
+import { Button, Skeleton, StatusBadge } from "@fresh/ui";
+import { CheckCircle2, ImageOff } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useParams } from "react-router";
 import { z } from "zod";
+import { useApiFile, useObjectUrl } from "../../api/files";
 import { useComplaint, useDecideComplaint, useResolveComplaint } from "../../api/orders";
 import { type ComplaintDetail, complaintItemLabel } from "../../api/types/orders";
 import { useLocationScope } from "../../app/location-scope";
@@ -103,15 +104,12 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
         {complaint.attachmentUrls.length > 0 && (
           <Section title="Photos">
             <ul className="flex flex-wrap gap-3">
-              {complaint.attachmentUrls.map((url) => (
+              {complaint.attachmentUrls.map((url, index) => (
                 <li key={url}>
-                  <a href={url} target="_blank" rel="noreferrer">
-                    <img
-                      src={url}
-                      alt="Complaint attachment"
-                      className="border-border size-32 rounded-md border object-cover"
-                    />
-                  </a>
+                  <ComplaintPhoto
+                    path={url}
+                    alt={`Photo ${index + 1} of ${complaint.attachmentUrls.length} from the customer`}
+                  />
                 </li>
               ))}
             </ul>
@@ -120,6 +118,34 @@ function ComplaintView({ complaint, reload }: { complaint: Complaint; reload: ()
         {complaint.status === "OPEN" && <DecideForm complaint={complaint} reload={reload} />}
       </div>
     </>
+  );
+}
+
+/**
+ * A complaint photo from the staff-only photo endpoint (AD-3): fetched with the Bearer token and shown through an
+ * object URL (an <img src> cannot send the token). Opens full size in a new tab from the same object URL.
+ */
+function ComplaintPhoto({ path, alt }: { path: string; alt: string }) {
+  const file = useApiFile(path);
+  const src = useObjectUrl(file.data);
+  const box = "border-border size-32 rounded-md border";
+  if (file.isError) {
+    return (
+      <div
+        role="img"
+        aria-label={`${alt} could not be loaded`}
+        className={`${box} text-text-muted flex flex-col items-center justify-center gap-1 p-2 text-center text-xs`}
+      >
+        <ImageOff aria-hidden="true" className="size-5" />
+        Could not load
+      </div>
+    );
+  }
+  if (!src) return <Skeleton className={box} />;
+  return (
+    <a href={src} target="_blank" rel="noreferrer">
+      <img src={src} alt={alt} className={`${box} object-cover`} />
+    </a>
   );
 }
 

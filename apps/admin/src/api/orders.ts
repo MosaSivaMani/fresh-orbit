@@ -12,6 +12,7 @@ import {
   type ComplaintSummary,
   type DecideComplaintRequest,
   type GoodwillRequest,
+  type Invoice,
   type PackRequest,
   type PackResponse,
   type PickList,
@@ -26,6 +27,7 @@ export const orderKeys = {
   all: ["orders"] as const,
   list: (q: object) => ["orders", "list", q] as const,
   detail: (id: Id) => ["orders", "detail", id] as const,
+  invoice: (id: Id) => ["orders", "invoice", id] as const,
   pickList: (q: object) => ["orders", "pick-list", q] as const,
   complaints: (q: object) => ["orders", "complaints", q] as const,
   complaint: (id: Id) => ["orders", "complaint", id] as const,
@@ -38,6 +40,12 @@ function withVersion<T extends { version?: Version }>(res: ApiResponse<T>): Vers
   return { ...res.data, version: res.data.version ?? res.version ?? "" } as Versioned<T>;
 }
 
+/**
+ * How often the work lists (orders, shipments board) re-read while the tab is visible, so new orders appear
+ * without a manual refresh (AD-7). TanStack Query pauses the interval while the tab is hidden.
+ */
+export const WORK_LIST_POLL_MS = 30_000;
+
 export function useOrders(query: AdminOrderListQuery) {
   const http = useHttp();
   return useQuery({
@@ -45,6 +53,7 @@ export function useOrders(query: AdminOrderListQuery) {
     queryFn: ({ signal }) =>
       http.get<Page<AdminOrderSummary>>("/admin/orders", { query: { ...query }, signal }),
     placeholderData: keepPreviousData,
+    refetchInterval: WORK_LIST_POLL_MS,
   });
 }
 
@@ -59,6 +68,15 @@ export function useOrder(orderId: Id) {
       const detail = flattenAdminOrder(res.data);
       return { ...detail, version: detail.version || res.version || "" };
     },
+  });
+}
+
+/** The order's GST invoice (AD-5); 404 until it is issued at delivery. */
+export function useOrderInvoice(orderId: Id) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: orderKeys.invoice(orderId),
+    queryFn: ({ signal }) => http.get<Invoice>(`/admin/orders/${orderId}/invoice`, { signal }),
   });
 }
 

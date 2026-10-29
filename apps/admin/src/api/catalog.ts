@@ -1,5 +1,11 @@
 import { type Page } from "@fresh/core";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useHttp } from "../app/services";
 import {
   type AdminCategory,
@@ -99,22 +105,54 @@ export function usePreparationMethods(enabled = true) {
   });
 }
 
+/** Variants per page in the pickers' search (AD-4); "Show more" loads the next page. */
+export const VARIANT_SEARCH_PAGE_SIZE = 20;
+
+/** The server's longest `q` for the variant search. */
+const MAX_VARIANT_SEARCH = 100;
+
 /**
- * Active variants of every product for pickers (`GET /admin/catalog/variants`, any staff member; G3), by product
- * name then SKU. One page of 100 is searched in the browser; a store with more active variants needs a server-side
- * search box (`q`).
+ * Active variants for pickers (`GET /admin/catalog/variants`, any staff member; G3), searched on the server by
+ * product, variant or SKU (`q`, AD-4) and paged, by product name then SKU. Pass the debounced text.
  */
-export function useVariantLookup(enabled = true) {
+export function useVariantSearch(search: string, enabled = true) {
   const http = useHttp();
-  return useQuery({
-    queryKey: catalogKeys.variantLookup,
-    queryFn: ({ signal }) =>
+  const q = search.trim().slice(0, MAX_VARIANT_SEARCH);
+  return useInfiniteQuery({
+    queryKey: [...catalogKeys.variantLookup, "search", q] as const,
+    queryFn: ({ pageParam, signal }) =>
       http.get<Page<VariantLookup>>("/admin/catalog/variants", {
-        query: { activeOnly: true, pageSize: 100 },
+        query: {
+          activeOnly: true,
+          q: q === "" ? undefined : q,
+          page: pageParam,
+          pageSize: VARIANT_SEARCH_PAGE_SIZE,
+        },
         signal,
       }),
-    staleTime: 5 * 60_000,
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page * last.pageSize < last.totalCount ? last.page + 1 : undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     enabled,
+  });
+}
+
+/** One variant by id (`id=`), so a chosen variant keeps its name whatever the search shows (AD-4). */
+export function useVariantById(variantId: Id, enabled = true) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: [...catalogKeys.variantLookup, "id", variantId] as const,
+    queryFn: async ({ signal }) => {
+      const found = await http.get<Page<VariantLookup>>("/admin/catalog/variants", {
+        query: { id: [variantId], pageSize: 1 },
+        signal,
+      });
+      return found.items[0] ?? null;
+    },
+    staleTime: 5 * 60_000,
+    enabled: enabled && variantId !== "",
   });
 }
 

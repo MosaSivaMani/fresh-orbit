@@ -7,15 +7,19 @@ import {
   type CouponListQuery,
   type CouponRedemption,
   type CouponRequest,
+  type Promotion,
+  type PromotionRequest,
 } from "./types/promotions";
 
-// docs/api/README.md §4.13 — admin coupons (promotions.manage).
+// docs/api/README.md §4.13 — admin coupons (promotions.manage) and home banners (catalog.manage).
 
 export const promotionKeys = {
   all: ["promotions"] as const,
   coupons: (q: object) => ["promotions", "coupons", q] as const,
   coupon: (id: Id) => ["promotions", "coupon", id] as const,
   redemptions: (id: Id, q: object) => ["promotions", "redemptions", id, q] as const,
+  banners: (q: object) => ["promotions", "banners", q] as const,
+  banner: (id: Id) => ["promotions", "banner", id] as const,
 };
 
 function withVersion(res: ApiResponse<Coupon>): Coupon {
@@ -72,6 +76,60 @@ export function useUpdateCoupon(couponId: Id) {
     mutationFn: async ({ body, version }: { body: CouponRequest; version: Version }) =>
       withVersion(
         await http.request<Coupon>("PUT", `/admin/coupons/${couponId}`, { body, ifMatch: version }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: promotionKeys.all }),
+  });
+}
+
+// Home banners (AD-6): `GET/POST /admin/promotions`, `GET/PUT /admin/promotions/{id}` (If-Match), catalog.manage.
+
+function bannerWithVersion(res: ApiResponse<Promotion>): Promotion {
+  return { ...res.data, version: res.data.version ?? res.version ?? "" };
+}
+
+export function useBanners(query: { cityId?: Id; page?: number; pageSize?: number }) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: promotionKeys.banners(query),
+    queryFn: ({ signal }) =>
+      http.get<Page<Promotion>>("/admin/promotions", { query: { ...query }, signal }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useBanner(promotionId: Id) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: promotionKeys.banner(promotionId),
+    queryFn: async ({ signal }) =>
+      bannerWithVersion(
+        await http.request<Promotion>("GET", `/admin/promotions/${promotionId}`, { signal }),
+      ),
+    enabled: Boolean(promotionId),
+  });
+}
+
+export function useCreateBanner() {
+  const http = useHttp();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: PromotionRequest) =>
+      bannerWithVersion(await http.request<Promotion>("POST", "/admin/promotions", { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: promotionKeys.all }),
+  });
+}
+
+/** Saves the whole banner, quoting the version read (If-Match); 412 when someone saved it first. */
+export function useUpdateBanner(promotionId: Id) {
+  const http = useHttp();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ body, version }: { body: PromotionRequest; version: Version }) =>
+      bannerWithVersion(
+        await http.request<Promotion>("PUT", `/admin/promotions/${promotionId}`, {
+          body,
+          ifMatch: version,
+        }),
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: promotionKeys.all }),
   });

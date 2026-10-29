@@ -274,6 +274,28 @@ public sealed class AdminOrderGapsTests(OrderingDatabase database) : OrderingTes
         numbers.Should().ContainSingle().Which.Should().Be(new KeyValuePair<Guid, string>(orderId, number));
     }
 
+    [Fact]
+    public async Task AD1_AD2_delivery_facts_name_the_order_address_and_amount_to_collect_in_one_batch()
+    {
+        var cod = await PlaceOrderAsync();
+        var online = await PlaceOrderAsync("ONLINE");
+        var codOrder = (await LoadOrderAsync(cod))!;
+
+        var facts = await InScopeAsync((s, _) => s.GetRequiredService<FreshOrbit.Ordering.Public.IOrderingApi>().GetOrderDeliveryFactsAsync([cod, online, Guid.NewGuid()], Ct));
+
+        facts.Keys.Should().BeEquivalentTo([cod, online]);
+        var codFacts = facts[cod];
+        codFacts.OrderNumber.Should().Be(codOrder.OrderNumber);
+        codFacts.RecipientName.Should().Be("Priya Raman");
+        codFacts.Phone.Should().Be("+919876543210");
+        codFacts.AddressLine.Should().Be("12, 3rd Cross Street, Near RTO, Thiruvanmiyur, Chennai");
+        codFacts.Pincode.Should().Be(CheckoutWorld.Pincode);
+        codFacts.PaymentMethod.Should().Be(FreshOrbit.Ordering.Public.PaymentMethod.Cod);
+        codFacts.AmountToCollectPaise.Should().Be(codOrder.AmountDuePaise).And.BePositive();
+        facts[online].PaymentMethod.Should().Be(FreshOrbit.Ordering.Public.PaymentMethod.Online);
+        facts[online].AmountToCollectPaise.Should().Be(0);
+    }
+
     private Task<IReadOnlyList<string>> DeletionBlockersAsync()
         => InScopeAsync((s, _) => s.GetRequiredService<FreshOrbit.Ordering.Infrastructure.Public.OrderingCustomerDeletionCheck>().GetBlockingItemsAsync(CustomerId, Ct));
 
