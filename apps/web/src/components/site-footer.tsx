@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { getCities } from "@/api/endpoints/catalog";
+import { getBusinessProfile, getCities } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
-import { type PublicCity } from "@/api/types/locations";
+import { type PublicBusinessProfile, type PublicCity } from "@/api/types/locations";
+import { getGrievanceOfficer } from "@/server/config";
 import { Logo } from "./logo";
 
 /**
@@ -20,6 +21,19 @@ async function loadCities(): Promise<PublicCity[]> {
   }
 }
 
+/** The seller's legal identity (`GET /business-profile`, L-6, D300); null when the API is unavailable. */
+async function loadProfile(): Promise<PublicBusinessProfile | null> {
+  try {
+    return await getBusinessProfile(publicHttp(FOOTER_CITIES_REVALIDATE_SECONDS));
+  } catch (error) {
+    console.warn(
+      "Footer: business profile unavailable.",
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
+
 const shopLinks = [
   { href: "/shop", label: "All seafood" },
   { href: "/search", label: "Search" },
@@ -29,6 +43,7 @@ const shopLinks = [
 
 const helpLinks = [
   { href: "/support", label: "Help and FAQ" },
+  { href: "/support#contact", label: "Contact us" },
   { href: "/support/delivery-policy", label: "Delivery policy" },
   { href: "/support/cancellation-policy", label: "Cancellation policy" },
   { href: "/support/refund-policy", label: "Refund policy" },
@@ -37,9 +52,66 @@ const helpLinks = [
   { href: "/about", label: "About us" },
 ];
 
-/** The dark footer (D95): logo, shop and help links, the cities we deliver to (from the API) and the small print. */
+const grievanceLink = { href: "/support#grievance", label: "Grievance officer" };
+
+/** A value the owner has filled in; blank and missing values are left out, never guessed. */
+function filled(value: string | null | undefined): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
+ * The legal block (L-6, D300): legal name, registered address, GSTIN, FSSAI licence and contacts, exactly as the
+ * business profile holds them. Each line appears only when the server sends it.
+ */
+function LegalDetails({ profile }: { profile: PublicBusinessProfile }) {
+  const phone = profile.supportPhone.replace(/\s+/g, "");
+  const rows: LegalRow[] = [
+    { field: "legalName", label: "Legal name", value: profile.legalName },
+    { field: "address", label: "Registered address", value: profile.address },
+    { field: "gstin", label: "GSTIN", value: profile.gstin },
+    { field: "fssaiLicenseNo", label: "FSSAI licence no.", value: profile.fssaiLicenseNo },
+    { field: "supportPhone", label: "Phone", value: profile.supportPhone, href: `tel:${phone}` },
+    {
+      field: "supportEmail",
+      label: "Email",
+      value: profile.supportEmail,
+      href: `mailto:${profile.supportEmail}`,
+    },
+  ];
+  const shown = rows.filter((r) => filled(r.value));
+  if (shown.length === 0) return null;
+  return (
+    <section aria-label="Legal details">
+      <dl className="grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2 lg:grid-cols-3">
+        {shown.map((r) => (
+          <div key={r.field} className="flex gap-1.5" data-field={r.field}>
+            <dt className="opacity-70">{r.label}:</dt>
+            <dd className="break-words opacity-90">
+              {r.href ? <a href={r.href}>{r.value}</a> : r.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+interface LegalRow {
+  /** The business-profile field the line shows (stable, for tests). */
+  field: keyof PublicBusinessProfile;
+  label: string;
+  value: string | null | undefined;
+  href?: string;
+}
+
+/**
+ * The dark footer (D95): logo, shop and help links, the cities we deliver to (from the API), the seller's legal
+ * details (from the business profile, D300) and the small print.
+ */
 export async function SiteFooter() {
-  const cities = await loadCities();
+  const [cities, profile] = await Promise.all([loadCities(), loadProfile()]);
+  // The grievance officer is linked only once configured (L-7, D300).
+  const help = getGrievanceOfficer() ? [...helpLinks, grievanceLink] : helpLinks;
   return (
     <footer className="bg-outline-ink text-on-outline-ink mt-12">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -59,7 +131,7 @@ export async function SiteFooter() {
         </nav>
         <nav aria-label="Help" className="flex flex-col gap-2 text-sm">
           <h2 className="font-display text-base font-semibold">Help</h2>
-          {helpLinks.map((l) => (
+          {help.map((l) => (
             <Link key={l.href} href={l.href} className="w-fit underline-offset-4 hover:underline">
               {l.label}
             </Link>
@@ -79,9 +151,12 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-on-outline-ink/20 border-t">
-        <p className="mx-auto max-w-7xl px-4 py-4 text-xs opacity-80 lg:px-8">
-          © {new Date().getFullYear()} Fresh Orbitt. Prices include GST.
-        </p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 lg:px-8">
+          {profile && <LegalDetails profile={profile} />}
+          <p className="text-xs opacity-80">
+            © {new Date().getFullYear()} Fresh Orbitt. Prices include GST.
+          </p>
+        </div>
       </div>
     </footer>
   );
