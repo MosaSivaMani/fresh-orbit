@@ -8,7 +8,9 @@ import '../api/api_client.dart';
 import '../api/repositories.dart';
 import '../api/token_store.dart';
 import '../core/app_prefs.dart';
+import '../core/launch.dart';
 import '../core/push_service.dart';
+import '../core/website.dart';
 import 'location_state.dart';
 import 'session.dart';
 
@@ -19,6 +21,15 @@ final appPrefsProvider = Provider<AppPrefs>((ref) => MemoryAppPrefs());
 final tokenStoreProvider = Provider<TokenStore>((ref) => TokenStore(MemorySecretStore()));
 
 final apiBaseUrlProvider = Provider<String>((ref) => apiBaseUrlDefine);
+
+/// The store website's address (`--dart-define=WEBSITE_BASE_URL`, D299); empty when not configured.
+final websiteBaseUrlProvider = Provider<String>((ref) => websiteBaseUrlDefine);
+
+/// The policy pages on the website; empty when the website is not configured, so every policy link is hidden.
+final policyLinksProvider = Provider<Map<PolicyPage, Uri>>((ref) => policyLinks(ref.watch(websiteBaseUrlProvider)));
+
+/// Opens a link outside the app ([openExternal]); tests override it to record the address.
+final externalLauncherProvider = Provider<ExternalLauncher>((ref) => openExternal);
 
 final pushServiceProvider = Provider<PushService>((ref) => NoopPushService());
 

@@ -28,6 +28,7 @@ import '../../state/cart_state.dart';
 import '../../state/core_providers.dart';
 import '../../state/first_run.dart';
 import '../../state/session.dart';
+import '../../widgets/policy_links.dart';
 
 /// Where a successful sign-in goes, keeping the pages below (D267). A screen that pushed the login itself
 /// passes no [from] and gets the page back by a pop. The router's redirect passes [from] (the page that needed
@@ -261,11 +262,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: _busy ? null : _skip,
                 child: const Text('Skip for now, just browse'),
               ),
-            Text(
-              'By continuing you agree to our terms and privacy policy.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: c.muted),
-            ),
+            // "terms" and "privacy policy" open the website's pages when it is configured (D299).
+            PolicyConsentLine(style: Theme.of(context).textTheme.bodySmall?.copyWith(color: c.muted)),
           ],
         ),
       ),
