@@ -79,6 +79,30 @@ describe("LoginForm", () => {
     expect(routerMock.replace).not.toHaveBeenCalled();
   });
 
+  it("links the terms and the privacy policy before each button, in a new tab (W-3)", async () => {
+    server.use(
+      http.post(`${API}/auth/otp/request`, () => HttpResponse.json(challenge, { status: 202 })),
+    );
+    const { container } = renderWithProviders(<LoginForm next={null} />);
+
+    const expectConsentBefore = (buttonName: string) => {
+      const button = screen.getByRole("button", { name: buttonName });
+      for (const href of ["/support/terms", "/support/privacy-policy"]) {
+        const link = container.querySelector<HTMLAnchorElement>(`form a[href="${href}"]`);
+        expect(link).not.toBeNull();
+        expect(link).toHaveAttribute("target", "_blank");
+        expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
+        // The button comes after the link.
+        const follows = link!.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING;
+        expect(follows).toBeTruthy();
+      }
+    };
+
+    expectConsentBefore("Send code");
+    await reachCodeStep();
+    expectConsentBefore("Verify and sign in");
+  });
+
   it("refuses a malformed number without calling the server", async () => {
     renderWithProviders(<LoginForm next={null} />);
     await userEvent.type(screen.getByLabelText(/Mobile number/), "12345");

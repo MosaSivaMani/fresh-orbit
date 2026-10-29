@@ -56,6 +56,7 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
       build: ${{ steps.tag.outputs.build }}
       site_url: ${{ steps.tag.outputs.site_url }}
+      app_environment: ${{ steps.tag.outputs.app_environment }}
     steps:
       - id: tag
         env:
@@ -77,6 +78,7 @@ jobs:
           fi
           if [[ "$TARGET" == production ]]; then
             site_url="$SITE_URL_PRODUCTION"
+            app_environment=Production
             [[ $build == false || "$tag" == *-prod ]] || tag="$tag-prod"
             if [[ "$tag" != *-prod ]]; then
               echo "::error::Only -prod images (built with the production site URL) can be deployed to production."
@@ -84,6 +86,7 @@ jobs:
             fi
           else
             site_url="$SITE_URL_STAGING"
+            app_environment=Staging
             if [[ "$tag" == *-prod ]]; then
               echo "::error::A -prod image carries the production site URL; build the ref for staging instead."
               exit 1
@@ -101,6 +104,7 @@ jobs:
             echo "tag=$tag"
             echo "build=$build"
             echo "site_url=$site_url"
+            echo "app_environment=$app_environment"
           } >> "$GITHUB_OUTPUT"
           echo "Release tag: $tag (build: $build)" >> "$GITHUB_STEP_SUMMARY"
 
@@ -144,8 +148,10 @@ jobs:
             org.opencontainers.image.version=${{ needs.release.outputs.tag }}
           # The website's public URL, inlined at build time by Next.js (ignored by the other images). The admin needs
           # none: it calls the API on its own origin through Caddy.
+          # APP_ENVIRONMENT: only -prod website images prerender indexable pages (L-45, D301).
           build-args: |
             NEXT_PUBLIC_SITE_URL=${{ needs.release.outputs.site_url }}
+            APP_ENVIRONMENT=${{ needs.release.outputs.app_environment }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 

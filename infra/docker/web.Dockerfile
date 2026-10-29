@@ -8,6 +8,7 @@
 #   - next.config switches to `output: "standalone"` (traced from the repository root) when NEXT_OUTPUT=standalone,
 #     so the server lands at .next/standalone/apps/web/server.js.
 #   - NEXT_PUBLIC_SITE_URL (canonical URLs, sitemap, robots) is inlined at build time: build argument.
+#   - APP_ENVIRONMENT (build argument for prerendered pages, runtime value from compose): only "Production" is indexed.
 #   - FRESH_API_ORIGIN (server-side only; the browser uses this site's /api/v1 proxy and /bff/auth handlers) is read
 #     at runtime: set by docker-compose.prod.yml to http://api:8080.
 #
@@ -31,11 +32,15 @@ ARG WEB_DIR=apps/web
 ARG NEXT_PUBLIC_SITE_URL=
 # "true" only for the free public demo (render.yaml): shows the "test data only" banner. Empty everywhere else.
 ARG NEXT_PUBLIC_DEMO_MODE=
+# "Production" only for -prod images (deploy.yml): pages prerendered at build time are indexable only then (L-45,
+# D301). At runtime docker-compose.prod.yml passes the server's APP_ENVIRONMENT; unset means noindex.
+ARG APP_ENVIRONMENT=
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
     NEXT_TELEMETRY_DISABLED=1 \
     NEXT_OUTPUT=standalone \
     NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL} \
-    NEXT_PUBLIC_DEMO_MODE=${NEXT_PUBLIC_DEMO_MODE}
+    NEXT_PUBLIC_DEMO_MODE=${NEXT_PUBLIC_DEMO_MODE} \
+    APP_ENVIRONMENT=${APP_ENVIRONMENT}
 WORKDIR /repo
 RUN corepack enable
 # Dependency layer: only package manifests and the pruned lockfile, so source edits keep the install cached.

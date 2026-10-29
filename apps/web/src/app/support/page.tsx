@@ -6,6 +6,8 @@ import { getBusinessProfile } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
 import { type PublicBusinessProfile } from "@/api/types/locations";
 import { ContentPage } from "@/components/content-page";
+import { GrievanceOfficerCard } from "@/components/grievance-officer";
+import { getGrievanceOfficer } from "@/server/config";
 
 export const metadata: Metadata = {
   title: "Help and FAQ",
@@ -80,6 +82,7 @@ async function loadProfile(): Promise<PublicBusinessProfile | null> {
 function ContactCard({ profile }: { profile: PublicBusinessProfile | null }) {
   return (
     <section
+      id="contact"
       aria-labelledby="contact-heading"
       className="bg-teal-soft flex flex-col gap-3 rounded-[20px] p-5 text-sm"
     >
@@ -131,6 +134,8 @@ function ContactCard({ profile }: { profile: PublicBusinessProfile | null }) {
 
 export default async function SupportPage() {
   const profile = await loadProfile();
+  // Shown only when configured (L-7, D300); the business profile has no grievance fields yet.
+  const officer = getGrievanceOfficer();
   return (
     <ContentPage
       title={
@@ -141,7 +146,12 @@ export default async function SupportPage() {
       intro="Answers about ordering, weights, slots, payment, cancellation and refunds."
       breadcrumbs={[{ href: "/", label: "Home" }, { label: "Help and FAQ" }]}
       picture={{ slot: "ONBOARDING_DELIVERY", focus: "45% 25%" }}
-      aside={<ContactCard profile={profile} />}
+      aside={
+        <div className="flex flex-col gap-4">
+          <ContactCard profile={profile} />
+          {officer && <GrievanceOfficerCard officer={officer} />}
+        </div>
+      }
     >
       <div className="flex flex-col gap-3">
         {FAQ.map((item) => (
@@ -178,6 +188,19 @@ export default async function SupportPage() {
             className="text-accent-text underline-offset-4 hover:underline"
           >
             Refund policy
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/support/privacy-policy"
+            className="text-accent-text underline-offset-4 hover:underline"
+          >
+            Privacy policy
+          </Link>
+        </li>
+        <li>
+          <Link href="/support/terms" className="text-accent-text underline-offset-4 hover:underline">
+            Terms of use
           </Link>
         </li>
       </ul>
