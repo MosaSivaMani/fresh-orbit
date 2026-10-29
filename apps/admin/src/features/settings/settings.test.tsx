@@ -13,6 +13,7 @@ const PROFILE = {
   address: "12 Harbour Road",
   supportPhone: "+919800000000",
   supportEmail: "help@freshorbit.test",
+  supportHours: "7 am to 9 pm, every day",
   timeZone: "Asia/Kolkata",
   version: "7",
 };
@@ -79,6 +80,28 @@ describe("Business profile", () => {
     expect(await screen.findByText("Enter a valid 15-character GSTIN.")).toBeInTheDocument();
     expect(screen.getByLabelText(/GSTIN/)).toHaveAttribute("aria-invalid", "true");
     expect(seen).toEqual(['"7"']);
+  });
+
+  it("keeps and sends the support hours (AD-8)", async () => {
+    server.use(
+      http.get(`${API}/admin/settings/business-profile`, () => HttpResponse.json(PROFILE)),
+    );
+    const seen = captureProfilePut();
+    const { user } = renderApp({
+      path: "/settings/business-profile",
+      permissions: ["settings.manage"],
+    });
+    const hours = await screen.findByLabelText(/Support hours/);
+    expect(hours).toHaveValue(PROFILE.supportHours);
+    await user.clear(hours);
+    await user.type(hours, "6 am to 10 pm");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(seen).toHaveLength(1));
+    expect(seen[0]).toMatchObject({
+      ifMatch: '"7"',
+      body: { supportHours: "6 am to 10 pm", legalName: PROFILE.legalName },
+    });
   });
 });
 

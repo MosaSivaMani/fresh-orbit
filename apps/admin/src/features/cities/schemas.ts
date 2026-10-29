@@ -18,6 +18,17 @@ export const rupees = (message: string) =>
     .trim()
     .refine((v) => parseRupeesToPaise(v) !== null, message);
 
+/**
+ * A city's state display name (LOC-R19, AD-9): optional, at most 60 characters, never derived from the state code.
+ * The create and edit forms always send it (null when blank), because a PUT that omits it clears it.
+ */
+export const stateNameField = z
+  .string()
+  .trim()
+  .max(60, "Keep the state name under 60 characters, or leave it empty.");
+
+export const STATE_NAME_HINT = "Prefills the state on customer addresses, e.g. Telangana.";
+
 export const optionalRupees = z
   .string()
   .trim()

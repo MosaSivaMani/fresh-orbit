@@ -22,6 +22,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { notifySaved } from "../../lib/feedback";
 import { useListParams } from "../../lib/list-params";
 import { CITY_STATUS, statusOptions } from "../../lib/status";
+import { STATE_NAME_HINT, stateNameField } from "./schemas";
 import { reportWriteError } from "./shared";
 import { ListEmpty } from "../../components/states";
 
@@ -133,6 +134,7 @@ const citySchema = z.object({
     .trim()
     .regex(/^[A-Z]{2}$/, "Enter the two-letter state code, e.g. TG."),
   timeZone: z.string().trim().min(1, "Enter the IANA time zone, e.g. Asia/Kolkata."),
+  stateName: stateNameField,
 });
 
 function CreateCityDialog({ onClose }: { onClose: () => void }) {
@@ -140,18 +142,19 @@ function CreateCityDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const form = useForm<z.infer<typeof citySchema>>({
     resolver: zodResolver(citySchema),
-    defaultValues: { code: "", name: "", stateCode: "", timeZone: "Asia/Kolkata" },
+    defaultValues: { code: "", name: "", stateCode: "", stateName: "", timeZone: "Asia/Kolkata" },
   });
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const city = await create.mutateAsync(values);
+      // AD-9: the state name is sent (null when blank) so it prefills customer addresses.
+      const city = await create.mutateAsync({ ...values, stateName: values.stateName || null });
       notifySaved("City added", "It stays in draft until every launch check passes.");
       onClose();
       void navigate(`/cities/${city.id}`);
     } catch (error) {
       reportWriteError(error, {
         setError: form.setError,
-        fields: ["code", "name", "stateCode", "timeZone"],
+        fields: ["code", "name", "stateCode", "stateName", "timeZone"],
         codeFields: { DUPLICATE: "code" },
       });
     }
@@ -184,6 +187,13 @@ function CreateCityDialog({ onClose }: { onClose: () => void }) {
               autoComplete="off"
             />
           </div>
+          <TextField
+            form={form}
+            name="stateName"
+            label="State name"
+            hint={STATE_NAME_HINT}
+            autoComplete="off"
+          />
           <TextField form={form} name="timeZone" label="Time zone" hint="IANA name." required />
         </form>
       </DialogContent>

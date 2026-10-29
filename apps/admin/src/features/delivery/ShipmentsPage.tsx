@@ -9,7 +9,7 @@ import { PageHeader, tableError } from "../../components/page";
 import { useListParams } from "../../lib/list-params";
 import { SHIPMENT_STATUS, statusOptions } from "../../lib/status";
 import { todayInIndia } from "../../lib/units";
-import { ShipmentActions } from "./ShipmentActions";
+import { CollectLine, ShipmentActions } from "./ShipmentActions";
 import { DeliveryNav, shortId } from "./shared";
 import { ListEmpty } from "../../components/states";
 
@@ -34,16 +34,51 @@ function columns(
             to={`/delivery/shipments/${row.original.id}`}
             className="text-accent-text font-medium hover:underline"
           >
-            Shipment {shortId(row.original.id)}
+            {row.original.orderNumber ?? `Shipment ${shortId(row.original.id)}`}
           </Link>
           <Link
             to={`/orders/${row.original.orderId}`}
             className="text-text-muted text-xs hover:underline"
           >
-            Order {shortId(row.original.orderId)}
+            Open order
           </Link>
         </span>
       ),
+    },
+    {
+      id: "customer",
+      header: "Customer",
+      cell: ({ row }) =>
+        row.original.recipientName ? (
+          <span className="flex flex-col">
+            <span>{row.original.recipientName}</span>
+            {row.original.phone && (
+              <a
+                href={`tel:${row.original.phone}`}
+                className="text-text-muted text-xs hover:underline"
+              >
+                {row.original.phone}
+              </a>
+            )}
+          </span>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      id: "address",
+      header: "Address",
+      cell: ({ row }) =>
+        row.original.addressLine ? (
+          <span className="block max-w-64 text-sm">
+            {row.original.addressLine}
+            {row.original.pincode && (
+              <span className="text-text-muted block text-xs">{row.original.pincode}</span>
+            )}
+          </span>
+        ) : (
+          "—"
+        ),
     },
     {
       id: "slot",
@@ -88,6 +123,11 @@ function columns(
           )}
         </span>
       ),
+    },
+    {
+      id: "collect",
+      header: "To collect",
+      cell: ({ row }) => <CollectLine shipment={row.original} />,
     },
     {
       id: "cash",
@@ -226,7 +266,7 @@ export function ShipmentsPage() {
           emptyState={
             <ListEmpty
               title="No shipments match these filters"
-              description="Shipments appear here when orders are packed."
+              description="Shipments appear here when orders are placed for this day."
             />
           }
         />

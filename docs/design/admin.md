@@ -38,12 +38,13 @@ listed in §5; **left** = not built.
 |---|---|---|---|---|---|
 | 1 | Login | `/login` | — | done | `POST /admin/auth/login` |
 | 1 | Shell, location switcher, user menu | (layout) | signed in | done | `GET /admin/auth/me`, `POST /admin/auth/logout`, `GET /admin/fulfillment-locations` (names, with `locations.manage`) |
-| 1 | Dashboard | `/` | — (tiles need `reports.view`) | done | `GET /admin/reports/dashboard` (60 s refresh), `GET /admin/reports/daily-sales` (today's totals) |
-| 2 | Orders list | `/orders` | `orders.view` | done | `GET /admin/orders` (one status, slotDate, slotId, paymentMethod, q, fulfillmentLocationId, sort `-placedAt`); bulk `POST /admin/orders/{id}/start-preparing` |
-| 2 | Order detail | `/orders/:orderId` | `orders.view` | done | `GET /admin/orders/{id}`; `start-preparing` (`orders.pack`), `cancel` (`orders.cancel`), `goodwill` (`refunds.request`), substitutions `POST …/items/{itemId}/substitutions`, `POST …/substitutions/{id}/record-response` (`orders.pack`; proposing needs the preparation method list, which needs `catalog.manage` — G3); payments panel (below) |
+| 1 | Dashboard | `/` | — (tiles need `reports.view`) | done | `GET /admin/reports/dashboard` (60 s refresh; today's sales from `DashboardResponse.sales`, G4) |
+| 2 | Orders list | `/orders` | `orders.view` | done | `GET /admin/orders` (30 s refresh, D304; status repeated, slotDate, slotId, paymentMethod, q, fulfillmentLocationId, sort `-placedAt`); bulk `POST /admin/orders/{id}/start-preparing` |
+| 2 | Order detail | `/orders/:orderId` | `orders.view` | done | `GET /admin/orders/{id}`; Payment tab links the invoice (below); `start-preparing` (`orders.pack`), `cancel` (`orders.cancel`), `goodwill` (`refunds.request`), substitutions `POST …/items/{itemId}/substitutions`, `POST …/substitutions/{id}/record-response` (`orders.pack`; proposing needs the preparation method list, which needs `catalog.manage` — G3); payments panel (below) |
 | 2 | Weigh and pack (whole order) | tab on order detail | `orders.pack` | done | `POST /admin/orders/{id}/pack` (If-Match); result shows packed, charged, capped, final total, amount due, refund due from the server |
+| 2 | Order invoice (view and print) | `/orders/:orderId/invoice` | `orders.view` | done | `GET /admin/orders/{id}/invoice`; browser print of the invoice only; PDF link when `pdfUrl` is set (D303) |
 | 2 | Pick list | `/orders/pick-list?slotId&fulfillmentLocationId` | `orders.pack` | done | `GET /admin/orders/pick-list` |
-| 2 | Complaints list / detail | `/complaints`, `/complaints/:id` | `complaints.manage` | done | `GET /admin/complaints`, `GET /admin/complaints/{id}`, `POST …/decide`, `POST …/resolve` |
+| 2 | Complaints list / detail | `/complaints`, `/complaints/:id` | `complaints.manage` | done | `GET /admin/complaints`, `GET /admin/complaints/{id}`, photos fetched with the bearer token as blob URLs (D303), `POST …/decide`, `POST …/resolve` |
 | 3 | Stock list | `/inventory` | `inventory.view` | done | `GET /admin/inventory/stock` (lowStockOnly, variantId); create stock item `POST /admin/inventory/stock-items` (`inventory.adjust`) |
 | 3 | Stock item | `/inventory/stock/:id` | `inventory.view` | done | item, batches; threshold, adjust, count (If-Match), waste (IK), discard batch (`inventory.adjust`) |
 | 3 | Receive stock | `/inventory/receive` | `inventory.receive` | done | `POST /admin/inventory/receipts` (IK) |
@@ -55,18 +56,18 @@ listed in §5; **left** = not built.
 | 5 | Tax rules | `/pricing/tax-rules` (own menu entry "Tax rules") | `pricing.manage` or `tax.manage` (list, `{ anyOf }` requirement); `tax.manage` for "New tax period" / "New rate" (D35) | done | list, schedule new period |
 | 5 | Bulk upload (dry run, then apply) | `/pricing/bulk` | `pricing.manage` | done | `POST /admin/pricing/prices/bulk` with `dryRun: true`, then apply with its own IK |
 | 5 | Coupons list / editor / redemptions | `/promotions`, `/promotions/new`, `/promotions/:id` | `promotions.manage` | done | `GET/POST /admin/coupons`, `GET/PUT /admin/coupons/{id}` (If-Match), `POST …/pause`, `…/resume`, `GET …/redemptions` |
-| 5 | Home banners | — | `catalog.manage` | **left** | `GET/POST/PUT /admin/promotions` (Promotions module not on `main`) |
-| 6 | Shipments board | `/delivery` | `delivery.manage` | done | shipments list; assign, dispatch, deliver (code), failed attempt, reattempt, return, record cash (IK) — all If-Match |
+| 5 | Home banners list / editor | `/banners`, `/banners/new`, `/banners/:promotionId` | `catalog.manage` | done | `GET/POST /admin/promotions`, `GET/PUT /admin/promotions/{id}` (If-Match, every field sent), city filter, link to a category, product (server search) or coupon code (D304) |
+| 6 | Shipments board | `/delivery` | `delivery.manage` | done | shipments list (30 s refresh) with order number, customer, phone, address and amount to collect from the server (D302); assign, dispatch, deliver (code), failed attempt, reattempt, return, record cash (IK, amount prefilled, hidden for prepaid) — all If-Match; a 412 reloads and retries once (D304) |
 | 6 | Shipment detail | `/delivery/shipments/:id` | `delivery.manage` | done | shipment, attempts, timeline (delivery code never shown) |
 | 6 | Slots / templates / riders | `/delivery/slots`, `/templates`, `/riders` | `delivery.manage` | done | slot capacity/open (If-Match), templates CRUD, riders CRUD |
-| 7 | Cities | `/cities` | `locations.manage` | done | `GET/POST /admin/cities` |
+| 7 | Cities | `/cities` | `locations.manage` | done | `GET/POST /admin/cities` (state name sent, AD-9) |
 | 7 | City detail and launch checklist | `/cities/:cityId` | `locations.manage` (activate/pause/retire `cities.activate`) | done | city, `GET …/readiness`, transitions (If-Match), locations and service areas of the city |
 | 7 | Fulfillment location | `/locations/:locationId` | `locations.manage` | done | update (If-Match), operating hours (whole week), closures |
 | 7 | Service area | `/service-areas/:id` | `locations.manage` | done | update fees (If-Match), add/remove pincodes |
-| 8 | Customers list / detail | `/customers`, `/customers/:id` | `customers.view` (block `customers.manage`) | partial | list, detail, block/unblock (If-Match); order history tab waits for the endpoint |
+| 8 | Customers list / detail | `/customers`, `/customers/:id` | `customers.view` (block `customers.manage`) | done | list (city filter), detail with `orderCounts`, Orders tab `GET /admin/customers/{id}/orders`, block/unblock (If-Match) (G6) |
 | 9 | Reports + CSV | `/reports?report=…` | `reports.view` | done | five reports with URL filters, server totals, `format=csv` download |
 | 10 | Staff and roles | `/settings/staff` | `staff.manage` | done | staff CRUD, reset password, roles and permissions |
-| 10 | Business profile | `/settings/business-profile` | `settings.manage` | done | GET (404 → create with `If-None-Match: *`), PUT (If-Match) |
+| 10 | Business profile | `/settings/business-profile` | `settings.manage` | done | GET (404 → create with `If-None-Match: *`), PUT (If-Match) with every field, including support hours (AD-8) |
 | 10 | Order policies | `/settings/order-policies` | `settings.manage` | done | default and per-city policies |
 | 10 | Number series | `/settings/number-series` | `settings.manage` | done | list, update (If-Match) |
 | 10 | Notification templates | `/settings/notification-templates` | `notifications.manage` | done | list, update, send test |
@@ -78,7 +79,7 @@ listed in §5; **left** = not built.
 | 11 | Cash settlements | `/cash-settlements` | `cash.settle` | done | list, record (IK), dispute, settle (If-Match) |
 | 11 | Payment issues | `/payment-issues` | `payments.view` (resolve `payments.manage`) | done | list, resolve (If-Match) |
 
-Left: home banners (row above). Everything else in the brief is built.
+Everything in the brief is built.
 
 ## 4. API types (generated)
 
@@ -96,15 +97,15 @@ Differences from the old temporary types that changed screens:
 
 - Order detail is nested: `GET /admin/orders/{id}` returns `{ order, …staff extras }`; `flattenAdminOrder` in
   `types/orders.ts` flattens it. Version from `order.version` (or the ETag).
-- Order list row: `recipientName`, `phone`, `deliverySlotId`, `slotStartAt`/`slotEndAt`; no `version`, so bulk
-  start-preparing reads each order's detail first (G13). One `status` filter, not a list (G14).
+- Order list row: `recipientName`, `phone`, `deliverySlotId`, `slotStartAt`/`slotEndAt` and `version`; bulk
+  start-preparing quotes each row's version (G13 closed). `status` may repeat (G14 closed).
 - History rows use `to`/`at`/`reasonCode` (no actor name); adjustments use `at`; gross reserved quantity comes
   from `lines`; item batches are gone (G17).
 - Pick list rows are `lines` with `grossQuantity` + `stockUnit`; no SKU, slot times or order count (G18).
 - Cancel takes `note`; substitution proposal takes `preparationMethodId` (mapped from the picker's code);
   recording an answer sends `{ answer: "ACCEPTED" | "REJECTED" }`; complaint decision takes `note`.
 - Complaint detail = complaint summary: no product name or refund limit (G15), no decided-by; shows decision note.
-- Customer detail has no order counts (G6). Coupon `description` and `validTo` are nullable; `isListed` is
+- Customer detail has `orderCounts` (G6 closed). Coupon `description` and `validTo` are nullable; `isListed` is
   required in the request and the editor keeps the current value (no control yet); redemptions show order id
   only (G16).
 - Payment issue kinds add `REFUND_METHOD_REQUIRED` and `WEBHOOK_ERROR`. Audit `before`/`after` are untyped.
@@ -117,13 +118,13 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 |---|---|---|---|---|
 | G1 | Location names need `locations.manage` | CLOSED (`admin/api-adoption`) | Location switcher and every location label read `GET /admin/me/locations` (any staff); scoped staff keep their token's ids while names load | — |
 | G2 | Cities list needs `locations.manage` | CLOSED (`admin/api-adoption`) | Report, coupon, order-policy and customer city pickers read `GET /admin/cities/lookup` for every staff member; "City policy" no longer needs `locations.manage` | — |
-| G3 | No staff-readable variant search | CLOSED (`admin/api-adoption`) | Receive stock, stock item and substitution pickers search `GET /admin/catalog/variants` (one page of 100 active variants, searched in the browser); preparations from `GET /admin/preparation-methods` for staff without `catalog.manage`; inventory rows show the server's product · variant names and SKU | — |
+| G3 | No staff-readable variant search | CLOSED (`admin/api-adoption`) | Receive stock, stock item and substitution pickers search `GET /admin/catalog/variants` on the server (`q`, 20 per page, "Show more", D304); preparations from `GET /admin/preparation-methods` for staff without `catalog.manage`; inventory rows show the server's product · variant names and SKU | — |
 | G4 | Dashboard has no sales figures; low stock has no unit | CLOSED (`admin/api-adoption`) | "Orders today" / "Sales today" tiles from `DashboardResponse.sales` (placed, cancelled, order value, delivered revenue); low stock in its `stockUnit` with the product name. The dashboard no longer reads the `daily-sales` report | — |
 | G5 | Ordering admin shapes not on `main` | CLOSED | Real shapes in the spec; screens follow them (§4) | — |
 | G6 | No `GET /admin/customers/{id}/orders`; no city filter; no order counts | CLOSED (`admin/api-adoption`) | Customer Orders tab lists the customer's orders; profile shows `orderCounts`; customers list filters by city | — |
 | G7 | Rider list needs `delivery.manage` | CLOSED (`admin/api-adoption`) | Cash settlement picks the rider from `GET /admin/delivery/riders/lookup` (name · last 4 phone digits); a 403 still falls back to typing the id | — |
-| G8 | `docs/api` lists If-Match on image upload and refund create, the backend does not require it | STILL OPEN | Admin follows the backend | Align `docs/api` (doc change) |
-| G9 | Tax rule scheduling has no If-Match | STILL OPEN | `POST /admin/pricing/tax-rules` returns a version but takes none | Version on the tax-rule collection, or accept |
+| G8 | `docs/api` lists If-Match on image upload and refund create, the backend does not require it | CLOSED | `docs/api` §1.7 "Appends without `If-Match`" now says both take none; admin follows the backend | — |
+| G9 | Tax rule scheduling has no If-Match | CLOSED | `POST /admin/pricing/tax-rules` takes the category's schedule version in `If-Match` (or `If-None-Match: *`), 412/428 as elsewhere | — |
 | G10 | Shipments list has no date filter; most lists have no `sort` | CLOSED (`admin/api-adoption`) | The shipments board sends the chosen `slotDate`; `sort` not used yet | — |
 | G11 | `CITY_RETIREMENT_BLOCKED` blocking item shape undocumented | CLOSED | `blocking` is typed `string[]` (`CityRetirementBlockedProblem`); the retire dialog lists it | — |
 | G12 | Payments have no created date | CLOSED (`admin/api-adoption`) | Payments list has a Created column from `createdAt` | — |
@@ -142,7 +143,7 @@ Re-checked against the generated OpenAPI document on 2026-10-24 (D63).
 
 The admin screens adopted them on `admin/api-adoption` (Status column above).
 
-Front end, not backend: coupon `isListed` is a switch ("Show in the customer's offers") on the coupon editor (`admin/api-adoption`). Product variants edit the serving facts (CAT-R21: fewest / most pieces and serves per basis; no pieces range for PIECE variants). Still open on the admin side: G8 (a `docs/api` wording change) and G9 (tax-rule versions are quoted per category already).
+Front end, not backend: coupon `isListed` is a switch ("Show in the customer's offers") on the coupon editor (`admin/api-adoption`). Product variants edit the serving facts (CAT-R21: fewest / most pieces and serves per basis; no pieces range for PIECE variants). Nothing in this table is open on the admin side.
 
 ## 5a. Illustrated look (U3, D53; Bold blocks D88, D89, D181)
 

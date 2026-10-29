@@ -8,7 +8,7 @@ import {
 import { Badge, Button, StatusBadge, Tabs, TabsContent, TabsList, TabsTrigger } from "@fresh/ui";
 import { Ban, Gift, PlayCircle, Replace } from "lucide-react";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useOrder, useStartPreparing } from "../../api/orders";
 import {
   type AdminOrderDetail,
@@ -192,7 +192,16 @@ function OrderDetail({ order, reload }: { order: Order; reload: () => unknown })
                     { label: "Refunded", value: formatRupees(order.amountRefundedPaise) },
                     {
                       label: "Invoice",
-                      value: order.invoice?.invoiceNumber ?? "Issued at delivery",
+                      value: order.invoice ? (
+                        <Link
+                          to={`/orders/${order.id}/invoice`}
+                          className="text-accent-text hover:underline"
+                        >
+                          {order.invoice.invoiceNumber} · View and print
+                        </Link>
+                      ) : (
+                        "Issued at delivery"
+                      ),
                     },
                   ]}
                 />

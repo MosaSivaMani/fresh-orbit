@@ -4,6 +4,8 @@ using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
 using FreshOrbit.Delivery.Domain.Templates;
+using FreshOrbit.Ordering.Public;
+using FreshOrbit.SharedKernel.Codes;
 
 namespace FreshOrbit.Delivery.Application.Reads;
 
@@ -44,9 +46,23 @@ public sealed record RiderLookupItem(Guid Id, Guid FulfillmentLocationId, string
 public sealed record DeliveryAttemptResponse(int AttemptNo, AttemptOutcome Outcome, string? Notes, DateTimeOffset AttemptedAt);
 
 /// <summary>Admin view of a shipment. The delivery code itself is never shown to staff (the customer reads it out).</summary>
+/// <param name="OrderNumber">The order's number (AD-1). The order fields are read from Ordering and are null only when the order cannot be read.</param>
+/// <param name="RecipientName">Who receives the parcel.</param>
+/// <param name="Phone">The recipient's phone (E.164).</param>
+/// <param name="AddressLine">Delivery address without the pincode, comma separated.</param>
+/// <param name="Pincode">Delivery pincode.</param>
+/// <param name="PaymentMethod">The order's payment method code: COD, UPI_ON_DELIVERY or ONLINE (AD-2).</param>
+/// <param name="AmountToCollectPaise">What the rider collects at the door (AD-2): the order's amount due for COD and UPI on delivery, 0 for prepaid orders.</param>
 public sealed record ShipmentResponse(
     Guid Id,
     Guid OrderId,
+    string? OrderNumber,
+    string? RecipientName,
+    string? Phone,
+    string? AddressLine,
+    string? Pincode,
+    string? PaymentMethod,
+    long? AmountToCollectPaise,
     Guid FulfillmentLocationId,
     Guid DeliverySlotId,
     Guid? RiderId,
@@ -191,18 +207,44 @@ public static class DeliveryMappings
         return new(s.Id, s.FulfillmentLocationId, s.SlotTemplateId, s.SlotDate, s.StartAt, s.EndAt, s.CutoffAt, s.Capacity, s.BookedCount, s.Status, s.ClosedReason, s.GetDisplayStatus(now), FormatVersion(s.Version));
     }
 
+    /// <summary>Adds the order facts to a response read without them (AD-1, AD-2); null keeps the response as it is.</summary>
+    public static ShipmentResponse WithOrder(this ShipmentResponse response, OrderDeliveryFacts? order)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        return order is null
+            ? response
+            : response with
+            {
+                OrderNumber = order.OrderNumber,
+                RecipientName = order.RecipientName,
+                Phone = order.Phone,
+                AddressLine = order.AddressLine,
+                Pincode = order.Pincode,
+                PaymentMethod = order.PaymentMethod.ToCode(),
+                AmountToCollectPaise = order.AmountToCollectPaise,
+            };
+    }
+
     public static RiderResponse ToResponse(this Rider r)
     {
         ArgumentNullException.ThrowIfNull(r);
         return new(r.Id, r.FulfillmentLocationId, r.FullName, r.Phone, r.IsActive, FormatVersion(r.Version));
     }
 
-    public static ShipmentResponse ToResponse(this Shipment s)
+    /// <summary>The shipment with its order's facts (AD-1, AD-2); <paramref name="order"/> null leaves the order fields null.</summary>
+    public static ShipmentResponse ToResponse(this Shipment s, OrderDeliveryFacts? order = null)
     {
         ArgumentNullException.ThrowIfNull(s);
         return new(
             s.Id,
             s.OrderId,
+            order?.OrderNumber,
+            order?.RecipientName,
+            order?.Phone,
+            order?.AddressLine,
+            order?.Pincode,
+            order?.PaymentMethod.ToCode(),
+            order?.AmountToCollectPaise,
             s.FulfillmentLocationId,
             s.DeliverySlotId,
             s.RiderId,
