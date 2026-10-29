@@ -190,3 +190,6 @@ export interface DecideComplaintRequest {
   refundAmountPaise?: number | null;
   note?: string | null;
 }
+
+/** `GET /admin/orders/{id}/invoice`: the GST tax invoice issued at delivery (AD-5); amounts are the server's. */
+export type Invoice = Schema<"InvoiceResponse">;

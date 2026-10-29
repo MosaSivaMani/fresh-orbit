@@ -1150,11 +1150,18 @@ updated resource and its `ETag`. Staff outside the resource's location → 403 `
 | POST `shipments/{id}/reattempt` | — | 200 shipment; 422 `REATTEMPT_NOT_ALLOWED` |
 | POST `shipments/{id}/return` | — | 200 shipment (RETURNED) |
 
-Shipment detail: `{ id, orderId, fulfillmentLocationId, deliverySlotId, riderId, status, placedAt, packedAt, coldBoxUsed,
+Shipment detail: `{ id, orderId, orderNumber, recipientName, phone, addressLine, pincode, paymentMethod,
+amountToCollectPaise, fulfillmentLocationId, deliverySlotId, riderId, status, placedAt, packedAt, coldBoxUsed,
 dispatchTemperatureC, temperatureWarning, dispatchedAt, deliveredAt, returnedAt, cancelledAt, deliveryCodeFailures,
 deliveryCodeLocked, cashCollectedPaise, cashMode, upiReference, cashCollectedAt, attempts[{ attemptNo, outcome, notes,
 attemptedAt }], version }`. The delivery code is never shown to staff; the customer sees it through order tracking while
 `OUT_FOR_DELIVERY`.
+
+Order facts on every shipment (AD-1, AD-2, D302): the list, the detail and every shipment command response carry
+`orderNumber`, `recipientName`, `phone`, `addressLine` (line 1, line 2, landmark, locality and city joined with
+", "), `pincode`, `paymentMethod` (`COD`, `UPI_ON_DELIVERY`, `ONLINE`) and `amountToCollectPaise` (the order's
+amount due; `0` for `ONLINE`), read from Ordering through `IOrderingApi.GetOrderDeliveryFactsAsync` in one batch per
+request. All seven are null when the order is not found. The admin shows them; it never computes the amount.
 
 ### 4.18 Admin cities, locations, pincodes, schedules
 

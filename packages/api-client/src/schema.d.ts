@@ -11879,6 +11879,14 @@ export interface components {
             id: string;
             /** Format: uuid */
             orderId: string;
+            orderNumber: null | string;
+            recipientName: null | string;
+            phone: null | string;
+            addressLine: null | string;
+            pincode: null | string;
+            paymentMethod: null | string;
+            /** Format: int64 */
+            amountToCollectPaise: null | number;
             /** Format: uuid */
             fulfillmentLocationId: string;
             /** Format: uuid */

@@ -1,6 +1,6 @@
-import { isApiError } from "@fresh/core";
+import { formatRupees, isApiError } from "@fresh/core";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Dialog, DialogContent } from "@fresh/ui";
+import { Button, Dialog, DialogContent, toast } from "@fresh/ui";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -11,15 +11,17 @@ import {
   useReattempt,
   useRecordAttempt,
   useRecordCashCollected,
+  useReloadShipment,
   useReturnShipment,
   useRiders,
 } from "../../api/delivery";
-import { type Shipment } from "../../api/types/delivery";
+import { type Shipment, type ShipmentStatus } from "../../api/types/delivery";
 import { SelectField, TextAreaField, TextField } from "../../components/form";
 import { notifySaved, reportError } from "../../lib/feedback";
 import { useIdempotencyKey } from "../../lib/idempotency";
-import { parseRupeesToPaise } from "../../lib/units";
-import { reportWriteError } from "./shared";
+import { SHIPMENT_STATUS } from "../../lib/status";
+import { paiseToRupeesInput, parseRupeesToPaise } from "../../lib/units";
+import { paymentMethodLabel, reportWriteError } from "./shared";
 
 type DialogKind = "assign" | "dispatch" | "deliver" | "attempt" | "cash" | "reattempt" | "return";
 
@@ -35,6 +37,16 @@ const OUTCOMES = [
   { value: "OTHER", label: "Other" },
 ];
 
+/** The statuses each action is offered in; a reload after a 412 repeats the action only while it still applies. */
+const ALLOWED: Record<Exclude<DialogKind, "cash">, readonly ShipmentStatus[]> = {
+  assign: ["PENDING", "ASSIGNED"],
+  dispatch: ["ASSIGNED"],
+  deliver: ["OUT_FOR_DELIVERY"],
+  attempt: ["OUT_FOR_DELIVERY"],
+  reattempt: ["FAILED"],
+  return: ["FAILED"],
+};
+
 const optionalRupees = z
   .string()
   .trim()
@@ -42,6 +54,11 @@ const optionalRupees = z
     (v) => v === "" || parseRupeesToPaise(v) !== null,
     "Enter an amount in rupees, e.g. 450 or 450.50.",
   );
+
+/** True when the server says the rider collects nothing (prepaid order, AD-2). */
+function isPrepaid(shipment: Shipment): boolean {
+  return shipment.amountToCollectPaise === 0;
+}
 
 /**
  * The actions a staff member can take on a shipment in its current status (docs/api §4.17). The server still
@@ -58,7 +75,9 @@ export function ShipmentActions({
   const close = () => setOpen(null);
   const s = shipment.status;
   const cashOpen =
-    shipment.cashCollectedPaise == null && (s === "OUT_FOR_DELIVERY" || s === "DELIVERED");
+    shipment.cashCollectedPaise == null &&
+    !isPrepaid(shipment) &&
+    (s === "OUT_FOR_DELIVERY" || s === "DELIVERED");
 
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -115,6 +134,71 @@ interface DialogProps {
   onClose: () => void;
 }
 
+/**
+ * AD-10: the "Reload" of the 412 prompt re-reads the shipment (and refreshes the board), then repeats the same
+ * action with the new version while the shipment is still in a status that offers it. Otherwise the dialog closes
+ * and says what the shipment is now; nothing is repeated.
+ */
+function useRetryAfterConflict(
+  shipment: Shipment,
+  kind: keyof typeof ALLOWED,
+  onClose: () => void,
+) {
+  const reload = useReloadShipment();
+  return (retry: (version: string) => Promise<void>) => async () => {
+    let fresh: Shipment;
+    try {
+      fresh = await reload(shipment.id);
+    } catch (error) {
+      reportError(error, { title: "Could not reload the shipment" });
+      return;
+    }
+    if (ALLOWED[kind].includes(fresh.status)) {
+      await retry(fresh.version);
+      return;
+    }
+    toast({
+      title: "This shipment changed",
+      description: `It is now ${SHIPMENT_STATUS[fresh.status]?.label ?? fresh.status}. Nothing was repeated.`,
+      tone: "warning",
+    });
+    onClose();
+  };
+}
+
+/** Who and where (AD-1) and what to collect (AD-2), at the top of each dialog. */
+function ShipmentSummary({ shipment }: { shipment: Shipment }) {
+  if (!shipment.orderNumber) return null;
+  return (
+    <div className="bg-surface-sand rounded-xl px-3 py-2 text-sm">
+      <p className="font-semibold">
+        Order {shipment.orderNumber} · {shipment.recipientName}
+      </p>
+      {shipment.addressLine && (
+        <p className="text-text-muted">
+          {shipment.addressLine}
+          {shipment.pincode ? ` ${shipment.pincode}` : ""}
+        </p>
+      )}
+      <CollectLine shipment={shipment} />
+    </div>
+  );
+}
+
+/** "Collect ₹669.50 · Cash on delivery" or "Prepaid: nothing to collect", from the server's amount (AD-2). */
+export function CollectLine({ shipment }: { shipment: Shipment }) {
+  if (shipment.amountToCollectPaise == null) return null;
+  if (isPrepaid(shipment)) {
+    return <p className="text-text-muted">Prepaid: nothing to collect</p>;
+  }
+  return (
+    <p className="font-semibold">
+      Collect {formatRupees(shipment.amountToCollectPaise)}
+      {shipment.paymentMethod ? ` · ${paymentMethodLabel(shipment.paymentMethod)}` : ""}
+    </p>
+  );
+}
+
 const assignSchema = z.object({ riderId: z.string().min(1, "Choose a rider.") });
 
 function AssignDialog({ shipment, onClose }: DialogProps) {
@@ -124,13 +208,14 @@ function AssignDialog({ shipment, onClose }: DialogProps) {
     pageSize: 100,
   });
   const assign = useAssignRider();
+  const retryAfterConflict = useRetryAfterConflict(shipment, "assign", onClose);
   const form = useForm<z.infer<typeof assignSchema>>({
     resolver: zodResolver(assignSchema),
     defaultValues: { riderId: shipment.riderId ?? "" },
   });
-  const onSubmit = form.handleSubmit(async (values) => {
+  async function send(values: z.infer<typeof assignSchema>, version: string): Promise<void> {
     try {
-      await assign.mutateAsync({ id: shipment.id, version: shipment.version, body: values });
+      await assign.mutateAsync({ id: shipment.id, version, body: values });
       notifySaved("Rider assigned");
       onClose();
     } catch (error) {
@@ -138,9 +223,11 @@ function AssignDialog({ shipment, onClose }: DialogProps) {
         setError: form.setError,
         fields: ["riderId"],
         codeFields: { RIDER_NOT_AVAILABLE: "riderId" },
+        onConflict: retryAfterConflict((next) => send(values, next)),
       });
     }
-  });
+  }
+  const onSubmit = form.handleSubmit((values) => send(values, shipment.version));
   const options = (riders.data?.items ?? []).map((r) => ({
     value: r.id,
     label: `${r.fullName} (${r.phone})`,
@@ -162,6 +249,7 @@ function AssignDialog({ shipment, onClose }: DialogProps) {
         }
       >
         <form id="assign-rider" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+          <ShipmentSummary shipment={shipment} />
           <SelectField
             form={form}
             name="riderId"
@@ -195,15 +283,16 @@ const dispatchSchema = z.object({
 
 function DispatchDialog({ shipment, onClose }: DialogProps) {
   const dispatch = useDispatchShipment();
+  const retryAfterConflict = useRetryAfterConflict(shipment, "dispatch", onClose);
   const form = useForm<z.infer<typeof dispatchSchema>>({
     resolver: zodResolver(dispatchSchema),
     defaultValues: { dispatchTemperatureC: "" },
   });
-  const onSubmit = form.handleSubmit(async (values) => {
+  async function send(values: z.infer<typeof dispatchSchema>, version: string): Promise<void> {
     try {
       const result = await dispatch.mutateAsync({
         id: shipment.id,
-        version: shipment.version,
+        version,
         body: { dispatchTemperatureC: Number(values.dispatchTemperatureC) },
       });
       notifySaved(
@@ -218,9 +307,11 @@ function DispatchDialog({ shipment, onClose }: DialogProps) {
         setError: form.setError,
         fields: ["dispatchTemperatureC"],
         title: "Could not dispatch",
+        onConflict: retryAfterConflict((next) => send(values, next)),
       });
     }
-  });
+  }
+  const onSubmit = form.handleSubmit((values) => send(values, shipment.version));
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -238,7 +329,8 @@ function DispatchDialog({ shipment, onClose }: DialogProps) {
           </>
         }
       >
-        <form id="dispatch-shipment" noValidate onSubmit={onSubmit}>
+        <form id="dispatch-shipment" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+          <ShipmentSummary shipment={shipment} />
           <TextField
             form={form}
             name="dispatchTemperatureC"
@@ -278,17 +370,20 @@ const deliverSchema = z
 
 function DeliverDialog({ shipment, onClose }: DialogProps) {
   const deliver = useDeliverShipment();
+  const retryAfterConflict = useRetryAfterConflict(shipment, "deliver", onClose);
+  const prepaid = isPrepaid(shipment);
   const form = useForm<z.infer<typeof deliverSchema>>({
     resolver: zodResolver(deliverSchema),
     defaultValues: { deliveryCode: "", cashCollected: "", cashMode: "", upiReference: "" },
   });
   const mode = useWatch({ control: form.control, name: "cashMode" });
-  const onSubmit = form.handleSubmit(async (values) => {
-    const cash = values.cashCollected === "" ? null : parseRupeesToPaise(values.cashCollected);
+  async function send(values: z.infer<typeof deliverSchema>, version: string): Promise<void> {
+    const cash =
+      prepaid || values.cashCollected === "" ? null : parseRupeesToPaise(values.cashCollected);
     try {
       await deliver.mutateAsync({
         id: shipment.id,
-        version: shipment.version,
+        version,
         body: {
           deliveryCode: values.deliveryCode,
           cashCollectedPaise: cash,
@@ -309,9 +404,11 @@ function DeliverDialog({ shipment, onClose }: DialogProps) {
           CASH_ALREADY_COLLECTED: "cashCollected",
         },
         title: "Could not mark as delivered",
+        onConflict: retryAfterConflict((next) => send(values, next)),
       });
     }
-  });
+  }
+  const onSubmit = form.handleSubmit((values) => send(values, shipment.version));
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -330,6 +427,7 @@ function DeliverDialog({ shipment, onClose }: DialogProps) {
         }
       >
         <form id="deliver-shipment" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+          <ShipmentSummary shipment={shipment} />
           {shipment.deliveryCodeLocked && (
             <p className="text-warning-text text-sm">
               Too many wrong codes. Record a failed attempt and reattempt to unlock.
@@ -344,21 +442,31 @@ function DeliverDialog({ shipment, onClose }: DialogProps) {
             maxLength={4}
             required
           />
-          <TextField
-            form={form}
-            name="cashCollected"
-            label="Cash collected (₹)"
-            hint={"Leave empty for prepaid orders, or record the collection later."}
-            inputMode="decimal"
-          />
-          <SelectField
-            form={form}
-            name="cashMode"
-            label="Collected as"
-            options={CASH_MODES}
-            placeholder="Cash or UPI"
-          />
-          {mode === "UPI" && <TextField form={form} name="upiReference" label="UPI reference" />}
+          {!prepaid && (
+            <>
+              <TextField
+                form={form}
+                name="cashCollected"
+                label="Cash collected (₹)"
+                hint={
+                  shipment.amountToCollectPaise != null
+                    ? `Collect ${formatRupees(shipment.amountToCollectPaise)}, or leave empty and record the collection later.`
+                    : "Leave empty for prepaid orders, or record the collection later."
+                }
+                inputMode="decimal"
+              />
+              <SelectField
+                form={form}
+                name="cashMode"
+                label="Collected as"
+                options={CASH_MODES}
+                placeholder="Cash or UPI"
+              />
+              {mode === "UPI" && (
+                <TextField form={form} name="upiReference" label="UPI reference" />
+              )}
+            </>
+          )}
         </form>
       </DialogContent>
     </Dialog>
@@ -378,15 +486,16 @@ const attemptSchema = z
 
 function AttemptDialog({ shipment, onClose }: DialogProps) {
   const record = useRecordAttempt();
+  const retryAfterConflict = useRetryAfterConflict(shipment, "attempt", onClose);
   const form = useForm<z.infer<typeof attemptSchema>>({
     resolver: zodResolver(attemptSchema),
     defaultValues: { outcome: "", notes: "" },
   });
-  const onSubmit = form.handleSubmit(async (values) => {
+  async function send(values: z.infer<typeof attemptSchema>, version: string): Promise<void> {
     try {
       await record.mutateAsync({
         id: shipment.id,
-        version: shipment.version,
+        version,
         body: {
           outcome: values.outcome as
             "CUSTOMER_UNAVAILABLE" | "ADDRESS_NOT_FOUND" | "REFUSED" | "OTHER",
@@ -396,9 +505,14 @@ function AttemptDialog({ shipment, onClose }: DialogProps) {
       notifySaved("Failed attempt recorded");
       onClose();
     } catch (error) {
-      reportWriteError(error, { setError: form.setError, fields: ["outcome", "notes"] });
+      reportWriteError(error, {
+        setError: form.setError,
+        fields: ["outcome", "notes"],
+        onConflict: retryAfterConflict((next) => send(values, next)),
+      });
     }
-  });
+  }
+  const onSubmit = form.handleSubmit((values) => send(values, shipment.version));
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -421,6 +535,7 @@ function AttemptDialog({ shipment, onClose }: DialogProps) {
         }
       >
         <form id="attempt-shipment" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+          <ShipmentSummary shipment={shipment} />
           <SelectField form={form} name="outcome" label="Outcome" required options={OUTCOMES} />
           <TextAreaField
             form={form}
@@ -457,9 +572,15 @@ const cashSchema = z
 function CashDialog({ shipment, onClose }: DialogProps) {
   const record = useRecordCashCollected();
   const key = useIdempotencyKey();
+  const due = shipment.amountToCollectPaise;
   const form = useForm<z.infer<typeof cashSchema>>({
     resolver: zodResolver(cashSchema),
-    defaultValues: { amount: "", mode: "", upiReference: "" },
+    // AD-2: the server's amount to collect is the starting value; staff change it only if the rider got another.
+    defaultValues: {
+      amount: due != null ? paiseToRupeesInput(due) : "",
+      mode: "",
+      upiReference: "",
+    },
   });
   const mode = useWatch({ control: form.control, name: "mode" });
   const onSubmit = form.handleSubmit(async (values) => {
@@ -493,7 +614,11 @@ function CashDialog({ shipment, onClose }: DialogProps) {
       <DialogContent
         size="sm"
         title="Record cash collected"
-        description="The amount must equal the amount due on the order."
+        description={
+          due != null
+            ? `Amount due: ${formatRupees(due)}. The amount must equal it.`
+            : "The amount must equal the amount due on the order."
+        }
         footer={
           <>
             <Button variant="outline" onClick={onClose}>
@@ -506,6 +631,7 @@ function CashDialog({ shipment, onClose }: DialogProps) {
         }
       >
         <form id="cash-collected" noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+          <ShipmentSummary shipment={shipment} />
           <TextField form={form} name="amount" label="Amount (₹)" inputMode="decimal" required />
           <SelectField form={form} name="mode" label="Collected as" required options={CASH_MODES} />
           {mode === "UPI" && (
@@ -524,20 +650,21 @@ function ConfirmTransition({
 }: DialogProps & { kind: "reattempt" | "return" }) {
   const reattempt = useReattempt();
   const ret = useReturnShipment();
+  const retryAfterConflict = useRetryAfterConflict(shipment, kind, onClose);
   const pending = reattempt.isPending || ret.isPending;
-  const run = async () => {
+  async function run(version: string): Promise<void> {
     try {
-      if (kind === "reattempt")
-        await reattempt.mutateAsync({ id: shipment.id, version: shipment.version });
-      else await ret.mutateAsync({ id: shipment.id, version: shipment.version });
+      if (kind === "reattempt") await reattempt.mutateAsync({ id: shipment.id, version });
+      else await ret.mutateAsync({ id: shipment.id, version });
       notifySaved(kind === "reattempt" ? "Out for delivery again" : "Shipment returned");
       onClose();
     } catch (error) {
       reportError(error, {
         title: kind === "reattempt" ? "Could not reattempt" : "Could not return",
+        onConflict: retryAfterConflict((next) => run(next)),
       });
     }
-  };
+  }
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent
@@ -556,7 +683,7 @@ function ConfirmTransition({
             <Button
               variant={kind === "return" ? "danger" : "primary"}
               loading={pending}
-              onClick={() => void run()}
+              onClick={() => void run(shipment.version)}
             >
               {kind === "reattempt" ? "Reattempt" : "Return"}
             </Button>

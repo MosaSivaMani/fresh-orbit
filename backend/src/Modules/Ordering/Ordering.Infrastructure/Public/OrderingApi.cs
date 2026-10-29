@@ -56,6 +56,32 @@ internal sealed class OrderingApi(FreshOrbitDbContext db) : IOrderingApi
         return await db.Set<Order>().AsNoTracking().Where(o => ids.Contains(o.Id)).ToDictionaryAsync(o => o.Id, o => o.OrderNumber, cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, OrderDeliveryFacts>> GetOrderDeliveryFactsAsync(IReadOnlyCollection<Guid> orderIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(orderIds);
+        if (orderIds.Count == 0)
+        {
+            return new Dictionary<Guid, OrderDeliveryFacts>();
+        }
+
+        var ids = orderIds.Distinct().ToList();
+        var rows = await db.Set<Order>().AsNoTracking()
+            .Where(o => ids.Contains(o.Id))
+            .Select(o => new { o.Id, o.OrderNumber, o.RecipientName, o.Phone, o.Line1, o.Line2, o.Landmark, o.Locality, o.CityName, o.Pincode, o.PaymentMethod, o.AmountDuePaise })
+            .ToListAsync(cancellationToken);
+        return rows.ToDictionary(
+            o => o.Id,
+            o => new OrderDeliveryFacts(
+                o.Id,
+                o.OrderNumber,
+                o.RecipientName,
+                o.Phone,
+                string.Join(", ", new[] { o.Line1, o.Line2, o.Landmark, o.Locality, o.CityName }.Where(part => !string.IsNullOrWhiteSpace(part)).Select(part => part!.Trim())),
+                o.Pincode,
+                ToPublic(o.PaymentMethod),
+                o.PaymentMethod == DomainPaymentMethod.Online ? 0 : o.AmountDuePaise));
+    }
+
     public async Task<CustomerOrderPage> ListCustomerOrdersAsync(Guid customerId, IReadOnlyCollection<Guid>? fulfillmentLocationIds, int skip, int take, CancellationToken cancellationToken = default)
     {
         var orders = CustomerOrders([customerId], fulfillmentLocationIds);

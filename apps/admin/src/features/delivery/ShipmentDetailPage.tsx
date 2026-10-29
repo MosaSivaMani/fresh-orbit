@@ -5,7 +5,7 @@ import { useRiders, useShipment } from "../../api/delivery";
 import { useLocationScope } from "../../app/location-scope";
 import { DetailList, PageHeader, QueryView, Section } from "../../components/page";
 import { SHIPMENT_STATUS } from "../../lib/status";
-import { ShipmentActions } from "./ShipmentActions";
+import { CollectLine, ShipmentActions } from "./ShipmentActions";
 import { shortId } from "./shared";
 
 const CASH_MODE_LABELS: Readonly<Record<string, string>> = { CASH: "Cash", UPI: "UPI" };
@@ -32,7 +32,7 @@ export function ShipmentDetailPage() {
           <PageHeader
             backTo="/delivery"
             backLabel="Shipments"
-            title={`Shipment ${shortId(s.id)}`}
+            title={s.orderNumber ? `Shipment for ${s.orderNumber}` : `Shipment ${shortId(s.id)}`}
             meta={<StatusBadge code={s.status} map={SHIPMENT_STATUS} />}
             description={scope.nameOf(s.fulfillmentLocationId)}
             actions={<ShipmentActions shipment={s} size="md" />}
@@ -49,10 +49,19 @@ export function ShipmentDetailPage() {
                         to={`/orders/${s.orderId}`}
                         className="text-accent-text hover:underline"
                       >
-                        Order {shortId(s.orderId)}
+                        {s.orderNumber ?? `Order ${shortId(s.orderId)}`}
                       </Link>
                     ),
                   },
+                  { label: "Recipient", value: s.recipientName ?? "—" },
+                  { label: "Phone", value: s.phone ?? "—" },
+                  {
+                    label: "Address",
+                    value: s.addressLine
+                      ? `${s.addressLine}${s.pincode ? ` ${s.pincode}` : ""}`
+                      : "—",
+                  },
+                  { label: "To collect", value: <CollectLine shipment={s} /> },
                   { label: "Rider", value: riderName(s.riderId) },
                   { label: "Placed", value: formatDateTime(s.placedAt) },
                   { label: "Packed", value: s.packedAt ? formatDateTime(s.packedAt) : "—" },

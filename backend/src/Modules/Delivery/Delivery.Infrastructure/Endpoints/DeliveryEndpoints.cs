@@ -8,6 +8,7 @@ using FreshOrbit.Delivery.Domain.Shared;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
 using FreshOrbit.Locations.Public;
+using FreshOrbit.Ordering.Public;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.Codes;
 using FreshOrbit.SharedKernel.EntityFramework;
@@ -188,6 +189,7 @@ internal static class DeliveryEndpoints
         int? page,
         int? pageSize,
         IDeliveryReads reads,
+        IOrderingApi ordering,
         ICurrentActor actor,
         CancellationToken cancellationToken)
     {
@@ -206,41 +208,49 @@ internal static class DeliveryEndpoints
             Sort = ShipmentSort.Parse(sort),
         };
         var result = await reads.ListShipmentsAsync(query, cancellationToken);
-        return TypedResults.Ok(new PagedResponse<ShipmentResponse>(result.Items, p, size, result.TotalCount));
+
+        // AD-1, AD-2: the page's order facts in one Ordering read (rule 2: through Ordering.Public).
+        var orders = await ordering.GetOrderDeliveryFactsAsync([.. result.Items.Select(s => s.OrderId)], cancellationToken);
+        var items = result.Items.Select(s => s.WithOrder(orders.GetValueOrDefault(s.OrderId))).ToList();
+        return TypedResults.Ok(new PagedResponse<ShipmentResponse>(items, p, size, result.TotalCount));
     }
 
-    private static async Task<IResult> GetShipmentAsync(Guid shipmentId, IDeliveryReads reads, ICurrentActor actor, HttpResponse response, CancellationToken cancellationToken)
+    private static async Task<IResult> GetShipmentAsync(Guid shipmentId, IDeliveryReads reads, IOrderingApi ordering, ICurrentActor actor, HttpResponse response, CancellationToken cancellationToken)
     {
         var shipment = await reads.GetShipmentAsync(shipmentId, cancellationToken) ?? throw new NotFoundException("No shipment has this id.");
         actor.EnsureLocation(shipment.FulfillmentLocationId);
+        var orders = await ordering.GetOrderDeliveryFactsAsync([shipment.OrderId], cancellationToken);
         response.Headers.ETag = $"\"{shipment.Version}\"";
-        return TypedResults.Ok(shipment);
+        return TypedResults.Ok(shipment.WithOrder(orders.GetValueOrDefault(shipment.OrderId)));
     }
 
-    private static Task<IResult> AssignAsync(Guid shipmentId, AssignRiderRequest request, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.AssignAsync(shipmentId, request, version, cancellationToken));
+    private static Task<IResult> AssignAsync(Guid shipmentId, AssignRiderRequest request, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.AssignAsync(shipmentId, request, version, cancellationToken), cancellationToken);
 
-    private static Task<IResult> DispatchAsync(Guid shipmentId, DispatchShipmentRequest request, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.DispatchAsync(shipmentId, request, version, cancellationToken));
+    private static Task<IResult> DispatchAsync(Guid shipmentId, DispatchShipmentRequest request, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.DispatchAsync(shipmentId, request, version, cancellationToken), cancellationToken);
 
-    private static Task<IResult> DeliverAsync(Guid shipmentId, DeliverShipmentRequest request, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.DeliverAsync(shipmentId, request, version, cancellationToken));
+    private static Task<IResult> DeliverAsync(Guid shipmentId, DeliverShipmentRequest request, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.DeliverAsync(shipmentId, request, version, cancellationToken), cancellationToken);
 
-    private static Task<IResult> RecordAttemptAsync(Guid shipmentId, RecordAttemptRequest request, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.RecordFailedAttemptAsync(shipmentId, request, version, cancellationToken));
+    private static Task<IResult> RecordAttemptAsync(Guid shipmentId, RecordAttemptRequest request, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.RecordFailedAttemptAsync(shipmentId, request, version, cancellationToken), cancellationToken);
 
-    private static Task<IResult> ReattemptAsync(Guid shipmentId, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.ReattemptAsync(shipmentId, version, cancellationToken));
+    private static Task<IResult> ReattemptAsync(Guid shipmentId, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.ReattemptAsync(shipmentId, version, cancellationToken), cancellationToken);
 
-    private static Task<IResult> ReturnAsync(Guid shipmentId, ShipmentService service, HttpRequest http, CancellationToken cancellationToken)
-        => ShipmentCommandAsync(http, version => service.ReturnAsync(shipmentId, version, cancellationToken));
+    private static Task<IResult> ReturnAsync(Guid shipmentId, ShipmentService service, IOrderingApi ordering, HttpRequest http, CancellationToken cancellationToken)
+        => ShipmentCommandAsync(http, ordering, version => service.ReturnAsync(shipmentId, version, cancellationToken), cancellationToken);
 
-    private static async Task<IResult> ShipmentCommandAsync(HttpRequest http, Func<uint, Task<Shipment>> command)
+    private static async Task<IResult> ShipmentCommandAsync(HttpRequest http, IOrderingApi ordering, Func<uint, Task<Shipment>> command, CancellationToken cancellationToken)
     {
         var version = IfMatch.GetRequiredVersion(http);
         var shipment = await command(version);
+
+        // The command is committed; the order facts are a read after it, so the response matches the board (AD-1).
+        var orders = await ordering.GetOrderDeliveryFactsAsync([shipment.OrderId], cancellationToken);
         http.HttpContext.Response.SetETag(shipment.Version);
-        return TypedResults.Ok(shipment.ToResponse());
+        return TypedResults.Ok(shipment.ToResponse(orders.GetValueOrDefault(shipment.OrderId)));
     }
 
     private static (int Page, int PageSize) Paging(int? page, int? pageSize)

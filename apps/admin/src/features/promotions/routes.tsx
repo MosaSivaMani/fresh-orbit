@@ -17,4 +17,16 @@ export const promotionsRoutes: RouteObject[] = [
     "promotions.manage",
     async () => (await import("./CouponEditorPage")).CouponEditorPage,
   ),
+  // Home banners (AD-6): `GET/POST/PUT /admin/promotions`, `catalog.manage`.
+  screen("banners", "catalog.manage", async () => (await import("./BannersPage")).BannersPage),
+  screen(
+    "banners/new",
+    "catalog.manage",
+    async () => (await import("./BannerEditorPage")).BannerCreatePage,
+  ),
+  screen(
+    "banners/:promotionId",
+    "catalog.manage",
+    async () => (await import("./BannerEditorPage")).BannerEditorPage,
+  ),
 ];
