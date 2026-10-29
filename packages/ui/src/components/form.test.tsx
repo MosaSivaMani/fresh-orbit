@@ -143,4 +143,27 @@ describe("Select and Combobox", () => {
     await userEvent.keyboard("{Enter}");
     expect(onChange).toHaveBeenCalledWith("seer");
   });
+
+  it("Combobox with server search reports the text, keeps the given options and labels an unlisted value", async () => {
+    const onSearch = vi.fn();
+    render(
+      <Combobox
+        aria-label="Variant"
+        value="kept"
+        selectedLabel="Seer fish · 1 kg"
+        onValueChange={() => undefined}
+        onSearchChange={onSearch}
+        footer={<button type="button">Show more</button>}
+        options={[{ value: "pomfret", label: "Pomfret" }]}
+      />,
+    );
+    const trigger = screen.getByRole("combobox", { name: "Variant" });
+    expect(trigger).toHaveTextContent("Seer fish · 1 kg");
+    await userEvent.click(trigger);
+    await userEvent.keyboard("seer");
+    expect(onSearch).toHaveBeenLastCalledWith("seer");
+    // The server decides what matches: the browser does not hide "Pomfret".
+    expect(screen.getByText("Pomfret")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show more" })).toBeInTheDocument();
+  });
 });

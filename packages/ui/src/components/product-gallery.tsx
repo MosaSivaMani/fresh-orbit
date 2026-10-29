@@ -7,16 +7,46 @@ import { Fish } from "lucide-react";
 import { type KeyboardEvent, type ReactNode, useRef, useState } from "react";
 import { cn, focusRing } from "../lib/cn";
 
+/** One rendition of a photo, as the server sends it (`ImageSource`: 320 / 640 / 1280 px WebP). */
+export interface ProductGalleryImageSource {
+  width: number;
+  url: string;
+}
+
 /** One photo of the product, as the server sends it. */
 export interface ProductGalleryImage {
   url: string;
   /** The server's alt text; when empty the product name is used. */
   altText?: string | null;
+  /** The server's renditions; the browser picks the smallest that fills the frame (D318). */
+  sources?: readonly ProductGalleryImageSource[] | null;
+}
+
+/** Slides fill the page column; thumbnails are 64 px buttons. */
+const SIZES = {
+  slide: "(min-width: 1024px) 50vw, 100vw",
+  thumbnail: "64px",
+} as const;
+
+/** `srcset` from the server's renditions (`url 640w, ...`); undefined when it sent none. */
+export function srcSetOf(
+  sources: readonly ProductGalleryImageSource[] | null | undefined,
+): string | undefined {
+  const usable = (sources ?? []).filter((s) => s.url && s.width > 0);
+  if (usable.length === 0) return undefined;
+  return [...usable]
+    .sort((a, b) => a.width - b.width)
+    .map((s) => `${s.url} ${s.width}w`)
+    .join(", ");
 }
 
 /** What `renderImage` receives for one picture. */
 export interface ProductGalleryImageRenderProps {
   src: string;
+  /** `srcset` built from the server's renditions; undefined when it sent none. */
+  srcSet: string | undefined;
+  /** The drawn width for `sizes` (`100vw` / `50vw` slides, `64px` thumbnails). */
+  sizes: string;
   /** Alt text for a slide; empty for a thumbnail (its button carries the label). */
   alt: string;
   /** `slide` for the 3:2 frame, `thumbnail` for the 64 px buttons. */
@@ -39,10 +69,18 @@ export interface ProductGalleryProps {
   className?: string;
 }
 
-function DefaultImage({ src, alt, priority, className }: ProductGalleryImageRenderProps) {
+function DefaultImage({
+  src,
+  srcSet,
+  sizes,
+  alt,
+  priority,
+  className,
+}: ProductGalleryImageRenderProps) {
   return (
     <img
       src={src}
+      {...(srcSet ? { srcSet, sizes } : {})}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : "auto"}
@@ -148,6 +186,8 @@ export function ProductGallery({
           >
             {renderImage({
               src: image.url,
+              srcSet: srcSetOf(image.sources),
+              sizes: SIZES.slide,
               alt: image.altText || name,
               variant: "slide",
               priority: i === 0,
@@ -198,6 +238,8 @@ export function ProductGallery({
               >
                 {renderImage({
                   src: image.url,
+                  srcSet: srcSetOf(image.sources),
+                  sizes: SIZES.thumbnail,
                   alt: "",
                   variant: "thumbnail",
                   priority: false,

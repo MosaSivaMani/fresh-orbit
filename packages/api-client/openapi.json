@@ -19855,6 +19855,13 @@
         "required": [
           "id",
           "orderId",
+          "orderNumber",
+          "recipientName",
+          "phone",
+          "addressLine",
+          "pincode",
+          "paymentMethod",
+          "amountToCollectPaise",
           "fulfillmentLocationId",
           "deliverySlotId",
           "riderId",
@@ -19886,6 +19893,49 @@
           "orderId": {
             "type": "string",
             "format": "uuid"
+          },
+          "orderNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recipientName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "addressLine": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pincode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paymentMethod": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amountToCollectPaise": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
           },
           "fulfillmentLocationId": {
             "type": "string",

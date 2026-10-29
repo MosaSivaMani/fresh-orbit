@@ -76,6 +76,23 @@ double _scale(WidgetTester tester) {
 /// The sections below the first screen are laid out but off screen until scrolled to.
 Finder _below(String key) => find.byKey(Key(key), skipOffstage: false);
 
+/// The on-screen box around [finder]'s render box, from all four corners, so tilts and scales are included.
+Rect _bounds(WidgetTester tester, Finder finder) {
+  final box = tester.renderObject<RenderBox>(finder);
+  final s = box.size;
+  final corners = [Offset.zero, Offset(s.width, 0), Offset(0, s.height), Offset(s.width, s.height)]
+      .map(box.localToGlobal)
+      .toList();
+  final xs = corners.map((p) => p.dx);
+  final ys = corners.map((p) => p.dy);
+  return Rect.fromLTRB(
+    xs.reduce((a, b) => a < b ? a : b),
+    ys.reduce((a, b) => a < b ? a : b),
+    xs.reduce((a, b) => a > b ? a : b),
+    ys.reduce((a, b) => a > b ? a : b),
+  );
+}
+
 final _verticalScroll = find.byWidgetPredicate(
   (w) => w is Scrollable && axisDirectionToAxis(w.axisDirection) == Axis.vertical,
 );
@@ -504,13 +521,73 @@ void main() {
     await _pump(tester);
 
     expect(find.byKey(const ValueKey('illustration-placeholder-ONBOARDING_FRESH')), findsOneWidget);
-    // The only pictures are the harbour's real boats and gulls, bundled in the theme package (D287).
+    // The only pictures are the scenery bundled in the theme package: the owner's harbour picture (D320) and the
+    // real boat with its three gulls (D287).
     final images = find.byType(Image);
-    final scenery = find.descendant(of: find.byKey(const Key('homeHarbour')), matching: find.byType(Image));
-    expect(images.evaluate().length, scenery.evaluate().length);
-    expect(scenery, findsNWidgets(6));
+    final harbour = find.descendant(of: find.byKey(const Key('homeHarbour')), matching: find.byType(Image));
+    final boat = find.descendant(of: find.byKey(const Key('homeHarbourBoat')), matching: find.byType(Image));
+    expect(harbour, findsOneWidget);
+    expect(boat, findsNWidgets(4));
+    expect(images.evaluate().length, harbour.evaluate().length + boat.evaluate().length);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('the harbour shows the owner\'s picture, faded at its edges, behind the header (D320)', (tester) async {
+    await _pump(tester);
+
+    final harbour = find.byKey(const Key('homeHarbour'));
+    final picture = tester.widget<Image>(find.descendant(of: harbour, matching: find.byType(Image)));
+    expect((picture.image as AssetImage).assetName, FreshSceneryPictures.harbour);
+    expect((picture.image as AssetImage).package, FreshSceneryPictures.package);
+    expect(find.descendant(of: harbour, matching: find.byType(ShaderMask)), findsNWidgets(2));
+    expect(find.descendant(of: harbour, matching: find.byType(FittedBox)), findsNothing);
+    // It sits behind the page: the search and Saved buttons are on top and take taps.
+    for (final label in ['Search', 'Saved']) {
+      expect(find.byTooltip(label).hitTestable(), findsOneWidget, reason: label);
+    }
+  });
+
+  // The owner's screenshot (2026-10-29): the trawler covered "kitchen" and crowded the heading. The boat now has
+  // room of its own at the end of the greeting line, so it never touches the heading, its sparks, the script
+  // line or the header buttons, at any phone width and with larger text.
+  for (final width in const [320.0, 360.0, 390.0, 430.0]) {
+    for (final scale in const [1.0, 1.3]) {
+      testWidgets('the boat and gulls cover no text or button at $width dp, text scale $scale', (tester) async {
+        await _pump(tester, size: Size(width, 844), textScale: scale);
+
+        final headingText = find.text('What’s cooking ');
+        final heading = find.ancestor(of: headingText, matching: find.byType(FittedBox)).first;
+        final sparks = find.descendant(of: heading, matching: find.byType(Sparks));
+        final keep = <String, Rect>{
+          'heading': _bounds(tester, heading),
+          'today?': _bounds(tester, find.text('today?')),
+          'sparks': _bounds(tester, sparks),
+          'script line': _bounds(tester, find.text('From our coast to your kitchen')),
+          'greeting': _bounds(tester, find.byKey(const Key('homeGreeting'))),
+          'search': _bounds(tester, find.byTooltip('Search')),
+          'saved': _bounds(tester, find.byTooltip('Saved')),
+        };
+        final ship = find.byKey(const Key('harbourTrawler'));
+        expect(ship, findsOneWidget);
+        final boat = find.descendant(of: find.byKey(const Key('homeHarbourBoat')), matching: find.byType(Image));
+        expect(boat, findsNWidgets(4));
+        for (var i = 0; i < boat.evaluate().length; i++) {
+          final part = _bounds(tester, boat.at(i));
+          expect(part.right, lessThanOrEqualTo(width + 0.5), reason: 'picture $i stays on screen');
+          for (final MapEntry(:key, :value) in keep.entries) {
+            expect(part.overlaps(value), isFalse, reason: 'picture $i ($part) covers $key ($value)');
+          }
+        }
+        final trawler = _bounds(tester, ship);
+        for (final MapEntry(:key, :value) in keep.entries) {
+          expect(trawler.overlaps(value), isFalse, reason: 'the trawler ($trawler) covers $key ($value)');
+        }
+        // The boat sits above the heading, never beside or below it.
+        expect(trawler.bottom, lessThanOrEqualTo(keep['sparks']!.top));
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 
   testWidgets('the city line carries the state name when the server sends one (D209, D238)', (tester) async {
     final json = serviceableJson()

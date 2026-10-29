@@ -6,7 +6,8 @@
 /// The rich screens' shared parts (D176, D181) are hand-written: the grid ([FreshLayout], [FreshColumns]), the
 /// highlights ([BrushHighlight], [Sparks], [ScriptLine], [SwooshUnderline], [Snowflake]) and the drawn scenery
 /// ([FreshScenery], [HarbourScenePainter], [PalmsPainter]) with the owner's real trawler and gull pictures
-/// ([FreshTrawler], [FreshGull], [FreshSceneryPictures]; D287). The sign-in look (D281): [FreshAuthPage],
+/// ([FreshTrawler], [FreshGull], [FreshSceneryPictures]; D287); the home harbour picture and its boat
+/// ([HarbourScene], [HarbourBoat]; D320). The sign-in look (D281): [FreshAuthPage],
 /// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]; the
 /// "Tell us about you" field (D290): [FreshTextField]. The order-placed look (D288): [FreshCelebrationHeader],
 /// [FreshTicketCard], [FreshNoteCard] and [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289):

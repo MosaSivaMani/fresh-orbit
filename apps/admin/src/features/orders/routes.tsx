@@ -15,6 +15,11 @@ export const ordersRoutes: RouteObject[] = [
     async () => (await import("./OrderDetailPage")).OrderDetailPage,
   ),
   screen(
+    "orders/:orderId/invoice",
+    "orders.view",
+    async () => (await import("./InvoicePage")).InvoicePage,
+  ),
+  screen(
     "complaints",
     "complaints.manage",
     async () => (await import("./ComplaintsListPage")).ComplaintsListPage,

@@ -125,6 +125,72 @@ describe("Receive stock", () => {
   });
 });
 
+function lookupItem(n: number) {
+  return {
+    variantId: `0192b500-0000-7000-8000-0000000${String(n).padStart(5, "0")}`,
+    productId: "0192b400-0000-7000-8000-00000000c001",
+    productName: "Seer fish",
+    variantName: `Cut ${n}`,
+    sku: `SEER-${n}`,
+    sellUnit: "KG",
+    stockUnit: "GRAM",
+    productStatus: "ACTIVE",
+    isActive: true,
+  };
+}
+
+describe("Variant picker search (AD-4)", () => {
+  it("searches on the server with q, pages with Show more, and picks a variant beyond the first page", async () => {
+    const requests: URL[] = [];
+    server.use(
+      http.get(`${API}/admin/catalog/variants`, ({ request }) => {
+        const url = new URL(request.url);
+        requests.push(url);
+        const ids = url.searchParams.getAll("id");
+        if (ids.length > 0) {
+          const all = [lookupItem(1), lookupItem(2), lookupItem(150)];
+          return HttpResponse.json(page(all.filter((v) => ids.includes(v.variantId))));
+        }
+        const pageNo = Number(url.searchParams.get("page") ?? "1");
+        const items = pageNo === 1 ? [lookupItem(1), lookupItem(2)] : [lookupItem(150)];
+        return HttpResponse.json(page(items, { page: pageNo, pageSize: 20, totalCount: 21 }));
+      }),
+    );
+    const { user } = renderApp({
+      path: "/inventory/receive",
+      permissions: ["inventory.view", "inventory.receive"],
+    });
+
+    await user.click(await screen.findByRole("combobox", { name: /^Variant/ }));
+    await user.keyboard("seer");
+    await waitFor(() =>
+      expect(requests.some((u) => u.searchParams.get("q") === "seer")).toBe(true),
+    );
+    const searched = requests.find((u) => u.searchParams.get("q") === "seer")!;
+    expect(searched.searchParams.get("activeOnly")).toBe("true");
+    expect(searched.searchParams.get("pageSize")).toBe("20");
+    // Typing is debounced: no request for the partial text.
+    expect(requests.some((u) => u.searchParams.get("q") === "s")).toBe(false);
+
+    await user.click(await screen.findByRole("button", { name: "Show more" }));
+    await waitFor(() =>
+      expect(
+        requests.some(
+          (u) => u.searchParams.get("q") === "seer" && u.searchParams.get("page") === "2",
+        ),
+      ).toBe(true),
+    );
+    await user.click(await screen.findByRole("option", { name: "Seer fish · Cut 150 (SEER-150)" }));
+
+    // The chosen variant keeps its name after the search resets (read back by id=).
+    await waitFor(() =>
+      expect(screen.getByRole("combobox", { name: /^Variant/ })).toHaveTextContent(
+        "Seer fish · Cut 150 (SEER-150)",
+      ),
+    );
+  });
+});
+
 describe("Stock adjustment", () => {
   it("quotes the stock item version and shows the conflict prompt on 412", async () => {
     let ifMatch: string | null = null;

@@ -270,3 +270,10 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 |---|---|
 | DEL-G7 | `GET /api/v1/admin/delivery/riders/lookup` is readable with `delivery.manage` **or** `cash.settle` (cash settlement pickers). Rows are `{ id, fulfillmentLocationId, fullName, phoneLast4, isActive }` (no full phone, no version); filters `fulfillmentLocationId`, `isActive`, `q` (name contains); ordered by name; location-scoped (a `fulfillmentLocationId` outside the caller's locations → 403 `LOCATION_ACCESS_DENIED`). The full rider list stays `delivery.manage`. |
 | DEL-G10 | `GET /api/v1/admin/delivery/shipments` adds `slotDate` (local date of the shipment's slot, `yyyy-MM-dd`) and `sort`: comma list of `placedAt` (default), `slotStartAt`, `status`, `dispatchedAt`, `-` for descending; `placedAt` then id break ties. Unknown or repeated keys → 422 `VALIDATION_FAILED` on `sort`. |
+
+## 11. Order facts on admin shipments (D302, audit AD-1/AD-2)
+
+| Rule | Behaviour |
+|---|---|
+| DEL-R25 | Every admin shipment read (`GET /admin/delivery/shipments`, `GET …/shipments/{id}`) and every shipment command response (assign, dispatch, deliver, attempts, reattempt, return) carries `orderNumber`, `recipientName`, `phone`, `addressLine`, `pincode`, `paymentMethod` and `amountToCollectPaise`. Delivery reads them from Ordering through `IOrderingApi.GetOrderDeliveryFactsAsync` once per request (never per row) and stores none of them. They are null when the order is not found. |
+| DEL-R26 | `amountToCollectPaise` is Ordering's `amountDuePaise` for `COD` and `UPI_ON_DELIVERY` and `0` for `ONLINE`; the admin shows it and prefills Record cash with it, and the cash rule (amount must equal the amount due, `CASH_AMOUNT_MISMATCH`) is still checked by Payments. |

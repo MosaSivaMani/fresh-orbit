@@ -60,8 +60,26 @@ describe("HomeHero", () => {
     const sources = Array.from(container.querySelectorAll("img")).map(
       (img) => img.getAttribute("src") ?? "",
     );
-    expect(sources.some((src) => src.includes("hero-harbour.jpg"))).toBe(true);
-    expect(sources.some((src) => src.includes("hero-ship.png"))).toBe(true);
+    expect(sources.some((src) => src.includes("hero-harbour.webp"))).toBe(true);
+    expect(sources.some((src) => src.includes("hero-ship.webp"))).toBe(true);
     expect(sources.filter((src) => src.includes("hero-gull-"))).toHaveLength(3);
+  });
+
+  it("draws every hero picture from a small WebP copy, never the full-size PNG or JPEG (W-8)", () => {
+    const { container } = render(<HomeHero />);
+
+    const sources = Array.from(container.querySelectorAll("img")).map((img) =>
+      decodeURIComponent(img.getAttribute("src") ?? ""),
+    );
+    expect(sources.length).toBeGreaterThanOrEqual(6);
+    for (const src of sources) {
+      expect(src).toMatch(/\.webp/);
+      expect(src).not.toMatch(/\.(png|jpe?g)/);
+    }
+    // Only the pictures on the first screen load eagerly: Padma and the harbour.
+    const eager = Array.from(container.querySelectorAll("img")).filter(
+      (img) => img.getAttribute("loading") !== "lazy",
+    );
+    expect(eager).toHaveLength(2);
   });
 });

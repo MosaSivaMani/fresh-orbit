@@ -1,10 +1,11 @@
-import { isApiError } from "@fresh/core";
+import { humanizeCode, isApiError } from "@fresh/core";
 import { AlertCircle } from "lucide-react";
 import { type ReactNode } from "react";
 import { type FieldValues, type Path, type UseFormSetError } from "react-hook-form";
 import { NavLink } from "react-router";
 import { errorMessage } from "../../lib/errors";
 import { reportError } from "../../lib/feedback";
+import { METHOD_LABELS } from "../payments/shared";
 
 /** Inline refusal shown inside a dialog or form (one sentence from the server). */
 export function FormAlert({ children }: { children: ReactNode }) {
@@ -97,6 +98,11 @@ export const DAYS = [
 
 export function dayLabel(day: number): string {
   return DAYS.find((d) => d.value === String(day))?.label ?? String(day);
+}
+
+/** "Cash on delivery", "UPI on delivery", "Online" for the order's payment method code (AD-2). */
+export function paymentMethodLabel(code: string): string {
+  return METHOD_LABELS[code] ?? humanizeCode(code);
 }
 
 /** Short, recognisable form of a UUID for staff (last 6 characters). */

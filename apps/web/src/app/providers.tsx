@@ -21,7 +21,11 @@ function SessionSync() {
   }, []);
 
   useEffect(() => {
-    if (previous.current !== status && previous.current !== "unknown") {
+    if (
+      previous.current !== status &&
+      previous.current !== "unknown" &&
+      previous.current !== "unavailable"
+    ) {
       // Customer data never outlives the session that fetched it.
       queryClient.removeQueries({ queryKey: ["me"] });
       queryClient.removeQueries({ queryKey: ["orders"] });

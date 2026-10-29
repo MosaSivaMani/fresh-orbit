@@ -26,7 +26,9 @@ const nextConfig: NextConfig = {
   ...(codespacesDomain ? { allowedDevOrigins: [`*.${codespacesDomain}`] } : {}),
   images: {
     // The API already serves WebP renditions (320 / 640 / 1280 px, CAT-R16); re-optimising them here would only
-    // add CPU work and a second cache. next/image still gives lazy loading and reserved space.
+    // add CPU work and a second cache. next/image still gives lazy loading and reserved space. With this set,
+    // next/image drops `srcset`, so the product gallery draws the server's renditions itself, and the home hero
+    // uses WebP copies saved at their drawn size (W-8, W-9, D318).
     unoptimized: true,
   },
   async headers() {
