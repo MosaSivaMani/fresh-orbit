@@ -77,6 +77,38 @@ public sealed class CheckoutTests(OrderingDatabase database) : OrderingTestBase(
     }
 
     [Fact]
+    public async Task Place_order_is_refused_while_the_business_profile_lacks_what_invoicing_needs()
+    {
+        // BE-1 / D295: refused at checkout, not found at delivery (rule 7).
+        World.Profile = World.Profile with { Gstin = null, LegalName = " " };
+        var key = Guid.NewGuid().ToString();
+
+        var response = await PlaceAsync(PlaceBody(), key);
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var problem = await ReadJsonAsync(response);
+        problem.GetProperty("code").GetString().Should().Be("STORE_NOT_READY");
+        var errors = problem.GetProperty("errors");
+        errors.EnumerateObject().Select(e => e.Name).Should().BeEquivalentTo(["businessProfile.legalName", "businessProfile.gstin"]);
+        errors.GetProperty("businessProfile.gstin")[0].GetProperty("code").GetString().Should().Be("STORE_NOT_READY");
+        await World.Inventory.DidNotReceive().ReserveAsync(Arg.Any<ReserveStockRequest>(), Arg.Any<CancellationToken>());
+        await World.Delivery.DidNotReceive().BookSlotAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        World.MarkConvertedCalls.Should().Be(0);
+        await using (var db = Database.CreateDbContext())
+        {
+            (await db.Set<Order>().CountAsync(o => o.CustomerId == CustomerId, Ct)).Should().Be(0);
+        }
+
+        var preview = await Customer.PostAsJsonAsync("/api/v1/checkout/preview", PlaceBody(), Ct);
+        preview.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await ReadJsonAsync(preview)).GetProperty("code").GetString().Should().Be("STORE_NOT_READY");
+
+        // Once the owner completes the profile, the same request (new key) places the order.
+        World.Profile = World.Profile with { Gstin = "33ABCDE1234F1Z5", LegalName = "Fresh Orbit Foods Pvt Ltd" };
+        (await PlaceAsync(PlaceBody())).StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
     public async Task Online_order_waits_for_payment_with_a_reservation_expiry()
     {
         var response = await PlaceAsync(PlaceBody("ONLINE"));

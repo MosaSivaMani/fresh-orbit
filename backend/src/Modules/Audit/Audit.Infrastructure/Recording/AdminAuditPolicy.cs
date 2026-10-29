@@ -92,6 +92,9 @@ public static class AdminAuditPolicy
         ["POST /api/v1/admin/orders/{orderId:guid}/cancel"] = "ORDER_CANCELLED_BY_STAFF",
         ["POST /api/v1/admin/orders/{orderId:guid}/goodwill"] = "ORDER_GOODWILL_GRANTED",
         ["POST /api/v1/admin/complaints/{complaintId:guid}/decide"] = "COMPLAINT_DECIDED",
+
+        // Operations: outbox dead letters (D296); the endpoint records the entry itself (platform rows are not audited).
+        ["POST /api/v1/admin/dead-letters/{deadLetterId:guid}/replay"] = "DEAD_LETTER_REPLAYED",
     };
 
     public static bool IsWriteMethod(string method) => WriteMethods.Contains(method);

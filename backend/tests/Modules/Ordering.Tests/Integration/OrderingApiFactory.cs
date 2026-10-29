@@ -87,6 +87,10 @@ public sealed class WorldPolicySettings(CheckoutWorld world, INumberSeriesServic
 
     public Task<BusinessProfile> GetBusinessProfileAsync(CancellationToken cancellationToken = default) => Task.FromResult(world.Profile);
 
+    /// <summary>The real Settings rule (D295) over the world's profile; tests clear a field to see checkout refused.</summary>
+    public Task<StoreReadiness> GetStoreReadinessAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult(new StoreReadiness(InvoicingReadiness.MissingFields(world.Profile.LegalName, world.Profile.Gstin, world.Profile.TimeZone)));
+
     public Task<string> NextNumberAsync(string seriesCode, string period, CancellationToken cancellationToken = default)
         => numberSeries.NextNumberAsync(seriesCode, period, cancellationToken);
 

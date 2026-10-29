@@ -5,6 +5,7 @@ using FreshOrbit.SharedKernel.Web;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Modules;
 using FreshOrbit.SharedKernel.Web.Storage;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -21,7 +22,10 @@ builder.Services.AddFreshOrbitApiHosting(builder.Configuration, builder.Environm
 builder.Services.AddFreshOrbitForwardedHeaders();
 builder.Services.AddFreshOrbitRateLimiting();
 builder.Services.AddOpenApi(OpenApiSetup.Configure);
-builder.Services.AddHealthChecks().AddDbContextCheck<FreshOrbitDbContext>("database");
+// /health (liveness): the database only. /health/ready (readiness): also the store configuration (BE-1, D295).
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<FreshOrbitDbContext>("database")
+    .AddCheck<StoreReadinessHealthCheck>(StoreReadinessHealthCheck.Name, tags: [StoreReadinessHealthCheck.ReadyTag]);
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
     .AllowAnyHeader()
@@ -47,7 +51,8 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference("/docs");
 }
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = check => !check.Tags.Contains(StoreReadinessHealthCheck.ReadyTag) });
+app.MapHealthChecks("/health/ready");
 app.MapGroup("/api/v1").MapFreshOrbitModules();
 
 return await app.RunFreshOrbitAsync();

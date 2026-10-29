@@ -28,5 +28,11 @@ public sealed class OutboxMessage
 
     public int Attempts { get; set; }
 
+    /// <summary>
+    /// Earliest time of the next delivery attempt after a failure (exponential backoff with jitter, D296); null means
+    /// due now (a new row, or a dead letter replayed by staff).
+    /// </summary>
+    public DateTimeOffset? NextAttemptAt { get; set; }
+
     public string? Error { get; set; }
 }

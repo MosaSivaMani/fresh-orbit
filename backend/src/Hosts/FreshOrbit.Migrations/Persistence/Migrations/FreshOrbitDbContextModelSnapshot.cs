@@ -5995,11 +5995,23 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("modified_by");
 
+                    b.Property<DateTimeOffset?>("ReplayedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("replayed_at");
+
+                    b.Property<Guid?>("ReplayedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replayed_by");
+
                     b.HasKey("Id")
                         .HasName("pk_dead_letters");
 
                     b.HasIndex("EventId")
                         .HasDatabaseName("ix_dead_letters_event_id");
+
+                    b.HasIndex("FailedAt")
+                        .HasDatabaseName("ix_dead_letters_failed_at")
+                        .HasFilter("replayed_at IS NULL");
 
                     b.ToTable("dead_letters", "platform");
                 });
@@ -6136,6 +6148,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_by");
+
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_attempt_at");
 
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone")
