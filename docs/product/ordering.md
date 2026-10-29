@@ -101,6 +101,7 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 
 | Key | Rule |
 |---|---|
+| ORD-R0 | **Store ready (D295, BE-1).** Preview and place order first read `ISettingsApi.GetStoreReadinessAsync` once; while the business profile lacks what the invoice at delivery needs (SET-R9: `legalName`, `gstin`, `timeZone`) → 422 `STORE_NOT_READY` with one error per missing field (`businessProfile.gstin`, …), before anything is reserved or written. Preview answers 422 too (missing configuration, not a customer-fixable blocker; ORD-R15 blockers are unchanged). |
 | ORD-R1 | Customer JWT required; guest token only → 401 `LOGIN_REQUIRED`; customer not `ACTIVE` → 403 `CUSTOMER_DELETED`. |
 | ORD-R2 | `POST /orders` requires `Idempotency-Key` (400 `IDEMPOTENCY_KEY_REQUIRED`); middleware scope (route, customer), 24 h: replay same body → original response + `Idempotent-Replayed: true`; different body → 422 `IDEMPOTENCY_KEY_REUSED`; running → 409 `IDEMPOTENCY_IN_PROGRESS`. |
 | ORD-R3 | Second guard: Read looks up an order by `(customer_id, idempotency_key)`; found → 201 with that order, no writes. A unique violation on that index at save → same. |

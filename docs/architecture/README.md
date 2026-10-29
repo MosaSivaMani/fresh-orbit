@@ -86,7 +86,7 @@ backend/
 | Staff auth | Email + password (ASP.NET Core `PasswordHasher`), same JWT; permissions in claims; optional location scope |
 | Authorization | Policies per permission code (`orders.pack`); endpoints declare `.RequirePermission("...")` |
 | Validation | FluentValidation, field-keyed 422 |
-| Events | Aggregate raises `DomainEvent`; `SaveChanges` writes `platform.outbox` in the same transaction; Worker dispatches to `IEventHandler<T>`; `platform.inbox` makes each handler run once; failures go to `platform.dead_letters` |
+| Events | Aggregate raises `DomainEvent`; `SaveChanges` writes `platform.outbox` in the same transaction; Worker dispatches to `IEventHandler<T>`; `platform.inbox` makes each handler run once; a failure is retried with exponential backoff and jitter (`next_attempt_at`, required `Outbox` settings, D296) and after `Outbox:MaxAttempts` goes to `platform.dead_letters` (Critical log; staff replay it with `platform.manage`) |
 | Jobs | Hangfire with PostgreSQL storage, in the Worker (inside the Api only in the free Demo, `Hosting:RunBackgroundJobsInApi`, `runbooks/render-demo.md`) |
 | Files | `IFileStorage` with MinIO (S3 API) implementation |
 | Payments | `IPaymentProvider`: `CashOnDelivery` (launch), `Fake` (tests), gateway adapter later |

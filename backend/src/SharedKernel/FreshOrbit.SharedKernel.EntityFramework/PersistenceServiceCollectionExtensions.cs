@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace FreshOrbit.SharedKernel.EntityFramework;
 
@@ -38,8 +39,11 @@ public static class PersistenceServiceCollectionExtensions
         services.TryAddScoped<IUnitOfWork>(provider => provider.GetRequiredService<FreshOrbitDbContext>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IModuleModel, PlatformModuleModel>());
         services.TryAddSingleton<IClock, SystemClock>();
+        // Every Outbox value is required (no defaults); the dispatcher hosts also validate at start-up (BackgroundJobsSetup).
         services.AddOptions<OutboxOptions>().BindConfiguration(OutboxOptions.SectionName);
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>());
         services.TryAddSingleton<OutboxDispatcher>();
+        services.TryAddScoped<DeadLetterStore>();
         services.TryAddScoped<ISampleRecordTracker, SampleRecordTracker>();
         services.TryAddScoped<SampleDataPurger>();
         return services;

@@ -329,6 +329,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | COMPLAINT_PHOTO_LIMIT_REACHED | 422 | Complaint already has 4 photos (field `file`) |
 | IMAGE_INVALID | 422 | Complaint photo is not JPEG/PNG/WebP, over 5 MB, shortest side under 320 px, or over the SEC-5 size limits (field `file`) |
 | INVOICE_NOT_ISSUED | 404 | Invoice exists only after `DELIVERED` |
+| STORE_NOT_READY | 422 | Checkout preview or place order while the business profile lacks what invoicing needs (D295); `errors` keyed `businessProfile.legalName`, `businessProfile.gstin`, `businessProfile.timeZone`, or `businessProfile` when no profile was saved. An admin must complete the profile; clients show a "not taking orders yet" message |
 
 ### Payments
 | Code | HTTP | Meaning |
@@ -373,6 +374,12 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | PREFERENCE_REQUIRED | 422 | `ORDER_UPDATES` SMS cannot be disabled |
 | BUSINESS_PROFILE_NOT_CONFIGURED | 404 | `GET /business-profile` before the owner saved the business profile (SET-R8) |
 
+### Operations (outbox dead letters, D296)
+| Code | HTTP | Meaning |
+|---|---|---|
+| DEAD_LETTER_NOT_FOUND | 404 | No dead letter with this `deadLetterId` (or its outbox event is gone) |
+| DEAD_LETTER_ALREADY_REPLAYED | 409 | The dead letter (or another dead letter of the same event) was already replayed, or the event was delivered since; field `deadLetterId` |
+
 ## 3. Permissions and roles
 
 | Permission | Allows | ADMIN | STORE_MANAGER | PACKER | DISPATCHER | SUPPORT | FINANCE |
@@ -402,6 +409,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | `settings.manage` | Business profile, order policies, number series | ✓ |  |  |  |  |  |
 | `staff.manage` | Staff, roles, location access | ✓ |  |  |  |  |  |
 | `audit.view` | Audit log | ✓ |  |  |  |  | ✓ |
+| `platform.manage` | Outbox dead letters: list and replay (D296) | ✓ |  |  |  |  |  |
 
 **Staff lookups (any staff token, no permission; G1–G3).** Reference names every admin screen needs are readable by
 every authenticated staff member, whatever their permissions: `GET /admin/me/locations` (only the caller's own
@@ -1272,6 +1280,8 @@ G4 `sales` (today, at each location's local date, caller's locations): `ordersPl
 | GET | `/api/v1/admin/settings/number-series` | settings.manage | | Series per code × period |
 | PUT | `/api/v1/admin/settings/number-series/{code}/{period}` | settings.manage | IM / If-None-Match | `prefix`, `padWidth`, `nextValue` (`NUMBER_SERIES_IN_USE` once issued) |
 | GET | `/api/v1/admin/audit` | audit.view | | `entityType`, `entityId`, `actorId`, `action`, `fromDate`, `toDate` |
+| GET | `/api/v1/admin/dead-letters` | platform.manage | | D296: outbox dead letters newest first; `status` `OPEN` (not replayed) or `REPLAYED` (both when absent), `page`, `pageSize`. Items `{ id, eventId, eventType, handler, error, failedAt, attempts, replayedAt, replayedBy }`; unknown `status` → 422 `VALIDATION_FAILED` (field `status`) |
+| POST | `/api/v1/admin/dead-letters/{deadLetterId}/replay` | platform.manage | | D296: put the dead letter's event back in the outbox once its cause is fixed: attempts 0, due on the next poll; every open dead letter of that event is marked replayed (handlers that already succeeded do not run again); audited `DEAD_LETTER_REPLAYED`. 200 with the dead letter; 404 `DEAD_LETTER_NOT_FOUND`; 409 `DEAD_LETTER_ALREADY_REPLAYED`. No `Idempotency-Key`: a repeat is refused with 409 and changes nothing. A handler that fails again gets a new dead letter after the full backoff |
 | GET | `/api/v1/admin/notification-templates` | notifications.manage | | Templates |
 | PUT | `/api/v1/admin/notification-templates/{code}/{channel}` | notifications.manage | IM | `subject`, `body`, `isActive` (`TEMPLATE_PLACEHOLDER_UNKNOWN`) |
 | POST | `/api/v1/admin/notification-templates/{code}/{channel}/test` | notifications.manage | | Send test to own contact |

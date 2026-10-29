@@ -23,4 +23,16 @@ public sealed class DeadLetter
     public string Error { get; private set; }
 
     public DateTimeOffset FailedAt { get; private set; }
+
+    /// <summary>When staff replayed the event of this dead letter (D296); null while it is open.</summary>
+    public DateTimeOffset? ReplayedAt { get; private set; }
+
+    /// <summary>The user id of the staff member who replayed it.</summary>
+    public Guid? ReplayedBy { get; private set; }
+
+    public void MarkReplayed(DateTimeOffset at, Guid? by)
+    {
+        ReplayedAt = at;
+        ReplayedBy = by;
+    }
 }

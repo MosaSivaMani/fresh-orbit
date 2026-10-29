@@ -59,6 +59,12 @@ public class ApiFactory(PostgresFixture database) : WebApplicationFactory<Progra
             builder.UseSetting($"RateLimiting:{rule}:PermitLimit", "100000");
         }
 
+        // Tests resolve the outbox dispatcher from the Api's services; every Outbox value is required (D296).
+        foreach (var (key, value) in TestOutboxSettings.Values)
+        {
+            builder.UseSetting(key, value);
+        }
+
         builder.ConfigureTestServices(services =>
         {
             services.Replace(ServiceDescriptor.Singleton<IClock>(Clock));

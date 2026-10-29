@@ -3,6 +3,7 @@ using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Outbox;
 using FreshOrbit.SharedKernel.EntityFramework.Platform;
 using FreshOrbit.SharedKernel.Tests.TestModule;
+using FreshOrbit.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,11 +44,14 @@ public sealed class OutboxDispatcherTests(SharedKernelDatabase database)
     }
 
     [Fact]
-    public async Task Failed_handler_is_retried_without_rerunning_handlers_that_succeeded()
+    public async Task Failed_handler_is_retried_after_its_backoff_without_rerunning_handlers_that_succeeded()
     {
-        await using var services = CreateServices(s => s
-            .AddEventHandler<WidgetRenamed, WidgetRenamedLogger>()
-            .AddEventHandler<WidgetRenamed, FlakyRenamedHandler>());
+        var clock = new TestClock();
+        await using var services = CreateServices(
+            s => s
+                .AddEventHandler<WidgetRenamed, WidgetRenamedLogger>()
+                .AddEventHandler<WidgetRenamed, FlakyRenamedHandler>(),
+            clock);
         var dispatcher = services.GetRequiredService<OutboxDispatcher>();
         var widget = Widget.Create("flaky");
         await SaveAsync(widget);
@@ -65,39 +69,87 @@ public sealed class OutboxDispatcherTests(SharedKernelDatabase database)
             afterFirst.ProcessedAt.Should().BeNull();
             afterFirst.Attempts.Should().Be(1);
             afterFirst.Error.Should().Contain(nameof(FlakyRenamedHandler));
+            afterFirst.NextAttemptAt.Should().NotBeNull();
             (await LogsAsync(db, widget.Id)).Should().Equal("renamed:flaky-renamed");
 
+            // BE-2: not retried before its backoff delay has passed.
+            await dispatcher.DispatchBatchAsync(Ct);
+            (await db.Set<OutboxMessage>().AsNoTracking().SingleAsync(m => m.Id == renamedId, Ct)).Attempts.Should().Be(1);
+
+            clock.Set(afterFirst.NextAttemptAt!.Value);
             await dispatcher.DispatchBatchAsync(Ct);
 
             var afterSecond = await db.Set<OutboxMessage>().AsNoTracking().SingleAsync(m => m.Id == renamedId, Ct);
             afterSecond.ProcessedAt.Should().NotBeNull();
+            afterSecond.NextAttemptAt.Should().BeNull();
             (await LogsAsync(db, widget.Id)).Should().BeEquivalentTo("renamed:flaky-renamed", "flaky-ok");
             (await db.Set<InboxRecord>().CountAsync(i => i.EventId == renamedId, Ct)).Should().Be(2);
         }
     }
 
     [Fact]
-    public async Task Handler_failing_every_attempt_is_dead_lettered_after_five_attempts()
+    public async Task Failed_row_is_rescheduled_with_exponential_backoff_and_jitter()
     {
-        await using var services = CreateServices(s => s.AddEventHandler<WidgetExploded, ExplodingHandler>());
+        var clock = new TestClock();
+        await using var services = CreateServices(s => s.AddEventHandler<WidgetExploded, ExplodingHandler>(), clock);
+        var dispatcher = services.GetRequiredService<OutboxDispatcher>();
+        var widget = Widget.Create("backoff");
+        widget.Explode();
+        var eventId = widget.DomainEvents.OfType<WidgetExploded>().Single().EventId;
+        await SaveAsync(widget);
+
+        var delays = new List<TimeSpan>();
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            var before = clock.UtcNow;
+            await dispatcher.DispatchBatchAsync(Ct);
+            await using var db = database.CreateDbContext();
+            var message = await db.Set<OutboxMessage>().AsNoTracking().SingleAsync(m => m.Id == eventId, Ct);
+            message.Attempts.Should().Be(attempt);
+            message.ProcessedAt.Should().BeNull();
+            message.NextAttemptAt.Should().NotBeNull();
+            delays.Add(message.NextAttemptAt!.Value - before);
+            clock.Set(message.NextAttemptAt.Value);
+        }
+
+        // 10 s, 20 s, 40 s (TestOutboxSettings), each within the ±20 % jitter.
+        for (var i = 0; i < delays.Count; i++)
+        {
+            var exact = TestOutboxSettings.RetryBaseDelay * Math.Pow(2, i);
+            var tolerance = TimeSpan.FromMilliseconds(1);
+            delays[i].Should().BeGreaterThanOrEqualTo((exact * 0.8) - tolerance).And.BeLessThanOrEqualTo((exact * 1.2) + tolerance);
+        }
+
+        await using var read = database.CreateDbContext();
+        (await read.Set<DeadLetter>().CountAsync(d => d.EventId == eventId, Ct)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Handler_failing_every_attempt_is_dead_lettered_after_the_configured_attempts()
+    {
+        var clock = new TestClock();
+        await using var services = CreateServices(s => s.AddEventHandler<WidgetExploded, ExplodingHandler>(), clock);
         var dispatcher = services.GetRequiredService<OutboxDispatcher>();
         var widget = Widget.Create("boom");
         widget.Explode();
         var eventId = widget.DomainEvents.OfType<WidgetExploded>().Single().EventId;
         await SaveAsync(widget);
 
-        for (var attempt = 0; attempt < 6; attempt++)
+        for (var attempt = 0; attempt < TestOutboxSettings.MaxAttempts + 1; attempt++)
         {
             await dispatcher.DispatchBatchAsync(Ct);
+            clock.Advance(TestOutboxSettings.RetryMaxDelay * 2);
         }
 
         await using var db = database.CreateDbContext();
         var message = await db.Set<OutboxMessage>().SingleAsync(m => m.Id == eventId, Ct);
-        message.Attempts.Should().Be(5);
+        message.Attempts.Should().Be(TestOutboxSettings.MaxAttempts);
         message.ProcessedAt.Should().BeNull();
+        message.NextAttemptAt.Should().BeNull();
         var deadLetter = await db.Set<DeadLetter>().SingleAsync(d => d.EventId == eventId, Ct);
         deadLetter.Handler.Should().Be(typeof(ExplodingHandler).FullName);
         deadLetter.Error.Should().Contain("Always fails.");
+        deadLetter.ReplayedAt.Should().BeNull();
     }
 
     [Fact]
@@ -120,12 +172,14 @@ public sealed class OutboxDispatcherTests(SharedKernelDatabase database)
         message.Error.Should().Contain("cannot be resolved");
     }
 
-    private ServiceProvider CreateServices(Action<IServiceCollection> handlers)
-        => database.CreateServices(services =>
-        {
-            services.Configure<OutboxOptions>(o => o.BatchSize = 1_000);
-            handlers(services);
-        });
+    private ServiceProvider CreateServices(Action<IServiceCollection> handlers, TestClock? clock = null)
+        => database.CreateServices(
+            services =>
+            {
+                services.Configure<OutboxOptions>(o => o.BatchSize = 1_000);
+                handlers(services);
+            },
+            clock);
 
     private async Task SaveAsync(Widget widget)
     {

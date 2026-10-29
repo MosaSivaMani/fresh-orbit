@@ -1,5 +1,6 @@
 using FreshOrbit.Hosting.BackgroundJobs;
 using FreshOrbit.SharedKernel.EntityFramework;
+using FreshOrbit.SharedKernel.EntityFramework.Outbox;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,8 @@ public static class BackgroundJobsSetup
             services.AddHangfireServer();
         }
 
+        // The dispatcher runs here: a missing or out-of-range Outbox value refuses start-up (rule 7, D296).
+        services.AddOptions<OutboxOptions>().ValidateOnStart();
         services.AddScoped<RecurringJobRunner>();
         services.AddHostedService<RecurringJobScheduler>();
         services.AddHostedService<OutboxDispatcherService>();

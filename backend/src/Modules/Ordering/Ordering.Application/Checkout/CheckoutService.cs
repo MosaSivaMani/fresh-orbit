@@ -237,10 +237,33 @@ public sealed class CheckoutService(
         _ => null,
     };
 
+    /// <summary>
+    /// ORD-R0 (BE-1, D295): no order is taken while the business profile lacks what the invoice at delivery needs
+    /// (legal name, GSTIN, time zone), so a delivered order can never be stuck without an invoice. One read through
+    /// Settings' public contract; 422 <c>STORE_NOT_READY</c> with one error per missing profile field.
+    /// </summary>
+    private async Task EnsureStoreReadyAsync(CancellationToken cancellationToken)
+    {
+        var readiness = await settings.GetStoreReadinessAsync(cancellationToken);
+        if (readiness.IsReady)
+        {
+            return;
+        }
+
+        var errors = readiness.MissingProfileFields
+            .Select(field => new FieldError(
+                field == "businessProfile" ? field : $"businessProfile.{field}",
+                OrderingErrors.StoreNotReady,
+                $"The store is not ready to take orders: an admin must enter the business profile's {field}."))
+            .ToList();
+        throw new RefusalException(OrderingErrors.StoreNotReady, "The store is not ready to take orders yet; an admin must complete the businessProfile.", errors);
+    }
+
     /// <summary>Read + Decide shared by preview and place (ORD-R1, R4–R9, R15).</summary>
     private async Task<CheckoutDecision> DecideAsync(Guid customerId, CheckoutRequest request, DateTimeOffset now, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        await EnsureStoreReadyAsync(cancellationToken);
         var customer = await customers.GetCustomerAsync(customerId, cancellationToken);
         if (customer is null || customer.Status != CustomerStatus.Active)
         {
