@@ -28,6 +28,7 @@ flutter test           # unit, provider and widget tests; no device needed
 | Define | Required | Meaning |
 |---|---|---|
 | `API_BASE_URL` | Yes | API origin (no path). The app calls `<origin>/api/v1/…`. When it is missing, the app shows "API address not configured" and makes no calls (rule 7: missing configuration is refused, no fallback) |
+| `WEBSITE_BASE_URL` | For store builds | The store website's origin (D299). The sign-in's "terms" and "privacy policy" and the policy rows in Settings and Help open `<origin>/support/privacy-policy`, `/terms`, `/refund-policy`, `/cancellation-policy` and `/delivery-policy` in the browser. When it is missing or not an http(s) address, every policy link is hidden (rule 7) |
 
 
 No city, price, slot or policy value is written in the app.
@@ -251,12 +252,15 @@ The app depends only on `PushService` (`lib/core/push_service.dart`); `NoopPushS
 **Android (Google Play)**
 
 - Android SDK + Android Studio (or command-line tools) on the build machine; `flutter doctor --android-licenses`.
-- An upload keystore (`keytool -genkey -v -keystore upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`),
-  stored outside git; `android/key.properties` (git-ignored) and a `signingConfigs.release` block in
-  `android/app/build.gradle.kts`. Today release builds use the debug key (flutter create default).
+- An upload keystore, stored outside git, given through `android/key.properties` (git-ignored) or the
+  `FRESH_ORBIT_UPLOAD_*` environment variables (D297, steps in `runbooks/mobile-release.md`). Without it a release
+  build stops with "Release signing is not configured"; it is never signed with the debug key. The demo APKs use a
+  separate, stable demo key from the `DEMO_*` repository secrets.
+- Launcher icons from the owner's logo (D298): Android mipmaps, adaptive icon on ocean teal, every iOS size.
 - Google Play Console account (one-time fee, paid by the owner), app entry `in.freshorbit.app`, Play App Signing,
   privacy policy URL, data safety form, content rating.
-- `flutter build appbundle --dart-define=API_BASE_URL=https://…` → upload to the internal testing track first.
+- `flutter build appbundle --dart-define=API_BASE_URL=https://… --dart-define=WEBSITE_BASE_URL=https://…` → upload
+  to the internal testing track first.
 
 **iOS (App Store)**
 
@@ -283,7 +287,7 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | `shared_preferences` | 2.5.6 | BSD-3-Clause | Pincode, onboarding flag, theme mode |
 | `intl` | 0.20.3 | BSD-3-Clause | IST date and time formatting |
 | `uuid` | 4.6.0 | MIT | Idempotency keys |
-| `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF |
+| `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF, website policy pages (D299) |
 | `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem; `pubspec.lock` must be refreshed with `flutter pub get` |
 | `fresh_theme` | path | Ours | Theme from design tokens |
 | `flutter_lints` (dev) | 6.0.0 | BSD-3-Clause | Lints |
@@ -747,3 +751,19 @@ the screen height; the page is one clamping `SingleChildScrollView` that continu
 Parts in `fresh_theme` (`lib/src/sections.dart`): `FreshSectionHeader`, `FreshStepTile`, `FreshHelpCard`. Tests
 in `home_screen_test.dart` (first screen still fills 390 × 844 and the sections start below it; at most six
 popular products; hidden without them; section order; screen-reader labels; the cold-storage rule; Help opens).
+
+## 25. Launch blockers: signing, icons, policy links (D297, D298, D299)
+
+From the October gap audit (`research/gap-audit-2026-10/`: MA-1, MA-2, MA-3, MA-15, ME-1).
+
+| Item | What the app does | Where |
+|---|---|---|
+| Release signing (D297) | Upload key from `android/key.properties` or `FRESH_ORBIT_UPLOAD_*`; without it the release package tasks stop with the list of missing values, never the debug key | `android/app/build.gradle.kts`, `runbooks/mobile-release.md` |
+| Demo signing (D297) | The demo workflow decodes `DEMO_KEYSTORE_BASE64` and signs both profile APKs with that one key, so each new APK installs over the last; without the secret it warns and uses the throwaway key; the summary lists each APK's certificate SHA-256 | `.github/workflows/mobile-demo.yml` |
+| Launcher icons (D298) | The logo's mark in a white disc on ocean teal `#073B4C`; Android legacy and round icons in five densities, adaptive icon (`mipmap-anydpi-v26`), iOS AppIcon set | `android/app/src/main/res/`, `ios/Runner/Assets.xcassets/AppIcon.appiconset/` |
+| Policy links (D299) | Sign-in: "terms" and "privacy policy" are links (`FreshLinkText`). Settings › "Privacy and policies" and Help › "Our policies": Privacy policy, Terms of use, Refund policy, Cancellation policy, Delivery policy, each opening the website page in the browser. Hidden without `WEBSITE_BASE_URL` | `lib/core/website.dart`, `lib/widgets/policy_links.dart` |
+
+`websiteBaseUrlProvider`, `policyLinksProvider` and `externalLauncherProvider` (which opens a link; tests replace
+it to record the address) are in `lib/state/core_providers.dart`. Tests: `test/widgets/policy_links_test.dart`
+(addresses built from the configured origin; links and rows open the right page; all hidden when not configured;
+`FreshLinkText` runs only the link's tap).

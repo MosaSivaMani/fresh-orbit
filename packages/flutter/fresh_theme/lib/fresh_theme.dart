@@ -11,7 +11,7 @@
 /// "Tell us about you" field (D290): [FreshTextField]. The order-placed look (D288): [FreshCelebrationHeader],
 /// [FreshTicketCard], [FreshNoteCard] and [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289):
 /// [FreshSeaFloor] and [FreshSeaFloorScroll]. The home's scrolling sections (D293): [FreshSectionHeader],
-/// [FreshStepTile] and [FreshHelpCard].
+/// [FreshStepTile] and [FreshHelpCard]. Inline links in a sentence (D299): [FreshLinkText] with [FreshTextPart].
 library;
 
 import 'package:flutter/material.dart';
@@ -26,6 +26,7 @@ export 'src/gallery.dart';
 export 'src/header.dart';
 export 'src/highlights.dart';
 export 'src/layout.dart';
+export 'src/links.dart';
 export 'src/look.dart';
 export 'src/motion.dart';
 export 'src/page.dart';
