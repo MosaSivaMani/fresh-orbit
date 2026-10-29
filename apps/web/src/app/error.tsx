@@ -4,10 +4,11 @@ import { Button, CharacterState, SkyPanel } from "@fresh/ui";
 import { RotateCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
+import { reportBrowserError } from "@/lib/report-error";
 
 /**
  * Route error boundary (D181): the harbour sky, the ERROR_GENERIC character, a calm message, the reference for
- * support and a retry.
+ * support and a retry. What it caught goes to error monitoring (W-7, D316).
  */
 export default function RouteError({
   error,
@@ -18,6 +19,7 @@ export default function RouteError({
 }) {
   useEffect(() => {
     console.error(error);
+    reportBrowserError(error, { boundary: "route" });
   }, [error]);
   return (
     <SkyPanel role="alert">

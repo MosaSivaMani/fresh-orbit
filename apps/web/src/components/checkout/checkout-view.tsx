@@ -20,7 +20,7 @@ import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { browserHttp } from "@/api/browser";
 import { addAddress, listAddresses, replaceAddress } from "@/api/endpoints/account";
 import { previewCheckout, placeOrder } from "@/api/endpoints/orders";
-import { type DroppedCartLine } from "@/api/types/cart";
+import { type Cart, type DroppedCartLine } from "@/api/types/cart";
 import {
   type Address,
   type AddressInput,
@@ -91,6 +91,15 @@ function labelText(label: string): string {
   return `${label.charAt(0)}${label.slice(1).toLowerCase()}`;
 }
 
+/** What makes the cart a different order: its lines, their quantities and preparations, and the coupon. */
+function cartKeyOf(cart: Cart | undefined): string {
+  if (!cart) return "";
+  const lines = cart.lines.map((l) =>
+    [l.id, l.variantId, l.quantity.value, l.quantity.unit, l.preparation?.code ?? ""].join(":"),
+  );
+  return `${lines.join("|")}#${cart.coupon?.code ?? ""}`;
+}
+
 type PriceChange = { previousTotalPaise: number; preview: CheckoutPreview };
 
 /**
@@ -134,9 +143,11 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
 
   // A new address, slot, payment method, substitution choice or note is a new order body: a retry must not reuse
   // the old key (the server would answer IDEMPOTENCY_KEY_REUSED), so the next Place order takes a fresh one.
+  // A changed cart (lines, quantities, preparations or coupon) is a new order too (D315).
+  const cartFingerprint = cartKeyOf(cart.data);
   useEffect(() => {
     placeKey.current = null;
-  }, [addressId, slotId, paymentMethod, substitution, notes]);
+  }, [addressId, slotId, paymentMethod, substitution, notes, cartFingerprint]);
 
   const previewKey = ["checkout-preview", addressId, slotId, paymentMethod, substitution] as const;
   const preview = useQuery({
@@ -181,8 +192,9 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
       router.push(`/orders/${encodeURIComponent(order.id)}/success`);
     } catch (e) {
       const apiError = asApiError(e);
-      // A retryable failure keeps the key so a second click cannot place a second order.
-      if (!apiError?.isRetryable) placeKey.current = null;
+      // No answer, a timeout or any 5xx may hide an order the server did place: keep the key, so the next click
+      // replays that result instead of placing a second order (D315). Only a definite refusal ends the action.
+      if (!apiError || !apiError.isOutcomeUnknown) placeKey.current = null;
       if (apiError?.code === "PRICE_CHANGED" && apiError.problem.preview) {
         const next = apiError.problem.preview as CheckoutPreview;
         queryClient.setQueryData(previewKey, next);

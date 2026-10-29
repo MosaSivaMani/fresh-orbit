@@ -102,6 +102,40 @@ describe("ProductGallery", () => {
     expect(pictures.filter((p) => p.dataset.priority === "true")).toHaveLength(1);
   });
 
+  it("offers the server's renditions as srcset, smallest first, with the drawn size (W-9)", () => {
+    const { container } = render(
+      <ProductGallery
+        images={[
+          {
+            url: "https://media.test/p1-1280.webp",
+            altText: "Seer fish steaks",
+            sources: [
+              { width: 1280, url: "https://media.test/p1-1280.webp" },
+              { width: 320, url: "https://media.test/p1-320.webp" },
+              { width: 640, url: "https://media.test/p1-640.webp" },
+            ],
+          },
+        ]}
+        name="Seer fish"
+      />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("srcset")).toBe(
+      "https://media.test/p1-320.webp 320w, https://media.test/p1-640.webp 640w, https://media.test/p1-1280.webp 1280w",
+    );
+    expect(img.getAttribute("sizes")).toBe("(min-width: 1024px) 50vw, 100vw");
+    expect(img.getAttribute("src")).toBe("https://media.test/p1-1280.webp");
+  });
+
+  it("falls back to the single url when the server sent no renditions", () => {
+    const { container } = render(
+      <ProductGallery images={[{ url: "https://media.test/p1.webp" }]} name="Seer fish" />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img.hasAttribute("srcset")).toBe(false);
+    expect(img.getAttribute("src")).toBe("https://media.test/p1.webp");
+  });
+
   it("says there is no photo yet when the product has none", () => {
     render(<ProductGallery images={[]} name="Seer fish" />);
     expect(screen.getByText("No photo of Seer fish yet")).toBeInTheDocument();
