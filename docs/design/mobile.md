@@ -42,7 +42,7 @@ has been run against a live API or on a device yet (see §9).
 | Splash | `/splash` | Done. Loads prefs and session, then goes to onboarding, location or home | — |
 | Onboarding (3 pages) | `/onboarding` | Done | — |
 | Location (pincode, serviceability, unserviceable state) | `/location` (`?change=1` from the pincode chip) | Done. Moving the cart asks first on `CART_LOCATION_CHANGED` | Widget (4) |
-| Home | `/home` (tab) | Done. Rich home on one grid (§16): delivery header, heading, harbour, hero, two cards, categories, Today's special; fits one screen (D182) | Widget (`home_screen_test.dart`) |
+| Home | `/home` (tab) | Done. Rich home on one grid (§16): delivery header, heading, harbour, hero, two cards, categories, Today's special fill the first screen (D182); the page scrolls on into Popular today, three steps, our promise, help and the sea floor (§24, D292–D293) | Widget (`home_screen_test.dart`) |
 | Shop (categories, filters, sort, paging) | `/shop?category=` (tab) | Done | — |
 | Search with suggestions | `/search` | Done. 250 ms debounce | — |
 | Product detail | `/product/:slug` | Done. Variant, preparation with yield note, quantity/weight stepper, server unit price and preparation charge, add to cart; the estimate and maximum come from the cart line (§8) | Widget (6) |
@@ -729,3 +729,21 @@ Not on onboarding (its own sea and art).
 Tests: `test/widgets/order_success_test.dart` (server values on the ticket, status pill, rider note, both
 buttons, 360 × 640 at 1× and 1.3× text with the band at the bottom) and `test/widgets/sea_floor_test.dart` (size,
 inset, semantics, width scaling, short and long pages, pincode, not served, empty cart, Help, sign-in and "Tell us about you" at 360 × 640).
+
+## 24. The home scrolls into more sections (D292, D293)
+
+The owner kept the home's first screen as it is and asked for more below it. The first screen is laid out exactly
+as before (§16: scaled to the space above the cart bar and menu, the offers growing into the room left) and given
+the screen height; the page is one clamping `SingleChildScrollView` that continues into:
+
+| Section | Content | Source |
+|---|---|---|
+| Popular *today* | Up to six products, two columns, the Shop's `ShopProductCard` (ADD, stepper), "See all →" to the Shop | `featuredProducts` of `GET /home`; hidden when empty (D186) |
+| Fresh in *three steps* | Pick your cut · Cleaned by hand · At your door, numbered coral badges | Onboarding words and tile pictures |
+| Our *promise* | Morning catch · Pay net weight · Kept chilled (or Cash or UPI when the store has no cold storage, D212), on the hero's dark teal | Onboarding words and tile pictures; `hasColdStorage` from serviceability |
+| Help card | "Need a hand?" and Get help → Account › Help, on the mango card colour | — |
+| Sea floor | `FreshSeaFloor` (D289) ends the page | — |
+
+Parts in `fresh_theme` (`lib/src/sections.dart`): `FreshSectionHeader`, `FreshStepTile`, `FreshHelpCard`. Tests
+in `home_screen_test.dart` (first screen still fills 390 × 844 and the sections start below it; at most six
+popular products; hidden without them; section order; screen-reader labels; the cold-storage rule; Help opens).

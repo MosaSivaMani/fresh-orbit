@@ -10,7 +10,8 @@
 /// [FreshAuthHeader], [FreshAvatarBadge], [FreshPhoneField], [FreshArrowButton] and [FreshCoastScene]; the
 /// "Tell us about you" field (D290): [FreshTextField]. The order-placed look (D288): [FreshCelebrationHeader],
 /// [FreshTicketCard], [FreshNoteCard] and [FreshOutlineArrowButton]. The sea-floor footer of calm pages (D289):
-/// [FreshSeaFloor] and [FreshSeaFloorScroll].
+/// [FreshSeaFloor] and [FreshSeaFloorScroll]. The home's scrolling sections (D293): [FreshSectionHeader],
+/// [FreshStepTile] and [FreshHelpCard].
 library;
 
 import 'package:flutter/material.dart';
@@ -32,6 +33,7 @@ export 'src/parts.dart';
 export 'src/prices.dart';
 export 'src/scenery.dart';
 export 'src/sea_floor.dart';
+export 'src/sections.dart';
 export 'src/stickers.dart';
 export 'src/titles.dart';
 

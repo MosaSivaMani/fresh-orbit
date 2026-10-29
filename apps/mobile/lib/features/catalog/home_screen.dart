@@ -5,15 +5,19 @@
 // row, which starts on the gutter and lets the second card peek. The harbour, the palms and the sparks are drawn
 // with the theme package's scenery and are not read by screen readers.
 //
-// The page fits one screen (D182, D221): it is laid out at the screen width and scaled down to the space above the
-// cart bar and the menu (both live in the shell, so they never cover it). Only at a system text scale of 1.5 or
-// more does it scroll, with clamping physics (no bounce). A page shorter than the screen gives the room left to
-// the offer pictures, so no dead gap is left above the cart bar. The chip, cards, category tiles and offer cards
+// The first screen is unchanged (D182, D221): it is laid out at the screen width and scaled down to the space
+// above the cart bar and the menu (both live in the shell, so they never cover it), and a first screen shorter
+// than that gives the room left to the offer pictures. The page then scrolls on (D292, owner 2026-10-29), with
+// clamping physics (no bounce), into the sections below it (D293): "Popular today" (the server's featured
+// products, hidden when it sends none, D186), "Fresh in three steps", "Our promise", the help card and the sea
+// floor. At a system text scale of 1.5 or more the first screen keeps its natural size instead of shrinking. The chip, cards, category tiles and offer cards
 // are the theme package's parts (D207); categories and offers without a server picture show the owner's bundled
 // pictures (D220).
 //
 // Every business value comes from the server (rule 4): the pincode and city (serviceability), the first name
-// (profile), the next slot, the categories and their pictures, the offers, and the cart in the shell.
+// (profile), the next slot, the categories and their pictures, the offers, the featured products and their
+// prices, and the cart in the shell. The sections below the first screen use the onboarding's approved words;
+// "Kept chilled" is said only when the serving store has cold storage (D212).
 
 import 'dart:math' as math;
 
@@ -31,6 +35,7 @@ import '../../state/catalog_state.dart';
 import '../../state/location_state.dart';
 import '../../state/session.dart';
 import '../../widgets/states.dart';
+import 'product_grid.dart';
 
 /// Pincode chip for app bars: "Delivering to 600041" → change pincode.
 class PincodeChip extends ConsumerWidget {
@@ -95,7 +100,7 @@ abstract final class HomeColors {
   static const List<Color> offerTints = [Color(0xFFE7F2EE), Color(0xFFFBE6DC)];
 }
 
-/// At this system text scale and above the home scrolls instead of shrinking to fit.
+/// At this system text scale and above the home's first screen keeps its natural size instead of shrinking to fit.
 const double homeScrollTextScale = 1.5;
 
 class HomeScreen extends ConsumerWidget {
@@ -116,29 +121,43 @@ class HomeScreen extends ConsumerWidget {
           loading: const Center(child: CircularProgressIndicator()),
           data: (data) => LayoutBuilder(
             builder: (context, box) {
+              final Widget first;
               if (MediaQuery.textScalerOf(context).scale(1) >= homeScrollTextScale) {
-                return SingleChildScrollView(
-                  key: const Key('homeScroll'),
-                  physics: const ClampingScrollPhysics(),
-                  child: SizedBox(width: box.maxWidth, child: _HomePage(data: data, minHeight: 0)),
-                );
-              }
-              // Full width always: a page taller than the screen is laid out wider and scaled down, never
-              // narrowed with side gaps (D182). A shorter page gives the room left to the specials, so no dead
-              // gap is left above the cart bar (D221).
-              return Align(
-                alignment: Alignment.topCenter,
-                child: FreshFitWidth(
-                  key: const Key('homeFit'),
-                  child: SizedBox(
-                    width: double.infinity,
-                    // Laid out wider to be scaled down, the page fills the screen height at that scale too.
-                    child: LayoutBuilder(
-                      builder: (context, page) => _HomePage(
-                        data: data,
-                        minHeight: box.maxWidth > 0 ? box.maxHeight * page.maxWidth / box.maxWidth : box.maxHeight,
+                first = _HomePage(data: data, minHeight: 0);
+              } else {
+                // Full width always: a first screen taller than the space is laid out wider and scaled down,
+                // never narrowed with side gaps (D182). A shorter one gives the room left to the specials, so no
+                // dead gap is left above the sections below (D221).
+                first = SizedBox(
+                  height: box.maxHeight,
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: FreshFitWidth(
+                      key: const Key('homeFit'),
+                      child: SizedBox(
+                        width: double.infinity,
+                        // Laid out wider to be scaled down, the page fills the screen height at that scale too.
+                        child: LayoutBuilder(
+                          builder: (context, page) => _HomePage(
+                            data: data,
+                            minHeight: box.maxWidth > 0
+                                ? box.maxHeight * page.maxWidth / box.maxWidth
+                                : box.maxHeight,
+                          ),
+                        ),
                       ),
                     ),
+                  ),
+                );
+              }
+              return SingleChildScrollView(
+                key: const Key('homeScroll'),
+                physics: const ClampingScrollPhysics(),
+                child: SizedBox(
+                  width: box.maxWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [first, _HomeSections(products: data.featuredProducts)],
                   ),
                 ),
               );
@@ -919,3 +938,211 @@ Widget _specialPicture(HomeBanner banner, int index, Color tint) {
   if (url == null || url.isEmpty) return bundled;
   return Image.network(url, fit: BoxFit.cover, excludeFromSemantics: true, errorBuilder: (_, _, _) => bundled);
 }
+
+/// The most featured products "Popular today" shows: three rows of two on a phone.
+const int homePopularCount = 6;
+
+/// The sections below the first screen (D293): "Popular today" (the server's featured products, hidden when it
+/// sends none, D186), "Fresh in three steps", "Our promise" on the dark-teal block, the help card and the sea
+/// floor. The steps and promises use the onboarding's approved words and pictures.
+class _HomeSections extends ConsumerWidget {
+  const _HomeSections({required this.products});
+
+  final List<ProductSummary> products;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = illustratedColors(context);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final keptCold = ref.watch(currentServiceabilityProvider).value?.hasColdStorage == true;
+    final green = dark ? c.tealSoft : const Color(0xFFE2F1DD);
+    final blue = dark ? c.iceSoft : const Color(0xFFDDF1F7);
+    final peach = dark ? c.coralSoft : const Color(0xFFFBE6DC);
+    final popular = products.take(homePopularCount).toList();
+    return Column(
+      key: const Key('homeSections'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (popular.isNotEmpty) ...[
+          const SizedBox(height: FreshLayout.sectionGap),
+          Padding(
+            padding: FreshLayout.page,
+            child: FreshSectionHeader(
+              text: 'Popular',
+              brushed: 'today',
+              color: c.ink,
+              action: 'See all →',
+              actionKey: const Key('homePopularSeeAll'),
+              onAction: () => context.go('/shop'),
+            ),
+          ),
+          const SizedBox(height: FreshLayout.cardGap),
+          GridView.builder(
+            key: const Key('homePopular'),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: FreshLayout.page,
+            gridDelegate: productGridDelegate,
+            itemCount: popular.length,
+            itemBuilder: (context, i) => ShopProductCard(product: popular[i], index: i),
+          ),
+        ],
+        const SizedBox(height: FreshLayout.sectionGap),
+        Padding(
+          padding: FreshLayout.page,
+          child: FreshSectionHeader(text: 'Fresh in', brushed: 'three steps', color: c.ink),
+        ),
+        const SizedBox(height: FreshLayout.cardGap),
+        Padding(
+          key: const Key('homeSteps'),
+          padding: FreshLayout.page,
+          child: FreshColumns(
+            children: [
+              _tile(
+                1,
+                IllustrationSlot.onboardingTileYourCut,
+                'Pick your cut',
+                'Whole, steaks, curry or fillet',
+                Icons.restaurant_rounded,
+                peach,
+                c,
+              ),
+              _tile(
+                2,
+                IllustrationSlot.onboardingTileCleanedByHand,
+                'Cleaned by hand',
+                'Scaled, gutted, washed',
+                Icons.water_drop_rounded,
+                blue,
+                c,
+              ),
+              _tile(
+                3,
+                IllustrationSlot.onboardingTileDeliveredFresh,
+                'At your door',
+                'In the slot you pick',
+                Icons.local_shipping_rounded,
+                green,
+                c,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: FreshLayout.sectionGap),
+        Padding(
+          padding: FreshLayout.page,
+          child: DecoratedBox(
+            key: const Key('homePromise'),
+            decoration: BoxDecoration(
+              color: HomeColors.hero,
+              borderRadius: BorderRadius.circular(FreshLayout.heroRadius),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const FreshSectionHeader(text: 'Our', brushed: 'promise', color: BlockInk.paper),
+                  const SizedBox(height: FreshLayout.cardGap),
+                  FreshColumns(
+                    children: [
+                      _tile(
+                        null,
+                        IllustrationSlot.onboardingTileMorningCatch,
+                        'Morning catch',
+                        'Direct from local boats',
+                        Icons.set_meal_rounded,
+                        HomeColors.heroBody,
+                        c,
+                        onDark: true,
+                      ),
+                      _tile(
+                        null,
+                        IllustrationSlot.onboardingTileNetWeight,
+                        'Pay net weight',
+                        'Weighed after cleaning',
+                        Icons.scale_rounded,
+                        HomeColors.heroBody,
+                        c,
+                        onDark: true,
+                      ),
+                      // "Kept chilled" only when the serving store has cold storage (D212); else how to pay.
+                      if (keptCold)
+                        _tile(
+                          null,
+                          IllustrationSlot.onboardingTileKeptChilled,
+                          'Kept chilled',
+                          'On ice all the way',
+                          Icons.ac_unit_rounded,
+                          HomeColors.heroBody,
+                          c,
+                          onDark: true,
+                        )
+                      else
+                        _tile(
+                          null,
+                          IllustrationSlot.onboardingTileCashUpi,
+                          'Cash or UPI',
+                          'Pay when it arrives',
+                          Icons.payments_rounded,
+                          HomeColors.heroBody,
+                          c,
+                          onDark: true,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: FreshLayout.sectionGap),
+        Padding(
+          padding: FreshLayout.page,
+          child: FreshHelpCard(
+            key: const Key('homeHelp'),
+            title: 'Need a hand?',
+            body: 'Questions about an order, a cut or a delivery? We are here to help.',
+            action: 'Get help →',
+            color: HomeColors.mangoCard,
+            onTap: () => context.go('/account/help'),
+          ),
+        ),
+        const SizedBox(height: FreshLayout.sectionGap),
+        const FreshSeaFloor(key: Key('homeSeaFloor'), includeBottomInset: false),
+      ],
+    );
+  }
+}
+
+/// A step or promise tile with the onboarding tile's picture, or its icon until the picture is bundled.
+Widget _tile(
+  int? step,
+  IllustrationSlot slot,
+  String label,
+  String caption,
+  IconData icon,
+  Color tint,
+  IllustratedColors c, {
+  bool onDark = false,
+}) => FreshStepTile(
+  key: ValueKey('homeTile-${slot.code}'),
+  step: step,
+  label: label,
+  caption: caption,
+  tint: tint,
+  ink: onDark ? BlockInk.paper : c.ink,
+  muted: onDark ? HomeColors.heroBody : c.muted,
+  picture: Illustration(
+    slot: slot,
+    size: FreshStepTile.pictureSize,
+    height: FreshStepTile.pictureHeight,
+    excludeFromSemantics: true,
+    fallback: Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 14),
+        child: Icon(icon, key: ValueKey('homeTile-fallback-${slot.code}'), size: 32, color: c.tealDeep),
+      ),
+    ),
+  ),
+);
