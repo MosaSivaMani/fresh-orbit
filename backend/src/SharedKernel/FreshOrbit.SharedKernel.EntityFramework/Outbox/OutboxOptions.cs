@@ -70,7 +70,7 @@ public sealed class OutboxOptionsValidator : IValidateOptions<OutboxOptions>
             failures.Add("Outbox:RetryBaseDelay must be more than zero.");
         }
 
-        if (options.RetryMaxDelay < options.RetryBaseDelay || options.RetryMaxDelay > MaxRetryDelayLimit)
+        if (options.RetryMaxDelay <= TimeSpan.Zero || options.RetryMaxDelay < options.RetryBaseDelay || options.RetryMaxDelay > MaxRetryDelayLimit)
         {
             failures.Add("Outbox:RetryMaxDelay must be at least Outbox:RetryBaseDelay and at most one day.");
         }
