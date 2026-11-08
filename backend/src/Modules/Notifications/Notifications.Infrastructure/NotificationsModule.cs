@@ -48,7 +48,6 @@ public sealed class NotificationsModule : IModule
 
         var options = configuration.GetSection(NotificationsOptions.SectionName).Get<NotificationsOptions>() ?? new NotificationsOptions();
         services.AddSingleton(options);
-        services.AddOptions<SmtpOptions>().BindConfiguration(SmtpOptions.SectionName);
 
         services.AddScoped<INotificationsRepository, NotificationsRepository>();
         services.AddScoped<NotificationComposer>();
@@ -82,16 +81,12 @@ public sealed class NotificationsModule : IModule
 
         // Adapters (NOT-R11): TryAdd so a host or test can register a real provider first.
         // SMS: Notifications:Sms:Provider; the development sender is refused outside Development/Testing (SEC-1).
+        // E-mail: Notifications:Email:Provider / Notifications:Smtp; push: Notifications:Push:Provider (FCM). The
+        // development senders are refused outside Development/Testing/Demo; DISABLED is logged Critical (D322, D325).
         services.AddFreshOrbitSms();
-        services.TryAddSingleton<IPushSender, LoggingPushSender>();
-        if (string.IsNullOrWhiteSpace(configuration[$"{SmtpOptions.SectionName}:Host"]))
-        {
-            services.TryAddSingleton<IEmailSender, LoggingEmailSender>();
-        }
-        else
-        {
-            services.TryAddSingleton<IEmailSender, SmtpEmailSender>();
-        }
+        services.AddFreshOrbitEmail();
+        services.AddFreshOrbitPush();
+        services.AddHostedService<DisabledChannelsStartupReport>();
 
         services.AddScoped<SendNotificationsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, NotificationsJobs>());

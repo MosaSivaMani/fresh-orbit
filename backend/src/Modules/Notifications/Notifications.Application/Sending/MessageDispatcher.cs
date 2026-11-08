@@ -58,21 +58,7 @@ public sealed class MessageDispatcher(
                     message.MarkSent(await email.SendAsync(new EmailMessage(user.Email, message.Subject ?? string.Empty, message.Body), cancellationToken), clock.UtcNow);
                     break;
                 case Channel.Push:
-                    var tokens = await repository.GetDeviceTokensAsync(message.UserId, cancellationToken);
-                    if (tokens.Count == 0)
-                    {
-                        message.Fail(NotificationsErrors.NoRecipientAddress);
-                        break;
-                    }
-
-                    var data = new Dictionary<string, string>(StringComparer.Ordinal) { ["templateCode"] = message.TemplateCode, ["messageId"] = message.Id.ToString() };
-                    var result = await push.SendAsync(new PushMessage([.. tokens.Select(t => t.PushToken)], message.Subject ?? string.Empty, message.Body, data), cancellationToken);
-                    foreach (var invalid in tokens.Where(t => result.InvalidTokens.Contains(t.PushToken, StringComparer.Ordinal)))
-                    {
-                        repository.Remove(invalid);
-                    }
-
-                    message.MarkSent(result.ProviderMessageId, clock.UtcNow);
+                    await SendPushAsync(message, cancellationToken);
                     break;
                 default:
                     message.Fail(NotificationsErrors.NoRecipientAddress);
@@ -88,9 +74,66 @@ public sealed class MessageDispatcher(
             // E2E-1: a missing DLT template id or a provider refusal does not fix itself by retrying.
             message.Fail(failure.FailureCode);
         }
+        catch (PushDeliveryException failure) when (failure.IsRetryable)
+        {
+            message.RecordFailure(failure.FailureCode, clock.UtcNow);
+        }
+        catch (PushDeliveryException failure)
+        {
+            message.Fail(failure.FailureCode);
+        }
+        catch (ChannelDisabledException disabled)
+        {
+            // D322 / D325: a channel switched off by configuration fails its messages; they are never marked SENT.
+            message.Fail(disabled.FailureCode);
+        }
         catch (Exception exception) when (exception is not OperationCanceledException and not DomainException)
         {
             message.RecordFailure(exception.GetType().Name + ": " + exception.Message, clock.UtcNow);
+        }
+    }
+
+    /// <summary>
+    /// D324: SENT only when at least one device accepted the message. Tokens the provider reports as unregistered are
+    /// removed whether or not the send succeeded; with none left the message fails with <c>NO_RECIPIENT_ADDRESS</c>.
+    /// </summary>
+    private async Task SendPushAsync(Message message, CancellationToken cancellationToken)
+    {
+        var tokens = await repository.GetDeviceTokensAsync(message.UserId, cancellationToken);
+        if (tokens.Count == 0)
+        {
+            message.Fail(NotificationsErrors.NoRecipientAddress);
+            return;
+        }
+
+        var data = new Dictionary<string, string>(StringComparer.Ordinal) { ["templateCode"] = message.TemplateCode, ["messageId"] = message.Id.ToString() };
+        PushResult result;
+        try
+        {
+            result = await push.SendAsync(new PushMessage([.. tokens.Select(t => t.PushToken)], message.Subject ?? string.Empty, message.Body, data), cancellationToken);
+        }
+        catch (PushDeliveryException failure)
+        {
+            RemoveInvalid(failure.InvalidTokens);
+            throw;
+        }
+
+        RemoveInvalid(result.InvalidTokens);
+        if (result.AcceptedCount > 0)
+        {
+            message.MarkSent(result.ProviderMessageId, clock.UtcNow);
+        }
+        else
+        {
+            message.Fail(NotificationsErrors.NoRecipientAddress);
+        }
+
+        void RemoveInvalid(IReadOnlyList<string> invalidTokens)
+        {
+            foreach (var invalid in tokens.Where(t => invalidTokens.Contains(t.PushToken, StringComparer.Ordinal)))
+            {
+                repository.Remove(invalid);
+            }
         }
     }
 }

@@ -108,8 +108,16 @@ public sealed class CapturingEmailSender : IEmailSender
 {
     public ConcurrentQueue<EmailMessage> Sent { get; } = new();
 
+    /// <summary>When set, the next sends throw it (e.g. <see cref="ChannelDisabledException"/>).</summary>
+    public Exception? Throw { get; set; }
+
     public Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
+        if (Throw is not null)
+        {
+            throw Throw;
+        }
+
         Sent.Enqueue(message);
         return Task.FromResult<string?>("email-" + Sent.Count);
     }
@@ -122,6 +130,12 @@ public sealed class CapturingPushSender : IPushSender
     /// <summary>When set, the next sends throw (to test retries).</summary>
     public bool Fail { get; set; }
 
+    /// <summary>When set, the next sends throw it (e.g. <see cref="PushDeliveryException"/>).</summary>
+    public Exception? Throw { get; set; }
+
+    /// <summary>When true, the next sends report every token as unregistered and accept none.</summary>
+    public bool AllUnregistered { get; set; }
+
     public Task<PushResult> SendAsync(PushMessage message, CancellationToken cancellationToken)
     {
         if (Fail)
@@ -129,7 +143,17 @@ public sealed class CapturingPushSender : IPushSender
             throw new HttpRequestException("push provider unavailable");
         }
 
+        if (Throw is not null)
+        {
+            throw Throw;
+        }
+
+        if (AllUnregistered)
+        {
+            return Task.FromResult(new PushResult(null, message.Tokens, 0));
+        }
+
         Sent.Enqueue(message);
-        return Task.FromResult(new PushResult("push-" + Sent.Count, []));
+        return Task.FromResult(new PushResult("push-" + Sent.Count, [], message.Tokens.Count));
     }
 }

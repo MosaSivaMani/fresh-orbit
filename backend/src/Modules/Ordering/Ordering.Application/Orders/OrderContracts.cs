@@ -199,7 +199,10 @@ public sealed record PickListData(IReadOnlyList<PickListLine> Lines, int OrderCo
 
 public sealed record InvoiceLineDto(int LineNo, string Description, string HsnCode, QuantityDto Quantity, long UnitPricePaise, long TaxablePaise, int TaxRateBp, long TaxPaise, long CgstPaise, long SgstPaise, long TotalPaise);
 
-/// <summary>Invoice JSON; <c>PdfUrl</c> stays null until PDF rendering exists (D20: may be deferred).</summary>
+/// <summary>
+/// Invoice JSON. <c>PdfUrl</c> is the authenticated download path for the caller's audience (customer or staff, D343)
+/// once the <c>InvoiceIssued</c> handler has rendered the PDF; null until then.
+/// </summary>
 public sealed record InvoiceResponse(
     Guid Id,
     Guid OrderId,
@@ -212,7 +215,14 @@ public sealed record InvoiceResponse(
     long TaxablePaise,
     long TaxPaise,
     long TotalPaise,
-    string? PdfUrl);
+    string? PdfUrl)
+{
+    /// <summary>The seller's registered address frozen at issue (D342); null on invoices issued before it was frozen.</summary>
+    public string? SellerAddress { get; init; }
+
+    /// <summary>FSSAI licence of the supplying premises frozen at issue (D342); null on older invoices.</summary>
+    public string? SellerFssaiLicenseNo { get; init; }
+}
 
 // Requests
 
@@ -339,7 +349,7 @@ public static class OrderViews
             order.RefundDuePaise);
     }
 
-    public static InvoiceResponse Invoice(Order order, Invoice invoice)
+    public static InvoiceResponse Invoice(Order order, Invoice invoice, string? pdfUrl)
     {
         ArgumentNullException.ThrowIfNull(order);
         ArgumentNullException.ThrowIfNull(invoice);
@@ -355,7 +365,11 @@ public static class OrderViews
             invoice.TaxablePaise,
             invoice.TaxPaise,
             invoice.TotalPaise,
-            null);
+            pdfUrl)
+        {
+            SellerAddress = invoice.SellerAddress,
+            SellerFssaiLicenseNo = invoice.SellerFssaiLicenseNo,
+        };
     }
 
     public static OrderTrackingResponse Tracking(Order order, ShipmentTrackingView? shipment)
