@@ -18,7 +18,14 @@ void main() {
     fetched = [];
     offline = false;
   });
-  tearDown(() => dir.delete(recursive: true));
+  tearDown(() async {
+    // A cache write started by the test may still be landing; a leftover temp folder is harmless.
+    try {
+      await dir.delete(recursive: true);
+    } on FileSystemException {
+      // Ignored: see above.
+    }
+  });
 
   DiskPictureCache cache({Duration maxAge = const Duration(days: 7)}) => DiskPictureCache(
     directory: () async => dir,
