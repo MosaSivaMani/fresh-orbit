@@ -69,6 +69,9 @@ step_env() {
     # E2E-1 added the DLT gateway and template ids; an env file generated before that cannot pass compose config.
     grep -qE '^SMS_DLT_GATEWAY=' "$ENV_FILE" \
       || die "$ENV_FILE predates the DLT SMS settings; delete it so it is generated again from .env.e2e.example."
+    # D322 / D325 made SMTP and the push provider required outside Development.
+    grep -qE '^PUSH_PROVIDER=' "$ENV_FILE" \
+      || die "$ENV_FILE predates the e-mail and push settings; delete it so it is generated again from .env.e2e.example."
   else
     log "Generating $ENV_FILE from .env.e2e.example (random secrets)."
     local line key
