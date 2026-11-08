@@ -39,6 +39,7 @@ public sealed class PlatformModuleModel : IModuleModel
             b.Property(x => x.Handler).HasMaxLength(OutboxMessage.MaxEventTypeLength).IsRequired();
             b.Property(x => x.Error).IsRequired();
             b.HasIndex(x => x.EventId);
+            b.HasIndex(x => x.FailedAt).HasFilter("replayed_at IS NULL");
         });
 
         modelBuilder.Entity<IdempotencyRecord>(b =>

@@ -10,7 +10,8 @@
 #   Environments `staging` and `production` (Settings → Environments). Add "Required reviewers" to get a manual
 #   approval before the deploy job runs.
 #   Environment secrets: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY (private key of the deploy user),
-#                        DEPLOY_KNOWN_HOSTS (output of `ssh-keyscan -t ed25519 <host>`; recommended),
+#                        DEPLOY_KNOWN_HOSTS (output of `ssh-keyscan -t ed25519 <host>`; required for production,
+#                        L-60; staging without it trusts the key on first use and warns),
 #                        DEPLOY_SSH_PORT (optional, default 22)
 #   Environment variables: DOMAIN (e.g. freshorbit.in), DEPLOY_PATH (optional, default /opt/freshorbit)
 #   Repository variables: SITE_URL_STAGING, SITE_URL_PRODUCTION (e.g. https://freshorbit.in). The website image inlines
@@ -58,6 +59,7 @@ jobs:
   release:
     name: Resolve release tag
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
       build: ${{ steps.tag.outputs.build }}
@@ -229,6 +231,7 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          TARGET: ${{ inputs.environment || 'staging' }}
         run: |
           set -euo pipefail
           for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY; do
@@ -242,6 +245,10 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           if [[ -n "${DEPLOY_KNOWN_HOSTS:-}" ]]; then
             printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          elif [[ "$TARGET" == production ]]; then
+            # L-60, D338: production never trusts a host key on first use.
+            echo "::error::Secret DEPLOY_KNOWN_HOSTS is required for production (ssh-keyscan -t ed25519 <host>; docs/runbooks/deploy.md §1)."
+            exit 1
           else
             echo "::warning::DEPLOY_KNOWN_HOSTS is not set; trusting the host key on first use."
             ssh-keyscan -p "$DEPLOY_PORT" -t ed25519 "$DEPLOY_HOST" > ~/.ssh/known_hosts

@@ -133,7 +133,10 @@ public sealed class CheckoutWorld
         MaxDeliveryAttempts = 3,
     };
 
-    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com");
+    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com")
+    {
+        TimeZone = "Asia/Kolkata",
+    };
 
     public static QuoteLine Fish(int grams) => Quote("KG", "GRAM", 129900, 4000, "PER_KG", grams, true, 8000, "Seer Fish", "Medium", "STEAKS", "Steaks");
 

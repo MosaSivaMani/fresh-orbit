@@ -94,6 +94,9 @@ Keeps Docker data (Postgres, media, images) off the boot disk so the instance ca
 
 ## 5. DNS on Cloudflare (free plan)
 
+Production (Hostinger, D127) follows `go-live.md` §2, which also has the CAA and the mail records (SPF, DKIM,
+DMARC). The steps below are the same for a staging domain.
+
 1. Add the domain to Cloudflare, then change the nameservers at the registrar to the two Cloudflare gives you.
 2. DNS records (all pointing at the server IP):
 
