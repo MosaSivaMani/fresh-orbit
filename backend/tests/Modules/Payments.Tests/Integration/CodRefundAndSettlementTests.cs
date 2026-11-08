@@ -115,7 +115,9 @@ public sealed class CodRefundAndSettlementTests(PaymentsDatabase database) : Pay
         (await CashCollectedAsync(rider, firstShipment, 10000)).EnsureSuccessStatusCode();
         var early = await CreateSettlementAsync(recorder, new { riderId, date = yesterday, receivedPaise = 10000 });
         early.StatusCode.Should().Be(HttpStatusCode.Created, await early.Content.ReadAsStringAsync(Ct));
-        (await ReadJsonAsync(early)).GetProperty("collectionsCount").GetInt32().Should().Be(1);
+        var earlyBody = await ReadJsonAsync(early);
+        earlyBody.GetProperty("collectionsCount").GetInt32().Should().Be(1);
+        var earlyId = earlyBody.GetProperty("id").GetGuid();
 
         // The rider collects again after the day's settlement was recorded.
         Factory.Clock.Advance(TimeSpan.FromHours(1));
@@ -133,7 +135,6 @@ public sealed class CodRefundAndSettlementTests(PaymentsDatabase database) : Pay
         body.GetProperty("differencePaise").GetInt64().Should().Be(0);
         body.GetProperty("collectionsCount").GetInt32().Should().Be(1);
         var nextId = body.GetProperty("id").GetGuid();
-        var earlyId = (await ReadJsonAsync(early)).GetProperty("id").GetGuid();
         (await LoadOrderPaymentsAsync(first.OrderId)).Single().CashSettlementId.Should().Be(earlyId);
         (await LoadOrderPaymentsAsync(second.OrderId)).Single().CashSettlementId.Should().Be(nextId);
     }
