@@ -12,6 +12,10 @@ on:
       - backend/data/sample/tools/make_images.py
       - .github/workflows/sample-images.yml
 
+# Read only, whatever the repository default is (L-70).
+permissions:
+  contents: read
+
 jobs:
   images:
     name: Make sample images
