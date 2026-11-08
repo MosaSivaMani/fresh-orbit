@@ -132,8 +132,10 @@ public sealed class CodRefundAndSettlementTests(PaymentsDatabase database) : Pay
         body.GetProperty("expectedPaise").GetInt64().Should().Be(25000);
         body.GetProperty("differencePaise").GetInt64().Should().Be(0);
         body.GetProperty("collectionsCount").GetInt32().Should().Be(1);
-        (await LoadOrderPaymentsAsync(first.OrderId)).Single().CashSettlementId.Should().NotBe((await LoadOrderPaymentsAsync(second.OrderId)).Single().CashSettlementId);
-        (await LoadOrderPaymentsAsync(second.OrderId)).Single().CashSettlementId.Should().Be(body.GetProperty("id").GetGuid());
+        var nextId = body.GetProperty("id").GetGuid();
+        var earlyId = (await ReadJsonAsync(early)).GetProperty("id").GetGuid();
+        (await LoadOrderPaymentsAsync(first.OrderId)).Single().CashSettlementId.Should().Be(earlyId);
+        (await LoadOrderPaymentsAsync(second.OrderId)).Single().CashSettlementId.Should().Be(nextId);
     }
 
     private static DateOnly LocalDate(DateTimeOffset utc) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(utc, Kolkata).DateTime);
