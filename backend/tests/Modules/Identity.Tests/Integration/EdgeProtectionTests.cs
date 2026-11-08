@@ -202,6 +202,54 @@ public sealed class EdgeProtectionTests(E1Database database) : IAsyncLifetime
         await ShouldBeRateLimitedAsync(await SendAsync(factory, HttpMethod.Get, "/api/v1/search/suggest?q=seer", "192.0.2.4"));
     }
 
+    /// <summary>ME-8 / MB-5: customers behind one carrier NAT address do not use up each other's search budget.</summary>
+    [Fact]
+    public async Task Search_limit_gives_each_signed_in_customer_their_own_budget_behind_one_ip()
+    {
+        const string sharedIp = "100.64.0.10";
+        var factory = Create(new()
+        {
+            ["RateLimiting:Search:PermitLimit"] = "1",
+            ["RateLimiting:Search:PerUserPermitLimit"] = "1",
+        });
+        using var first = factory.CreateCustomerClient();
+        using var second = factory.CreateCustomerClient();
+
+        (await SendAsync(first, HttpMethod.Get, "/api/v1/products", sharedIp)).StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
+        await ShouldBeRateLimitedAsync(await SendAsync(first, HttpMethod.Get, "/api/v1/search/suggest?q=seer", sharedIp));
+
+        (await SendAsync(second, HttpMethod.Get, "/api/v1/products", sharedIp)).StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
+        await ShouldBeRateLimitedAsync(await SendAsync(second, HttpMethod.Get, "/api/v1/products", sharedIp));
+
+        // Guests on that address keep the per-IP bucket, which the signed-in customers did not touch.
+        (await SendAsync(factory, HttpMethod.Get, "/api/v1/products", sharedIp)).StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
+        await ShouldBeRateLimitedAsync(await SendAsync(factory, HttpMethod.Get, "/api/v1/products", sharedIp));
+    }
+
+    /// <summary>ME-8 / MB-5: with the shipped ceilings, guests behind one address get past the old 60 searches and 20 codes.</summary>
+    [Fact]
+    public async Task Guests_behind_one_ip_get_past_the_old_search_and_otp_ceilings()
+    {
+        const string sharedIp = "100.64.0.20";
+        var shipped = new RateLimitingOptions();
+        var factory = Create(new()
+        {
+            ["RateLimiting:Search:PermitLimit"] = shipped.Search.PermitLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["RateLimiting:OtpRequest:PermitLimit"] = shipped.OtpRequest.PermitLimit.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        });
+
+        for (var i = 0; i < 61; i++)
+        {
+            (await SendAsync(factory, HttpMethod.Get, "/api/v1/search/suggest?q=seer", sharedIp)).StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
+        }
+
+        // 21 customers ask for a code from one address: past the old 20 at the edge and in Identity (per-phone limits still apply).
+        for (var i = 0; i < 21; i++)
+        {
+            (await RequestOtpAsync(factory, E1ApiFactory.NewPhone(), sharedIp, null)).StatusCode.Should().Be(HttpStatusCode.Accepted);
+        }
+    }
+
     [Fact]
     public async Task Public_endpoints_share_the_public_limit()
     {
@@ -283,6 +331,11 @@ public sealed class EdgeProtectionTests(E1Database database) : IAsyncLifetime
     private static async Task<HttpResponseMessage> SendAsync(EdgeApiFactory factory, HttpMethod method, string path, string peer, HttpContent? content = null, string? forwardedFor = null)
     {
         using var client = factory.CreateClient();
+        return await SendAsync(client, method, path, peer, content, forwardedFor);
+    }
+
+    private static async Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string path, string peer, HttpContent? content = null, string? forwardedFor = null)
+    {
         using var request = new HttpRequestMessage(method, path) { Content = content };
         request.Headers.Add(EdgeApiFactory.PeerHeader, peer);
         if (forwardedFor is not null)

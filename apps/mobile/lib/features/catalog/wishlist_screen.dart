@@ -63,7 +63,7 @@ class WishlistScreen extends ConsumerWidget {
                   SliverPadding(
                     padding: FreshLayout.list,
                     sliver: SliverGrid.builder(
-                      gridDelegate: productGridDelegate,
+                      gridDelegate: productGridDelegateOf(context),
                       itemCount: withProduct.length,
                       itemBuilder: (context, i) {
                         return ShopProductCard(product: withProduct[i].product!, index: i);

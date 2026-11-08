@@ -37,7 +37,7 @@ and `docs/database/README.md`. Swagger is generated from code and must match thi
 | Refresh reuse | Presenting an already-rotated token revokes the whole family → 401 `REFRESH_TOKEN_REUSED` |
 | Customer login | Phone + OTP (`/auth/otp/request`, `/auth/otp/verify`); account is created on first verify |
 | Staff login | Email + password (`/admin/auth/login`) |
-| Refresh flow | On 401 `TOKEN_EXPIRED` the client calls `POST /api/v1/auth/refresh` once, then retries; a second 401 → sign-in screen |
+| Refresh flow | An expired or invalid access token gets 401 `UNAUTHENTICATED` (the server does not tell expired from invalid). A client holding a refresh token calls `POST /api/v1/auth/refresh` once, then retries; a second 401 → sign-in screen (D307). Other 401 codes (`LOGIN_REQUIRED`) are refusals, not token problems |
 | Customer token on `/admin` | 403 `FORBIDDEN` |
 | Staff location scope | Staff without all-locations access acting on another location → 403 `LOCATION_ACCESS_DENIED`; lists are filtered silently |
 
@@ -157,13 +157,13 @@ Webhooks use the provider event id instead (§7).
 | Policy | Applies to | Limit | Key |
 |---|---|---|---|
 | `otp-request` | `POST /auth/otp/request` | 3 / 10 min and 10 / day | phone |
-| `otp-request-ip` | same | 20 / hour | IP |
-| `otp-verify` | `POST /auth/otp/verify` | 5 attempts per challenge (then `OTP_TOO_MANY_ATTEMPTS`), 30 / 10 min | challenge; IP |
+| `otp-request-ip` | same | 300 / hour (D314: carrier NAT puts many customers on one IP; the per-phone limits are the main guard) | IP |
+| `otp-verify` | `POST /auth/otp/verify` | 5 attempts per challenge (then `OTP_TOO_MANY_ATTEMPTS`), 300 / 10 min (D314) | challenge; IP |
 | `staff-login` | `POST /admin/auth/login` | 10 / 5 min per IP (HTTP limiter); 5 failed logins / 15 min per email + IP (Identity, IDN-R20); account `LOCKED` for 15 min after 10 consecutive failures, doubling per repeat lock up to 24 h (D33) | IP; email + IP |
 | `refresh` | `POST /auth/refresh` | 30 / min | IP |
 | `checkout` | `/checkout/preview`, `POST /orders`, payment initiate | 20 / min (preview), 5 / min (place, pay) | customer |
-| `search` | `GET /products`, `/search/*` | 60 / min | IP |
-| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 120 / min | IP |
+| `search` | `GET /products`, `/search/*` | 120 / min per signed-in customer, else 600 / min per IP (D314) | customer, else IP |
+| `public` | other anonymous endpoints (`/home`, `/categories*`, `/products/{slug}`, `/availability`, `/serviceability`, `/cities`, `/delivery-slots`, `/promotions`, `/business-profile`), `/me/stock-alerts*` (until the customer limiter exists) and every `/cart*` route except `PUT /cart/coupon` (guests use the cart; D62) | 240 / min per signed-in customer, else 1200 / min per IP (D314) | customer, else IP |
 | `coupon` | `PUT /cart/coupon` | 10 / 10 min | customer (IP when anonymous) |
 | `upload` | `POST /orders/{orderId}/complaints/{complaintId}/photos` | 20 / hour | customer (IP when anonymous) |
 | `customer` | other customer endpoints | 300 / min | user |
@@ -193,7 +193,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | VALIDATION_FAILED | 422 | One or more fields invalid; see `errors` |
 | MALFORMED_REQUEST | 400 | Body or parameter cannot be read |
 | UNAUTHENTICATED | 401 | No or invalid token |
-| TOKEN_EXPIRED | 401 | Access token expired; refresh |
+| TOKEN_EXPIRED | 401 | Reserved, not sent today: an expired token gets `UNAUTHENTICATED` (D307). Clients treat both the same |
 | LOGIN_REQUIRED | 401 | Customer login needed (checkout with guest cart) |
 | FORBIDDEN | 403 | Missing permission |
 | LOCATION_ACCESS_DENIED | 403 | Staff not allowed at this fulfillment location |
