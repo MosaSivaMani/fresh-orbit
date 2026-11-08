@@ -34,6 +34,13 @@
     <!-- Hangfire.Core depends on Newtonsoft.Json >= 11.0.1 (vulnerable); pin the patched version. -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
+  <ItemGroup Label="Telemetry">
+    <!-- OpenTelemetry (Apache-2.0), BE-8 / D332: registered only when Telemetry:OtlpEndpoint is set. -->
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.2" />
+  </ItemGroup>
   <ItemGroup Label="Tests">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />

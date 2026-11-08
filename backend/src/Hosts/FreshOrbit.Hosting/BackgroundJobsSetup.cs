@@ -43,6 +43,10 @@ public static class BackgroundJobsSetup
         services.AddScoped<RecurringJobRunner>();
         services.AddHostedService<RecurringJobScheduler>();
         services.AddHostedService<OutboxDispatcherService>();
+
+        // Platform retention purge (SEC-13, D336); job and outbox metrics (BE-8, D333).
+        services.AddFreshOrbitPlatformJobs();
+        services.AddFreshOrbitJobMetrics(configuration);
         return services;
     }
 }

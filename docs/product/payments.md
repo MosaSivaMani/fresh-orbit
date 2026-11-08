@@ -115,6 +115,7 @@ Uses `.Public` of: Ordering (order facts), Delivery (shipment, rider), Identity 
 | PAY-R22 | **Issues.** `reconciliation_issues(kind, subject_type, subject_id, order_id, details jsonb, status, detected_at, resolved_at, resolved_by, note)`; unique `(kind, subject_id)` where status = OPEN (no duplicates). New OPEN issue → `PaymentAlertRaised` (Notifications sends `STAFF_PAYMENT_ALERT` to staff with `payments.view` at the location). |
 | PAY-R23 | **Location scoping.** Admin lists filter by `fulfillment_location_id` on payments/refunds/settlements (S1, S5, S7) against the staff `loc` claim; detail of another location → 403 `LOCATION_ACCESS_DENIED`. Webhook-event list is unscoped and needs `payments.view` + all-locations access. |
 | PAY-R24 | **Audit.** Every admin write (refund request/approve/reject/mark-paid, cash collected, settlement create/dispute/resolve, reprocess) writes an audit entry via the platform audit hook. Customer UPI ids are stored but masked in lists (`pri***@okicici`). |
+| PAY-R25 | **Webhook retention (SEC-13, D335).** The daily Worker job `payments.purge-webhook-payloads` (02:40 UTC) sets `payload` to the JSON string `"PURGED"` and `headers` to `{}` on PROCESSED, IGNORED and REJECTED webhook events received more than 30 days ago, in one set-based update. The row and its summary columns stay (provider, provider event id, type, status, `payload_sha256`, times, error), so the duplicate guard (PAY-R7) still holds. RECEIVED and ERROR rows are kept whole (they can still be reprocessed). |
 
 ## 4. Events
 
@@ -169,6 +170,7 @@ Uses `.Public` of: Ordering (order facts), Delivery (shipment, rider), Identity 
 | DisputeCashSettlement | `POST /api/v1/admin/cash-settlements/{id}/dispute` (IM, `cash.settle`) | settlement | OPEN/SETTLED; `reason` required | DISPUTED | `CashSettlementRecorded` |
 | ResolveCashSettlement | G2 `POST /api/v1/admin/cash-settlements/{id}/settle` (IM, `cash.settle`) | settlement | OPEN/DISPUTED; `note`; resolver ≠ creator if difference ≠ 0 | SETTLED, `settled_by` | `CashSettlementRecorded` |
 | ReconcilePayments | Worker hourly | candidates PAY-R21 | PAY-R21 | status changes + issues | as webhook + `PaymentAlertRaised` |
+| PurgeWebhookPayloads | Worker daily 02:40 UTC | — | PAY-R25 | `payload`, `headers` of old finished events | — |
 | ResolveIssue | G3 `POST /api/v1/admin/payment-issues/{id}/resolve` | issue | OPEN | RESOLVED | — |
 | Queries | `GET /orders/{id}/payments`, `GET /orders/{id}/refunds` (customer, own order else 404); `GET /admin/payments`, `/admin/orders/{id}/payments`, `/admin/webhook-events`, `/admin/refunds`, `/admin/cash-settlements` | one SQL each, location-scoped (PAY-R23) | | | |
 

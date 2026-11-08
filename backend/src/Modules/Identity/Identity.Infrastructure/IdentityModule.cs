@@ -6,6 +6,7 @@ using FreshOrbit.Identity.Application.Shared;
 using FreshOrbit.Identity.Application.Staff;
 using FreshOrbit.Identity.Domain.Shared;
 using FreshOrbit.Identity.Infrastructure.Endpoints;
+using FreshOrbit.Identity.Infrastructure.Jobs;
 using FreshOrbit.Identity.Infrastructure.Persistence;
 using FreshOrbit.Identity.Infrastructure.Persistence.Repositories;
 using FreshOrbit.Identity.Infrastructure.Public;
@@ -14,6 +15,7 @@ using FreshOrbit.Identity.Infrastructure.Seeding;
 using FreshOrbit.Identity.Public;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.EntityFramework.Seeding;
+using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Modules;
 using Microsoft.AspNetCore.Routing;
@@ -77,6 +79,10 @@ public sealed class IdentityModule : IModule
 
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IReferenceDataLoader, IdentityReferenceDataLoader>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISampleDataLoader, IdentitySampleDataLoader>());
+
+        // SEC-13 / D77 retention purge (D334).
+        services.AddScoped<IdentityRetentionJob>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, IdentityJobRegistration>());
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints) => IdentityEndpoints.Map(endpoints);

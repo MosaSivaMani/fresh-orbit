@@ -27,6 +27,8 @@ x-logging: &logging
 x-backend-env: &backend-env
   ConnectionStrings__FreshOrbit: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-freshorbit};Username=${POSTGRES_USER:-freshorbit};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required};Maximum Pool Size=40;Gss Encryption Mode=Disable"
   Serilog__MinimumLevel__Default: ${LOG_LEVEL:-Information}
+  # OpenTelemetry traces and metrics over OTLP/HTTP; empty = telemetry off (D332, docs/runbooks/telemetry.md).
+  Telemetry__OtlpEndpoint: ${TELEMETRY_OTLP_ENDPOINT:-}
   # Stamped into logs; times in the database are UTC regardless.
   TZ: UTC
 

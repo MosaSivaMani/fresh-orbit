@@ -95,6 +95,7 @@ public sealed class PaymentsModule : IModule
         services.AddEventHandler<RefundApproved, RefundApprovedHandler>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, PaymentsJobRegistration>());
         services.TryAddScoped<ReconciliationJob>();
+        services.TryAddScoped<WebhookPayloadRetentionJob>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<ISamplePurgeParticipant, PaymentsSamplePurgeParticipant>());
     }
 

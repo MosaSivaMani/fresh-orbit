@@ -23,4 +23,4 @@
 | **Owner testing** (demo app on an Android phone; whole store in a GitHub Codespace) | `runbooks/owner-testing.md` |
 | **Free public demo** (website, admin and API on Render + Neon free plans, sample store only, shareable links) | `runbooks/render-demo.md` |
 | **Mobile signing and release builds** (demo key secrets, upload key, launcher icons) | `runbooks/mobile-release.md` |
-| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`) |
+| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`; telemetry and retention purges: `runbooks/telemetry.md`) |
