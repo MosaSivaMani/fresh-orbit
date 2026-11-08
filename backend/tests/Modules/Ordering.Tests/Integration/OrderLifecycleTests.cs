@@ -95,6 +95,38 @@ public sealed class OrderLifecycleTests(OrderingDatabase database) : OrderingTes
     }
 
     [Fact]
+    public async Task With_no_overweight_allowance_a_heavier_pack_costs_the_shown_price_and_a_lighter_pack_costs_less()
+    {
+        // D347: the reference default allowance is 0 — the price shown is the most the customer pays.
+        World.Policy = World.Policy with { MaxOverweightBp = 0 };
+        var staff = Staff();
+
+        var heavyId = await PlaceOrderAsync();
+        var placed = await LoadOrderAsync(heavyId);
+        placed!.Items.First(i => i.LineNo == 1).MaxChargeableQuantity.Should().Be(500);
+        placed.MaxTotalPaise.Should().Be(placed.TotalPaise);
+        await StartPreparingAsync(staff, heavyId);
+        var heavy = await ReadJsonAsync(await PackAsync(staff, heavyId, 580, 2));
+        var heavyFish = heavy.GetProperty("lines")[0];
+        heavyFish.GetProperty("packed").GetProperty("value").GetInt32().Should().Be(580);
+        heavyFish.GetProperty("charged").GetProperty("value").GetInt32().Should().Be(500);
+        heavyFish.GetProperty("capped").GetBoolean().Should().BeTrue();
+        heavyFish.GetProperty("adjustmentPaise").GetInt64().Should().Be(0);
+        heavy.GetProperty("finalTotalPaise").GetInt64().Should().Be(placed.TotalPaise);
+        heavy.GetProperty("amountDuePaise").GetInt64().Should().Be(placed.TotalPaise);
+
+        var lightId = await PlaceOrderAsync();
+        await StartPreparingAsync(staff, lightId);
+        var light = await ReadJsonAsync(await PackAsync(staff, lightId, 450, 2));
+        var lightFish = light.GetProperty("lines")[0];
+        lightFish.GetProperty("charged").GetProperty("value").GetInt32().Should().Be(450);
+        lightFish.GetProperty("capped").GetBoolean().Should().BeFalse();
+        lightFish.GetProperty("adjustmentPaise").GetInt64().Should().BeNegative();
+        light.GetProperty("finalTotalPaise").GetInt64().Should().BeLessThan(World.EstimatedTotalPaise);
+        light.GetProperty("amountDuePaise").GetInt64().Should().Be(light.GetProperty("finalTotalPaise").GetInt64());
+    }
+
+    [Fact]
     public async Task Stale_or_missing_if_match_is_refused()
     {
         var orderId = await PlaceOrderAsync();

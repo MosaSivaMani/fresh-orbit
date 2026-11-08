@@ -15,7 +15,7 @@ export default function TermsPage() {
       sections={[
         {
           heading: "Prices",
-          body: "Prices depend on where we deliver, so we show them once you enter your pincode. The total at checkout is the one we charge, never more than the maximum shown for weighed items.",
+          body: "Prices depend on where we deliver, so we show them once you enter your pincode. The price you see is the most you pay: if a weighed item's pack weighs less than you ordered, you pay less or we refund the difference, and if it weighs more, the extra is free.",
         },
         {
           heading: "Orders",

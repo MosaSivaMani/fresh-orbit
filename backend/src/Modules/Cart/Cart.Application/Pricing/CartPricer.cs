@@ -56,7 +56,10 @@ public sealed class CartPricer(
     IOrderingApi ordering,
     IDeliveryFeeTaxRate deliveryFeeTax)
 {
-    /// <summary>The net-weight note shown with weight-based items.</summary>
+    /// <summary>
+    /// The overweight note shown with weight-based items, only when a non-zero allowance is configured; at 0 (the
+    /// default, D347) extra packed weight is free and no note is sent.
+    /// </summary>
     public static string WeightNote(int maxOverweightBp)
         => $"Weight-based items are charged on actual net weight, up to {(maxOverweightBp / 100m).ToString("0.##", CultureInfo.InvariantCulture)}% over the ordered weight.";
 

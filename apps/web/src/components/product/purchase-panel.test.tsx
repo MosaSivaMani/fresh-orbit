@@ -2,7 +2,13 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { cartWithSeer, emptyCart, problem, seerFish } from "../../../test/fixtures";
+import {
+  cartWithAllowance,
+  cartWithSeer,
+  emptyCart,
+  problem,
+  seerFish,
+} from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
@@ -10,7 +16,7 @@ import { PINCODE_COOKIE, writeBrowserCookie } from "@/lib/cookies";
 import { PurchasePanel } from "./purchase-panel";
 
 describe("PurchasePanel", () => {
-  it("adds the chosen variant, preparation and weight, then shows the server's estimate and maximum", async () => {
+  it("adds the chosen variant, preparation and weight, then shows the server's price plainly", async () => {
     writeBrowserCookie(PINCODE_COOKIE, "600041");
     let cart = emptyCart;
     let sent: { body: unknown; pincode: string | null } | null = null;
@@ -32,9 +38,32 @@ describe("PurchasePanel", () => {
       body: { variantId: "v1", preparationCode: "STEAK", quantity: { value: 500, unit: "GRAM" } },
       pincode: "600041",
     });
-    // Both amounts are the server's cart line values (₹669.50 and ₹736.45), only formatted here.
-    expect(screen.getByText(/Estimated ₹669\.50/)).toBeInTheDocument();
-    expect(screen.getByText(/at most ₹736\.45/)).toBeInTheDocument();
+    // D347: the server's maximum equals its line total, so the price is shown plainly, only formatted here.
+    expect(screen.getByText("₹669.50.")).toBeInTheDocument();
+    expect(screen.queryByText(/at most/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/estimat/i)).not.toBeInTheDocument();
+    // The server's net-weight note, shown as sent.
+    expect(
+      screen.getByText("Prices are for net weight after cleaning. If your pack weighs less, you pay less."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the server's maximum for the cart line when an over-weight allowance is configured", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let cart = emptyCart;
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cart)),
+      http.post(`${API}/cart/items`, () => {
+        cart = cartWithAllowance;
+        return HttpResponse.json(cartWithAllowance);
+      }),
+    );
+    renderWithProviders(<PurchasePanel product={seerFish} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add to cart" }));
+
+    expect(await screen.findByText(/In your cart: 500 g/)).toBeInTheDocument();
+    expect(screen.getByText(/you pay at most ₹736\.45 if packed up to 550 g/)).toBeInTheDocument();
   });
 
   it("shows the server's field message when the quantity is refused", async () => {
@@ -78,7 +107,29 @@ describe("PurchasePanel", () => {
     expect(screen.getByRole("button", { name: "Set pincode to buy" })).toBeEnabled();
   });
 
-  it("shows the server's quote for the chosen size, cut and weight before adding", async () => {
+  it("shows the server's quote plainly when its maximum equals the price (D347)", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    server.use(
+      http.get(`${API}/price-quote`, () =>
+        HttpResponse.json({
+          variantId: "v1",
+          preparationCode: "STEAK",
+          quantity: { value: 500, unit: "GRAM" },
+          maxChargeableQuantity: { value: 500, unit: "GRAM" },
+          estimatedTotalPaise: 66950,
+          maxChargeablePaise: 66950,
+          weightNote: null,
+        }),
+      ),
+    );
+    renderWithProviders(<PurchasePanel product={seerFish} />);
+
+    expect(await screen.findByText("₹669.50")).toBeInTheDocument();
+    expect(screen.queryByText(/at most/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/estimat/i)).not.toBeInTheDocument();
+  });
+
+  it("shows the server's quote with its maximum when an over-weight allowance is configured", async () => {
     writeBrowserCookie(PINCODE_COOKIE, "600041");
     let asked: URLSearchParams | null = null;
     server.use(

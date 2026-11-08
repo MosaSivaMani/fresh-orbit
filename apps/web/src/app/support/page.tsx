@@ -22,8 +22,8 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     a: "Prices and availability are set per store. Once you enter your pincode we show what the store that delivers to you sells, at its price.",
   },
   {
-    q: "Why is my total an estimate?",
-    a: "Weighed items are cleaned and weighed when your order is packed. You pay for the actual net weight, which can be a little more or less than ordered, but never above the maximum shown in your cart and at checkout.",
+    q: "Can my total change after weighing?",
+    a: "Only down. Weighed items are cleaned and weighed when your order is packed, and the price you see is the most you pay. If your pack weighs less than you ordered, you pay less, or we refund the difference if you paid online. If it weighs more, the extra is free.",
   },
   {
     q: "What does the preparation option change?",

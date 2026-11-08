@@ -389,7 +389,14 @@ class _OrderReceipt extends StatelessWidget {
   Widget build(BuildContext context) {
     final finalAmounts = order.finalAmounts;
     final amounts = finalAmounts ?? order.estimate;
-    final totalLabel = finalAmounts == null ? 'Estimated total' : 'Final total';
+    // D347: before packing the total is the most the customer pays; weighed items can only come down. The
+    // "Estimated" wording stays only when the server allows an over-weight charge (max above ordered).
+    final allowance = order.hasOverWeightAllowance;
+    final totalLabel = finalAmounts != null
+        ? 'Final total'
+        : allowance
+        ? 'Estimated total'
+        : 'Total';
     final rows = <ReceiptRow>[
       for (final item in order.items)
         ReceiptRow(
@@ -402,7 +409,7 @@ class _OrderReceipt extends StatelessWidget {
             if (item.status != 'ACTIVE') humanizeCode(item.status),
           ].join(', '),
           semanticsLabel:
-              '${item.productName}, ${item.finalTotalPaise == null ? 'estimated' : 'final'} '
+              '${item.productName}, ${item.finalTotalPaise != null ? 'final ' : allowance ? 'estimated ' : ''}'
               '${formatRupees(item.finalTotalPaise ?? item.estimatedTotalPaise)}',
         ),
       ReceiptRow('Delivery', formatRupees(amounts.deliveryFeePaise)),
@@ -427,10 +434,13 @@ class _OrderReceipt extends StatelessWidget {
       total: order.amountDuePaise > 0
           ? ReceiptRow('To pay at the door', formatRupees(order.amountDuePaise))
           : ReceiptRow(totalLabel, formatRupees(amounts.totalPaise)),
-      note: finalAmounts == null
+      note: finalAmounts != null
+          ? null
+          : allowance
           ? 'The final total is set when your order is weighed and packed, never above the maximum shown at '
                 'checkout.'
-          : null,
+          : 'Weighed items can only come down after weighing: if your pack weighs less, you pay less — never '
+                'more.',
     );
   }
 }

@@ -1,19 +1,24 @@
 import { formatRupees } from "@fresh/core";
 import { BillBox, type BillRow } from "@fresh/ui";
 import { type CartCoupon, type CartTotals } from "@/api/types/cart";
+import { WEIGHED_NOTE } from "@/lib/weighed";
 
 /**
  * The bill box with totals exactly as the server sent them (docs/api §5.2). This component formats paise; it never
- * adds, subtracts or derives an amount.
+ * adds, subtracts or derives an amount. When the server's maximum equals its total (D347: the price shown is the most
+ * you pay) the total is shown plainly; only a configured over-weight allowance (maximum above total) adds "at most".
  */
 export function OrderSummary({
   totals,
   coupon,
-  totalLabel = "Estimated total",
+  totalLabel = "Total",
+  hasWeighedItems = false,
 }: {
   totals: CartTotals;
   coupon: CartCoupon | null;
   totalLabel?: string;
+  /** Some line is sold by weight: shows the plain net-weight note when no maximum above the total applies. */
+  hasWeighedItems?: boolean;
 }) {
   const rows: BillRow[] = [{ id: "items", label: "Items", value: formatRupees(totals.itemsPaise) }];
   if (totals.preparationPaise > 0) {
@@ -41,29 +46,33 @@ export function OrderSummary({
   });
 
   const weighed = totals.maxTotalPaise > totals.estimatedTotalPaise;
+  const plainWeightNote = !weighed && hasWeighedItems;
   const freeDeliveryShort =
     totals.freeDeliveryShortfallPaise != null && totals.freeDeliveryShortfallPaise > 0;
   const minOrderShort =
     totals.minOrderShortfallPaise != null &&
     totals.minOrderShortfallPaise > 0 &&
     totals.minOrderPaise != null;
+  const hasNotes =
+    weighed || plainWeightNote || totals.taxPaise > 0 || freeDeliveryShort || minOrderShort;
 
   return (
     <BillBox
       rows={rows}
       total={{ label: totalLabel, value: formatRupees(totals.estimatedTotalPaise) }}
       notes={
-        (weighed || totals.taxPaise > 0 || freeDeliveryShort || minOrderShort) && (
+        hasNotes && (
           <>
             {weighed && (
               <p>
-                Weighed items are charged on actual net weight. You will pay at most{" "}
+                Weighed items are charged on actual net weight. You pay at most{" "}
                 <span className="text-text font-semibold">
                   {formatRupees(totals.maxTotalPaise)}
                 </span>
                 .
               </p>
             )}
+            {plainWeightNote && <p>{WEIGHED_NOTE}</p>}
             {totals.taxPaise > 0 && <p>Prices include taxes of {formatRupees(totals.taxPaise)}.</p>}
             {freeDeliveryShort && (
               <p className="bg-teal-soft text-accent-text rounded-lg p-2 font-semibold">

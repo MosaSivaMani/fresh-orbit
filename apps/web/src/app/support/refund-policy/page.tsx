@@ -18,7 +18,7 @@ export default function RefundPolicyPage() {
         },
         {
           heading: "Weight differences",
-          body: "Weighed items are charged on their actual net weight after cleaning, never above the maximum shown in your cart and at checkout.",
+          body: "Weighed items are priced on net weight after cleaning, and the price you see is the most you pay. If your pack weighs less than you ordered, you pay less on delivery, or we refund the difference if you paid online. If it weighs more, the extra is free.",
         },
         {
           heading: "How we resolve it",

@@ -3,7 +3,9 @@
 // quantity stepper bounded by the server's min / max / step / maxOrderableNow, and add to cart.
 //
 // Prices: the screen shows the server's unit price and preparation charge, and for the chosen size, cut and
-// quantity the server's estimate and maximum (GET /price-quote); the app computes none of them. A sold-out
+// quantity the server's price (GET /price-quote); the app computes none of them. D347: the price you see is the
+// most you pay, so the server's maximum equals its estimate and the price is shown plainly; "Estimated" and
+// "You pay at most" appear only if the server sends a larger maximum (an over-weight allowance). A sold-out
 // size offers "Notify me", a back-in-stock alert at the store that serves the pincode (POST /me/stock-alerts).
 
 import 'package:flutter/material.dart';
@@ -98,7 +100,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       final line = cart.lines.where((l) => l.variantId == v.id && l.preparation?.code == prep).firstOrNull;
       final text = line == null
           ? 'Added to cart.'
-          : 'Added. Estimated ${formatRupees(line.estimatedLineTotalPaise)}, at most ${formatRupees(line.maxLineTotalPaise)}.';
+          : line.maxLineTotalPaise > line.estimatedLineTotalPaise
+          ? 'Added. Estimated ${formatRupees(line.estimatedLineTotalPaise)}, '
+                'at most ${formatRupees(line.maxLineTotalPaise)}.'
+          : 'Added. ${formatRupees(line.estimatedLineTotalPaise)} for ${formatQuantity(line.quantity)}.';
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -407,9 +412,11 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   InfoBanner(
                     tone: BannerTone.success,
                     title: 'In your cart: ${formatQuantity(line.quantity)}',
-                    text:
-                        'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
-                        '${formatRupees(line.maxLineTotalPaise)} (up to ${formatQuantity(line.maxChargeableQuantity)}).',
+                    text: line.maxLineTotalPaise > line.estimatedLineTotalPaise
+                        ? 'Estimated ${formatRupees(line.estimatedLineTotalPaise)}. You pay at most '
+                              '${formatRupees(line.maxLineTotalPaise)} '
+                              '(up to ${formatQuantity(line.maxChargeableQuantity)}).'
+                        : '${formatRupees(line.estimatedLineTotalPaise)} for ${formatQuantity(line.quantity)}.',
                   ),
                 ],
                 const SizedBox(height: FreshSpacing.s3),
@@ -656,8 +663,10 @@ class _SoldOutCard extends StatelessWidget {
   }
 }
 
-/// The server's estimate for the chosen size, cut and quantity (GET /price-quote). Hidden when the server
+/// The server's price for the chosen size, cut and quantity (GET /price-quote). Hidden when the server
 /// gives none (no price at this store, or the quote is refused); the cart prices the line again when added.
+/// D347: shown plainly ("₹670 for 500 g"); "Estimated" and the at-most line only when the server's maximum is
+/// above its estimate (an over-weight allowance is configured).
 class _Estimate extends ConsumerWidget {
   const _Estimate({required this.request});
 
@@ -669,8 +678,10 @@ class _Estimate extends ConsumerWidget {
     return switch (quote) {
       AsyncData(:final value) => PriceEstimateRow(
         key: const Key('priceQuote'),
-        estimate: 'Estimated ${formatRupees(value.estimatedTotalPaise)} for ${formatQuantity(value.quantity)}',
-        atMost: value.maxChargeablePaise == null
+        estimate: _hasAllowance(value)
+            ? 'Estimated ${formatRupees(value.estimatedTotalPaise)} for ${formatQuantity(value.quantity)}'
+            : '${formatRupees(value.estimatedTotalPaise)} for ${formatQuantity(value.quantity)}',
+        atMost: !_hasAllowance(value)
             ? null
             : value.maxChargeableQuantity == null
             ? 'You pay at most ${formatRupees(value.maxChargeablePaise!)}.'
@@ -681,4 +692,8 @@ class _Estimate extends ConsumerWidget {
       _ => const SkeletonBox(height: 48),
     };
   }
+
+  /// The server's maximum is above its estimate: an over-weight allowance is configured (D347 default: none).
+  static bool _hasAllowance(PriceQuote q) =>
+      q.maxChargeablePaise != null && q.maxChargeablePaise! > q.estimatedTotalPaise;
 }

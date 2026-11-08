@@ -2,7 +2,14 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { cartWithSeer, emptyCart, problem, seerFish, seerLine } from "../../../test/fixtures";
+import {
+  cartWithAllowance,
+  cartWithSeer,
+  emptyCart,
+  problem,
+  seerFish,
+  seerLine,
+} from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
@@ -46,7 +53,6 @@ describe("CartView", () => {
 
     const items = await screen.findByRole("list", { name: "Items in your cart" });
     expect(within(items).getByText("₹669.50")).toBeInTheDocument();
-    expect(within(items).getByText("at most ₹736.45")).toBeInTheDocument();
     const bill = screen.getByRole("region", { name: "Bill details" });
     expect(within(bill).getByText("Free")).toBeInTheDocument();
     expect(within(bill).getByText("₹669.50")).toBeInTheDocument();
@@ -56,6 +62,32 @@ describe("CartView", () => {
       "href",
       "/login?next=%2Fcheckout",
     );
+  });
+
+  it("shows the price plainly when the server's maximum equals it (D347)", async () => {
+    server.use(...cartReads());
+    renderWithProviders(<CartView />);
+
+    const bill = await screen.findByRole("region", { name: "Bill details" });
+    expect(within(bill).getByText("Total")).toBeInTheDocument();
+    expect(
+      within(bill).getByText(/if your pack weighs less, you pay less, never more/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/at most/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/estimat/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/packed up to/i)).not.toBeInTheDocument();
+  });
+
+  it("still shows the server's maximum when an over-weight allowance is configured", async () => {
+    server.use(...cartReads(cartWithAllowance));
+    renderWithProviders(<CartView />);
+
+    const items = await screen.findByRole("list", { name: "Items in your cart" });
+    expect(within(items).getByText("₹669.50")).toBeInTheDocument();
+    expect(within(items).getByText("at most ₹736.45")).toBeInTheDocument();
+    const bill = screen.getByRole("region", { name: "Bill details" });
+    expect(within(bill).getByText(/You pay at most/)).toHaveTextContent("₹736.45");
+    expect(within(bill).queryByText(/never more/)).not.toBeInTheDocument();
   });
 
   it("steps the quantity by the cart line's order step and shows the server's new line", async () => {

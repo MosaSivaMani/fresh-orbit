@@ -31,7 +31,7 @@ public static class OrderFactory
         string productName = "Product",
         string variantName = "Variant",
         string? preparationName = null,
-        int maxOverweightBp = 1000,
+        int maxOverweightBp = 1000, // a non-zero allowance so the cap is exercised; the reference default is 0 (D347)
         Guid? variantId = null)
     {
         var unit = sellUnit == "KG" ? PricedUnit.Gram : PricedUnit.Piece;

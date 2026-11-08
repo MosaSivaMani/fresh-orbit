@@ -125,6 +125,7 @@ public sealed class CheckoutWorld
 
     public IPricingApi Pricing { get; } = Substitute.For<IPricingApi>();
 
+    /// <summary>A non-zero overweight allowance (1000 bp) so the cap is exercised; the reference default is 0 (D347).</summary>
     public OrderPolicy Policy { get; set; } = new(15, 1000, "CONFIRMED", 500000)
     {
         EnabledPaymentMethods = ["COD", "UPI_ON_DELIVERY", "ONLINE"],

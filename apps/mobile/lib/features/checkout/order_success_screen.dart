@@ -86,10 +86,13 @@ class _OrderPlaced extends StatelessWidget {
               if (address != null)
                 FreshTicketRow(icon: Icons.location_on_outlined, label: 'Deliver to', value: address.oneLine),
             ],
-            totalLabel: 'Estimated total',
+            // D347: the price you see is the most you pay. "Estimated" only when an over-weight allowance is set.
+            totalLabel: order.hasOverWeightAllowance ? 'Estimated total' : 'Total',
             totalValue: total,
-            totalSemanticsLabel: 'Estimated total $total',
-            note: 'The final total is set when your order is weighed and packed.',
+            totalSemanticsLabel: '${order.hasOverWeightAllowance ? 'Estimated total' : 'Total'} $total',
+            note: order.hasOverWeightAllowance
+                ? 'The final total is set when your order is weighed and packed.'
+                : 'Priced on net weight after cleaning. If your pack weighs less, you pay less — never more.',
           ),
         ),
         Padding(

@@ -27,7 +27,8 @@ lawyer have approved them (the web team's job, not done here).
 - **Check with lawyer:** marks a point a lawyer (or, for food safety, a food-safety consultant; for GST, the CA) must
   confirm before publishing.
 - *(setting)* marks a number that comes from the order policy or store settings in the admin. Current defaults:
-  over-weight cap 10 %, pay-on-delivery limit ₹5,000, complaint window 24 hours, substitution answer 15 minutes,
+  over-weight charge 0 % (D347: the price shown is the most the customer pays), pay-on-delivery limit ₹5,000,
+  complaint window 24 hours, substitution answer 15 minutes,
   online payment window 15 minutes, customer can cancel until *Confirmed*, 3 delivery attempts
   (`backend/data/reference/settings/order-policies.json`). If the business changes a setting, the published text must
   change too; better, the website should read these values from the API.
@@ -85,9 +86,11 @@ lawyer have approved them (the web team's job, not done here).
    applies to us; whether a resident nodal contact (rule 4(1)) is needed for our business type.
 8. **Complaint window and late delivery.** Whether 24 hours is reasonable for perishables, and whether a late delivery
    must be fully refunded (E-Commerce Rules rule 7).
-9. **Weight over-charge.** Whether charging up to 10 % above the ordered weight, with a "most you could pay" shown at
-   checkout, is clear consent; whether Legal Metrology rules treat our packs as pre-packaged (declarations on the
-   product page) and require stamped scales.
+9. **Weight over-charge.** ~~Whether charging up to 10 % above the ordered weight, with a "most you could pay" shown
+   at checkout, is clear consent~~ — **resolved by D347** (2026-11-08): no over-weight charge; the price shown is the
+   most the customer pays, extra weight is free, a lighter pack costs less. Still open: whether Legal Metrology rules
+   treat our packs (including the fixed net-weight packs, D348) as pre-packaged (declarations on the product page) and
+   require stamped scales.
 10. **Coupon on a returned order** stays used; fair when the failure was not the customer's?
 11. **Account blocking** grounds and notice; **pricing-error** clause; **limitation of liability** and force majeure;
     **jurisdiction** clause given Consumer Protection Act s.34.

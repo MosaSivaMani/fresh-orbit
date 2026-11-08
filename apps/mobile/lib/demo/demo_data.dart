@@ -182,7 +182,7 @@ Json? demoProductDetail(String slug) {
         },
       },
     ],
-    'netWeightNote': 'You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.',
+    'netWeightNote': 'Prices are for net weight after cleaning. If your pack weighs less, you pay less.',
     'isWishlisted': false,
   };
 }
@@ -229,7 +229,6 @@ Json _line({
   required int itemPaise,
   required int prepPaise,
   required int estimated,
-  required int max,
 }) => {
   'id': id,
   'productId': productId,
@@ -242,7 +241,8 @@ Json _line({
   'preparation': {'code': 'CLEANED', 'name': 'Cleaned', 'yieldBp': 8000},
   'quantity': {'value': 500, 'unit': 'GRAM'},
   'estimatedNetQuantity': {'value': 500, 'unit': 'GRAM'},
-  'maxChargeableQuantity': {'value': 550, 'unit': 'GRAM'},
+  // D347: no over-weight charge, so the most charged is the ordered weight and the maximum is the estimate.
+  'maxChargeableQuantity': {'value': 500, 'unit': 'GRAM'},
   'unitPricePaise': unitPrice,
   'priceUnit': 'KG',
   'itemPaise': itemPaise,
@@ -251,7 +251,7 @@ Json _line({
   'taxRateBp': 0,
   'taxPaise': 0,
   'estimatedLineTotalPaise': estimated,
-  'maxLineTotalPaise': max,
+  'maxLineTotalPaise': estimated,
   'availability': {'status': 'IN_STOCK', 'message': null},
   'isSellable': true,
   'issues': <Object?>[],
@@ -267,7 +267,6 @@ final _cartLines = [
     itemPaise: 64950,
     prepPaise: 1500,
     estimated: 66450,
-    max: 73095,
   ),
   _line(
     id: 'line2',
@@ -278,7 +277,6 @@ final _cartLines = [
     itemPaise: 44950,
     prepPaise: 1500,
     estimated: 46450,
-    max: 51095,
   ),
 ];
 
@@ -291,7 +289,7 @@ const _cartTotals = <String, Object?>{
   'deliveryFeeWaived': true,
   'taxPaise': 0,
   'estimatedTotalPaise': 112900,
-  'maxTotalPaise': 124190,
+  'maxTotalPaise': 112900,
   'minOrderPaise': 29900,
   'minOrderShortfallPaise': 0,
   'freeDeliveryShortfallPaise': 0,
@@ -307,7 +305,7 @@ Json demoCart() => {
   'totals': _cartTotals,
   'canCheckout': true,
   'checkoutBlockers': <Object?>[],
-  'messages': ['Weight-based items are charged on actual net weight, up to 10% over the ordered weight.'],
+  'messages': <String>[],
 };
 
 Json demoPreview(String addressId, String slotId, String paymentMethod) => {
@@ -390,13 +388,14 @@ Json? demoOrder(String id) {
         'variantName': 'Medium',
         'preparationName': 'Cleaned',
         'orderedQuantity': {'value': 500, 'unit': 'GRAM'},
-        'maxChargeableQuantity': {'value': 550, 'unit': 'GRAM'},
+        'maxChargeableQuantity': {'value': 500, 'unit': 'GRAM'},
+        // D347: packed heavier than ordered; the extra 20 g is free, so the ordered 500 g is charged.
         'packedQuantity': delivered ? {'value': 520, 'unit': 'GRAM'} : null,
-        'chargedQuantity': delivered ? {'value': 520, 'unit': 'GRAM'} : null,
+        'chargedQuantity': delivered ? {'value': 500, 'unit': 'GRAM'} : null,
         'unitPricePaise': 129900,
         'preparationChargePaise': 1500,
         'estimatedTotalPaise': 66450,
-        'finalTotalPaise': delivered ? 69108 : null,
+        'finalTotalPaise': delivered ? 66450 : null,
         'status': 'ACTIVE',
       },
       {
@@ -406,7 +405,7 @@ Json? demoOrder(String id) {
         'variantName': 'Medium',
         'preparationName': 'Cleaned',
         'orderedQuantity': {'value': 500, 'unit': 'GRAM'},
-        'maxChargeableQuantity': {'value': 550, 'unit': 'GRAM'},
+        'maxChargeableQuantity': {'value': 500, 'unit': 'GRAM'},
         'packedQuantity': delivered ? {'value': 495, 'unit': 'GRAM'} : null,
         'chargedQuantity': delivered ? {'value': 495, 'unit': 'GRAM'} : null,
         'unitPricePaise': 89900,
@@ -426,16 +425,16 @@ Json? demoOrder(String id) {
     },
     'final': delivered
         ? {
-            'itemsPaise': 112048,
-            'preparationPaise': 3045,
+            'itemsPaise': 109450,
+            'preparationPaise': 2985,
             'discountPaise': 0,
             'deliveryFeePaise': 0,
             'taxPaise': 0,
-            'totalPaise': 115093,
+            'totalPaise': 112435,
           }
         : null,
     'amountDuePaise': delivered || status == 'CANCELLED' ? 0 : 112900,
-    'amountPaidPaise': delivered ? 115093 : 0,
+    'amountPaidPaise': delivered ? 112435 : 0,
     'amountRefundedPaise': 0,
     'couponCode': null,
     'substitutions': <Object?>[],

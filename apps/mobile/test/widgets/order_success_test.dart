@@ -68,7 +68,13 @@ void main() {
     expect(inTicket('12, 3rd Cross Street, Sample Nagar, Sample City, 600041'), findsOneWidget);
     // The server's estimate (70850 paise), formatted, never recomputed from the lines.
     expect(inTicket('₹708.50'), findsOneWidget);
-    expect(inTicket('The final total is set when your order is weighed and packed.'), findsOneWidget);
+    // D347: the total is the most the customer pays, so it is not called an estimate.
+    expect(inTicket('Total'), findsOneWidget);
+    expect(inTicket('Estimated total'), findsNothing);
+    expect(
+      inTicket('Priced on net weight after cleaning. If your pack weighs less, you pay less — never more.'),
+      findsOneWidget,
+    );
 
     final note = find.byKey(const Key('deliveryCodeNote'));
     expect(note, findsOneWidget);

@@ -570,7 +570,7 @@ class _Review extends StatelessWidget {
               text: preview.coupon!.message ?? humanizeCode(preview.coupon!.status),
             ),
           ),
-        TotalsCard(totals: preview.totals, title: 'Bill'),
+        TotalsCard(totals: preview.totals, title: 'Bill', hasWeighedItems: anyWeighed(preview.lines)),
       ],
     );
   }
@@ -606,7 +606,13 @@ class _PriceChangedDialog extends StatelessWidget {
               key: const Key('newTotal'),
               style: theme.textTheme.titleMedium,
             ),
-            Text('At most ${formatRupees(after.totals.maxTotalPaise)}', style: theme.textTheme.bodySmall),
+            // D347: shown only when the server's maximum is above the total (an over-weight allowance is set).
+            if (after.totals.maxTotalPaise > after.totals.estimatedTotalPaise)
+              Text(
+                'At most ${formatRupees(after.totals.maxTotalPaise)}',
+                key: const Key('newMaxTotal'),
+                style: theme.textTheme.bodySmall,
+              ),
             for (final b in after.blockers) ...[
               const SizedBox(height: FreshSpacing.s2),
               InfoBanner(tone: BannerTone.danger, text: b.message),

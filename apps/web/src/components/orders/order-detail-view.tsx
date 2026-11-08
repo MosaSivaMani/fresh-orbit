@@ -37,6 +37,22 @@ const ITEM_STATUS_TEXT: Record<string, string> = {
 
 const CLOSED = ["DELIVERED", "CANCELLED", "RETURNED"];
 
+/**
+ * The note under a bill not yet packed (D347). Normally the price shown is the most you pay, so the total can only
+ * come down after weighing. Only when the server says an item may be charged above its ordered weight (an operator
+ * configured an over-weight allowance) does the note say the final amount is confirmed at packing. No weighed items
+ * (none ordered in grams), no note.
+ */
+export function unpackedBillNote(order: Pick<OrderDetail, "items">): string | null {
+  if (!order.items.some((i) => i.orderedQuantity.unit === "GRAM")) return null;
+  const overWeightAllowed = order.items.some(
+    (i) => i.maxChargeableQuantity.value > i.orderedQuantity.value,
+  );
+  return overWeightAllowed
+    ? "Weighed items are charged on actual net weight; the final amount is confirmed when your order is packed."
+    : "Weighed items are priced on net weight after cleaning. After weighing, your total can only come down: if your pack weighs less, you pay less, never more.";
+}
+
 /** The server's amounts as bill rows; the total is the server's `totalPaise`, never a sum. */
 export function amountRows(amounts: OrderAmounts): BillRow[] {
   const rows: BillRow[] = [
@@ -92,7 +108,7 @@ function Items({ order }: { order: OrderDetail }) {
               </span>
             ) : (
               <span className="text-text tabular-nums">
-                est. {formatRupees(item.estimatedTotalPaise)}
+                {formatRupees(item.estimatedTotalPaise)}
               </span>
             )}
           </div>
@@ -187,6 +203,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
   const t = tracking.data;
   const status = t?.status ?? o.status;
   const amounts = o.final ?? o.estimate;
+  const weightNote = o.final === null ? unpackedBillNote(o) : null;
   // Times in the store's own zone (W10, ORD-R65).
   const zone = t?.timeZone ?? o.timeZone;
   return (
@@ -275,7 +292,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
               title="Bill"
               rows={amountRows(amounts)}
               total={{
-                label: o.final ? "Total" : "Estimated total",
+                label: o.final ? "Final total" : "Total",
                 value: formatRupees(amounts.totalPaise),
               }}
               notes={
@@ -284,9 +301,7 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
                   {amounts.taxPaise > 0 && (
                     <p>Includes taxes of {formatRupees(amounts.taxPaise)}.</p>
                   )}
-                  {o.final === null && (
-                    <p>The final amount is confirmed when your order is packed.</p>
-                  )}
+                  {weightNote && <p>{weightNote}</p>}
                   {o.amountRefundedPaise > 0 && (
                     <p>Refunded: {formatRupees(o.amountRefundedPaise)}</p>
                   )}

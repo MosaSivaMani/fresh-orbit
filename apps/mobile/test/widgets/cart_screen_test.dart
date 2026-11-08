@@ -18,12 +18,9 @@ void main() {
     await pumpScreen(tester, deps, const CartScreen());
     await tester.pumpAndSettle();
 
-    expect(find.text('Estimated'), findsOneWidget);
     expect(find.text('₹669.50'), findsOneWidget);
-    expect(find.text('At most ₹736.45 for up to 550 g'), findsOneWidget);
     expect(find.text('Only 1.5 kg left today.'), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const Key('estimatedTotal'))).data, '₹708.50');
-    expect(tester.widget<Text>(find.byKey(const Key('maxTotal'))).data, '₹775.45');
     expect(find.text('₹39'), findsOneWidget); // delivery fee from the server
     final checkout = find.byKey(const Key('checkoutButton'));
     expect(find.descendant(of: checkout, matching: find.text('Checkout')), findsOneWidget);
@@ -32,6 +29,41 @@ void main() {
     await tester.tap(checkout);
     await tester.pumpAndSettle();
     expect(find.text('route:/checkout'), findsOneWidget);
+  });
+
+  testWidgets('D347: when the maximum equals the price, no estimate or at-most wording is shown', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.cart.current = cart();
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    final price = find.byKey(const ValueKey('linePrice-line1'));
+    expect(find.descendant(of: price, matching: find.text('₹669.50')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lineMax-line1')), findsNothing);
+    expect(find.byKey(const Key('maxTotal')), findsNothing);
+    expect(tester.widget<Text>(find.byKey(const Key('estimatedTotal'))).data, '₹708.50');
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.textContaining('Estimated'), findsNothing);
+    expect(find.textContaining(RegExp('at most', caseSensitive: false)), findsNothing);
+    expect(find.textContaining('up to'), findsNothing);
+    // Weighed items carry the plain net-weight note.
+    await tester.ensureVisible(find.byKey(const Key('weightNote')));
+    expect(
+      tester.widget<Text>(find.byKey(const Key('weightNote'))).data,
+      'Priced on net weight after cleaning. If your pack weighs less, you pay less — never more.',
+    );
+  });
+
+  testWidgets('with an over-weight allowance (maximum above the price) the at-most amounts are shown', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.cart.current = Cart.fromJson(cartJson(lines: [cartLineJson(max: 73645, maxQuantity: 550)], maxTotal: 77545));
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Estimated'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('lineMax-line1'))).data, 'At most ₹736.45 for up to 550 g');
+    expect(find.text('Estimated total'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const Key('maxTotal'))).data, '₹775.45');
   });
 
   testWidgets('server blockers are shown and checkout stays disabled', (tester) async {

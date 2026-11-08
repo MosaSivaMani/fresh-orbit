@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
-import { type OrderDetail, type OrderTracking } from "@/api/types/orders";
+import { type OrderDetail, type OrderItem, type OrderTracking } from "@/api/types/orders";
 import { problem } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
@@ -52,6 +52,29 @@ function order(overrides: Partial<OrderDetail> = {}): OrderDetail {
     invoice: null,
     allowedActions: { cancel: true, raiseComplaint: false, downloadInvoice: false, reorder: false },
     ...overrides,
+  };
+}
+
+/** A 500 g seer line not yet packed; `maxGrams` above 500 means the server allows an over-weight charge. */
+function weighedItem(maxGrams: number): OrderItem {
+  return {
+    id: "i1",
+    lineNo: 1,
+    variantId: "v1",
+    productName: "Seer Fish (Vanjaram)",
+    variantName: "Medium (3-5 kg fish)",
+    preparationName: "Steaks (1 cm)",
+    imageKey: null,
+    orderedQuantity: { value: 500, unit: "GRAM" },
+    maxChargeableQuantity: { value: maxGrams, unit: "GRAM" },
+    packedQuantity: null,
+    chargedQuantity: null,
+    unitPricePaise: 129900,
+    preparationChargePaise: 2000,
+    estimatedTotalPaise: 66950,
+    finalTotalPaise: null,
+    status: "ACTIVE",
+    substitutedFromItemId: null,
   };
 }
 
@@ -128,9 +151,35 @@ describe("OrderDetailView", () => {
 
     const bill = screen.getByRole("region", { name: "Bill" });
     expect(within(bill).getByText("− ₹50")).toBeInTheDocument();
-    // The final total is the server's value, shown as "Total".
-    expect(within(bill).getByText("Total")).toBeInTheDocument();
+    // The final total is the server's value, shown as "Final total" once packed.
+    expect(within(bill).getByText("Final total")).toBeInTheDocument();
     expect(within(bill).getByText("₹619.50")).toBeInTheDocument();
+  });
+
+  it("before packing shows a plain total that can only come down for weighed items (D347)", async () => {
+    server.use(
+      http.get(`${API}/orders/o1`, () => HttpResponse.json(order({ items: [weighedItem(500)] }))),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const bill = await screen.findByRole("region", { name: "Bill" });
+    expect(within(bill).getByText("Total")).toBeInTheDocument();
+    expect(within(bill).getByText(/can only come down/)).toBeInTheDocument();
+    expect(screen.queryByText(/estimat/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/est\./)).not.toBeInTheDocument();
+  });
+
+  it("before packing says the amount is confirmed at packing when an over-weight allowance applies", async () => {
+    server.use(
+      http.get(`${API}/orders/o1`, () => HttpResponse.json(order({ items: [weighedItem(550)] }))),
+      http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+    );
+    renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+
+    const bill = await screen.findByRole("region", { name: "Bill" });
+    expect(within(bill).getByText(/confirmed when your order is packed/)).toBeInTheDocument();
+    expect(within(bill).queryByText(/can only come down/)).not.toBeInTheDocument();
   });
 
   it("shows the not-found character state for an unknown order", async () => {

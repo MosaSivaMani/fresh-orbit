@@ -165,8 +165,8 @@ void main() {
         const ReceiptCard(
           title: 'Order FO-260001',
           rows: [ReceiptRow('Delivery', '23 Oct, 2:00 PM – 4:00 PM'), ReceiptRow('Payment', 'Cash on delivery')],
-          total: ReceiptRow('Estimated total', '₹708.50'),
-          note: 'The final total is set when your order is weighed and packed.',
+          total: ReceiptRow('Total', '₹708.50'),
+          note: 'If your pack weighs less, you pay less — never more.',
         ),
       );
 
@@ -180,9 +180,9 @@ void main() {
         '23 Oct, 2:00 PM – 4:00 PM',
         'Payment',
         'Cash on delivery',
-        'Estimated total',
+        'Total',
         '₹708.50',
-        'The final total is set when your order is weighed and packed.',
+        'If your pack weighs less, you pay less — never more.',
       ]);
     });
 
@@ -193,12 +193,12 @@ void main() {
         const ReceiptCard(
           title: 'Order FO-1',
           rows: [ReceiptRow('Payment', 'UPI on delivery')],
-          total: ReceiptRow('Estimated total', '₹99.00', semanticsLabel: 'Estimated total ₹99.00'),
+          total: ReceiptRow('Total', '₹99.00', semanticsLabel: 'Total ₹99.00'),
         ),
       );
 
       expect(find.bySemanticsLabel('Payment: UPI on delivery'), findsOneWidget);
-      expect(find.bySemanticsLabel('Estimated total ₹99.00'), findsOneWidget);
+      expect(find.bySemanticsLabel('Total ₹99.00'), findsOneWidget);
       handle.dispose();
     });
   });

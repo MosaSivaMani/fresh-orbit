@@ -347,6 +347,7 @@ function PolicyDialog({
             form={form}
             name="maxOverweightPercent"
             label="Max overweight (%)"
+            hint="Keep 0: the price the customer sees is the most they pay, and extra packed weight is free (D347)."
             inputMode="decimal"
             required
           />

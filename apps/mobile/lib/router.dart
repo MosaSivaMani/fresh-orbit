@@ -185,7 +185,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 /// The five tabs (D88, D176): the floating rounded menu, and on Home and Shop the floating cart bar above it
 /// while the cart has lines. Both sit in the bottom bar slot, so they take their own space and never cover a
-/// screen's content. The cart bar's amount is the server cart's estimated total, only formatted.
+/// screen's content. The cart bar's amount is the server cart's total, only formatted.
 ///
 /// Android back (D234): a page inside a tab goes back within the tab; the first page of any other tab goes to
 /// Home; on Home the first back shows "Press back again to exit" and only a second back within two seconds

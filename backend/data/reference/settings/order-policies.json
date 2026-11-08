@@ -4,7 +4,7 @@
     {
       "cityId": null,
       "reservationMinutes": 15,
-      "maxOverweightBp": 1000,
+      "maxOverweightBp": 0,
       "cancelAllowedUntilStatus": "CONFIRMED",
       "codMaxOrderPaise": 500000,
       "enabledPaymentMethods": ["COD", "UPI_ON_DELIVERY"],

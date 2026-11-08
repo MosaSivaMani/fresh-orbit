@@ -276,6 +276,24 @@ public sealed class StorefrontProductShapeTests(CatalogDatabase database) : Stor
     }
 
     [Fact]
+    public async Task Price_quote_with_no_overweight_allowance_has_one_price_and_no_weight_note()
+    {
+        // D347: the reference default allowance is 0 — the price shown is the most the customer pays.
+        var served = await CreateServedLocationAsync();
+        await SavePolicyAsync(served.CityId, maxOverweightBp: 0);
+        var category = await CreateCategoryAsync();
+        var product = await CreatePublishedProductAsync(category, "Seer Fish");
+        await PriceAsync(served.LocationId, product.VariantId, 129900, 149900);
+        await AddStockAsync(served.LocationId, product.VariantId, 20000);
+
+        var quote = await GetPublicAsync($"/api/v1/price-quote?variantId={product.VariantId}&preparation=CURRY_CUT&quantity=750&unit=GRAM", served.Pincode);
+
+        AssertQuantityView(quote.GetProperty("maxChargeableQuantity"), 750, "GRAM");
+        quote.GetProperty("maxChargeablePaise").GetInt64().Should().Be(quote.GetProperty("estimatedTotalPaise").GetInt64());
+        (quote.TryGetProperty("weightNote", out var note) ? note.ValueKind : JsonValueKind.Null).Should().Be(JsonValueKind.Null);
+    }
+
+    [Fact]
     public async Task Price_quote_matches_the_cart_line_formula_and_refuses_invalid_quantities()
     {
         var served = await CreateServedLocationAsync();

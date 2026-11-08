@@ -104,7 +104,7 @@ export const seerFish: ProductDetail = {
     },
   ],
   netWeightNote:
-    "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.",
+    "Prices are for net weight after cleaning. If your pack weighs less, you pay less.",
   availability: { status: "IN_STOCK", message: null },
   isWishlisted: false,
   locationRequired: false,
@@ -122,7 +122,7 @@ export const seerLine: CartLine = {
   preparation: { code: "STEAK", name: "Steaks (1 cm)", yieldBp: 7000 },
   quantity: { value: 500, unit: "GRAM" },
   estimatedNetQuantity: { value: 500, unit: "GRAM" },
-  maxChargeableQuantity: { value: 550, unit: "GRAM" },
+  maxChargeableQuantity: { value: 500, unit: "GRAM" },
   unitPricePaise: 129900,
   compareAtPaise: 149900,
   priceUnit: "KG",
@@ -132,7 +132,7 @@ export const seerLine: CartLine = {
   taxRateBp: 0,
   taxPaise: 0,
   estimatedLineTotalPaise: 66950,
-  maxLineTotalPaise: 73645,
+  maxLineTotalPaise: 66950,
   availability: { status: "IN_STOCK", message: null },
   isSellable: true,
   issues: [],
@@ -183,16 +183,30 @@ export const cartWithSeer: Cart = {
     deliveryFeeWaived: true,
     taxPaise: 0,
     estimatedTotalPaise: 66950,
-    maxTotalPaise: 73645,
+    maxTotalPaise: 66950,
     minOrderPaise: 29900,
     minOrderShortfallPaise: 0,
     freeDeliveryShortfallPaise: 0,
   },
   canCheckout: true,
   checkoutBlockers: [],
-  messages: [
-    "Weight-based items are charged on actual net weight, up to 10% over the ordered weight.",
+  messages: [],
+};
+
+/**
+ * The same cart when an operator configures a 10% over-weight allowance (D347 makes 0 the default): the server's
+ * maximum is above its estimate, so the site still says "at most".
+ */
+export const cartWithAllowance: Cart = {
+  ...cartWithSeer,
+  lines: [
+    {
+      ...seerLine,
+      maxChargeableQuantity: { value: 550, unit: "GRAM" },
+      maxLineTotalPaise: 73645,
+    },
   ],
+  totals: { ...cartWithSeer.totals, maxTotalPaise: 73645 },
 };
 
 export const homeAddress: Address = {
@@ -238,6 +252,7 @@ export function preview(expectedTotalPaise: number): CheckoutPreview {
     totals: {
       ...cartWithSeer.totals,
       estimatedTotalPaise: expectedTotalPaise,
+      maxTotalPaise: expectedTotalPaise,
     },
     paymentMethods: [
       { method: "COD", enabled: true, reasonCode: null },
