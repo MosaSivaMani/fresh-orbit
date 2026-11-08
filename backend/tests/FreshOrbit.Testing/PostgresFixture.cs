@@ -63,9 +63,13 @@ public class PostgresFixture : IAsyncLifetime
     /// </summary>
     public ServiceProvider CreateServices(Action<IServiceCollection>? configure = null, TestClock? clock = null, ICurrentActor? actor = null)
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { [$"ConnectionStrings:{FreshOrbitDbContextOptions.ConnectionStringName}"] = ConnectionString })
-            .Build();
+        var settings = new Dictionary<string, string?> { [$"ConnectionStrings:{FreshOrbitDbContextOptions.ConnectionStringName}"] = ConnectionString };
+        foreach (var (key, value) in TestOutboxSettings.Values)
+        {
+            settings[key] = value;
+        }
+
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddLogging();

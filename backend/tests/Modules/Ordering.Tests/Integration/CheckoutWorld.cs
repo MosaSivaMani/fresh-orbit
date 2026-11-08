@@ -134,7 +134,10 @@ public sealed class CheckoutWorld
         MaxDeliveryAttempts = 3,
     };
 
-    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com");
+    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com")
+    {
+        TimeZone = "Asia/Kolkata",
+    };
 
     /// <summary>The cart is stubbed, so its quote carries the allowance: 1000 bp by default, 0 for the D347 default.</summary>
     public static QuoteLine Fish(int grams, int maxOverweightBp = 1000) => Quote("KG", "GRAM", 129900, 4000, "PER_KG", grams, true, 8000, "Seer Fish", "Medium", "STEAKS", "Steaks", maxOverweightBp);
