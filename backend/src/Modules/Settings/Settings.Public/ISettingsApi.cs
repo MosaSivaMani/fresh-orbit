@@ -22,6 +22,21 @@ public interface ISettingsApi
     Task<string> GetFinancialPeriodAsync(DateTimeOffset at, CancellationToken cancellationToken = default);
 
     Task<BusinessProfile> GetBusinessProfileAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Whether the business profile holds what invoicing needs (BE-1, D295). Never throws for a missing profile: it is
+    /// reported as missing. Checkout refuses orders and the Api readiness check reports unready until it is complete.
+    /// </summary>
+    Task<StoreReadiness> GetStoreReadinessAsync(CancellationToken cancellationToken = default);
+}
+
+/// <param name="MissingProfileFields">
+/// camelCase business-profile fields still to enter (<c>legalName</c>, <c>gstin</c>, <c>timeZone</c>), or
+/// <c>businessProfile</c> when no profile was saved; empty when the store can take orders.
+/// </param>
+public sealed record StoreReadiness(IReadOnlyList<string> MissingProfileFields)
+{
+    public bool IsReady => MissingProfileFields.Count == 0;
 }
 
 /// <param name="MaxOverweightBp">Allowed packed overweight in basis points (1000 = +10 %).</param>

@@ -7,7 +7,8 @@ namespace FreshOrbit.Hosting.BackgroundJobs;
 
 /// <summary>
 /// Runs the outbox dispatcher in a loop: a full batch is followed immediately by the next one; otherwise the
-/// service waits <see cref="OutboxOptions.PollInterval"/> (5 s by default). A loop is used instead of a Hangfire
+/// service waits <see cref="OutboxOptions.PollInterval"/> (configuration, 5 s in the Worker's settings). A failed row
+/// is not retried on the next poll but after its backoff delay (<see cref="OutboxRetrySchedule"/>, D296). A loop is used instead of a Hangfire
 /// recurring job because Hangfire schedules at minute granularity and polls every 15 s.
 /// </summary>
 internal sealed partial class OutboxDispatcherService(OutboxDispatcher dispatcher, IOptions<OutboxOptions> options, ILogger<OutboxDispatcherService> logger) : BackgroundService
