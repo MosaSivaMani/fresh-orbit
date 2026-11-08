@@ -8,6 +8,7 @@ import '../api/api_client.dart';
 import '../api/repositories.dart';
 import '../api/token_store.dart';
 import '../core/app_prefs.dart';
+import '../core/crash_reporter.dart';
 import '../core/launch.dart';
 import '../core/push_service.dart';
 import '../core/website.dart';
@@ -32,6 +33,9 @@ final policyLinksProvider = Provider<Map<PolicyPage, Uri>>((ref) => policyLinks(
 final externalLauncherProvider = Provider<ExternalLauncher>((ref) => openExternal);
 
 final pushServiceProvider = Provider<PushService>((ref) => NoopPushService());
+
+/// Overridden in main.dart with the build's reporter (D309); tests get the no-op.
+final crashReporterProvider = Provider<CrashReporter>((ref) => const NoopCrashReporter());
 
 final dioProvider = Provider<Dio>((ref) {
   return createDio(

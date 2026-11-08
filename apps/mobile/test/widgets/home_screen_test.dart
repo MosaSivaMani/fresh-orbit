@@ -172,7 +172,7 @@ void main() {
     expect(find.descendant(of: find.byType(HomeScreen), matching: _verticalScroll), findsOneWidget);
     final scroll = tester.widget<SingleChildScrollView>(find.byKey(const Key('homeScroll')));
     expect(scroll.physics, isA<ClampingScrollPhysics>());
-    expect(find.byType(RefreshIndicator), findsNothing);
+    expect(find.byKey(const Key('homeRefresh')), findsOneWidget);
     // The sections start below the first screen.
     final sections = tester.getRect(_below('homeSections'));
     expect(sections.top, moreOrLessEquals(fit.bottom, epsilon: 0.01));
@@ -286,19 +286,53 @@ void main() {
   });
 
   for (final size in const [Size(360, 640), Size(390, 844)]) {
-    for (final scale in const [1.0, 1.3]) {
-      testWidgets('no overflow at ${size.width.toInt()}×${size.height.toInt()} with text scale $scale', (tester) async {
-        await _pump(tester, size: size, textScale: scale);
+    testWidgets('no overflow at ${size.width.toInt()}×${size.height.toInt()} with text scale 1.0', (tester) async {
+      await _pump(tester, size: size);
 
-        expect(tester.takeException(), isNull);
-        final fit = tester.getRect(find.byKey(const Key('homeFit')));
-        expect(fit.bottom, lessThanOrEqualTo(size.height + 0.01));
-        // Always the full width: scaling to fit never leaves side gaps.
-        expect(fit.left, 0);
-        expect(fit.width, size.width);
-      });
+      expect(tester.takeException(), isNull);
+      final fit = tester.getRect(find.byKey(const Key('homeFit')));
+      expect(fit.bottom, lessThanOrEqualTo(size.height + 0.01));
+      // Always the full width: scaling to fit never leaves side gaps.
+      expect(fit.left, 0);
+      expect(fit.width, size.width);
+    });
+
+    for (final scale in const [1.15, 1.3, 1.49]) {
+      testWidgets(
+        'at ${size.width.toInt()}×${size.height.toInt()} with text scale $scale the text is not shrunk and the page '
+        'scrolls (D306)',
+        (tester) async {
+          await _pump(tester, size: size, textScale: scale);
+
+          expect(tester.takeException(), isNull);
+          // No scale-to-fit wrapper: every text keeps the customer's size.
+          expect(find.byKey(const Key('homeFit')), findsNothing);
+          expect(find.byType(FreshFitWidth), findsNothing);
+          // The first screen is taller than the phone, so the page scrolls further.
+          final scroll = find.byKey(const Key('homeScroll'));
+          final position = tester.state<ScrollableState>(
+            find.descendant(of: scroll, matching: find.byType(Scrollable)).first,
+          ).position;
+          expect(position.maxScrollExtent, greaterThan(0));
+        },
+      );
     }
   }
+
+  testWidgets('pull-to-refresh reads the home again (D313)', (tester) async {
+    final deps = await _pump(tester);
+    var reads = 0;
+    deps.catalog.onHome = () async {
+      reads++;
+      return _home();
+    };
+
+    await tester.fling(find.byKey(const Key('homeScroll')), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+
+    expect(reads, 1);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('an offer opens its category or product; one with no slug is not a button', (tester) async {
     final handle = tester.ensureSemantics();

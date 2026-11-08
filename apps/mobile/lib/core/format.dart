@@ -1,6 +1,7 @@
 // Display formatting only (docs/design/README.md §7). Nothing here computes a business value: every number
 // comes from the API and is turned into text. Integer arithmetic only, so large paise values stay exact.
 
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../api/models/common.dart';
@@ -154,10 +155,34 @@ String formatPhone(String e164) {
 /// Input check for an Indian mobile number typed without the country code. Returns E.164 or null.
 /// This is form validation, not a business rule: the server validates again.
 String? toIndianE164(String input) {
-  final digits = input.replaceAll(RegExp(r'[^0-9]'), '');
-  final local = digits.length == 12 && digits.startsWith('91') ? digits.substring(2) : digits;
+  final local = indianMobileDigits(input);
   if (local.length != 10 || !RegExp(r'^[6-9]').hasMatch(local)) return null;
   return '+91$local';
+}
+
+/// The national digits of a typed, pasted or autofilled Indian mobile number (ME-4): "+91 98765 43210",
+/// "919876543210" and "09876543210" all give "9876543210". A leading "+91" is the country code; a bare "91" is
+/// taken as the country code only when 12 or more digits came in (a 10-digit number may start with 91); leading
+/// zeros (the trunk prefix) are dropped. The result is at most 10 digits.
+String indianMobileDigits(String input) {
+  var digits = input.replaceAll(RegExp(r'[^0-9]'), '');
+  final plus = input.trimLeft().startsWith('+');
+  if (digits.startsWith('91') && (plus || digits.length >= 12)) digits = digits.substring(2);
+  digits = digits.replaceFirst(RegExp(r'^0+'), '');
+  return digits.length > 10 ? digits.substring(0, 10) : digits;
+}
+
+/// Phone field formatter: keeps only the 10 national digits of what was typed or pasted (see [indianMobileDigits]),
+/// instead of cutting "+91 98765 43210" to the wrong number "9198765432".
+class IndianMobileInputFormatter extends TextInputFormatter {
+  const IndianMobileInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final digits = indianMobileDigits(newValue.text);
+    if (digits == newValue.text) return newValue;
+    return TextEditingValue(text: digits, selection: TextSelection.collapsed(offset: digits.length));
+  }
 }
 
 /// Six-digit pincode input check (form validation only; serviceability comes from the server).
