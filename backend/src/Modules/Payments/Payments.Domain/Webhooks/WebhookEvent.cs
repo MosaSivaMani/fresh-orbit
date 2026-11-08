@@ -30,6 +30,15 @@ public sealed class WebhookEvent : Entity
     /// <summary>Length of a lowercase hex SHA-256.</summary>
     public const int Sha256HexLength = 64;
 
+    /// <summary>
+    /// The body kept once the retention purge has run (SEC-13, D335): a JSON string, so the jsonb column stays valid and
+    /// a purged row is told apart from any real body.
+    /// </summary>
+    public const string PurgedPayload = "\"PURGED\"";
+
+    /// <summary>The headers kept once the retention purge has run.</summary>
+    public const string PurgedHeaders = "{}";
+
     private WebhookEvent()
     {
         Provider = string.Empty;

@@ -5,7 +5,9 @@ worker, migrations (one-shot), web, admin, PostgreSQL 17, and optionally Grafana
 `.github/workflows/deploy.yml` for linux/amd64 and linux/arm64 and pushed to GHCR as
 `ghcr.io/mosasivamani/fresh-orbit-{api,worker,migrations,web,admin}:<tag>`.
 
-Server setup: `oracle-setup.md`. Backups: `backup-restore.md`. Security settings (SMS DLT credentials,
+Server setup: `go-live.md` for a new production server with an empty database (Hostinger, D127), `oracle-setup.md`
+for the Oracle staging server, `move-to-hostinger.md` to move a running store. Security incidents and data breaches:
+`incident-response.md`. Backups: `backup-restore.md`. Security settings (SMS DLT credentials,
 forwarded-headers subnet): `security-configuration.md`.
 
 **Before a release, run the local end-to-end check** (`e2e-check.md`): `infra/scripts/e2e-check.sh` builds the five
@@ -51,7 +53,7 @@ start, then about every 90 days), is expected
    | `DEPLOY_HOST` | server IP or host name |
    | `DEPLOY_USER` | `deploy` |
    | `DEPLOY_SSH_KEY` | private key of a key pair used **only** by CI (its `.pub` is in `/home/deploy/.ssh/authorized_keys`) |
-   | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <host>` (recommended; without it the first connection is trusted blindly) |
+   | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <host>`. **Required for `production`** (the deploy stops without it, L-60, D338); on staging, without it the first connection is trusted blindly with a warning |
    | `DEPLOY_SSH_PORT` | optional, default 22 |
 
    and **variables**: `DOMAIN` (e.g. `freshorbit.in`), optional `DEPLOY_PATH` (default `/opt/freshorbit`).
@@ -144,7 +146,8 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 3. Provisioned alerts (`infra/monitoring/alerting/alerts.yml`): **Backend errors** (any Error/Fatal from api or
    worker in 5 minutes) and **Upstream failures at Caddy** (more than five 502–504 in 5 minutes, for 2 minutes).
 4. **Server-down alerts must come from outside the server.** Use a free external HTTP check on
-   `https://api.<domain>/health` (e.g. Uptime Kuma, MIT, on another machine, or a free hosted uptime monitor), and a
+   `https://api.<domain>/health` (e.g. Uptime Kuma, MIT, on another machine, or a free hosted uptime monitor) plus one
+   on `https://api.<domain>/health/ready` (503 while the store cannot take orders, D295), and a
    dead-man's switch for backups (`BACKUP_PING_URL`, e.g. a free healthchecks.io check; healthchecks.io is BSD-licensed
    and can be self-hosted).
 5. GlitchTip (error tracking, MIT) was considered; it needs its own Postgres, Redis, web and worker (~1 GB), so it is
@@ -161,6 +164,8 @@ Measured idle use on a test run: Loki ~75 MB, Alloy ~57 MB, Grafana ~155 MB (lim
 | api exits 1 with `DataProtection:KeysPath is required…` | The api's environment lacks `DataProtection__KeysPath` (set in `docker-compose.prod.yml` to `/keys` with the `dataprotection-keys` volume); an old compose file was copied? |
 | api/worker exit right after start (exit code 1) | A start-up validator refused the configuration: `logs.sh api --no-follow -n 50` shows the Critical line `Start-up refused: … configuration is invalid` naming the key (`security-configuration.md`) |
 | api `unhealthy` | `logs.sh api --no-follow -n 300`; `/health` checks the database connection |
+| `/health/ready` answers 503 | The store is not ready (D295): the business profile lacks legal name, GSTIN or time zone, so checkout answers 422 `STORE_NOT_READY`. Complete it in admin › Settings › Business profile. `/health` (liveness) stays 200 |
+| Critical `Event … dead-lettered after … attempts` | An event handler failed every attempt (about 6.4 h with the default `Outbox` settings, D296). Fix the cause in the logs, then replay it: `GET /api/v1/admin/dead-letters?status=OPEN` and `POST /api/v1/admin/dead-letters/{deadLetterId}/replay` with a `platform.manage` staff token |
 | Caddy cannot get certificates | DNS A records point at the server? Ports 80/443 open in the Oracle security list and UFW? Cloudflare grey cloud for the first issuance |
 | 502 from Caddy | `logs.sh --status`: is the upstream (api/web/admin) running? |
 | Rate limits hit everyone at once | `DOCKER_SUBNET` / forwarded-headers settings (`security-configuration.md`) |

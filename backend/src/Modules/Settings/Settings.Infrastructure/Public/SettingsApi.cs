@@ -48,4 +48,10 @@ internal sealed class SettingsApi(FreshOrbitDbContext db, INumberSeriesService n
             TimeZone = profile.TimeZone,
         };
     }
+
+    public async Task<StoreReadiness> GetStoreReadinessAsync(CancellationToken cancellationToken = default)
+    {
+        var profile = await db.Set<DomainBusinessProfile>().AsNoTracking().OrderBy(p => p.Id).FirstOrDefaultAsync(cancellationToken);
+        return new StoreReadiness(Domain.BusinessProfiles.InvoicingReadiness.MissingFields(profile));
+    }
 }

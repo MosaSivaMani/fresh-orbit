@@ -40,10 +40,27 @@ module keeps two central tables keyed by `METHOD route-pattern`:
   (`REFUND_REQUESTED/APPROVED/REJECTED/MARKED_PAID`), cash settlements (`CASH_SETTLEMENT_RECORDED/SETTLED/DISPUTED`),
   `PAYMENT_ISSUE_RESOLVED`, `WEBHOOK_EVENT_REPROCESSED`, price, charge and tax schedules (`PRICE_SCHEDULED`,
   `PRICE_ENDED`, `PREPARATION_CHARGE_SCHEDULED`, `PRICES_BULK_IMPORTED`, `TAX_RULE_SCHEDULED`), settings (`*_CHANGED`),
-  city activation (`CITY_ACTIVATED/PAUSED/RETIRED`), staff order cancel, goodwill and complaint decisions.
+  city activation (`CITY_ACTIVATED/PAUSED/RETIRED`), staff order cancel, goodwill and complaint decisions, and the
+  outbox dead-letter replay (`DEAD_LETTER_REPLAYED`, §4).
 - **Exemptions** (only these are allowed): `POST /api/v1/admin/auth/login` (anonymous caller; failed logins are
   counted by Identity) and `POST /api/v1/admin/auth/logout` (revokes the caller's own sessions).
 
 `AdminWriteCoverageTests` enumerates every mapped admin POST/PUT/PATCH/DELETE of the real Api host and asserts that
 each is audited or exempt with a reason, that the exemptions are only the two above, that every audited one requires an
 authenticated caller, and that every named-action key still matches a mapped route.
+
+## 4. Outbox dead letters (operations, D296)
+
+The Audit module also maps the operations view of the outbox, because it is the module staff use to see what the
+system did. The `platform` rows themselves are changed only by the outbox code (`DeadLetterStore` in
+`SharedKernel.EntityFramework`), never by this module.
+
+| Key | Rule |
+|---|---|
+| AUD-R11 | A handler that fails every attempt (`Outbox:MaxAttempts`, with exponential backoff and jitter between attempts, D296) gets one `platform.dead_letters` row per failing handler and a Critical log line naming the event and handlers. |
+| AUD-R12 | `GET /api/v1/admin/dead-letters` (`platform.manage`): newest first, `status` `OPEN` or `REPLAYED`, paged; each item carries the event type and the outbox row's attempts. |
+| AUD-R13 | `POST /api/v1/admin/dead-letters/{deadLetterId}/replay` (`platform.manage`): the event's outbox row gets attempts 0 and is due on the next poll, every open dead letter of that event is marked `replayed_at` / `replayed_by`, and an explicit entry `DEAD_LETTER_REPLAYED` (entity `DEAD_LETTER`, the dead-letter id) is written in the same save (the `platform` schema is not audited generically, AUD-R7). Handlers that already succeeded have an inbox row and do not run again. Unknown id → 404 `DEAD_LETTER_NOT_FOUND`; already replayed, or the event was delivered since → 409 `DEAD_LETTER_ALREADY_REPLAYED`. |
+
+Tests: `DeadLetterReplayTests` (list, replay, audit entry, 404/409/403/401/422); `OutboxDispatcherTests` and
+`OutboxRetryScheduleTests` in `FreshOrbit.SharedKernel.Tests` (backoff, dead letter after the configured attempts,
+configuration refused when missing).

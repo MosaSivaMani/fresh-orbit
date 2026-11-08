@@ -14,7 +14,11 @@ internal sealed class PaymentsJobRegistration : IRecurringJobRegistration
 {
     public const string ReconciliationJobId = "payments.reconcile";
 
-    public IEnumerable<RecurringJobDefinition> GetJobs() => [new RecurringJobDefinition(ReconciliationJobId, "7 * * * *", typeof(ReconciliationJob))];
+    public IEnumerable<RecurringJobDefinition> GetJobs() =>
+    [
+        new RecurringJobDefinition(ReconciliationJobId, "7 * * * *", typeof(ReconciliationJob)),
+        new RecurringJobDefinition(WebhookPayloadRetentionJob.JobId, "40 2 * * *", typeof(WebhookPayloadRetentionJob)),
+    ];
 }
 
 /// <summary>
