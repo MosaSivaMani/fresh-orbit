@@ -5,7 +5,9 @@ worker, migrations (one-shot), web, admin, PostgreSQL 17, and optionally Grafana
 `.github/workflows/deploy.yml` for linux/amd64 and linux/arm64 and pushed to GHCR as
 `ghcr.io/mosasivamani/fresh-orbit-{api,worker,migrations,web,admin}:<tag>`.
 
-Server setup: `oracle-setup.md`. Backups: `backup-restore.md`. Security settings (SMS DLT credentials,
+Server setup: `go-live.md` for a new production server with an empty database (Hostinger, D127), `oracle-setup.md`
+for the Oracle staging server, `move-to-hostinger.md` to move a running store. Security incidents and data breaches:
+`incident-response.md`. Backups: `backup-restore.md`. Security settings (SMS DLT credentials,
 forwarded-headers subnet): `security-configuration.md`.
 
 **Before a release, run the local end-to-end check** (`e2e-check.md`): `infra/scripts/e2e-check.sh` builds the five
@@ -51,7 +53,7 @@ start, then about every 90 days), is expected
    | `DEPLOY_HOST` | server IP or host name |
    | `DEPLOY_USER` | `deploy` |
    | `DEPLOY_SSH_KEY` | private key of a key pair used **only** by CI (its `.pub` is in `/home/deploy/.ssh/authorized_keys`) |
-   | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <host>` (recommended; without it the first connection is trusted blindly) |
+   | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <host>`. **Required for `production`** (the deploy stops without it, L-60, D338); on staging, without it the first connection is trusted blindly with a warning |
    | `DEPLOY_SSH_PORT` | optional, default 22 |
 
    and **variables**: `DOMAIN` (e.g. `freshorbit.in`), optional `DEPLOY_PATH` (default `/opt/freshorbit`).

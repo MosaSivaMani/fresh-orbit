@@ -163,7 +163,7 @@ services:
       DataProtection__KeysPath: /keys
       FileStorage__RootPath: /media
       FileStorage__PublicBaseUrl: https://api.${DOMAIN:?DOMAIN is required}/media
-      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbit}
+      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbitt}
       Notifications__SupportPhone: ${SUPPORT_PHONE:-}
       Notifications__SupportEmail: ${SUPPORT_EMAIL:-}
       Notifications__Smtp__Host: ${SMTP_HOST:-}
@@ -172,7 +172,7 @@ services:
       Notifications__Smtp__UserName: ${SMTP_USERNAME:-}
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
-      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
+      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbitt}
     volumes:
       - media:/media
       - dataprotection-keys:/keys
@@ -207,7 +207,7 @@ services:
       FileStorage__RootPath: /media
       FileStorage__PublicBaseUrl: https://api.${DOMAIN:?DOMAIN is required}/media
       Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY is required}
-      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbit}
+      Notifications__BusinessName: ${BUSINESS_NAME:-Fresh Orbitt}
       Notifications__SupportPhone: ${SUPPORT_PHONE:-}
       Notifications__SupportEmail: ${SUPPORT_EMAIL:-}
       Notifications__Smtp__Host: ${SMTP_HOST:-}
@@ -216,7 +216,7 @@ services:
       Notifications__Smtp__UserName: ${SMTP_USERNAME:-}
       Notifications__Smtp__Password: ${SMTP_PASSWORD:-}
       Notifications__Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
-      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbit}
+      Notifications__Smtp__FromName: ${SMTP_FROM_NAME:-Fresh Orbitt}
     volumes:
       - media:/media
     # No HTTP endpoint: the restart policy covers crashes; deploy.sh checks it stays running.

@@ -119,6 +119,48 @@ is lost, Play can reset it, but keep a backup anyway.
 
 4. In Play Console create the app `in.freshorbit.app`, enrol in **Play App Signing**, and upload the bundle to the
    internal testing track first. Give Play the privacy policy address `https://<website host>/support/privacy-policy`.
+   The data-safety, content-rating and target-audience answers are prepared in `play-store.md`.
+
+---
+
+## Part 3. Build the Play bundle in GitHub Actions (`mobile-release.yml`)
+
+The workflow builds and signs the bundle on a GitHub runner, so nobody needs Flutter or the key on a laptop (D337).
+It runs only when started by hand and only from `main` or a `v*` tag.
+
+1. **Environment, once.** GitHub › repository › **Settings** › **Environments** › **New environment** named
+   `play-release`. Under **Deployment branches and tags** choose **Selected branches and tags** and add `main` and the
+   tag pattern `v*`. Tick **Required reviewers** and add yourself, so every release build waits for your approval.
+2. **Secrets in that environment** (not repository secrets), from the upload keystore of part 2 step 1:
+
+   | Secret | Value |
+   |---|---|
+   | `UPLOAD_KEYSTORE_BASE64` | `base64 -w0 upload.jks` (Linux) or `base64 -i upload.jks \| tr -d '\n'` (macOS) |
+   | `UPLOAD_KEYSTORE_PASSWORD` | store password |
+   | `UPLOAD_KEY_ALIAS` | `upload` |
+   | `UPLOAD_KEY_PASSWORD` | key password (the same as the store password for a PKCS12 keystore) |
+
+   With the GitHub CLI: `gh secret set UPLOAD_KEYSTORE_BASE64 --env play-release < upload.b64`, and the same with
+   `--env play-release` for the other three.
+3. **Variables in that environment:** `RELEASE_API_BASE_URL` = `https://api.<domain>` and `RELEASE_WEBSITE_BASE_URL`
+   = `https://<domain>` (`gh variable set RELEASE_API_BASE_URL --env play-release --body https://api.<domain>`).
+   Only `https://<host>` with no path is accepted.
+4. **Run it:** **Actions** › **Mobile release AAB** › **Run workflow**, branch `main` (or a tag), version name such as
+   `1.0.0`. Approve the `play-release` deployment when GitHub asks.
+5. **Result:** the run summary names the file `fresh-orbit-<version>-<code>.aab`, the API address and the upload
+   certificate's SHA-256; download the `release-aab` artifact (kept 14 days) and upload it in Play Console ›
+   **Testing** › **Internal testing** › **Create new release**. The SHA-256 must equal the upload key Play Console
+   shows under **App integrity**.
+
+What the workflow refuses, before building anything: a ref other than `main` or a `v*` tag; a version name that is
+not `1.2.3`; any of the four secrets missing (it lists every missing one); either address missing or not
+`https://<host>`; a keystore that does not open with the password and alias. After the build it checks that the
+bundle is signed with that same upload certificate and stops otherwise. The decoded keystore is deleted at the end.
+
+**Version code.** Play needs a higher version code for every upload. The workflow uses its own run number
+(`--build-number`), which only goes up; the version name comes from the run's input (`--build-name`), not from
+`pubspec.yaml`. Renaming or recreating the workflow file would restart the run number at 1, so do not: Play would
+refuse the next upload until the count passes the last code it has.
 
 ## Launcher icons
 

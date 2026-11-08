@@ -200,3 +200,31 @@ rclone crypt and checksummed (`backup-restore.md:30-70`, `backup.sh:75`); in-app
 | Lawyer review, grievance officer, policy placeholders | Missing (not in §6 yet; add) | L-7, L-8, L-9 |
 | E-mail provider, password manager, uptime monitor | Missing (not in §6 yet; add) | L-30, L-49, L-66 |
 | Sample-data check | Open (staging and demo only) | L-96 |
+
+## Follow-up status
+
+The audit table above stays as written; this section records what was closed later.
+
+**2026-11-08, branch `launch/runbooks-release` (D337–D338), docs and CI only:**
+
+| Row | Status | Where |
+|---|---|---|
+| L-22, F-10 (workflow part) | Closed: `mobile-release.yml` builds a signed AAB by hand from the `play-release` environment and refuses without the upload key | `.github/workflows/mobile-release.yml`; `runbooks/mobile-release.md` part 3 (D337) |
+| L-80 | Closed in CI: version name from the run's input, version code from the run number (`pubspec.yaml` keeps `0.1.0+1` for local builds) | D337 |
+| L-24, F-13, L-81 | Closed: data-safety, content-rating and target-audience answers from what the code collects | `runbooks/play-store.md` |
+| L-27, F-19 | Closed: roles, clocks (CERT-In 6 h, Board and people without delay, Board report in 72 h), steps, SQL to find affected people, notice templates, drill log | `runbooks/incident-response.md` |
+| L-32, F-15, L-59, L-48, L-44 | Closed: fresh Hostinger install with an empty database, DNS with CAA and mail records, `BACKUP_PING_URL` required, first `--create-admin`, business profile, tax rules, first city and store, read-only production checks | `runbooks/go-live.md` |
+| L-31 | Closed in the runbook: whitelist `https://<domain>` for `PAYMENT_FAILED` and `SUBSTITUTION_PROPOSED`, and ask Fast2SMS about call-back numbers. Registering it stays with the owner (L-3) | `runbooks/security-configuration.md` §2.1 step 3 |
+| L-67 | Closed: order and effect of rotating every secret | `runbooks/security-configuration.md` §7 |
+| L-60 | Closed: production refuses a deploy without `DEPLOY_KNOWN_HOSTS` | `.github/workflows/deploy.yml` (D338) |
+| L-70, L-71 | Closed: `permissions: contents: read` in `ci.yml` and `sample-images.yml`; 5-minute timeout on the release job | D338 |
+| L-75 | Closed: `BUSINESS_NAME` and `SMTP_FROM_NAME` default to "Fresh Orbitt" (D170) | `infra/compose/.env.prod.example`; `docker-compose.prod.yml` |
+| L-93, L-94 | Closed: `smoke.sh` comment; `server-setup.sh` summary points to `go-live.md` | `infra/scripts/` |
+
+Not taken on this branch (other branches may close some, e.g. L-6, L-7, L-18, L-21, L-25, L-34, L-35, L-45 and
+L-47 by D297–D301 and D319): owner actions (L-1 to L-5, L-8, L-9, L-10, L-13, L-16, L-23,
+L-30 monitor account, L-33, L-38, L-49, L-52, L-55, L-66, L-87), product or code work (L-19, L-20, L-26, L-28,
+L-50, L-51, L-57, L-82 delete-account page, L-83, L-84, L-85), decisions (L-17 staging, L-39 RPO, L-53, L-76), and
+CI or infra items left for a separate change (L-36 image scanning, L-37 Dependabot ecosystems, L-40 to L-43 and L-64
+alert rules, L-61, L-62, L-68, L-69, L-72, L-73, L-74). L-58 (cash and UPI daily close) needs the owner's process
+first; L-92 needs a check of the GHCR package visibility after the first push.

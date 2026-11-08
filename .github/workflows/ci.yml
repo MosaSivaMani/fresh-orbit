@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Read only, whatever the repository default is (L-70).
+permissions:
+  contents: read
+
 jobs:
   # Runs a job only when its part of the repository changed, to save Actions minutes (D253). A skipped job counts as
   # passed. Changes to this workflow, or a push with no usable base, run everything.

@@ -273,7 +273,7 @@ folders() {
 summary() {
   log "Done"
   cat <<EOF
-Next steps (docs/runbooks/oracle-setup.md):
+Next steps (new production server: docs/runbooks/go-live.md; Oracle staging: docs/runbooks/oracle-setup.md):
   1. From your laptop, in a NEW terminal, check you can log in:  ssh $DEPLOY_USER@<server-ip>
      Keep this root session open until that works.
   2. Copy infra/ to $APP_DIR/infra and create $APP_DIR/infra/compose/.env.prod (chmod 600).
