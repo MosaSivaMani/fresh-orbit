@@ -35,6 +35,7 @@ import { useCart, useChangeCartLocation } from "@/cart/use-cart";
 import { asApiError, describeError, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { paymentMethodLabels } from "@/lib/status-maps";
+import { hasWeighedLines } from "@/lib/weighed";
 import { useLocation } from "@/location/location-context";
 import { SlotPicker } from "./slot-picker";
 
@@ -485,7 +486,7 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
             <OrderSummary
               totals={current.totals}
               coupon={current.coupon}
-              totalLabel="Estimated total"
+              hasWeighedItems={hasWeighedLines(cart.data.lines)}
             />
             {current.blockers.length > 0 && (
               <ul className="flex flex-col gap-1" aria-label="Before you place the order">
@@ -511,9 +512,13 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
           <Skeleton className="h-48 rounded-[20px]" />
         ) : (
           <>
-            <OrderSummary totals={cart.data.totals} coupon={cart.data.coupon} />
+            <OrderSummary
+              totals={cart.data.totals}
+              coupon={cart.data.coupon}
+              hasWeighedItems={hasWeighedLines(cart.data.lines)}
+            />
             <p className="text-text-muted text-xs">
-              Choose an address and a slot to see the final estimate.
+              Choose an address and a slot to see your total for delivery there.
             </p>
           </>
         )}
@@ -526,15 +531,12 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
             )}
           </div>
         )}
-        <p className="text-text-muted text-xs">
-          You pay on delivery. Weighed items are charged on actual net weight, never above the
-          maximum shown.
-        </p>
+        <p className="text-text-muted text-xs">You pay on delivery.</p>
       </div>
 
       <StickyActionBar
         className="lg:col-span-2"
-        summary={current ? "Estimated total" : "Choose an address and a slot"}
+        summary={current ? "Total" : "Choose an address and a slot"}
         amount={current ? formatRupees(current.expectedTotalPaise) : undefined}
         action={
           <Button
@@ -576,13 +578,13 @@ export function CheckoutView({ initialSlotId = null }: { initialSlotId?: string 
           >
             <dl className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-text-muted">Previous estimate</dt>
+                <dt className="text-text-muted">Previous total</dt>
                 <dd className="text-text-muted line-through">
                   {formatRupees(priceChange.previousTotalPaise)}
                 </dd>
               </div>
               <div className="text-text flex justify-between text-base font-bold">
-                <dt>New estimate</dt>
+                <dt>New total</dt>
                 <dd>{formatRupees(priceChange.preview.expectedTotalPaise)}</dd>
               </div>
             </dl>

@@ -10,9 +10,9 @@ import { LoadError } from "@/components/states";
 import { queryKeys } from "@/lib/query-keys";
 import { slotText } from "@/lib/slot-text";
 import { paymentMethodLabels } from "@/lib/status-maps";
-import { amountRows } from "./order-detail-view";
+import { amountRows, unpackedBillNote } from "./order-detail-view";
 
-/** The order-placed screen (D95): the ORDER_PLACED character, the server's slot, payment and estimate. */
+/** The order-placed screen (D95): the ORDER_PLACED character, the server's slot, payment and total. */
 export function OrderSuccess({ orderId }: { orderId: string }) {
   const order = useQuery({
     queryKey: queryKeys.order(orderId),
@@ -31,6 +31,7 @@ export function OrderSuccess({ orderId }: { orderId: string }) {
     );
   }
   const o = order.data;
+  const weightNote = unpackedBillNote(o);
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
@@ -66,13 +67,8 @@ export function OrderSuccess({ orderId }: { orderId: string }) {
       <BillBox
         title="Bill"
         rows={amountRows(o.estimate)}
-        total={{ label: "Estimated total", value: formatRupees(o.estimate.totalPaise) }}
-        notes={
-          <p>
-            Weighed items are charged on actual net weight; the final amount is confirmed when your
-            order is packed.
-          </p>
-        }
+        total={{ label: "Total", value: formatRupees(o.estimate.totalPaise) }}
+        notes={weightNote && <p>{weightNote}</p>}
       />
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
         <Button asChild size="lg">

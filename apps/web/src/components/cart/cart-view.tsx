@@ -10,6 +10,7 @@ import { useCart } from "@/cart/use-cart";
 import { ChangePincodeButton } from "@/components/change-pincode-button";
 import { SlotPicker } from "@/components/checkout/slot-picker";
 import { EmptyPage, LoadError } from "@/components/states";
+import { hasWeighedLines } from "@/lib/weighed";
 import { useLocation } from "@/location/location-context";
 import { CartLineRow } from "./cart-line-row";
 import { CouponForm } from "./coupon-form";
@@ -123,7 +124,11 @@ export function CartView() {
 
       <div className="flex flex-col gap-4 lg:sticky lg:top-20">
         <CouponForm coupon={data.coupon} pincode={data.pincode} />
-        <OrderSummary totals={data.totals} coupon={data.coupon} />
+        <OrderSummary
+          totals={data.totals}
+          coupon={data.coupon}
+          hasWeighedItems={hasWeighedLines(data.lines)}
+        />
         {data.checkoutBlockers.length > 0 && (
           <ul className="flex flex-col gap-1" aria-label="Before you check out">
             {data.checkoutBlockers.map((b) => (
@@ -140,7 +145,7 @@ export function CartView() {
 
       <StickyActionBar
         className="lg:col-span-2"
-        summary="Estimated total"
+        summary="Total"
         amount={formatRupees(data.totals.estimatedTotalPaise)}
         action={
           data.canCheckout ? (

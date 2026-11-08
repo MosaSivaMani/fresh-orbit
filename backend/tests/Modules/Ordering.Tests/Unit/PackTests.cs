@@ -59,6 +59,80 @@ public sealed class PackTests
     }
 
     [Fact]
+    public void With_no_overweight_allowance_a_heavier_pack_is_charged_the_ordered_weight()
+    {
+        // D347: the reference default allowance is 0 — the price shown is the most the customer pays.
+        var order = OrderFactory.Place([NoAllowanceSeerFish()]).Preparing();
+        var line = order.Items[0];
+
+        var result = order.Pack([new PackLine(line.Id, 600, "GRAM")], false, 0, OrderFactory.Staff, At);
+
+        line.MaxChargeableQuantity.Should().Be(500);
+        order.MaxTotalPaise.Should().Be(order.TotalPaise);
+        result[0].PackedQuantity.Should().Be(600);
+        result[0].ChargedQuantity.Should().Be(500);
+        result[0].Capped.Should().BeTrue();
+        result[0].AdjustmentPaise.Should().Be(0);
+        result[0].FinalTotalPaise.Should().Be(66950);
+        order.Adjustments.Should().BeEmpty();
+        order.FinalTotalPaise.Should().Be(order.TotalPaise);
+        order.AmountDuePaise.Should().Be(order.TotalPaise);
+    }
+
+    [Fact]
+    public void With_no_overweight_allowance_a_lighter_pack_reduces_the_charge()
+    {
+        var order = OrderFactory.Place([NoAllowanceSeerFish()]).Preparing();
+
+        var result = order.Pack([new PackLine(order.Items[0].Id, 450, "GRAM")], false, 0, OrderFactory.Staff, At);
+
+        // 450 g = 58455 + 1800 against 66950 ordered.
+        result[0].ChargedQuantity.Should().Be(450);
+        result[0].Capped.Should().BeFalse();
+        result[0].FinalTotalPaise.Should().Be(60255);
+        result[0].AdjustmentPaise.Should().Be(-6695);
+        order.Adjustments.Should().ContainSingle(a => a.Kind == AdjustmentKind.Weight && a.AmountPaise == -6695);
+        order.FinalTotalPaise.Should().Be(60255);
+        order.AmountDuePaise.Should().Be(60255);
+    }
+
+    [Fact]
+    public void With_no_overweight_allowance_a_prepaid_lighter_pack_refunds_the_shortfall()
+    {
+        var order = OrderFactory.Place([NoAllowanceSeerFish()], PaymentMethod.Online);
+        var paid = order.TotalPaise;
+        order.ConfirmPayment(Guid.NewGuid(), paid, order.PlacedAt.AddMinutes(1));
+        order.Preparing();
+
+        order.Pack([new PackLine(order.Items[0].Id, 450, "GRAM")], false, paid, OrderFactory.Staff, At);
+
+        order.FinalTotalPaise.Should().Be(60255);
+        order.AmountDuePaise.Should().Be(0);
+        order.RefundDuePaise.Should().Be(paid - 60255);
+        order.RefundDueWeightShortfallPaise.Should().Be(paid - 60255);
+    }
+
+    [Fact]
+    public void Fixed_net_weight_pack_is_charged_the_pack_price_whatever_is_packed_above_it()
+    {
+        // A fixed pack (sell unit PACK, e.g. "Seer steaks, 500 g net") is never weight-variable: the charge is per pack.
+        var pack = OrderFactory.Line("PACK", 74900, 0, null, 1, false, 0, 0, "Seer Fish", "Steaks 500 g net");
+        var order = OrderFactory.Place([pack]).Preparing();
+        var line = order.Items[0];
+
+        var result = order.Pack([new PackLine(line.Id, 2, "PACK")], false, 0, OrderFactory.Staff, At);
+
+        line.MaxChargeableQuantity.Should().Be(1);
+        result[0].ChargedQuantity.Should().Be(1);
+        result[0].FinalTotalPaise.Should().Be(74900);
+        order.FinalTotalPaise.Should().Be(order.TotalPaise);
+        order.Adjustments.Should().BeEmpty();
+    }
+
+    private static OrderItemSnapshot NoAllowanceSeerFish()
+        => OrderFactory.Line("KG", 129900, 4000, "PER_KG", 500, true, 0, 0, "Seer Fish", "Medium", "Steaks", maxOverweightBp: 0);
+
+    [Fact]
     public void Non_weight_variable_line_packed_above_ordered_is_charged_as_ordered()
     {
         var order = OrderFactory.Place([OrderFactory.Crabs()]).Preparing();

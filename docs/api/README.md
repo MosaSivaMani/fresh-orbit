@@ -620,7 +620,7 @@ Product shape fields (all server-computed; clients render them as given, never d
       "availability": { "status": "IN_STOCK", "maxOrderableNow": { "value": 5000, "unit": "GRAM" }, "message": null }
     }
   ],
-  "netWeightNote": "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.", "isWishlisted": false,
+  "netWeightNote": "Prices are for net weight after cleaning. If your pack weighs less, you pay less.", "isWishlisted": false,
   "offer": { "couponCode": "FRESH15", "text": "15% off up to ₹100 on orders above ₹499 with code FRESH15" }
 }
 ```
@@ -657,13 +657,15 @@ Cart is priced on every read (§5). Owner = customer JWT, else `X-Cart-Token`.
 ```json
 {
   "variantId": "0192b411-0001-7000-8000-000000000201", "preparationCode": "STEAK", "quantity": { "value": 500, "unit": "GRAM" },
-  "maxChargeableQuantity": { "value": 550, "unit": "GRAM" }, "unitPricePaise": 129900, "compareAtPaise": 149900, "discountBp": 1334, "priceUnit": "KG",
+  "maxChargeableQuantity": { "value": 500, "unit": "GRAM" }, "unitPricePaise": 129900, "compareAtPaise": 149900, "discountBp": 1334, "priceUnit": "KG",
   "itemPaise": 64950, "preparationPaise": 2000, "chargeBasis": "PER_KG", "taxRateBp": 500, "taxPaise": 3188,
-  "estimatedTotalPaise": 66950, "maxChargeablePaise": 73645, "availability": { "status": "IN_STOCK", "message": null },
+  "estimatedTotalPaise": 66950, "maxChargeablePaise": 66950, "availability": { "status": "IN_STOCK", "message": null },
   "fulfillmentLocationCode": "CHN-TVM", "pincode": "600041",
-  "weightNote": "Weight-based items are charged on actual net weight, up to 10% over the ordered weight."
+  "weightNote": null
 }
 ```
+At the default `maxOverweightBp` 0 (D347) `maxChargeableQuantity` / `maxChargeablePaise` equal the ordered quantity and
+`estimatedTotalPaise`, and `weightNote` is null; with a non-zero allowance they are larger and `weightNote` says so.
 `preparation` omitted → the variant's default. Refusals (422, field in `errors`): `LOCATION_REQUIRED` / `PINCODE_NOT_SERVICEABLE`
 (`pincode`), `VALIDATION_FAILED` (missing `variantId`, `quantity` or `unit`), `PRODUCT_NOT_AVAILABLE` (`variantId`),
 `PREPARATION_NOT_AVAILABLE` / `PREPARATION_CHARGE_NOT_AVAILABLE` (`preparation`), `QUANTITY_UNIT_INVALID` (`unit`),
@@ -692,9 +694,9 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
       "productName": "Seer Fish (Vanjaram)", "variantId": "0192b411-0001-7000-8000-000000000201", "variantName": "Medium (3-5 kg fish)",
       "sellUnit": "KG", "imageUrl": "https://img.freshorbit.in/products/seer-fish/1-320.webp",
       "preparation": { "code": "STEAK", "name": "Steaks (1 cm)", "yieldBp": 7000 }, "quantity": { "value": 500, "unit": "GRAM" },
-      "estimatedNetQuantity": { "value": 500, "unit": "GRAM" }, "maxChargeableQuantity": { "value": 550, "unit": "GRAM" }, "unitPricePaise": 129900,
+      "estimatedNetQuantity": { "value": 500, "unit": "GRAM" }, "maxChargeableQuantity": { "value": 500, "unit": "GRAM" }, "unitPricePaise": 129900,
       "compareAtPaise": 149900, "priceUnit": "KG", "itemPaise": 64950, "preparationChargePaise": 2000, "preparationChargeBasis": "PER_KG",
-      "taxRateBp": 0, "taxPaise": 0, "estimatedLineTotalPaise": 66950, "maxLineTotalPaise": 73645,
+      "taxRateBp": 0, "taxPaise": 0, "estimatedLineTotalPaise": 66950, "maxLineTotalPaise": 66950,
       "availability": { "status": "IN_STOCK", "message": null }, "isSellable": true, "issues": []
     },
     {
@@ -702,9 +704,9 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
       "productName": "Tiger Prawns", "variantId": "0192b411-0002-7000-8000-000000000202", "variantName": "Large (20-25 count/kg)", "sellUnit": "KG",
       "imageUrl": "https://img.freshorbit.in/products/tiger-prawns/1-320.webp",
       "preparation": { "code": "CLEANED", "name": "Peeled and deveined", "yieldBp": 6000 }, "quantity": { "value": 500, "unit": "GRAM" },
-      "estimatedNetQuantity": { "value": 500, "unit": "GRAM" }, "maxChargeableQuantity": { "value": 550, "unit": "GRAM" }, "unitPricePaise": 89900,
+      "estimatedNetQuantity": { "value": 500, "unit": "GRAM" }, "maxChargeableQuantity": { "value": 500, "unit": "GRAM" }, "unitPricePaise": 89900,
       "compareAtPaise": null, "priceUnit": "KG", "itemPaise": 44950, "preparationChargePaise": 3000, "preparationChargeBasis": "PER_KG",
-      "taxRateBp": 0, "taxPaise": 0, "estimatedLineTotalPaise": 47950, "maxLineTotalPaise": 52745,
+      "taxRateBp": 0, "taxPaise": 0, "estimatedLineTotalPaise": 47950, "maxLineTotalPaise": 47950,
       "availability": { "status": "LOW_STOCK", "message": "Only 1.5 kg left today." }, "isSellable": true, "issues": []
     },
     {
@@ -721,11 +723,11 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
   "coupon": { "code": "FRESH100", "status": "APPLIED", "discountPaise": 10000, "message": null },
   "totals": {
     "itemsPaise": 239900, "preparationPaise": 5000, "subtotalPaise": 244900, "discountPaise": 10000, "deliveryFeePaise": 0, "deliveryFeeWaived": true,
-    "taxPaise": 0, "estimatedTotalPaise": 234900, "maxTotalPaise": 246390, "minOrderPaise": 29900, "minOrderShortfallPaise": 0,
+    "taxPaise": 0, "estimatedTotalPaise": 234900, "maxTotalPaise": 234900, "minOrderPaise": 29900, "minOrderShortfallPaise": 0,
     "freeDeliveryShortfallPaise": 0
   },
   "canCheckout": true, "checkoutBlockers": [],
-  "messages": [ "Weight-based items are charged on actual net weight, up to 10% over the ordered weight." ]
+  "messages": []
 }
 ```
 
@@ -806,7 +808,9 @@ Response: order detail (shape below) with `status: CONFIRMED` (COD / UPI_ON_DELI
 | Race | Retried internally up to 3 times; then 409 `CONCURRENT_SAVE` |
 | Effects | Stock reserved `ceil(net × 10000 / yieldBp)` g, slot booked, coupon redeemed, cart `CONVERTED`, reservation expiry `reservationMinutes` for `PENDING_PAYMENT` |
 
-**GET /api/v1/orders/{orderId}** → 200 (after packing, COD)
+**GET /api/v1/orders/{orderId}** → 200 (after packing, COD). This example and the pack example below were written with a
++10 % allowance (`maxOverweightBp` 1000) to show the cap; at the default 0 (D347) `maxChargeableQuantity` equals the
+ordered quantity, so the prawns packed at 580 g would be charged 500 g and the extra is free.
 ```json
 {
   "id": "0192b600-0001-7000-8000-000000000501", "orderNumber": "FO-260001", "version": "918273", "status": "PACKED", "paymentMethod": "COD",
@@ -1307,7 +1311,7 @@ needs that is not here is a missing API field, not a client calculation.
 |---|---|---|
 | `quantity` | Ordered net quantity | GRAM for KG variants, PIECE, PACK |
 | `estimatedNetQuantity` | Net quantity the customer receives (estimate) | = `quantity` (net-weight model) |
-| `maxChargeableQuantity` | Cap on charged quantity | weight-variable: `quantity × (10000 + maxOverweightBp) / 10000` floored; otherwise `quantity` |
+| `maxChargeableQuantity` | Cap on charged quantity | weight-variable: `quantity × (10000 + maxOverweightBp) / 10000` floored; otherwise `quantity`. Default `maxOverweightBp` 0 (D347) → equals `quantity` |
 | `unitPricePaise` / `priceUnit` | Current location price per KG / PIECE / PACK | from `variant_prices` at the fulfillment location |
 | `compareAtPaise` | Strike-through price | display only |
 | `itemPaise` | `quantity × unitPrice` (per kg ÷ 1000 for grams) | round half up to paise per line |

@@ -25,7 +25,8 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
 {
     public const double SimilarityThreshold = 0.3;
     public const int SuggestLimit = 8;
-    public const string NetWeightNote = "You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.";
+    /// <summary>Net-weight note on every product (D347): true whatever the configured overweight allowance.</summary>
+    public const string NetWeightNote = "Prices are for net weight after cleaning. If your pack weighs less, you pay less.";
 
     private const string VisibleProductsFrom = """
         FROM catalog.products p

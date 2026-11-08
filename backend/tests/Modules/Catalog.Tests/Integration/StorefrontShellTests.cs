@@ -196,7 +196,7 @@ public sealed class StorefrontShellTests(CatalogDatabase database) : StorefrontT
         var response = await SendAsync(settings, HttpMethod.Put, $"/api/v1/admin/settings/order-policies/{cityId}", new
         {
             reservationMinutes = 15,
-            maxOverweightBp = 1000,
+            maxOverweightBp = 0,
             cancelAllowedUntilStatus = "CONFIRMED",
             codMaxOrderPaise = 500000,
             enabledPaymentMethods = CodOnly,

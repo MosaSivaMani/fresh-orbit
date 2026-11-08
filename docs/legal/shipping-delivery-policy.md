@@ -47,8 +47,9 @@ The delivery fee is shown on your invoice. It does not change if the final weigh
 At launch you pay **on delivery**, in cash or by **UPI** (scan the rider's QR code). Online payment will be added
 later.
 
-- Pay-on-delivery is available for orders whose "most you could pay" total is up to **₹5,000** *(setting)*.
-- You pay the **final amount** after weighing, which the app shows once your order is packed. See §2 of the
+- Pay-on-delivery is available for orders whose total is up to **₹5,000** *(setting)*.
+- You pay the **final amount** after weighing, which the app shows once your order is packed. It is never more than
+  the total you saw at checkout. See §2 of the
   [Refund and cancellation policy](refund-cancellation-policy.md).
 
 ## 5. On the day

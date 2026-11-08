@@ -169,7 +169,7 @@ cannot be disabled). Variables are pre-formatted strings from the server (`…Te
 | Column | Value | Source |
 |---|---|---|
 | `reservation_minutes` | 15 | proposal (ONLINE payment window) |
-| `max_overweight_bp` | 1000 | decided (+10%, database §3) |
+| `max_overweight_bp` | 0 | decided (D347, 2026-11-08: no over-weight charge, the price shown is the most the customer pays; was 1000 = +10 %) |
 | `cancel_allowed_until_status` | `CONFIRMED` | `docs/api` §6 default |
 | `cod_max_order_paise` | 500000 (₹5,000) | proposal; business confirms |
 | `enabled_payment_methods` (new, RD-G3) | `["COD", "UPI_ON_DELIVERY"]` | ONLINE off until a gateway is live |

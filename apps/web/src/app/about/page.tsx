@@ -42,8 +42,8 @@ export default function AboutPage() {
         <li>Set your delivery pincode to see what is sold near you and at what price.</li>
         <li>Choose the size and how you want it cleaned and cut.</li>
         <li>
-          Weighed items are charged on the actual net weight after cleaning, never above the maximum
-          shown in your cart.
+          Weighed items are priced on net weight after cleaning. The price you see is the most you
+          pay: if your pack weighs less, you pay less, and if it weighs more, the extra is free.
         </li>
         <li>Pick a delivery slot and pay on delivery.</li>
       </ul>

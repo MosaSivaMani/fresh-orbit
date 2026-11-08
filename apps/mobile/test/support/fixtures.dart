@@ -93,7 +93,7 @@ Map<String, Object?> productDetailJson() => {
       },
     },
   ],
-  'netWeightNote': 'You pay for net weight after cleaning. Final weight may vary up to 10% above the ordered weight.',
+  'netWeightNote': 'Prices are for net weight after cleaning. If your pack weighs less, you pay less.',
   'isWishlisted': false,
 };
 
@@ -103,7 +103,10 @@ Map<String, Object?> cartLineJson({
   String id = 'line1',
   int quantity = 500,
   int estimated = 66950,
-  int max = 73645,
+  // D347: no over-weight charge by default, so the maximum equals the estimate. A test may pass a larger
+  // [max] / [maxQuantity] to stand for an operator-configured over-weight allowance.
+  int? max,
+  int? maxQuantity,
   String availability = 'IN_STOCK',
   String? availabilityMessage,
 }) => {
@@ -118,7 +121,7 @@ Map<String, Object?> cartLineJson({
   'preparation': {'code': 'STEAK', 'name': 'Steaks (1 cm)', 'yieldBp': 7000},
   'quantity': {'value': quantity, 'unit': 'GRAM'},
   'estimatedNetQuantity': {'value': quantity, 'unit': 'GRAM'},
-  'maxChargeableQuantity': {'value': quantity * 11 ~/ 10, 'unit': 'GRAM'},
+  'maxChargeableQuantity': {'value': maxQuantity ?? quantity, 'unit': 'GRAM'},
   'unitPricePaise': 129900,
   'compareAtPaise': 149900,
   'priceUnit': 'KG',
@@ -128,7 +131,7 @@ Map<String, Object?> cartLineJson({
   'taxRateBp': 0,
   'taxPaise': 0,
   'estimatedLineTotalPaise': estimated,
-  'maxLineTotalPaise': max,
+  'maxLineTotalPaise': max ?? estimated,
   'availability': {'status': availability, 'message': availabilityMessage},
   'isSellable': true,
   'issues': <Object?>[],
@@ -137,7 +140,7 @@ Map<String, Object?> cartLineJson({
 Map<String, Object?> cartJson({
   List<Map<String, Object?>>? lines,
   int estimatedTotal = 70850,
-  int maxTotal = 77545,
+  int? maxTotal,
   bool canCheckout = true,
   List<Map<String, Object?>> blockers = const [],
   Map<String, Object?>? coupon,
@@ -157,14 +160,14 @@ Map<String, Object?> cartJson({
     'deliveryFeeWaived': false,
     'taxPaise': 0,
     'estimatedTotalPaise': estimatedTotal,
-    'maxTotalPaise': maxTotal,
+    'maxTotalPaise': maxTotal ?? estimatedTotal,
     'minOrderPaise': 29900,
     'minOrderShortfallPaise': 0,
     'freeDeliveryShortfallPaise': 0,
   },
   'canCheckout': canCheckout,
   'checkoutBlockers': blockers,
-  'messages': ['Weight-based items are charged on actual net weight, up to 10% over the ordered weight.'],
+  'messages': <String>[],
 };
 
 Cart cart({List<Map<String, Object?>>? lines, int estimatedTotal = 70850, Map<String, Object?>? coupon}) =>
@@ -172,7 +175,7 @@ Cart cart({List<Map<String, Object?>>? lines, int estimatedTotal = 70850, Map<St
 
 Map<String, Object?> previewJson({
   int expectedTotal = 70850,
-  int maxTotal = 77545,
+  int? maxTotal,
   bool canPlaceOrder = true,
   List<Map<String, Object?>> blockers = const [],
 }) => {
@@ -204,7 +207,7 @@ Map<String, Object?> previewJson({
     'deliveryFeeWaived': false,
     'taxPaise': 0,
     'estimatedTotalPaise': expectedTotal,
-    'maxTotalPaise': maxTotal,
+    'maxTotalPaise': maxTotal ?? expectedTotal,
   },
   'paymentMethods': [
     {'method': 'COD', 'enabled': true, 'reasonCode': null},
@@ -252,7 +255,7 @@ Map<String, Object?> orderJson({String status = 'CONFIRMED', Map<String, Object?
       'variantName': 'Medium (3-5 kg fish)',
       'preparationName': 'Steaks (1 cm)',
       'orderedQuantity': {'value': 500, 'unit': 'GRAM'},
-      'maxChargeableQuantity': {'value': 550, 'unit': 'GRAM'},
+      'maxChargeableQuantity': {'value': 500, 'unit': 'GRAM'},
       'packedQuantity': null,
       'chargedQuantity': null,
       'unitPricePaise': 129900,

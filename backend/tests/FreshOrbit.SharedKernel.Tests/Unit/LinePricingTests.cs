@@ -93,8 +93,17 @@ public sealed class LinePricingTests
     [InlineData(500, false, 1_000, 500)]
     [InlineData(2, false, 1_000, 2)]
     [InlineData(999, true, 1_000, 1_098)] // 1 098.9 floored
+    [InlineData(500, true, 0, 500)] // D347 default: no allowance, the ordered weight is the most charged
+    [InlineData(333, true, 0, 333)]
     public void Max_chargeable_quantity_floors_the_overweight_allowance(int ordered, bool weightVariable, int overweightBp, int expected)
         => LinePricing.MaxChargeableQuantity(ordered, weightVariable, overweightBp).Should().Be(expected);
+
+    [Theory]
+    [InlineData(600, 500)] // heavier pack: the extra is free
+    [InlineData(500, 500)]
+    [InlineData(450, 450)] // lighter pack: charged less
+    public void With_no_allowance_the_charged_quantity_never_exceeds_the_ordered_weight(int packed, int expected)
+        => LinePricing.ChargedQuantity(packed, LinePricing.MaxChargeableQuantity(500, true, 0)).Should().Be(expected);
 
     [Theory]
     [InlineData(540, 550, 540)]

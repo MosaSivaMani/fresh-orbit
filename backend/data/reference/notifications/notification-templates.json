@@ -38,7 +38,7 @@
         "orderUrl"
       ],
       "subject": null,
-      "body": "Order {{orderNumber}} confirmed. Delivery {{slotDateText}}, {{slotWindowText}}. Est. total {{estimatedTotalText}} ({{paymentMethodText}}). - {{businessName}}",
+      "body": "Order {{orderNumber}} confirmed. Delivery {{slotDateText}}, {{slotWindowText}}. Total {{estimatedTotalText}} ({{paymentMethodText}}). - {{businessName}}",
       "dltTemplateId": null
     },
     {
@@ -54,7 +54,7 @@
         "orderUrl"
       ],
       "subject": "Your order {{orderNumber}} is confirmed",
-      "body": "Hello {{recipientName}},\n\nThank you for your order {{orderNumber}}.\n\nDelivery: {{slotDateText}}, {{slotWindowText}}\nEstimated total: {{estimatedTotalText}} ({{paymentMethodText}})\n\nThe final amount may change slightly for items sold by weight.\n\nView your order: {{orderUrl}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
+      "body": "Hello {{recipientName}},\n\nThank you for your order {{orderNumber}}.\n\nDelivery: {{slotDateText}}, {{slotWindowText}}\nTotal: {{estimatedTotalText}} ({{paymentMethodText}})\n\nThis is the most you pay. If an item sold by weight packs lighter than ordered, you pay less.\n\nView your order: {{orderUrl}}\n\n{{businessName}} | {{supportPhone}} | {{supportEmail}}",
       "dltTemplateId": null
     },
     {
@@ -86,7 +86,7 @@
         "orderUrl"
       ],
       "subject": "Order confirmed",
-      "body": "Order {{orderNumber}} is confirmed for {{slotDateText}}, {{slotWindowText}}. Estimated total {{estimatedTotalText}}.",
+      "body": "Order {{orderNumber}} is confirmed for {{slotDateText}}, {{slotWindowText}}. Total {{estimatedTotalText}}.",
       "dltTemplateId": null
     },
     {

@@ -15,9 +15,10 @@ import '../../widgets/policy_links.dart';
 
 const _faq = <(String, String)>[
   (
-    'Why is my total an estimate?',
-    'Fish and meat are weighed when your order is packed. You pay for the net weight we pack, and never more than '
-        'the maximum shown at checkout.',
+    'Can my total change after weighing?',
+    'Only down, never up. Fish and meat are weighed after cleaning when your order is packed. If your pack weighs '
+        'less than you ordered, you pay less (or, if you paid online, we refund the difference). If it weighs more, '
+        'the extra is free.',
   ),
   (
     'What does the cleaning yield mean?',

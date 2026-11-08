@@ -51,6 +51,29 @@ With fixed costs of *(estimate)* ₹1,20,000 a month (two staff, a rider, rent, 
 **1,350 orders a month, ~45 a day**. Every ₹10 saved on wastage or delivery per order lowers that by ~10 %.
 The real numbers come from the system once the gaps in §2.1 are closed.
 
+### Setting a price (D347, D348)
+
+Since 2026-11-08 the price the customer sees is **the most they pay** (D347): we never charge for weight above
+what was ordered, and a lighter pack costs less. Like Licious and FreshToHome, our top items will also be sold as
+**fixed net-weight packs** at one price (D348), e.g. "Seer steaks, 500 g net (5–7 pieces), ₹X", packed to at least
+the stated net weight. Both mean a pack is always a little over the stated weight and **we give that extra away**, so
+it must be inside the price. Method, per product and preparation:
+
+```
+cost per net kg   = harbour price per kg (raw) ÷ cleaning yield        e.g. ₹700 ÷ 0.70 = ₹1,000
++ wastage         = × (1 + wastage share)                              e.g. × 1.05      = ₹1,050
++ over-pack give  = × (1 + over-pack giveaway, ~2–5 %)                 e.g. × 1.03      = ₹1,082
++ packaging       = + packaging and ice per kg                         e.g. + ₹30       = ₹1,112
+price per net kg  = ÷ (1 − target margin)                              e.g. ÷ (1 − 0.30) = ₹1,589
+pack price        = price per net kg × pack net kg                     e.g. × 0.5       = ₹794
+```
+
+Then **compare with the market** (Licious, FreshToHome, local shops for the same cut and net weight) and **round**
+to a clean price (₹799, not ₹794); if the rounded price is far above the market, look again at buying and yield
+before cutting the margin. The over-pack giveaway is measured, not guessed: the pack screen records the packed weight,
+so (packed − ordered) ÷ ordered over a month gives the real figure to put back into the price. Prices are set per
+location in the admin (price periods); there is no fallback price (rule 7).
+
 ## 2. Gaps, area by area
 
 Legend: **Have** = in the system today · **Gap** = missing · priority **P1** (before or at soft launch),

@@ -259,6 +259,16 @@ class OrderDetail {
 
   /// Replacements the store proposed for short items; PROPOSED ones wait for the customer's answer.
   final List<OrderSubstitution> substitutions;
+
+  /// True when the server let an item be charged above its ordered weight (an over-weight allowance). D347's
+  /// default is none: the server's maximum quantity equals the ordered one and the total can only come down.
+  /// Only compares two server quantities to choose wording; no amount is computed.
+  bool get hasOverWeightAllowance => items.any(
+    (i) =>
+        i.maxChargeableQuantity != null &&
+        i.maxChargeableQuantity!.unit == i.orderedQuantity.unit &&
+        i.maxChargeableQuantity!.value > i.orderedQuantity.value,
+  );
 }
 
 /// A replacement proposed for a short item (`substitutions[]` of the order detail). The price difference is the

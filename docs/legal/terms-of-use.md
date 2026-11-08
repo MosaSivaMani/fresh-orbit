@@ -71,9 +71,9 @@ of the Consumer Protection (E-Commerce) Rules 2020, and Legal Metrology declarat
 - When you place an order you make an offer to buy. The order is accepted when we confirm it: at once for orders you
   pay on delivery, or once payment is received for online payment (when we offer it). You get a confirmation SMS
   with your order number.
-- **Weight:** items sold by weight are charged at the weight we pack, never more than **10 % above** the weight you
-  ordered *(setting)*. If we pack less, you pay less. At checkout we show the estimated total and the most you could
-  pay. Details in the [Refund and cancellation policy](refund-cancellation-policy.md), §2.
+- **Weight:** the price you see is the most you pay. Items sold by weight are charged for the net weight we pack, up to
+  the weight you ordered: if we pack more, the extra is free; if we pack less, you pay less. Details in the
+  [Refund and cancellation policy](refund-cancellation-policy.md), §2.
 - **Substitutions:** if we cannot supply an item, we follow the choice you made at checkout (call me, choose a similar
   item, or don't substitute).
 - **Notes:** you can add a note (up to 500 characters) for our team. A note cannot change prices or these terms.

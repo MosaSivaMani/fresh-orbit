@@ -56,7 +56,7 @@ class CartScreen extends ConsumerWidget {
             key: const Key('checkoutButton'),
             label: 'Checkout',
             amount: formatRupees(v.totals!.estimatedTotalPaise),
-            semanticLabel: 'Checkout, estimated ${formatRupees(v.totals!.estimatedTotalPaise)}',
+            semanticLabel: 'Checkout, ${formatRupees(v.totals!.estimatedTotalPaise)}',
             onPressed: v.canCheckout ? () => context.push('/checkout') : null,
           ),
         ),
@@ -157,7 +157,10 @@ class _CartBody extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: FreshLayout.cardGap),
             child: InfoBanner(tone: BannerTone.danger, text: b.message.isEmpty ? humanizeCode(b.code) : b.message),
           ),
-        if (totals != null) ...[ShortfallBanners(totals: totals), TotalsCard(totals: totals)],
+        if (totals != null) ...[
+          ShortfallBanners(totals: totals),
+          TotalsCard(totals: totals, hasWeighedItems: anyWeighed(cart.lines)),
+        ],
         for (final m in cart.messages)
           Padding(
             padding: const EdgeInsets.only(top: FreshLayout.cardGap),
@@ -272,14 +275,18 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                         ),
                       ),
                     const SizedBox(height: 2),
+                    // D347: max == estimated is the normal case, so the line price is shown plainly; the
+                    // "Estimated" / "At most" wording appears only when the server sends a larger maximum.
                     PriceTag(
+                      key: ValueKey('linePrice-${line.id}'),
                       paise: line.estimatedLineTotalPaise,
-                      prefix: 'Estimated',
+                      prefix: line.maxLineTotalPaise > line.estimatedLineTotalPaise ? 'Estimated' : null,
                       style: AppText.price(c.ink, size: 14),
                     ),
-                    if (line.maxLineTotalPaise != line.estimatedLineTotalPaise)
+                    if (line.maxLineTotalPaise > line.estimatedLineTotalPaise)
                       Text(
                         'At most ${formatRupees(line.maxLineTotalPaise)} for up to ${formatQuantity(line.maxChargeableQuantity)}',
+                        key: ValueKey('lineMax-${line.id}'),
                         style: muted,
                       ),
                   ],

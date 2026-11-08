@@ -123,7 +123,7 @@ new columns are null on invoices issued before L-12.
 | ORD-R15 | Preview runs the same Read + Decide with no writes; business problems are returned as `blockers` (never 422); `expectedTotalPaise = estimatedTotalPaise`; `paymentMethods[]` with `reasonCode`. `address.label` is the saved address label (HOME / WORK / OTHER) from `ICustomersApi.GetDeliveryAddressAsync` (`DeliveryAddress.Label`). |
 | ORD-R16 | Order header snapshot: address fields, city, location, service area, slot id + start/end, substitution preference, payment method, coupon code, `items/preparation/discount/delivery_fee/tax/total_paise` (estimate), notes (≤ 500 chars). |
 | ORD-R17 | Item snapshot: product id/name, variant id/name, sku, image key, hsn, preparation code/name, sell unit, unit price, preparation charge rate + basis, tax rate, yield, ordered quantity, estimated total, max chargeable quantity, allocated discount. Later catalog/price changes never alter it. |
-| ORD-R18 | `max_chargeable_quantity`: weight-variable variants floor(`ordered × (10000 + maxOverweightBp) / 10000`), policy at placement; others = ordered. |
+| ORD-R18 | `max_chargeable_quantity`: weight-variable variants floor(`ordered × (10000 + maxOverweightBp) / 10000`), policy at placement; others = ordered. Default `maxOverweightBp` 0 (D347): max chargeable = ordered, so a heavier pack is charged the ordered weight (extra free) and a lighter pack less. |
 | ORD-R19 | Line numbers 1..n in cart line order; substitution lines take the next number. |
 
 ### Status, reads, access

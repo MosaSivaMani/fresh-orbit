@@ -41,7 +41,7 @@ number, wording or applicability must be checked; **Open** = a question only a l
 System facts used: OTP sign-in valid 5 minutes (IDN-R1); browse without sign-in, sign in to order; deletion refused
 with an active order (`ACTIVE_ORDERS_EXIST`); staff block (CUS-R8); tax-inclusive prices (D2); prices per pincode's
 store (LOC-R1, rule 7 of CLAUDE.md); price-change confirmation (ORD-R10); acceptance at confirmation (ORD-R14);
-10 % over-weight cap (ORD-R18, R27); substitutions (ORD-R33–R36); 500-character notes (ORD-R16); COD limit on max
+no over-weight charge, 0 % by default since D347 (ORD-R18, R27); substitutions (ORD-R33–R36); 500-character notes (ORD-R16); COD limit on max
 total (ORD-R9, D17); coupons one per order, first-order, per-customer and total limits, given back on cancel, kept on
 return (PROMO-R6–R10, ORD-R41, D19).
 
@@ -83,7 +83,7 @@ SEC-13 and D77.
 | E-Commerce Rules rule 4(10) (refunds within a reasonable period / as RBI prescribes) | Refund days are owner placeholders, flagged | Likely |
 | E-Commerce Rules rule 7 (no refusal of refund for defective, deficient, not-as-described, late goods) | Complaint flow with refund up to line total; late delivery at order level; 24 h window and staff discretion flagged | Likely on rule; Open on whether our window and discretion comply |
 | Consumer Protection Act 2019 (statutory rights cannot be excluded) | "Nothing in this policy takes away any right you have" | Sure |
-| Legal Metrology Act 2009 and (Packaged Commodities) Rules 2011: sale by weight, verified scales, declarations for pre-packed goods sold online | Charge on packed net weight with a stated maximum; flagged | Open: whether our cut-to-order packs are "pre-packaged", and whether stamped scales and product-page declarations are needed |
+| Legal Metrology Act 2009 and (Packaged Commodities) Rules 2011: sale by weight, verified scales, declarations for pre-packed goods sold online | Charge on packed net weight, never above the ordered weight (D347: the price shown is the most you pay); fixed net-weight packs (D348) packed to at least the stated net weight; flagged | Open: whether our cut-to-order packs are "pre-packaged", and whether stamped scales and product-page declarations are needed |
 | RBI rules on refunds for failed digital payments (turn-around times) | Only relevant once online payment starts | Likely; Open later |
 
 System facts used: customer cancel until `CONFIRMED` by default, `PENDING_PAYMENT` always (ORD-R38, SET-R2); staff
@@ -149,3 +149,8 @@ batch code, catch/harvest date, best-before, receipt temperature (INV-R4); cold-
 ## 8. What needs checking
 
 All "Likely" and "Open" rows above; the consolidated list is "Open legal questions" in `docs/legal/README.md`.
+
+**Update 2026-11-08 (D347):** the open question on consent to charging up to 10 % above the ordered weight is
+resolved: the business no longer charges any over-weight (`maxOverweightBp` 0), so the price shown is the most the
+customer pays, extra packed weight is free and a lighter pack costs less. The Legal Metrology question (pre-packaged
+status, product-page declarations, stamped scales) stays open and now also covers the fixed net-weight packs (D348).

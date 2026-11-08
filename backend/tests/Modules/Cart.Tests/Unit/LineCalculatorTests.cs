@@ -3,6 +3,7 @@ using FreshOrbit.Cart.Application.Pricing;
 using FreshOrbit.Cart.Public;
 using FreshOrbit.Catalog.Public;
 using FreshOrbit.Inventory.Public;
+using FreshOrbit.Pricing.Public;
 
 namespace FreshOrbit.Cart.Tests.Unit;
 
@@ -81,5 +82,39 @@ public sealed class LineCalculatorTests
         gone.MinOrder.Should().BeNull();
         gone.MaxOrder.Should().BeNull();
         gone.OrderStep.Should().BeNull();
+    }
+
+    [Fact]
+    public void With_no_overweight_allowance_the_max_line_total_is_the_shown_price()
+    {
+        // D347: the reference default allowance is 0 — the price shown is the most the customer pays.
+        var fish = Fish();
+        var line = new PricingLine(Guid.CreateVersion7(), fish.VariantId, null, 750);
+        var price = new LinePrice(fish.VariantId, null, 129900, null, 0, null, 500);
+        var stock = new VariantAvailability(fish.VariantId, 5000, QuantityUnit.Gram);
+
+        var none = LineCalculator.Price(new ResolvedLine(line, fish, null, null), price, stock, 0).ToView(0);
+        var allowance = LineCalculator.Price(new ResolvedLine(line, fish, null, null), price, stock, 1000).ToView(0);
+
+        none.MaxChargeableQuantity.Should().Be(new QuantityView(750, "GRAM"));
+        none.MaxLineTotalPaise.Should().Be(none.EstimatedLineTotalPaise);
+        allowance.MaxChargeableQuantity.Should().Be(new QuantityView(825, "GRAM"));
+        allowance.MaxLineTotalPaise.Should().BeGreaterThan(allowance.EstimatedLineTotalPaise);
+    }
+
+    [Fact]
+    public void Fixed_net_weight_pack_has_one_price_whatever_the_allowance()
+    {
+        var pack = new VariantInfo(
+            Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), "Seer Fish", "seer-fish", "Steaks 500 g net", "SEER-P500", null, "0302", "SEAFOOD",
+            SellUnit.Pack, StockUnit.Piece, 500, null, 1, 10, 1, false, true, []);
+        var line = new PricingLine(Guid.CreateVersion7(), pack.VariantId, null, 2);
+        var price = new LinePrice(pack.VariantId, null, 74900, null, 0, null, 500);
+
+        var view = LineCalculator.Price(new ResolvedLine(line, pack, null, null), price, new VariantAvailability(pack.VariantId, 10, QuantityUnit.Piece), 1000).ToView(0);
+
+        view.MaxChargeableQuantity.Should().Be(new QuantityView(2, "PACK"));
+        view.EstimatedLineTotalPaise.Should().Be(149800);
+        view.MaxLineTotalPaise.Should().Be(149800);
     }
 }

@@ -114,7 +114,7 @@ DLT registration is done by the business, not by us. Each step's id goes into `.
 |---|---|---|---|
 | `OTP_LOGIN` | `SMS_DLT_TEMPLATE_OTP_LOGIN` | `{#var#} is your {#var#} login code. It expires in {#var#} minutes. Do not share it with anyone.` | code, businessName, expiresInMinutes |
 | `OTP_VERIFY_PHONE` | `SMS_DLT_TEMPLATE_OTP_VERIFY_PHONE` | `{#var#} is your {#var#} code to verify this phone number. It expires in {#var#} minutes.` | code, businessName, expiresInMinutes |
-| `ORDER_CONFIRMED` | `SMS_DLT_TEMPLATE_ORDER_CONFIRMED` | `Order {#var#} confirmed. Delivery {#var#}, {#var#}. Est. total {#var#} ({#var#}). - {#var#}` | orderNumber, slotDateText, slotWindowText, estimatedTotalText, paymentMethodText, businessName |
+| `ORDER_CONFIRMED` | `SMS_DLT_TEMPLATE_ORDER_CONFIRMED` | `Order {#var#} confirmed. Delivery {#var#}, {#var#}. Total {#var#} ({#var#}). - {#var#}` | orderNumber, slotDateText, slotWindowText, estimatedTotalText, paymentMethodText, businessName |
 | `PAYMENT_RECEIVED` | `SMS_DLT_TEMPLATE_PAYMENT_RECEIVED` | `Payment of {#var#} received for order {#var#} ({#var#}). - {#var#}` | amountText, orderNumber, paymentMethodText, businessName |
 | `PAYMENT_FAILED` | `SMS_DLT_TEMPLATE_PAYMENT_FAILED` | `Payment of {#var#} for order {#var#} failed. Retry: {#var#} - {#var#}` | amountText, orderNumber, retryUrl, businessName |
 | `SUBSTITUTION_PROPOSED` | `SMS_DLT_TEMPLATE_SUBSTITUTION_PROPOSED` | `Order {#var#}: {#var#} is unavailable. Accept {#var#} ({#var#}) by {#var#}: {#var#}` | orderNumber, itemName, proposedItemName, priceDifferenceText, respondByText, orderUrl |

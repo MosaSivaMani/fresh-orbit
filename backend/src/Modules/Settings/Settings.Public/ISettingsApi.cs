@@ -39,7 +39,7 @@ public sealed record StoreReadiness(IReadOnlyList<string> MissingProfileFields)
     public bool IsReady => MissingProfileFields.Count == 0;
 }
 
-/// <param name="MaxOverweightBp">Allowed packed overweight in basis points (1000 = +10 %).</param>
+/// <param name="MaxOverweightBp">Allowed packed overweight that may be charged, in basis points (1000 = +10 %); 0 by default (D347: the price shown is the most the customer pays, extra weight is free).</param>
 /// <param name="CancelAllowedUntilStatus">Order status code up to which a customer may cancel (e.g. CONFIRMED).</param>
 public sealed record OrderPolicy(int ReservationMinutes, int MaxOverweightBp, string CancelAllowedUntilStatus, long CodMaxOrderPaise)
 {

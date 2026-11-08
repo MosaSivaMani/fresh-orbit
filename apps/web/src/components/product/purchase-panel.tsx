@@ -68,20 +68,20 @@ function QuoteLine({
   if (!quote.data) {
     return (
       <p className="text-text-muted text-xs">
-        The estimated and maximum price for your weight are shown as soon as it is in your cart.
+        The price for your weight is shown as soon as it is in your cart.
       </p>
     );
   }
   const q = quote.data;
-  const most = `; at most ${formatRupees(q.maxChargeablePaise)} if packed up to ${formatQuantity(q.maxChargeableQuantity)}`;
+  // D347: the maximum equals the price unless an over-weight allowance is configured.
+  const most = `; you pay at most ${formatRupees(q.maxChargeablePaise)} if packed up to ${formatQuantity(q.maxChargeableQuantity)}`;
   return (
     <p className="text-text-muted text-sm" aria-live="polite">
-      Estimated{" "}
       <span className="text-text font-bold tabular-nums">
         {formatRupees(q.estimatedTotalPaise)}
       </span>{" "}
       for {formatQuantity(q.quantity)}
-      {q.maxChargeablePaise !== q.estimatedTotalPaise && most}.
+      {q.maxChargeablePaise > q.estimatedTotalPaise && most}.
     </p>
   );
 }
@@ -274,9 +274,9 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
             In your cart: {formatQuantity(inCart.quantity)}, {inCart.preparation?.name}
           </p>
           <p className="text-text-muted">
-            Estimated {formatRupees(inCart.estimatedLineTotalPaise)}
-            {inCart.maxLineTotalPaise !== inCart.estimatedLineTotalPaise &&
-              `; at most ${formatRupees(inCart.maxLineTotalPaise)} if packed up to ${formatQuantity(inCart.maxChargeableQuantity)}`}
+            {formatRupees(inCart.estimatedLineTotalPaise)}
+            {inCart.maxLineTotalPaise > inCart.estimatedLineTotalPaise &&
+              `; you pay at most ${formatRupees(inCart.maxLineTotalPaise)} if packed up to ${formatQuantity(inCart.maxChargeableQuantity)}`}
             .
           </p>
           <Link

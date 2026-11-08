@@ -3,15 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
-/// The server's estimate for one line before it is added: "Estimated ₹649 for 500 g" in the price face and,
-/// under it, the most it can cost after weighing. A soft teal tile on the grid's tile radius.
+/// The server's price for one line before it is added: "₹649 for 500 g" in the price face and, only when an
+/// over-weight allowance is configured (D347 default: none), the most it can cost after weighing under it
+/// ([atMost], null otherwise). A soft teal tile on the grid's tile radius.
 class PriceEstimateRow extends StatelessWidget {
   const PriceEstimateRow({super.key, required this.estimate, this.atMost});
 
-  /// For example "Estimated ₹649 for 500 g".
+  /// For example "₹649 for 500 g" (or "Estimated ₹649 for 500 g" when [atMost] is given).
   final String estimate;
 
-  /// For example "You pay at most ₹715 (up to 550 g)."
+  /// For example "You pay at most ₹715 (up to 550 g)." Null when the maximum equals the price.
   final String? atMost;
 
   @override

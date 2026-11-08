@@ -147,7 +147,7 @@ class ReceiptRow {
   /// A small second line under the label (for example "Packed 1.01 kg net").
   final String? detail;
 
-  /// Read instead of "label: value" (for example "Estimated total ₹708.50").
+  /// Read instead of "label: value" (for example "Total ₹708.50").
   final String? semanticsLabel;
 }
 

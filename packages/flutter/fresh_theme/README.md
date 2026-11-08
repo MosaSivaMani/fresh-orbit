@@ -50,7 +50,7 @@ badges) live here and the app uses them from here; a screen never builds its own
 | `lib/src/gallery.dart` | `FreshGallery`: the one picture gallery (D266, D276). Every picture as a swipeable page that fills its parent (the screen keeps its 3:2 frame); tappable dots on a paper pill (only for more than one picture; at once under reduced motion; `dotsAlignment`); "Picture i of n" with increase / decrease and a "Show picture i" button per dot for screen readers; one picture alone, none shows `empty`. Pictures come from the app's `itemBuilder`, which passes the server's alt text |
 | `lib/src/stickers.dart` | `Sticker` + `StickerTone`, `PolaroidCard`, `ReceiptRow` + `ReceiptCard` |
 | `lib/src/motion.dart` | `EntranceMotion`, `motionAllowed(context)` |
-| `lib/src/prices.dart` | `PriceEstimateRow` (the server's estimate and "at most" for a line), `CouponTile` (code, description, condition, one action) |
+| `lib/src/prices.dart` | `PriceEstimateRow` (the server's price for a line, and "at most" only when an over-weight allowance is set), `CouponTile` (code, description, condition, one action) |
 
 Still in the app, because they read app models, API errors or the bundled illustrations: `ColorBlockScreen`,
 `AvatarCircle`, `EmptyState`, `ErrorState`, `NotFoundScreen`, `AsyncValueView`, `showErrorSnack`,

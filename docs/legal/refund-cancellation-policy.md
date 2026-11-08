@@ -51,24 +51,25 @@ We tell you the reason by SMS and in the app. If you have paid anything, we refu
 cancelling, we must bear similar charges when we cancel. We charge nothing today; keep it that way or add the matching
 clause.
 
-## 2. Weight: why the final price can differ
+## 2. Weight: the price you see is the most you pay
 
-Fish and shellfish are sold by **net weight after cleaning and cutting**. Nobody can cut fish to an exact weight, so the
-weight is measured when we pack your order.
+Fish and shellfish are sold by **net weight after cleaning and cutting** (the weight you cook, never the weight before
+cleaning). Nobody can cut fish to an exact weight, so the weight is measured when we pack your order.
 
-- At checkout you see the **estimated total** (for the weight you ordered) and the **most you could pay**.
-- **If we pack more than you ordered**, you pay for the packed weight, but **never more than 10 % above** the weight
-  you ordered *(setting)*. Any fish above that limit is free.
+- The price you see on the product page, in your cart and at checkout is **the most you pay**. It never goes up after
+  weighing.
+- **If we pack more than you ordered**, the extra is free.
 - **If we pack less than you ordered**, you pay only for what we packed.
-- Items sold **per piece or per pack** have no weight difference.
+- Items sold **per piece or per pack** (for example "500 g net, 5–7 pieces") have one fixed price; each pack is packed
+  to at least the stated net weight.
 - After packing, the app shows the **final amount**; the rider's SMS repeats the amount to pay. This is the amount you pay on delivery and the amount on
   your invoice.
 - **Paid online (when we offer it):** you are never charged more than you paid. If the final amount is lower, the
   difference is refunded automatically to your original payment method.
 
-**Check with lawyer:** whether charging up to 10 % above the ordered weight, shown as a "most you could pay" amount at
-checkout, is clear enough consent under the Consumer Protection Act 2019 and the Legal Metrology rules (see the
-research note).
+*Resolved by decision D347 (2026-11-08): we no longer charge for weight above the ordered weight, so the earlier
+lawyer question about consent to an over-weight charge is closed. The Legal Metrology question about pack declarations
+stays open (README, question 9).*
 
 ## 3. Items we cannot supply
 

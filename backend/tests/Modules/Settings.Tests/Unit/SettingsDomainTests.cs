@@ -76,10 +76,19 @@ public sealed class NumberSeriesTests
 
 public sealed class OrderPolicyTests
 {
-    private static OrderPolicyData Valid() => new(15, 1000, "CONFIRMED", 300_000, ["COD", "ONLINE"], 10, 48, 2);
+    private static OrderPolicyData Valid() => new(15, 0, "CONFIRMED", 300_000, ["COD", "ONLINE"], 10, 48, 2);
 
     [Fact]
     public void Valid_policy_has_no_errors() => OrderPolicy.Validate(Valid()).Should().BeEmpty();
+
+    [Theory]
+    [InlineData(0, true)] // D347 default: no overweight charge
+    [InlineData(1000, true)] // a non-zero allowance stays configurable
+    [InlineData(5000, true)]
+    [InlineData(5001, false)]
+    [InlineData(-1, false)]
+    public void Overweight_allowance_is_zero_to_five_thousand_basis_points(int bp, bool valid)
+        => OrderPolicy.Validate(Valid() with { MaxOverweightBp = bp }).Any(e => e.Field == "maxOverweightBp").Should().Be(!valid);
 
     [Fact]
     public void Out_of_range_values_are_listed()

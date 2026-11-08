@@ -37,14 +37,15 @@ void main() {
     expect(find.text('Whole, uncleaned'), findsOneWidget);
     expect(find.text('Free'), findsOneWidget);
     expect(find.textContaining('About 70% of the whole weight'), findsOneWidget);
-    expect(find.textContaining('You pay for net weight after cleaning'), findsOneWidget);
+    expect(find.textContaining('Prices are for net weight after cleaning'), findsOneWidget);
     expect(find.text('500 g'), findsOneWidget); // starts at the server minOrder
   });
 
   testWidgets('stepper proposes quantities in server steps and add sends them; estimate comes from the server line', (
     tester,
   ) async {
-    deps.cart.afterWrite = () => cart(lines: [cartLineJson(quantity: 750, estimated: 100425, max: 110467)]);
+    // D347: the server's maximum equals its estimate, so the price is shown plainly.
+    deps.cart.afterWrite = () => cart(lines: [cartLineJson(quantity: 750, estimated: 100425)]);
     await pump(tester);
 
     final increase = find.byTooltip('Increase quantity of Seer Fish');
@@ -61,6 +62,24 @@ void main() {
     expect(item.preparationCode, 'STEAK');
     expect(item.quantity.value, 750);
     expect(item.quantity.unit, 'GRAM');
+    expect(find.text('Added. ₹1,004.25 for 750 g.'), findsOneWidget);
+    expect(find.text('₹1,004.25 for 750 g.'), findsOneWidget); // the "In your cart" banner
+    expect(find.textContaining('at most'), findsNothing);
+    expect(find.textContaining('Estimated'), findsNothing);
+  });
+
+  testWidgets('with an over-weight allowance the added line still says the most it can cost', (tester) async {
+    deps.cart.afterWrite = () =>
+        cart(lines: [cartLineJson(quantity: 750, estimated: 100425, max: 110467, maxQuantity: 825)]);
+    await pump(tester);
+
+    final increase = find.byTooltip('Increase quantity of Seer Fish');
+    await tester.ensureVisible(increase);
+    await tester.tap(increase);
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('addToCart')));
+    await tester.pumpAndSettle();
+
     expect(find.text('Added. Estimated ₹1,004.25, at most ₹1,104.67.'), findsOneWidget);
     expect(find.textContaining('You pay at most ₹1,104.67'), findsOneWidget);
   });
@@ -113,20 +132,24 @@ void main() {
     expect(find.byKey(const Key('addToCart')), findsNothing);
   });
 
-  testWidgets('the estimate for the chosen quantity is the server quote, re-asked when the quantity changes', (
+  testWidgets('the price for the chosen quantity is the server quote, re-asked when the quantity changes', (
     tester,
   ) async {
+    // D347: no over-weight charge, so the server's maximum equals its estimate.
     deps.catalog.onQuote = (variantId, prep, quantity) async => PriceQuote.fromJson({
       'quantity': {'value': quantity.value, 'unit': quantity.unit},
-      'maxChargeableQuantity': {'value': quantity.value + 50, 'unit': quantity.unit},
+      'maxChargeableQuantity': {'value': quantity.value, 'unit': quantity.unit},
       'estimatedTotalPaise': quantity.value == 500 ? 67000 : 100500,
-      'maxChargeablePaise': quantity.value == 500 ? 73700 : 110500,
+      'maxChargeablePaise': quantity.value == 500 ? 67000 : 100500,
       'availability': {'status': 'IN_STOCK', 'message': null},
     });
     await pump(tester);
 
-    expect(find.byKey(const Key('priceQuote')), findsOneWidget);
-    expect(find.textContaining('Estimated ₹670 for 500 g'), findsOneWidget);
+    final quote = find.byKey(const Key('priceQuote'));
+    expect(quote, findsOneWidget);
+    expect(find.descendant(of: quote, matching: find.text('₹670 for 500 g')), findsOneWidget);
+    expect(find.descendant(of: quote, matching: find.textContaining('at most')), findsNothing);
+    expect(find.textContaining('Estimated'), findsNothing);
 
     final increase = find.byTooltip('Increase quantity of Seer Fish');
     await tester.ensureVisible(increase);
@@ -134,7 +157,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deps.catalog.quotes.map((q) => q.split(':').last), containsAllInOrder(['500', '750']));
-    expect(find.textContaining('Estimated ₹1,005 for 750 g'), findsOneWidget);
+    expect(find.descendant(of: quote, matching: find.text('₹1,005 for 750 g')), findsOneWidget);
+  });
+
+  testWidgets('with an over-weight allowance the quote shows the estimate and the most you pay', (tester) async {
+    deps.catalog.onQuote = (variantId, prep, quantity) async => PriceQuote.fromJson({
+      'quantity': {'value': quantity.value, 'unit': quantity.unit},
+      'maxChargeableQuantity': {'value': quantity.value + 50, 'unit': quantity.unit},
+      'estimatedTotalPaise': 67000,
+      'maxChargeablePaise': 73700,
+      'availability': {'status': 'IN_STOCK', 'message': null},
+    });
+    await pump(tester);
+
+    final quote = find.byKey(const Key('priceQuote'));
+    expect(find.descendant(of: quote, matching: find.text('Estimated ₹670 for 500 g')), findsOneWidget);
+    expect(find.descendant(of: quote, matching: find.text('You pay at most ₹737 (up to 550 g).')), findsOneWidget);
   });
 
   testWidgets('a sold-out size offers Notify me, which asks the server for a back-in-stock alert', (tester) async {
