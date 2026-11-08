@@ -26,6 +26,7 @@
     { "code": "reports.view", "description": "Reports" },
     { "code": "settings.manage", "description": "Business profile, order policies, number series" },
     { "code": "staff.manage", "description": "Staff, roles, location access" },
-    { "code": "audit.view", "description": "Audit log" }
+    { "code": "audit.view", "description": "Audit log" },
+    { "code": "platform.manage", "description": "Outbox dead letters: list and replay (D296)" }
   ]
 }

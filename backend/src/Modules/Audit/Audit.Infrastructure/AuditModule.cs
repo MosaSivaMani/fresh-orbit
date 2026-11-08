@@ -1,5 +1,6 @@
 using FluentValidation;
 using FreshOrbit.Audit.Application.Entries;
+using FreshOrbit.Audit.Infrastructure.DeadLetters;
 using FreshOrbit.Audit.Infrastructure.Persistence;
 using FreshOrbit.Audit.Infrastructure.Public;
 using FreshOrbit.Audit.Infrastructure.Recording;
@@ -24,6 +25,9 @@ public sealed class AuditModule : IModule
 {
     public const string ViewPermission = "audit.view";
 
+    /// <summary>Outbox dead letters: list and replay (BE-2, D296).</summary>
+    public const string DeadLettersPermission = "platform.manage";
+
     public string Name => "Audit";
 
     public void Register(IServiceCollection services, IConfiguration configuration)
@@ -35,6 +39,7 @@ public sealed class AuditModule : IModule
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IInterceptor, AdminWriteAuditInterceptor>());
         services.AddScoped<IAuditReads, AuditReads>();
         services.AddScoped<IValidator<AuditListRequest>, AuditListRequestValidator>();
+        services.AddScoped<IValidator<DeadLetterListRequest>, DeadLetterListRequestValidator>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
@@ -43,5 +48,7 @@ public sealed class AuditModule : IModule
             .WithValidation<AuditListRequest>()
             .RequirePermission(ViewPermission)
             .WithTags("Audit");
+
+        DeadLetterEndpoints.Map(endpoints);
     }
 }

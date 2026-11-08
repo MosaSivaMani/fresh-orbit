@@ -187,9 +187,9 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | settings.business_profile | id, legal_name, trade_name, gstin, fssai_license_no, address, support_phone, support_email, time_zone | single row; `time_zone` (IANA) decides the financial year of a number |
 | settings.order_policies | id, city_id (null = default), reservation_minutes, max_overweight_bp, cancel_allowed_until_status, cod_max_order_paise, enabled_payment_methods text[], substitution_response_minutes, complaint_window_hours, max_delivery_attempts | unique city_id (nulls not distinct); range checks |
 | settings.number_series | id, code ORDER/INVOICE, period, prefix, pad_width, next_value, last_issued_at | unique (code, period); row locked (`FOR UPDATE`) and incremented in the caller's transaction |
-| platform.outbox | id, event_type, payload jsonb, occurred_at, correlation_id, processed_at, attempts, error | index (occurred_at) where processed_at is null |
+| platform.outbox | id, event_type, payload jsonb, occurred_at, correlation_id, processed_at, attempts, next_attempt_at, error | index (occurred_at) where processed_at is null; `next_attempt_at` null = due now, else exponential backoff with jitter after a failure (D296) |
 | platform.inbox | event_id, handler, processed_at | PK both |
-| platform.dead_letters | id, event_id, handler, error, failed_at | |
+| platform.dead_letters | id, event_id, handler, error, failed_at, replayed_at, replayed_by | index (event_id); index (failed_at) where replayed_at is null; replayed by staff with `platform.manage` (D296) |
 | platform.idempotency_keys | scope, key, request_hash, status_code, response jsonb, expires_at | PK (scope, key) |
 | platform.sample_records | table_name, record_id | tracks sample data for purge |
 

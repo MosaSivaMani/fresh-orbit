@@ -29,6 +29,9 @@ public static class OrderingErrors
     public const string CustomerDeleted = "CUSTOMER_DELETED";
     public const string LocationAccessDenied = "LOCATION_ACCESS_DENIED";
     public const string ConfigurationMissing = "CONFIGURATION_MISSING";
+
+    /// <summary>Checkout refused while the business profile lacks what invoicing needs (BE-1, D295).</summary>
+    public const string StoreNotReady = "STORE_NOT_READY";
     public const string ValidationFailed = "VALIDATION_FAILED";
     public const string GoodwillExceedsTotal = "GOODWILL_EXCEEDS_TOTAL";
     public const string RefundAmountInvalid = "REFUND_AMOUNT_INVALID";
