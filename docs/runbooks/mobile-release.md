@@ -121,47 +121,6 @@ is lost, Play can reset it, but keep a backup anyway.
    internal testing track first. Give Play the privacy policy address `https://<website host>/support/privacy-policy`.
    The data-safety, content-rating and target-audience answers are prepared in `play-store.md`.
 
----
-
-## Part 3. Build the Play bundle in GitHub Actions (`mobile-release.yml`)
-
-The workflow builds and signs the bundle on a GitHub runner, so nobody needs Flutter or the key on a laptop (D337).
-It runs only when started by hand and only from `main` or a `v*` tag.
-
-1. **Environment, once.** GitHub › repository › **Settings** › **Environments** › **New environment** named
-   `play-release`. Under **Deployment branches and tags** choose **Selected branches and tags** and add `main` and the
-   tag pattern `v*`. Tick **Required reviewers** and add yourself, so every release build waits for your approval.
-2. **Secrets in that environment** (not repository secrets), from the upload keystore of part 2 step 1:
-
-   | Secret | Value |
-   |---|---|
-   | `UPLOAD_KEYSTORE_BASE64` | `base64 -w0 upload.jks` (Linux) or `base64 -i upload.jks \| tr -d '\n'` (macOS) |
-   | `UPLOAD_KEYSTORE_PASSWORD` | store password |
-   | `UPLOAD_KEY_ALIAS` | `upload` |
-   | `UPLOAD_KEY_PASSWORD` | key password (the same as the store password for a PKCS12 keystore) |
-
-   With the GitHub CLI: `gh secret set UPLOAD_KEYSTORE_BASE64 --env play-release < upload.b64`, and the same with
-   `--env play-release` for the other three.
-3. **Variables in that environment:** `RELEASE_API_BASE_URL` = `https://api.<domain>` and `RELEASE_WEBSITE_BASE_URL`
-   = `https://<domain>` (`gh variable set RELEASE_API_BASE_URL --env play-release --body https://api.<domain>`).
-   Only `https://<host>` with no path is accepted.
-4. **Run it:** **Actions** › **Mobile release AAB** › **Run workflow**, branch `main` (or a tag), version name such as
-   `1.0.0`. Approve the `play-release` deployment when GitHub asks.
-5. **Result:** the run summary names the file `fresh-orbit-<version>-<code>.aab`, the API address and the upload
-   certificate's SHA-256; download the `release-aab` artifact (kept 14 days) and upload it in Play Console ›
-   **Testing** › **Internal testing** › **Create new release**. The SHA-256 must equal the upload key Play Console
-   shows under **App integrity**.
-
-What the workflow refuses, before building anything: a ref other than `main` or a `v*` tag; a version name that is
-not `1.2.3`; any of the four secrets missing (it lists every missing one); either address missing or not
-`https://<host>`; a keystore that does not open with the password and alias. After the build it checks that the
-bundle is signed with that same upload certificate and stops otherwise. The decoded keystore is deleted at the end.
-
-**Version code.** Play needs a higher version code for every upload. The workflow uses its own run number
-(`--build-number`), which only goes up; the version name comes from the run's input (`--build-name`), not from
-`pubspec.yaml`. Renaming or recreating the workflow file would restart the run number at 1, so do not: Play would
-refuse the next upload until the count passes the last code it has.
-
 ## Launcher icons
 
 The icons come from the owner's logo (D119, D298): `docs/design/brand/logo-master.png`, mark in a white disc on the
@@ -169,3 +128,94 @@ brand's ocean teal `#073B4C`. Android: legacy `ic_launcher.png` and `ic_launcher
 density, and an adaptive icon (`mipmap-anydpi-v26/`, foreground `ic_launcher_foreground.png`, background colour
 `ic_launcher_background` in `values/colors.xml`). iOS: every size in `AppIcon.appiconset/Contents.json`, opaque.
 The Play Store listing icon (512 × 512) is `docs/design/brand/app-icon-512.png`.
+
+## Store build (D309, MA-7)
+
+`.github/workflows/mobile-release.yml` builds the signed Google Play bundle. Manual only: **Actions › Mobile release ›
+Run workflow** on `main`. Once, before the first run, the owner adds:
+
+| Kind | Name | Value |
+|---|---|---|
+| Secret | `UPLOAD_KEYSTORE_BASE64` | `base64 -i upload.jks` of the upload key from part 2 |
+| Secret | `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS`, `UPLOAD_KEY_PASSWORD` | as in part 2 |
+| Variable | `API_BASE_URL` | the production API origin |
+| Variable | `WEBSITE_BASE_URL` | the production website origin (policy links, D299) |
+| Variable | `APP_LINK_HOST` | the website host only, for example `shop.example.in` (App links, below) |
+| Variable (optional) | `CRASH_REPORT_DSN` | the GlitchTip / Sentry DSN (Crash reports, below); empty = device log only |
+
+The run refuses to start when a required value is missing. It uploads two artifacts: the `.aab` (upload it in Play
+Console › Internal testing) and the `debug-info` symbols (keep them: `flutter symbolize -i <stack> -d debug-info/`
+turns an obfuscated crash stack back into file and line). The build number is the run number plus the
+`build-number-offset` input (default 100); raise the offset if Play says the version code was used. The version
+name comes from `pubspec.yaml`: set it (for example `1.0.0+1`) in a mobile change before the first store upload
+(L-80).
+
+What else the run refuses before building (D337): a ref other than `main` or a `v*` tag; an address that is not
+`https://<host>` with no path; a keystore that does not open with `UPLOAD_KEYSTORE_PASSWORD` and `UPLOAD_KEY_ALIAS`.
+After the build it checks that the bundle is signed with that upload certificate, writes the certificate's SHA-256
+in the run summary (it must equal the upload key in Play Console › App integrity) and deletes the decoded key.
+
+Secrets as repository secrets, with the GitHub CLI from the folder holding the files:
+`gh secret set UPLOAD_KEYSTORE_BASE64 < upload.b64` (make `upload.b64` with `base64 -w0 upload.jks` on Linux or
+`base64 -i upload.jks | tr -d '\n'` on macOS), then `gh secret set UPLOAD_KEYSTORE_PASSWORD` and the other two, and
+`gh variable set API_BASE_URL --body https://api.<domain>`.
+
+## App links (D308, MB-4)
+
+Website links (`/products/...`, `/shop/...`, `/orders/...`, `/search`, `/cart`) open the app once the website proves
+it belongs with the app. Until then the app is built with the reserved host `app-links-not-configured.invalid` and
+every link opens the browser.
+
+1. Choose the host: the website's domain without `https://` (the same one as `WEBSITE_BASE_URL`).
+2. **Android.** Set it for the build: the repository variable `APP_LINK_HOST` (store build), or
+   `flutter build appbundle ... ` with the environment variable `FRESH_ORBIT_APP_LINK_HOST=<host>` (or
+   `-PfreshOrbitAppLinkHost=<host>` to Gradle). Then serve this file from the website at
+   `https://<host>/.well-known/assetlinks.json` (content type `application/json`, no redirect):
+
+   ```json
+   [{
+     "relation": ["delegate_permission/common.handle_all_urls"],
+     "target": {
+       "namespace": "android_app",
+       "package_name": "in.freshorbit.app",
+       "sha256_cert_fingerprints": ["<SHA-256 of the app signing key>"]
+     }
+   }]
+   ```
+
+   With Play App Signing the fingerprint is the **app signing key** from Play Console › Setup › App signing (not the
+   upload key). Add the demo key's SHA-256 too if demo APKs should open links. Check with
+   `adb shell pm get-app-links in.freshorbit.app` (state `verified`).
+3. **iOS** (needs the Apple team, below). Set `APP_LINK_HOST = <host>` in `apps/mobile/ios/Flutter/AppLinks.xcconfig`,
+   turn on **Associated Domains** for the App ID, and serve `https://<host>/.well-known/apple-app-site-association`
+   (no extension, `application/json`, no redirect):
+
+   ```json
+   { "applinks": { "details": [ { "appIDs": ["<TEAM_ID>.in.freshorbit.app"],
+     "components": [ { "/": "/products/*" }, { "/": "/shop*" }, { "/": "/orders*" }, { "/": "/search*" }, { "/": "/cart" } ] } ] } }
+   ```
+
+4. Both files belong to the website (`apps/web/public/.well-known/`); add them in a website change once the domain and
+   the fingerprints are known. Test: tap a product link in an SMS or WhatsApp on a phone with the app installed, cold
+   start and warm.
+
+## Crash reports (D309, ME-7, MA-5)
+
+Without `CRASH_REPORT_DSN` errors go to the device log only (`adb logcat -s fresh_orbit.crash`). To collect them:
+run GlitchTip (free, MIT; one Docker container plus Postgres and Redis, on the same server as the API, or its free
+hosted plan), create a project, and copy its DSN (`https://<key>@<host>/<project>`) into the repository variable
+`CRASH_REPORT_DSN`. The app sends only scrubbed text: no phone numbers, codes, tokens, e-mail addresses or user ids.
+
+## Push notifications: what is ready (MA-6)
+
+Code side, done without an account: the `PushService` seam (`lib/core/push_service.dart`, no-op today), the
+device-token calls after sign-in and sign-out, and the Android 13 `POST_NOTIFICATIONS` permission in the manifest
+(asked at a natural moment once push works, never at launch). Owner side, still needed: the Firebase project and the
+APNs key; then follow `docs/design/mobile.md` §10.
+
+## iOS team (MA-4)
+
+No archive can be made until the owner's Apple Developer account exists. Then: open `apps/mobile/ios/Runner.xcworkspace`
+in Xcode on a Mac, Runner target › Signing & Capabilities › Team, keep **Automatically manage signing**, add
+**Associated Domains** (`applinks:<host>`, App links above) and, with push, **Push Notifications**. Xcode writes
+`DEVELOPMENT_TEAM` into `project.pbxproj`; commit that change.

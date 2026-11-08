@@ -209,8 +209,8 @@ The audit table above stays as written; this section records what was closed lat
 
 | Row | Status | Where |
 |---|---|---|
-| L-22, F-10 (workflow part) | Closed: `mobile-release.yml` builds a signed AAB by hand from the `play-release` environment and refuses without the upload key | `.github/workflows/mobile-release.yml`; `runbooks/mobile-release.md` part 3 (D337) |
-| L-80 | Closed in CI: version name from the run's input, version code from the run number (`pubspec.yaml` keeps `0.1.0+1` for local builds) | D337 |
+| L-22, F-10 (workflow part) | Closed: `mobile-release.yml` (D309, PR #54) builds the signed AAB by hand; this branch adds the ref, address and keystore checks, the signature check after the build, SHA-pinned actions and an actionlint check on pull requests | `.github/workflows/mobile-release.yml`; `runbooks/mobile-release.md` "Store build" (D337) |
+| L-80 | Partly: the build number is the run number plus an offset (D309); the version name still comes from `pubspec.yaml` (`0.1.0+1`), to be set to `1.0.0` in a mobile change before the first upload | `runbooks/mobile-release.md` "Store build" |
 | L-24, F-13, L-81 | Closed: data-safety, content-rating and target-audience answers from what the code collects | `runbooks/play-store.md` |
 | L-27, F-19 | Closed: roles, clocks (CERT-In 6 h, Board and people without delay, Board report in 72 h), steps, SQL to find affected people, notice templates, drill log | `runbooks/incident-response.md` |
 | L-32, F-15, L-59, L-48, L-44 | Closed: fresh Hostinger install with an empty database, DNS with CAA and mail records, `BACKUP_PING_URL` required, first `--create-admin`, business profile, tax rules, first city and store, read-only production checks | `runbooks/go-live.md` |

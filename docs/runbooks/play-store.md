@@ -12,8 +12,9 @@ Building and signing the bundle: `mobile-release.md`. Not legal advice.
 
 | Fact | Evidence |
 |---|---|
-| The only Android permission is `INTERNET`. No location, camera, contacts, storage or phone permission | `apps/mobile/android/app/src/main/AndroidManifest.xml:3` |
+| Android permissions: `INTERNET` and `POST_NOTIFICATIONS` (declared for push, asked only once push works, MA-6). No location, camera, contacts, storage or phone permission. App backup is off (`allowBackup="false"`) | `apps/mobile/android/app/src/main/AndroidManifest.xml:3,6,11` |
 | No analytics, advertising, crash-reporting or push SDK in the app (dependencies: dio, riverpod, flutter_secure_storage, go_router, image_picker, intl, shared_preferences, uuid, url_launcher) | `apps/mobile/pubspec.yaml` |
+| Crash reports (D309): only when the store build sets `CRASH_REPORT_DSN`, the app posts a scrubbed error message and stack (no user, no device id, no phone numbers, codes, tokens or e-mails; tags: OS name, release, environment) to our own GlitchTip or Sentry server. Without it, errors stay in the device log | `apps/mobile/lib/core/crash_reporter.dart:102-117` |
 | Complaint photos are picked from the gallery (system photo picker), never the camera, and uploaded to our server | `apps/mobile/lib/core/photo_picker.dart:15` |
 | Addresses are typed (pincode, lines, landmark); the app sends no map pin (`latitude: null`), although the API accepts one | `apps/mobile/lib/api/models/account.dart:153`; `Customers.Domain/Addresses/Address.cs:42-62` |
 | Customer record: full name, optional e-mail, offers opt-in; user record: phone | `Customers.Domain/Customers/Customer.cs:24-28`; `Identity.Domain/Users/User.cs:30-42` |
@@ -58,14 +59,15 @@ feature without it.
 | Photos and videos › **Photos** | Up to 4 photos on a complaint, chosen from the gallery | Optional | App functionality |
 | App activity › **App interactions** | Wishlist, stock alerts, cart | Optional | App functionality, Personalization |
 | App activity › **Other user-generated content** | Complaint description, order notes | Optional | App functionality |
+| App info and performance › **Crash logs** | **Only if the store build sets `CRASH_REPORT_DSN`** (D309): scrubbed error and stack sent to our own error server. The DSN must be `https://`, or "encrypted in transit" is no longer true. Without the variable, leave it unticked | Not optional for the user (no switch in the app) | Analytics (app stability). Not linked to the user: the report carries no user or device id |
 | Device or other IDs | **Not collected today.** Changes when: Firebase push is added (the FCM token is a device id; purpose App functionality) | | |
 
 Not collected (leave unticked): Location (approximate and precise; the app reads no device location and sends no
 map pin; a typed address is "Address" above; changes when a map pin or location permission is added), Messages
 (e-mails, SMS, in-app chat: the app reads none; SMS **we send** are not user messages), Contacts, Calendar, Health
 and fitness, Audio, Files and docs, Web browsing, Installed apps, In-app search history (search text is used for the
-answer and not kept as history), App info and performance (no crash logs or diagnostics are sent; changes when crash
-reporting is added, F-27), Credit score, User payment info (no card or bank details; changes when an online payment
+answer and not kept as history), Diagnostics and other app performance data (nothing beyond the crash logs above),
+Credit score, User payment info (no card or bank details; changes when an online payment
 gateway is added: the gateway's SDK and its own data-safety answers then apply).
 
 **IP address.** The server keeps the IP address with each OTP request to limit abuse. Play does not list IP address

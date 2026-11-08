@@ -235,7 +235,8 @@ Send `SMTP_FROM_ADDRESS` from this domain (for example `orders@<domain>`), never
 - **Backups:** the cron runs at 21:30 UTC; next morning `journalctl -t freshorbit-backup --since yesterday` on the
   server and a green healthchecks.io check.
 - **Incident roles** filled in `incident-response.md` §1; the team knows where it is.
-- **App:** build the Play bundle with `mobile-release.yml` (`RELEASE_API_BASE_URL=https://api.<domain>`) and fill
+- **App:** build the Play bundle with `mobile-release.yml` (repository variables `API_BASE_URL=https://api.<domain>`,
+  `WEBSITE_BASE_URL=https://<domain>`, `APP_LINK_HOST=<domain>`; `mobile-release.md` "Store build") and fill
   the Play Console forms from `play-store.md`.
 - Record the go-live (date, tag, server, who did it) in `docs/team/progress.md` and any choice made on the way in
   `docs/decisions/log.md`.
