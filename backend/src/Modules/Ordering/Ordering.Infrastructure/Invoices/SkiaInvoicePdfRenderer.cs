@@ -52,7 +52,11 @@ public sealed class SkiaInvoicePdfRenderer : IInvoicePdfRenderer, IDisposable
 
     /// <summary>True when both embedded fonts have a glyph for every character of <paramref name="text"/>.</summary>
     public bool CanPrint(string text)
-        => _regular.ContainsGlyphs(text) && _bold.ContainsGlyphs(text);
+    {
+        using var regular = new SKFont(_regular);
+        using var bold = new SKFont(_bold);
+        return regular.ContainsGlyphs(text) && bold.ContainsGlyphs(text);
+    }
 
     public byte[] Render(InvoicePdfContent content)
     {
