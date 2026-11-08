@@ -99,6 +99,7 @@ public sealed class OrderLifecycleTests(OrderingDatabase database) : OrderingTes
     {
         // D347: the reference default allowance is 0 — the price shown is the most the customer pays.
         World.Policy = World.Policy with { MaxOverweightBp = 0 };
+        World.Lines = [CheckoutWorld.Fish(500, maxOverweightBp: 0), CheckoutWorld.Crabs(2)];
         var staff = Staff();
 
         var heavyId = await PlaceOrderAsync();

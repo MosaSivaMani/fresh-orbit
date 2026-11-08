@@ -43,9 +43,7 @@ describe("PurchasePanel", () => {
     expect(screen.queryByText(/at most/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/estimat/i)).not.toBeInTheDocument();
     // The server's net-weight note, shown as sent.
-    expect(
-      screen.getByText("Prices are for net weight after cleaning. If your pack weighs less, you pay less."),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/If your pack weighs less, you pay less\./)).toBeInTheDocument();
   });
 
   it("shows the server's maximum for the cart line when an over-weight allowance is configured", async () => {

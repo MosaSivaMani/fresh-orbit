@@ -136,15 +136,16 @@ public sealed class CheckoutWorld
 
     public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com");
 
-    public static QuoteLine Fish(int grams) => Quote("KG", "GRAM", 129900, 4000, "PER_KG", grams, true, 8000, "Seer Fish", "Medium", "STEAKS", "Steaks");
+    /// <summary>The cart is stubbed, so its quote carries the allowance: 1000 bp by default, 0 for the D347 default.</summary>
+    public static QuoteLine Fish(int grams, int maxOverweightBp = 1000) => Quote("KG", "GRAM", 129900, 4000, "PER_KG", grams, true, 8000, "Seer Fish", "Medium", "STEAKS", "Steaks", maxOverweightBp);
 
     public static QuoteLine Crabs(int pieces) => Quote("PIECE", "PIECE", 65000, 0, null, pieces, false, 10000, "Mud Crab", "Live", null, null);
 
-    public static QuoteLine Quote(string sellUnit, string stockUnit, long price, long prepRate, string? basis, int quantity, bool weightVariable, int yieldBp, string product, string variant, string? prepCode, string? prepName)
+    public static QuoteLine Quote(string sellUnit, string stockUnit, long price, long prepRate, string? basis, int quantity, bool weightVariable, int yieldBp, string product, string variant, string? prepCode, string? prepName, int maxOverweightBp = 1000)
     {
         var facts = new LinePriceFacts(sellUnit == "KG" ? PricedUnit.Gram : PricedUnit.Piece, price, prepRate, basis == "PER_KG" ? PreparationChargeBasis.PerKg : null, 0);
         var amounts = LinePricing.Compute(facts, quantity);
-        var max = LinePricing.MaxChargeableQuantity(quantity, weightVariable, 1000);
+        var max = LinePricing.MaxChargeableQuantity(quantity, weightVariable, maxOverweightBp);
         var maxAmounts = LinePricing.Compute(facts, max);
         return new QuoteLine(
             Guid.CreateVersion7(),
