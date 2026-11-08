@@ -99,6 +99,82 @@ Map<String, Object?> productDetailJson() => {
 
 ProductDetail productDetail() => ProductDetail.fromJson(productDetailJson());
 
+/// D348: a fixed net-weight pack of seer steaks, one price per pack (`sellUnit` PACK).
+Map<String, Object?> packVariantJson() => {
+  'id': 'v2',
+  'sku': 'SEER-STEAK-500',
+  'name': 'Steaks, 500 g net',
+  'sellUnit': 'PACK',
+  'isWeightVariable': false,
+  'packSizeGrams': 500,
+  'avgPieceGrams': null,
+  'minOrder': {'value': 1, 'unit': 'PACK'},
+  'maxOrder': {'value': 10, 'unit': 'PACK'},
+  'orderStep': {'value': 1, 'unit': 'PACK'},
+  'unitPricePaise': 74900,
+  'compareAtPaise': null,
+  'preparations': [
+    {
+      'code': 'STEAK',
+      'name': 'Steaks (1 cm)',
+      'yieldBp': 10000,
+      'isDefault': true,
+      'chargePaise': 0,
+      'chargeBasis': 'FLAT',
+    },
+  ],
+  'availability': {
+    'status': 'IN_STOCK',
+    'maxOrderableNow': {'value': 10, 'unit': 'PACK'},
+    'message': null,
+  },
+  'serving': {
+    'basis': {'value': 1, 'unit': 'PACK'},
+    'netWeightGrams': 500,
+    'piecesMin': 5,
+    'piecesMax': 7,
+    'serves': 3,
+  },
+};
+
+/// The seer fish product with the pack size as its only size.
+Map<String, Object?> packProductDetailJson() => {
+  ...productDetailJson(),
+  'variants': [packVariantJson()],
+};
+
+/// D348: one line of 1 pack; the price is the pack price and never changes.
+Map<String, Object?> packCartLineJson({String id = 'line2', int packs = 1}) => {
+  'id': id,
+  'productId': 'p1',
+  'productSlug': 'seer-fish-vanjaram',
+  'productName': 'Seer Fish (Vanjaram)',
+  'variantId': 'v2',
+  'variantName': 'Steaks, 500 g net',
+  'sellUnit': 'PACK',
+  'imageUrl': null,
+  'preparation': {'code': 'STEAK', 'name': 'Steaks (1 cm)', 'yieldBp': 10000},
+  'quantity': {'value': packs, 'unit': 'PACK'},
+  'estimatedNetQuantity': {'value': packs, 'unit': 'PACK'},
+  'maxChargeableQuantity': {'value': packs, 'unit': 'PACK'},
+  'unitPricePaise': 74900,
+  'compareAtPaise': null,
+  'priceUnit': 'PACK',
+  'itemPaise': 74900 * packs,
+  'preparationChargePaise': 0,
+  'preparationChargeBasis': null,
+  'taxRateBp': 0,
+  'taxPaise': 0,
+  'estimatedLineTotalPaise': 74900 * packs,
+  'maxLineTotalPaise': 74900 * packs,
+  'packNetGrams': 500,
+  'piecesMin': 5,
+  'piecesMax': 7,
+  'availability': {'status': 'IN_STOCK', 'message': null},
+  'isSellable': true,
+  'issues': <Object?>[],
+};
+
 Map<String, Object?> cartLineJson({
   String id = 'line1',
   int quantity = 500,

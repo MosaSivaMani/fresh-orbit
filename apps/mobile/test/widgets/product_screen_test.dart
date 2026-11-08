@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/api/models/cart.dart';
 import 'package:fresh_orbit_app/api/models/catalog.dart';
+import 'package:fresh_orbit_app/core/format.dart';
 import 'package:fresh_orbit_app/features/catalog/product_screen.dart';
 
 import '../support/fixtures.dart';
@@ -211,6 +212,72 @@ void main() {
     await pump(tester);
 
     expect(find.byKey(const Key('productCaught')), findsNothing);
+  });
+
+  group('fixed packs (D348)', () {
+    testWidgets('a PACK size shows its net weight, pieces and price per pack, and the stepper counts packs', (
+      tester,
+    ) async {
+      deps.catalog.onProduct = (_, _) async => ProductDetail.fromJson(packProductDetailJson());
+      deps.cart.afterWrite = () => cart(lines: [packCartLineJson(packs: 2)]);
+      await pump(tester);
+
+      final facts = find.byKey(const Key('productPackFacts'));
+      expect(facts, findsOneWidget);
+      expect(find.descendant(of: facts, matching: find.text('500 g net · 5–7 pieces · ₹749')), findsOneWidget);
+      expect(find.descendant(of: facts, matching: find.text(netWeightCaption)), findsOneWidget);
+      final price = find.byKey(const Key('productPrice'));
+      expect(find.descendant(of: price, matching: find.text('₹749 per pack')), findsOneWidget);
+      expect(find.textContaining('/kg'), findsNothing);
+      expect(find.text('Serves 3 per pack'), findsOneWidget);
+      expect(find.text('1 pack'), findsOneWidget); // the stepper starts at the server minOrder
+
+      final increase = find.byTooltip('Increase quantity of Seer Fish');
+      await tester.ensureVisible(increase);
+      await tester.tap(increase);
+      await tester.pump();
+      expect(find.text('2 packs'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('addToCart')));
+      await tester.pumpAndSettle();
+
+      final item = deps.cart.added.single;
+      expect(item.variantId, 'v2');
+      expect((item.quantity.value, item.quantity.unit), (2, 'PACK'));
+      expect(find.textContaining('Estimated'), findsNothing);
+    });
+
+    testWidgets('size chips carry the pack net weight; a KG size keeps its per-kg price and no pack facts', (
+      tester,
+    ) async {
+      final json = productDetailJson();
+      final pack = {...packVariantJson(), 'name': 'Steaks'};
+      deps.catalog.onProduct = (_, _) async => ProductDetail.fromJson({
+        ...json,
+        'variants': [...(json['variants']! as List<Object?>), pack],
+      });
+      await pump(tester);
+
+      expect(find.text('₹1,299/kg'), findsOneWidget);
+      expect(find.byKey(const Key('productPackFacts')), findsNothing);
+      final chip = find.byKey(const ValueKey('size-v2'));
+      expect(find.descendant(of: chip, matching: find.text('Steaks · 500 g net')), findsOneWidget);
+
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('productPackFacts')), findsOneWidget);
+      expect(find.textContaining('500 g net · 5–7 pieces'), findsOneWidget);
+      expect(find.text('₹749 per pack'), findsOneWidget);
+    });
+
+    test('Variant parses packSizeGrams, avgPieceGrams and the serving net weight', () {
+      final v = Variant.fromJson(packVariantJson());
+      expect((v.isPack, v.packSizeGrams, v.avgPieceGrams, v.packNetGrams), (true, 500, null, 500));
+      expect((v.serving!.netWeightGrams, v.serving!.piecesMin, v.serving!.piecesMax), (500, 5, 7));
+      expect(productDetail().variants.single.packNetGrams, isNull);
+    });
   });
 
   test('fixture cart parses', () => expect(cart().lines.single, isA<CartLine>()));

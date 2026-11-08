@@ -129,6 +129,43 @@ public sealed class PackTests
         order.Adjustments.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(560)] // packed above the stated 500 g net: the extra is free
+    [InlineData(500)]
+    [InlineData(480)] // under-packed by mistake: still recorded, the charge is the pack price
+    public void Fixed_net_weight_pack_records_the_weighed_net_grams_and_the_charge_never_changes(int weighed)
+    {
+        var pack = OrderFactory.Line("PACK", 74900, 0, null, 2, false, 0, 0, "Seer Fish", "Steaks 500 g net");
+        var order = OrderFactory.Place([pack]).Preparing();
+        var line = order.Items[0];
+
+        var result = order.Pack([new PackLine(line.Id, 2, "PACK", weighed * 2)], false, 0, OrderFactory.Staff, At);
+
+        line.PackedNetGrams.Should().Be(weighed * 2);
+        result[0].ChargedQuantity.Should().Be(2);
+        result[0].FinalTotalPaise.Should().Be(149800);
+        order.FinalTotalPaise.Should().Be(order.TotalPaise);
+        order.Adjustments.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("KG", 500)]
+    [InlineData("PACK", 0)]
+    public void Packed_net_grams_are_refused_on_a_weighed_line_or_when_not_positive(string sellUnit, int grams)
+    {
+        var item = sellUnit == "KG" ? NoAllowanceSeerFish() : OrderFactory.Line("PACK", 74900, 0, null, 1, false, 0, 0);
+        var order = OrderFactory.Place([item]).Preparing();
+        var unit = sellUnit == "KG" ? "GRAM" : "PACK";
+        var quantity = sellUnit == "KG" ? 500 : 1;
+
+        var act = () => order.Pack([new PackLine(order.Items[0].Id, quantity, unit, grams)], false, 0, OrderFactory.Staff, At);
+
+        var refusal = act.Should().Throw<RefusalException>().Which;
+        refusal.Code.Should().Be("PACKED_QUANTITY_INVALID");
+        refusal.Errors.Select(e => e.Field).Should().Equal("lines[0].packedNetGrams");
+        order.Status.Should().Be(OrderStatus.Preparing);
+    }
+
     private static OrderItemSnapshot NoAllowanceSeerFish()
         => OrderFactory.Line("KG", 129900, 4000, "PER_KG", 500, true, 0, 0, "Seer Fish", "Medium", "Steaks", maxOverweightBp: 0);
 

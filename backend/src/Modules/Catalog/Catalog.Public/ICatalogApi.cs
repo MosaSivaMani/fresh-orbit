@@ -109,6 +109,12 @@ public sealed record VariantInfo(
     IReadOnlyList<PreparationInfo> Preparations)
 {
     public ProductStatus ProductStatus { get; init; }
+
+    /// <summary>Fewest pieces per serving basis (one pack for PACK variants, CAT-R21); null when not stated.</summary>
+    public int? PiecesMin { get; init; }
+
+    /// <summary>Most pieces per serving basis; null when not stated.</summary>
+    public int? PiecesMax { get; init; }
 }
 
 /// <param name="YieldBp">Net weight after preparation as basis points of raw weight (6500 = 65 %).</param>

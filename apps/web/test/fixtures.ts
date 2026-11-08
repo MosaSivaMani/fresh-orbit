@@ -139,6 +139,81 @@ export const seerLine: CartLine = {
   minOrder: { value: 500, unit: "GRAM" },
   maxOrder: { value: 5000, unit: "GRAM" },
   orderStep: { value: 250, unit: "GRAM" },
+  packNetGrams: null,
+  piecesMin: null,
+  piecesMax: null,
+};
+
+/**
+ * Seer steaks sold as a fixed net-weight pack (D348): "500 g net (5–7 pieces), ₹749" per pack, packed to at least
+ * the stated net weight; the price never changes with the packed weight.
+ */
+export const seerSteakPack: ProductDetail = {
+  ...seerFish,
+  id: "p2",
+  slug: "seer-steaks-pack",
+  name: "Seer Steaks",
+  netWeightNote:
+    "Prices are for net weight after cleaning. If your pack weighs less, you pay less.",
+  variants: [
+    {
+      id: "v2",
+      sku: "SEER-STEAK-500",
+      name: "500 g pack",
+      sellUnit: "PACK",
+      isWeightVariable: false,
+      packSizeGrams: 500,
+      avgPieceGrams: null,
+      minOrder: { value: 1, unit: "PACK" },
+      maxOrder: { value: 6, unit: "PACK" },
+      orderStep: { value: 1, unit: "PACK" },
+      unitPricePaise: 74900,
+      compareAtPaise: null,
+      preparations: [],
+      availability: {
+        status: "IN_STOCK",
+        maxOrderableNow: { value: 6, unit: "PACK" },
+        message: null,
+      },
+      serving: {
+        basis: { value: 1, unit: "PACK" },
+        netWeightGrams: 500,
+        piecesMin: 5,
+        piecesMax: 7,
+        serves: 3,
+      },
+    },
+  ],
+};
+
+/** Two packs of seer steaks in the cart: one fixed price per pack, so the maximum equals the total. */
+export const seerPackLine: CartLine = {
+  ...seerLine,
+  id: "line2",
+  productId: "p2",
+  productSlug: "seer-steaks-pack",
+  productName: "Seer Steaks",
+  variantId: "v2",
+  variantName: "500 g pack",
+  sellUnit: "PACK",
+  preparation: null,
+  quantity: { value: 2, unit: "PACK" },
+  estimatedNetQuantity: { value: 2, unit: "PACK" },
+  maxChargeableQuantity: { value: 2, unit: "PACK" },
+  unitPricePaise: 74900,
+  compareAtPaise: null,
+  priceUnit: "PACK",
+  itemPaise: 149800,
+  preparationChargePaise: 0,
+  preparationChargeBasis: null,
+  estimatedLineTotalPaise: 149800,
+  maxLineTotalPaise: 149800,
+  minOrder: { value: 1, unit: "PACK" },
+  maxOrder: { value: 6, unit: "PACK" },
+  orderStep: { value: 1, unit: "PACK" },
+  packNetGrams: 500,
+  piecesMin: 5,
+  piecesMax: 7,
 };
 
 export const emptyCart: Cart = {
@@ -207,6 +282,20 @@ export const cartWithAllowance: Cart = {
     },
   ],
   totals: { ...cartWithSeer.totals, maxTotalPaise: 73645 },
+};
+
+/** A cart holding two fixed packs of seer steaks (D348). */
+export const cartWithPack: Cart = {
+  ...cartWithSeer,
+  lines: [seerPackLine],
+  totals: {
+    ...cartWithSeer.totals,
+    itemsPaise: 149800,
+    preparationPaise: 0,
+    subtotalPaise: 149800,
+    estimatedTotalPaise: 149800,
+    maxTotalPaise: 149800,
+  },
 };
 
 export const homeAddress: Address = {

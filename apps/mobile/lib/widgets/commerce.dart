@@ -11,11 +11,22 @@ import 'bold.dart';
 
 /// Paise in, ₹ out: price, optional struck-through compare-at price ("Original price"), optional unit.
 class PriceTag extends StatelessWidget {
-  const PriceTag({super.key, required this.paise, this.compareAtPaise, this.perUnit, this.prefix, this.style});
+  const PriceTag({
+    super.key,
+    required this.paise,
+    this.compareAtPaise,
+    this.perUnit,
+    this.unitLabel,
+    this.prefix,
+    this.style,
+  });
 
   final int paise;
   final int? compareAtPaise;
   final String? perUnit;
+
+  /// Written after the price instead of the [perUnit] suffix, for example " per pack" or " · 500 g net" (D348).
+  final String? unitLabel;
   final String? prefix;
   final TextStyle? style;
 
@@ -23,7 +34,7 @@ class PriceTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final main = style ?? theme.textTheme.titleMedium;
-    final unit = perUnit == null ? '' : formatPerUnit(perUnit!);
+    final unit = unitLabel ?? (perUnit == null ? '' : formatPerUnit(perUnit!));
     final price = formatRupees(paise);
     final compare = compareAtPaise != null && compareAtPaise! > paise ? formatRupees(compareAtPaise!) : null;
     final label = [
@@ -268,6 +279,8 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context);
     final ill = illustratedColors(context);
     final price = product.fromPrice;
+    // D348: a fixed pack reads "₹749 · 500 g net", never a per-kg wording; the net grams come from the server.
+    final packGrams = price?.perUnit == 'PACK' ? product.defaultVariant?.packNetGrams : null;
     final availability = product.availability;
     final soldOut = availability != null && !availability.canAdd;
     final chipLabel = switch (availability?.status) {
@@ -364,9 +377,11 @@ class ProductCard extends StatelessWidget {
                       const Spacer(),
                       if (price != null)
                         PriceTag(
+                          key: const Key('cardPrice'),
                           paise: price.unitPricePaise,
                           compareAtPaise: price.compareAtPaise,
                           perUnit: price.perUnit,
+                          unitLabel: packGrams == null ? null : ' · ${formatNetWeight(packGrams)}',
                           style: AppText.price(ill.ink),
                         )
                       else if (product.locationRequired)

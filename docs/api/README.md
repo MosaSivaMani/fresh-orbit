@@ -536,7 +536,7 @@ city (admin `stateName`) and is `null` when not configured, never derived from t
 `cutoffAt` the last moment to order for it; null when no slot is bookable (LOC-R18).
 
 Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
-CART-R31); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
+CART-R31) and, on lines sold per PACK, `packNetGrams`, `piecesMin`, `piecesMax` (one pack, D348, CART-R33; null otherwise); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
 Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14), and `badge`, an optional short label the admin set ("NEW", "20% OFF"; null when none; shown as given, PROMO-R29).
 
 ### 4.4 Catalog and search (public)
@@ -1070,6 +1070,7 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 |---|---|
 | Lines | Every `ACTIVE` line must appear once; `packedQuantity` 0 → `SHORT_SUPPLIED` |
 | Charge | `charged = min(packed, maxChargeable)`; price and preparation charge use `charged` |
+| Pack lines (D348) | Optional `packedNetGrams` (> 0) on a line sold per PACK: weighed net grams of all its packs, recorded and returned on the item as `packedNetGrams`; the charge never changes. On another line or ≤ 0 → 422 `PACKED_QUANTITY_INVALID` (`lines[i].packedNetGrams`) |
 | Shortfall | COD/UPI on delivery: `amountDuePaise` reduced; prepaid: `refundDuePaise` > 0, Payments handler creates `WEIGHT_SHORTFALL` / `SHORT_SUPPLY` refund |
 | Stock | Reservation consumed; SALE movements FEFO by gross `ceil(packed × 10000 / yieldBp)` |
 | Pending substitution | 409 `INVALID_STATUS_TRANSITION` until answered or expired |

@@ -88,7 +88,7 @@ public sealed class OrderCommandService(
         ArgumentNullException.ThrowIfNull(request);
         var lines = (request.Lines ?? []).Select((l, i) => l?.PackedQuantity is null
             ? throw new RefusalException(OrderingErrors.PackedQuantityInvalid, "Some packed quantities are invalid.", [new FieldError($"lines[{i}]", OrderingErrors.PackedQuantityInvalid, "Send the packed quantity with its unit.")])
-            : new PackLine(l.OrderItemId, l.PackedQuantity.Value, l.PackedQuantity.Unit)).ToList();
+            : new PackLine(l.OrderItemId, l.PackedQuantity.Value, l.PackedQuantity.Unit, l.PackedNetGrams)).ToList();
         var order = await LoadForStaffAsync(actor, orderId, expectedVersion, cancellationToken);
         var paid = order.IsPrepaid ? (await payments.GetPaymentStatusAsync(order.Id, cancellationToken)).PaidPaise : 0;
         var result = order.Pack(lines, request.ColdBoxUsed, Math.Max(paid, order.CapturedPaise), OrderActor.Staff(actor.StaffMemberId), clock.UtcNow);

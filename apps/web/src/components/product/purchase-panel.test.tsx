@@ -4,10 +4,12 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import {
   cartWithAllowance,
+  cartWithPack,
   cartWithSeer,
   emptyCart,
   problem,
   seerFish,
+  seerSteakPack,
 } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
@@ -62,6 +64,36 @@ describe("PurchasePanel", () => {
 
     expect(await screen.findByText(/In your cart: 500 g/)).toBeInTheDocument();
     expect(screen.getByText(/you pay at most ₹736\.45 if packed up to 550 g/)).toBeInTheDocument();
+  });
+
+  it("shows a fixed net-weight pack with its one price and counts packs (D348)", async () => {
+    writeBrowserCookie(PINCODE_COOKIE, "600041");
+    let cart = emptyCart;
+    let sent: unknown = null;
+    server.use(
+      http.get(`${API}/cart`, () => HttpResponse.json(cart)),
+      http.post(`${API}/cart/items`, async ({ request }) => {
+        sent = await request.json();
+        cart = cartWithPack;
+        return HttpResponse.json(cartWithPack);
+      }),
+    );
+    renderWithProviders(<PurchasePanel product={seerSteakPack} />);
+
+    const facts = screen.getByText(/^500 g net · 5–7 pieces/, { selector: "p" });
+    expect(facts).toHaveTextContent("500 g net · 5–7 pieces · ₹749 per pack");
+    expect(screen.getByText(/Net weight is the weight after cleaning\./)).toBeInTheDocument();
+    expect(screen.getByText("Serves 3")).toBeInTheDocument();
+    expect(screen.getByText("Number of packs")).toBeInTheDocument();
+    // The price of a pack is fixed: no note about lighter packs costing less, no gross weight.
+    expect(screen.queryByText(/you pay less/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/gross/i)).not.toBeInTheDocument();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Add to cart" }));
+
+    expect(await screen.findByText(/In your cart: 2 packs/)).toBeInTheDocument();
+    expect(sent).toEqual({ variantId: "v2", quantity: { value: 1, unit: "PACK" } });
+    expect(screen.queryByText(/at most/i)).not.toBeInTheDocument();
   });
 
   it("shows the server's field message when the quantity is refused", async () => {

@@ -3,6 +3,7 @@ import {
   formatQuantity,
   formatRupees,
   formatTime,
+  formatWeight,
   humanizeCode,
 } from "@fresh/core";
 import { Badge, Button, StatusBadge, Tabs, TabsContent, TabsList, TabsTrigger } from "@fresh/ui";
@@ -356,7 +357,11 @@ function ItemsTable({
                   <span className="text-text-muted block text-xs">
                     {item.variantName} · {item.preparationName} ·{" "}
                     {formatRupees(item.unitPricePaise)}/
-                    {item.orderedQuantity.unit === "GRAM" ? "kg" : "unit"}
+                    {item.orderedQuantity.unit === "GRAM"
+                      ? "kg"
+                      : item.orderedQuantity.unit === "PACK"
+                        ? "pack"
+                        : "unit"}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
@@ -372,6 +377,12 @@ function ItemsTable({
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {item.packedQuantity ? formatQuantity(item.packedQuantity) : "—"}
+                  {/* D348: the net weight staff weighed for a fixed pack line; recorded only. */}
+                  {item.packedNetGrams != null && (
+                    <span className="text-text-muted block text-xs">
+                      {formatWeight(item.packedNetGrams)} net
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
                   {item.chargedQuantity ? formatQuantity(item.chargedQuantity) : "—"}

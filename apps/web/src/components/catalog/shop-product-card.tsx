@@ -1,6 +1,6 @@
 "use client";
 
-import { formatQuantity } from "@fresh/core";
+import { formatQuantity, formatWeight } from "@fresh/core";
 import { FoodCard, type FoodCardTone, PriceTag, toast } from "@fresh/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fish } from "lucide-react";
@@ -15,7 +15,7 @@ import { type ProductDetail, type ProductListItem } from "@/api/types/catalog";
 import { lineBounds } from "@/cart/line-bounds";
 import { useAddToCart, useCart, useChangeCartItem, useRemoveCartItem } from "@/cart/use-cart";
 import { describeError, hasCode } from "@/lib/errors";
-import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
+import { discountLabel, freshnessLine, piecesText, servingLine } from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
@@ -97,7 +97,29 @@ export function ShopProductCard({
   const onError = (e: unknown) => toast({ title: describeError(e), tone: "danger" });
   // The default variant's serving facts (CAT-R21, CAT-R23), else the local names.
   const localNames = product.localNames.length > 0 ? product.localNames.join(" · ") : undefined;
-  const meta = servingLine(product.defaultVariant?.serving) ?? localNames;
+  // D348: a default size sold as a fixed net-weight PACK prices the pack ("₹749 for 500 g net"), and the meta
+  // line names its pieces and servings instead of repeating the weight.
+  const packVariant =
+    product.defaultVariant?.sellUnit === "PACK" && product.fromPrice?.perUnit === "PACK"
+      ? product.defaultVariant
+      : undefined;
+  const packNet = packVariant?.serving.netWeightGrams ?? null;
+  const packParts = packVariant
+    ? [
+        piecesText(packVariant.serving.piecesMin, packVariant.serving.piecesMax),
+        packVariant.serving.serves !== null ? `serves ${packVariant.serving.serves}` : null,
+      ].filter((part): part is string => part !== null)
+    : [];
+  const factsLine = packVariant
+    ? packParts.join(" · ") || null
+    : servingLine(product.defaultVariant?.serving);
+  const meta = factsLine ?? localNames;
+  const per =
+    packNet !== null
+      ? `for ${formatWeight(packNet)} net`
+      : product.fromPrice
+        ? sellUnitLabels[product.fromPrice.perUnit]
+        : undefined;
   const fresh = product.availability?.message ?? freshnessLine(product.freshness) ?? freshness;
 
   async function onAdd() {
@@ -171,7 +193,7 @@ export function ShopProductCard({
           <PriceTag
             paise={product.fromPrice.unitPricePaise}
             mrpPaise={product.fromPrice.compareAtPaise}
-            per={sellUnitLabels[product.fromPrice.perUnit]}
+            per={per}
             savingsLabel={discountLabel(product.fromPrice.discountBp)}
             size="sm"
           />

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { type ServingInfo } from "@/api/types/catalog";
-import { discountLabel, freshnessLine, servingLine } from "./product-facts";
+import {
+  discountLabel,
+  freshnessLine,
+  packFacts,
+  servingLine,
+  variantPackFacts,
+} from "./product-facts";
 
 const perKg: ServingInfo = {
   basis: { value: 1000, unit: "GRAM" },
@@ -43,6 +49,48 @@ describe("servingLine", () => {
     expect(servingLine({ ...perKg, piecesMin: null, piecesMax: null, serves: null })).toBeNull();
     expect(servingLine(null)).toBeNull();
     expect(servingLine(undefined)).toBeNull();
+  });
+});
+
+describe("packFacts", () => {
+  it("states the pack's net weight and pieces range (D348)", () => {
+    expect(packFacts(500, 5, 7)).toBe("500 g net · 5–7 pieces");
+  });
+
+  it("writes 1000 g as 1 kg and a fixed count once", () => {
+    expect(packFacts(1000, 6, 6)).toBe("1 kg net · 6 pieces");
+    expect(packFacts(250, 1, 1)).toBe("250 g net · 1 piece");
+  });
+
+  it("leaves the pieces out when the server does not know them", () => {
+    expect(packFacts(500, null, null)).toBe("500 g net");
+    expect(packFacts(500)).toBe("500 g net");
+  });
+
+  it("shows nothing without the net weight", () => {
+    expect(packFacts(null, 5, 7)).toBeNull();
+    expect(packFacts(undefined)).toBeNull();
+  });
+});
+
+describe("variantPackFacts", () => {
+  it("describes a PACK variant from its pack size and serving pieces", () => {
+    expect(
+      variantPackFacts({
+        sellUnit: "PACK",
+        packSizeGrams: 500,
+        serving: { ...pack, piecesMin: 5, piecesMax: 7 },
+      }),
+    ).toBe("500 g net · 5–7 pieces");
+  });
+
+  it("falls back to the serving's net weight for a list variant", () => {
+    expect(variantPackFacts({ sellUnit: "PACK", serving: pack })).toBe("500 g net · 3 pieces");
+  });
+
+  it("is null for a variant sold by weight or piece", () => {
+    expect(variantPackFacts({ sellUnit: "KG", packSizeGrams: null, serving: perKg })).toBeNull();
+    expect(variantPackFacts({ sellUnit: "PIECE", serving: piece })).toBeNull();
   });
 });
 

@@ -17,6 +17,12 @@ const schema = z.object({
         .trim()
         .min(1, "Enter the weighed quantity (0 if not supplied).")
         .regex(/^\d+$/, "Enter a whole number."),
+      // PACK lines only (D348): optional, recorded only; the price of a fixed pack never changes.
+      netGrams: z
+        .string()
+        .trim()
+        .regex(/^\d*$/, "Enter the packed net weight as a whole number of grams.")
+        .refine((v) => v === "" || Number(v) > 0, "Enter a packed net weight above 0 g."),
     }),
   ),
   coldBoxUsed: z.boolean(),
@@ -44,7 +50,7 @@ export function PackForm({
   const form = useForm<PackValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      lines: activeItems.map((i) => ({ orderItemId: i.id, value: "" })),
+      lines: activeItems.map((i) => ({ orderItemId: i.id, value: "", netGrams: "" })),
       coldBoxUsed: true,
     },
   });
@@ -55,19 +61,23 @@ export function PackForm({
       aliases[`lines[${index}].packedQuantity.value`] = `lines.${index}.value`;
       aliases[`lines[${index}].packedQuantity`] = `lines.${index}.value`;
       aliases[`lines[${index}]`] = `lines.${index}.value`;
+      aliases[`lines[${index}].packedNetGrams`] = `lines.${index}.netGrams`;
     });
     pack.mutate(
       {
         version: order.version,
         body: {
           coldBoxUsed: values.coldBoxUsed,
-          lines: values.lines.map((line, index) => ({
-            orderItemId: line.orderItemId,
-            packedQuantity: {
-              value: Number(line.value),
-              unit: activeItems[index]!.orderedQuantity.unit,
-            },
-          })),
+          lines: values.lines.map((line, index) => {
+            const unit = activeItems[index]!.orderedQuantity.unit;
+            return {
+              orderItemId: line.orderItemId,
+              packedQuantity: { value: Number(line.value), unit },
+              ...(unit === "PACK" && line.netGrams !== ""
+                ? { packedNetGrams: Number(line.netGrams) }
+                : {}),
+            };
+          }),
         },
       },
       {
@@ -124,8 +134,11 @@ export function PackForm({
           </thead>
           <tbody>
             {activeItems.map((item, index) => {
-              const unitLabel = item.orderedQuantity.unit === "GRAM" ? "g" : "pcs";
+              const unit = item.orderedQuantity.unit;
+              const isPack = unit === "PACK";
+              const unitLabel = unit === "GRAM" ? "g" : isPack ? "packs" : "pcs";
               const error = form.formState.errors.lines?.[index]?.value?.message;
+              const netError = form.formState.errors.lines?.[index]?.netGrams?.message;
               return (
                 <tr key={item.id} className="border-border border-t align-top">
                   <td className="px-3 py-3 tabular-nums">{item.lineNo}</td>
@@ -156,6 +169,23 @@ export function PackForm({
                         {...form.register(`lines.${index}.value`)}
                       />
                     </FormField>
+                    {isPack && (
+                      <FormField
+                        label="Packed net weight (g)"
+                        hint="Recorded only; the price does not change."
+                        error={netError}
+                        className="mt-2"
+                      >
+                        <Input
+                          inputMode="numeric"
+                          autoComplete="off"
+                          aria-label={`Packed net weight (g) for line ${item.lineNo}`}
+                          className="tabular-nums"
+                          endAdornment={<span className="text-xs">g</span>}
+                          {...form.register(`lines.${index}.netGrams`)}
+                        />
+                      </FormField>
+                    )}
                   </td>
                 </tr>
               );

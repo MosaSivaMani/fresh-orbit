@@ -73,6 +73,37 @@ String formatWeightRange(int minGrams, int maxGrams) {
   return '${formatWeight(minGrams)} – ${formatWeight(maxGrams)}';
 }
 
+/// Net weight is always the weight after cleaning; gross weight is never shown (D348).
+const netWeightCaption = 'Net weight is the weight after cleaning.';
+
+/// 500 → "500 g net" · 1000 → "1 kg net" (the server's net grams, formatted).
+String formatNetWeight(int grams) => '${formatWeight(grams)} net';
+
+/// The server's piece count: (5, 7) → "5–7 pieces" · (6, 6) → "6 pieces" · (1, 1) → "1 piece" ·
+/// (5, null) → "at least 5 pieces" · (null, 7) → "up to 7 pieces" · (null, null) → null.
+String? formatPieces(int? min, int? max) {
+  String pieces(int n) => n == 1 ? '1 piece' : '$n pieces';
+  return switch ((min, max)) {
+    (final int lo, final int hi) when lo == hi => pieces(lo),
+    (final int lo, final int hi) => '$lo–$hi pieces',
+    (final int lo, null) => 'at least ${pieces(lo)}',
+    (null, final int hi) => 'up to ${pieces(hi)}',
+    _ => null,
+  };
+}
+
+/// One pack's facts (D348): "500 g net · 5–7 pieces"; the pieces part is left out when the server states none.
+String formatPackFacts(int netGrams, {int? piecesMin, int? piecesMax}) =>
+    [formatNetWeight(netGrams), ?formatPieces(piecesMin, piecesMax)].join(' · ');
+
+/// A size name with its pack net weight: "Steaks" + 500 → "Steaks · 500 g net"; the name alone when it already
+/// says the net weight (for example "Steaks, 500 g net") or when [netGrams] is null.
+String withNetWeight(String name, int? netGrams) {
+  if (netGrams == null) return name;
+  final net = formatNetWeight(netGrams);
+  return name.toLowerCase().contains(net.toLowerCase()) ? name : '$name · $net';
+}
+
 /// GRAM → weight · PIECE → "6 pieces" · PACK → "1 pack".
 String formatQuantity(Quantity q) => switch (q.unit) {
   'GRAM' => formatWeight(q.value),

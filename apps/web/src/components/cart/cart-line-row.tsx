@@ -10,6 +10,7 @@ import { lineBounds } from "@/cart/line-bounds";
 import { ProductImage } from "@/components/catalog/product-card";
 import { useChangeCartItem, useRemoveCartItem } from "@/cart/use-cart";
 import { describeError, fieldMessage } from "@/lib/errors";
+import { NET_WEIGHT_CAPTION, packFacts } from "@/lib/product-facts";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 
 /** One cart line: picture, name, the server's line total, a − n + stepper and remove. */
@@ -20,6 +21,9 @@ export function CartLineRow({ line }: { line: CartLine }) {
   const [error, setError] = useState<string | null>(null);
   const weighed = line.maxLineTotalPaise > line.estimatedLineTotalPaise;
   const formatValue = (v: number) => formatQuantity({ value: v, unit: line.quantity.unit });
+  // D348: one pack's net weight and pieces, as the server states them for a PACK line.
+  const pack =
+    line.sellUnit === "PACK" ? packFacts(line.packNetGrams, line.piecesMin, line.piecesMax) : null;
 
   function setQuantity(value: number) {
     setError(null);
@@ -58,6 +62,11 @@ export function CartLineRow({ line }: { line: CartLine }) {
               {line.variantName}
               {line.preparation && ` · ${line.preparation.name}`}
             </span>
+            {pack && (
+              <span className="text-text text-[13px] font-semibold" title={NET_WEIGHT_CAPTION}>
+                {pack} <span className="text-text-muted font-normal">per pack</span>
+              </span>
+            )}
           </div>
           <div className="shrink-0 text-right">
             <p className="font-display text-lg leading-tight font-extrabold tabular-nums">

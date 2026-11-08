@@ -11,7 +11,13 @@ import { getPriceQuote, getProduct } from "@/api/endpoints/catalog";
 import { type Preparation, type ProductDetail, type Variant } from "@/api/types/catalog";
 import { useAddToCart, useCart } from "@/cart/use-cart";
 import { describeError, fieldMessage, hasCode } from "@/lib/errors";
-import { discountLabel, freshnessLine, servingLine } from "@/lib/product-facts";
+import {
+  NET_WEIGHT_CAPTION,
+  discountLabel,
+  freshnessLine,
+  servingLine,
+  variantPackFacts,
+} from "@/lib/product-facts";
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
@@ -166,7 +172,13 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
 
   const formatValue = (v: number) => formatQuantity({ value: v, unit: variant.minOrder.unit });
   // The chosen size's serving facts (CAT-R21) and catch date (CAT-R25), as the server states them.
-  const serving = servingLine(variant.serving);
+  // D348: a PACK is one fixed net weight at one fixed price. Its pack facts replace the serving line, which
+  // would only repeat the weight and pieces.
+  const isPack = variant.sellUnit === "PACK";
+  const pack = variantPackFacts(variant);
+  const serves = variant.serving?.serves ?? null;
+  const packServes = serves !== null ? `Serves ${serves}` : null;
+  const serving = isPack ? packServes : servingLine(variant.serving);
   const caught = freshnessLine(variant.freshness);
 
   return (
@@ -207,6 +219,7 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
                 name="variant"
                 value={v.id}
                 label={v.name}
+                description={variantPackFacts(v) ?? undefined}
                 checked={v.id === variant.id}
                 onChange={() => selectVariant(v.id)}
               />
@@ -219,10 +232,29 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
           <span className="font-semibold">Size:</span> {variant.name}
         </p>
       )}
-      {(variant.packSizeGrams !== null || variant.avgPieceGrams !== null) && (
+      {pack && (
+        <div className="bg-teal-soft flex flex-col gap-0.5 rounded-[14px] px-3 py-2.5">
+          <p className="text-text font-bold">
+            {pack}
+            {priced && (
+              <>
+                {" · "}
+                <span className="tabular-nums">{formatRupees(variant.unitPricePaise!)}</span>{" "}
+                <span className="text-text-muted text-sm font-semibold">per pack</span>
+              </>
+            )}
+          </p>
+          <p className="text-text-muted text-xs">
+            {NET_WEIGHT_CAPTION} Each pack is packed to at least this net weight and its price never
+            changes.
+          </p>
+        </div>
+      )}
+      {((!isPack && variant.packSizeGrams !== null) || variant.avgPieceGrams !== null) && (
         <p className="text-text-muted text-sm">
           {[
-            variant.packSizeGrams !== null &&
+            !isPack &&
+              variant.packSizeGrams !== null &&
               `Pack of ${formatQuantity({ value: variant.packSizeGrams, unit: "GRAM" })}`,
             variant.avgPieceGrams !== null &&
               `about ${formatQuantity({ value: variant.avgPieceGrams, unit: "GRAM" })} a piece`,
@@ -259,7 +291,8 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
         </fieldset>
       )}
 
-      {variant.isWeightVariable && product.netWeightNote && (
+      {/* A PACK's price is fixed (D348): the note about lighter packs costing less never shows for it. */}
+      {variant.isWeightVariable && !isPack && product.netWeightNote && (
         <p className="bg-accent-coral-subtle text-accent-coral-text rounded-[10px] px-3 py-2 text-sm">
           {product.netWeightNote}
         </p>
@@ -271,7 +304,8 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
           aria-live="polite"
         >
           <p className="text-text font-semibold">
-            In your cart: {formatQuantity(inCart.quantity)}, {inCart.preparation?.name}
+            In your cart: {formatQuantity(inCart.quantity)}
+            {inCart.preparation && `, ${inCart.preparation.name}`}
           </p>
           <p className="text-text-muted">
             {formatRupees(inCart.estimatedLineTotalPaise)}
@@ -312,7 +346,11 @@ export function PurchasePanel({ product: initial }: PurchasePanelProps) {
 
       <div className="flex flex-col gap-1">
         <span className="text-text text-sm font-semibold" id="qty-label">
-          {variant.isWeightVariable ? "Net weight after cleaning" : "Quantity"}
+          {isPack
+            ? "Number of packs"
+            : variant.isWeightVariable
+              ? "Net weight after cleaning"
+              : "Quantity"}
         </span>
         <p className="text-text-muted text-xs">
           From {formatValue(variant.minOrder.value)} to {formatValue(variant.maxOrder.value)}, in

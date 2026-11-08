@@ -14,7 +14,12 @@ void main() {
     expect((await b.catalog.home()).featuredProducts, isNotEmpty);
     expect((await b.catalog.products(const ProductQuery(category: 'crabs'))).items.single.name, 'Mud Crab');
     expect((await b.catalog.product('squid')).variants.single.availability!.status, 'OUT_OF_STOCK');
-    expect((await b.cart.get()).lines, hasLength(2));
+    final demoCart = await b.cart.get();
+    expect(demoCart.lines, hasLength(3));
+    final pack = demoCart.lines.singleWhere((l) => l.sellUnit == 'PACK');
+    expect((pack.packNetGrams, pack.piecesMin, pack.piecesMax), (500, 5, 7));
+    final seer = await b.catalog.product('seer-fish');
+    expect(seer.variants.singleWhere((v) => v.isPack).packNetGrams, 500);
     for (final id in demoOrderStatuses.keys) {
       expect((await b.orders.order(id)).status, demoOrderStatuses[id]);
       expect((await b.orders.tracking(id)).timeline, isNotEmpty);

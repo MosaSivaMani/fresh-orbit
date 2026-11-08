@@ -183,6 +183,36 @@ describe("ShopProductCard", () => {
     expect(screen.getByText("Caught 23 Oct 2026")).toBeInTheDocument();
   });
 
+  it("prices a fixed pack by its net weight instead of per kg (D348)", () => {
+    const item: ProductListItem = {
+      ...seerItem,
+      slug: "seer-steaks-pack",
+      name: "Seer Steaks",
+      fromPrice: { unitPricePaise: 74900, compareAtPaise: null, perUnit: "PACK" },
+      defaultVariant: {
+        id: "v2",
+        name: "500 g pack",
+        sellUnit: "PACK",
+        minOrder: { value: 1, unit: "PACK" },
+        maxOrder: { value: 6, unit: "PACK" },
+        orderStep: { value: 1, unit: "PACK" },
+        defaultPreparationCode: null,
+        serving: {
+          basis: { value: 1, unit: "PACK" },
+          netWeightGrams: 500,
+          piecesMin: 5,
+          piecesMax: 7,
+          serves: 3,
+        },
+      },
+    };
+    renderWithProviders(<ShopProductCard product={item} />);
+
+    expect(screen.getByText(/for 500 g net/)).toBeInTheDocument();
+    expect(screen.getByText("5–7 pieces · serves 3")).toBeInTheDocument();
+    expect(screen.queryByText(/kg/)).toBeNull();
+  });
+
   it("has no offer line unless the server gave one", () => {
     const { container } = renderWithProviders(<ShopProductCard product={seerItem} />);
     expect(container.querySelector(".bg-gradient-to-b")).toBeNull();

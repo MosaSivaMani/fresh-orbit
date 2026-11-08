@@ -119,8 +119,12 @@ export function flattenAdminOrder(response: AdminOrderDetailResponse): AdminOrde
   return { ...order, ...extras };
 }
 
+/**
+ * `packedNetGrams` (D348): the total net grams weighed for a PACK line, all its packs together. Allowed on PACK lines
+ * only and recorded only; the charge of a fixed pack never changes with it.
+ */
 export type PackRequest = Omit<Schema<"PackOrderRequest">, "lines"> & {
-  lines: { orderItemId: Id; packedQuantity: Quantity }[];
+  lines: { orderItemId: Id; packedQuantity: Quantity; packedNetGrams?: number | null }[];
 };
 
 export type PackResponse = Coded<

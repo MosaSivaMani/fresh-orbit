@@ -7,6 +7,8 @@
 // most you pay, so the server's maximum equals its estimate and the price is shown plainly; "Estimated" and
 // "You pay at most" appear only if the server sends a larger maximum (an over-weight allowance). A sold-out
 // size offers "Notify me", a back-in-stock alert at the store that serves the pincode (POST /me/stock-alerts).
+// D348: a fixed pack (sellUnit PACK) shows its facts near the price, "500 g net · 5–7 pieces · ₹749", priced per
+// pack with the after-cleaning caption; its size chip carries the net weight and the stepper counts packs.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,6 +214,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     final wished = ref.watch(wishlistIdsProvider).contains(detail.id) || (detail.isWishlisted ?? false);
     final selectedPrep = v.preparations.where((p) => p.code == prep).firstOrNull;
     final locationRequired = detail.locationRequired || v.unitPricePaise == null;
+    final packGrams = v.packNetGrams;
+    final serving = v.isPack ? packServingText(v.serving) : servingText(v.serving);
     final heroSticker = v.availability != null && v.availability!.status != 'IN_STOCK'
         ? Sticker(
             label: v.availability!.status == 'LOW_STOCK' ? 'Low stock' : 'Sold out',
@@ -279,9 +283,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   children: [
                     if (v.unitPricePaise != null)
                       PriceTag(
+                        key: const Key('productPrice'),
                         paise: v.unitPricePaise!,
                         compareAtPaise: v.compareAtPaise,
                         perUnit: v.sellUnit,
+                        // D348: one price per pack, the charge never changes.
+                        unitLabel: v.isPack ? ' per pack' : null,
                         style: AppText.price(c.ink, size: 22),
                       ),
                     if (v.availability != null) AvailabilityBadge(status: v.availability!.status),
@@ -290,6 +297,17 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     if (async.isLoading) const FreshBadge(label: 'Updating…'),
                   ],
                 ),
+                if (packGrams != null) ...[
+                  const SizedBox(height: FreshSpacing.s2),
+                  FreshPackFacts(
+                    key: const Key('productPackFacts'),
+                    facts: [
+                      formatPackFacts(packGrams, piecesMin: v.serving?.piecesMin, piecesMax: v.serving?.piecesMax),
+                      if (v.unitPricePaise case final paise?) formatRupees(paise),
+                    ].join(' · '),
+                    caption: netWeightCaption,
+                  ),
+                ],
                 if (locationRequired) ...[
                   const SizedBox(height: FreshSpacing.s2),
                   const InfoBanner(
@@ -321,7 +339,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     children: [
                       for (final option in detail.variants)
                         ChoiceChip(
-                          label: Text(option.name),
+                          key: ValueKey('size-${option.id}'),
+                          label: Text(withNetWeight(option.name, option.packNetGrams)),
                           selected: option.id == v.id,
                           onSelected: (_) => setState(() {
                             _variantId = option.id;
@@ -333,9 +352,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   ),
                 ] else ...[
                   const SizedBox(height: FreshSpacing.s2),
-                  Text(v.name, style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
+                  Text(withNetWeight(v.name, packGrams), style: theme.textTheme.bodyMedium?.copyWith(color: c.muted)),
                 ],
-                if (servingText(v.serving) case final serving?) ...[
+                if (serving != null) ...[
                   const SizedBox(height: FreshSpacing.s1),
                   Text(
                     serving,
@@ -385,7 +404,11 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   ),
                 const SizedBox(height: FreshSpacing.s2),
                 Text(
-                  'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, in steps of ${formatQuantity(v.orderStep)} (net weight).',
+                  v.isPack
+                      ? 'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}. '
+                            'Each pack is packed to at least its net weight, at the same price.'
+                      : 'Order ${formatQuantity(v.minOrder)} to ${formatQuantity(maxQty)}, '
+                            'in steps of ${formatQuantity(v.orderStep)} (net weight).',
                   style: theme.textTheme.bodySmall?.copyWith(color: c.muted),
                 ),
                 if (!locationRequired && (v.availability?.canAdd ?? true)) ...[
@@ -492,6 +515,13 @@ String? servingText(Serving? serving) {
   final serves = serving.serves;
   if (pieces == null) return serves == null ? null : 'Serves $serves $per';
   return serves == null ? 'About $pieces $per' : 'About $pieces $per · serves $serves';
+}
+
+/// For a fixed pack the pieces are already in the pack facts, so only the servings are told: "Serves 2 per pack".
+/// Null when the server states none.
+String? packServingText(Serving? serving) {
+  final serves = serving?.serves;
+  return serves == null ? null : 'Serves $serves per pack';
 }
 
 /// Promises of the shop, as small tiles. "Kept cold" only when the store for the pincode has cold storage

@@ -73,14 +73,24 @@ class ProductSummary {
 }
 
 /// `defaultVariant` of a list item: the size, its order rules and its default cut, so ADD needs no detail call.
+/// [sellUnit] and [serving] are optional so an older list shape still parses.
 class ListVariant {
-  const ListVariant({required this.id, required this.name, required this.minOrder, this.defaultPreparationCode});
+  const ListVariant({
+    required this.id,
+    required this.name,
+    required this.minOrder,
+    this.defaultPreparationCode,
+    this.sellUnit,
+    this.serving,
+  });
 
   factory ListVariant.fromJson(Json j) => ListVariant(
     id: reqString(j, 'id'),
     name: reqString(j, 'name'),
     minOrder: reqQuantity(j, 'minOrder'),
     defaultPreparationCode: optString(j, 'defaultPreparationCode'),
+    sellUnit: optString(j, 'sellUnit'),
+    serving: Serving.fromJsonOrNull(j['serving']),
   );
 
   /// Null when the shape is incomplete: the card then reads the product detail before adding, as before.
@@ -98,6 +108,15 @@ class ListVariant {
 
   /// The cut the cart uses when none is sent; null when the size has no cuts.
   final String? defaultPreparationCode;
+
+  /// KG, PIECE or PACK; null when the server did not send it.
+  final String? sellUnit;
+
+  /// What one kg, pack or piece of this size holds (CAT-R21); null when not sent.
+  final Serving? serving;
+
+  /// Net grams in one pack (D348), as the server states it; null unless this size is sold as a PACK.
+  int? get packNetGrams => sellUnit == 'PACK' ? serving?.netWeightGrams : null;
 }
 
 /// `{ caughtOn, receivedAt }` of the batch the next order is packed from (CAT-R25). Shown as given; nothing is
@@ -260,6 +279,8 @@ class Variant {
     required this.name,
     required this.sellUnit,
     required this.isWeightVariable,
+    this.packSizeGrams,
+    this.avgPieceGrams,
     required this.minOrder,
     required this.maxOrder,
     required this.orderStep,
@@ -278,6 +299,8 @@ class Variant {
       name: reqString(j, 'name'),
       sellUnit: reqString(j, 'sellUnit'),
       isWeightVariable: optBool(j, 'isWeightVariable') ?? false,
+      packSizeGrams: optInt(j, 'packSizeGrams'),
+      avgPieceGrams: optInt(j, 'avgPieceGrams'),
       minOrder: reqQuantity(j, 'minOrder'),
       maxOrder: reqQuantity(j, 'maxOrder'),
       orderStep: reqQuantity(j, 'orderStep'),
@@ -296,6 +319,12 @@ class Variant {
   /// KG, PIECE or PACK.
   final String sellUnit;
   final bool isWeightVariable;
+
+  /// Net grams in one pack (D348: packed to at least this weight, the price never changes); PACK only.
+  final int? packSizeGrams;
+
+  /// Average weight of one piece; PIECE only.
+  final int? avgPieceGrams;
   final Quantity minOrder;
   final Quantity maxOrder;
   final Quantity orderStep;
@@ -309,6 +338,11 @@ class Variant {
 
   /// Pieces and servings per serving basis, as the server states them (CAT-R21); null when not stated.
   final Serving? serving;
+
+  bool get isPack => sellUnit == 'PACK';
+
+  /// Net grams in one pack: the server's [packSizeGrams], else its serving net weight; null unless a PACK.
+  int? get packNetGrams => isPack ? (packSizeGrams ?? serving?.netWeightGrams) : null;
 
   Preparation? get defaultPreparation {
     for (final p in preparations) {
@@ -392,7 +426,7 @@ class ProductOffer {
 /// `serving { basis, netWeightGrams, piecesMin, piecesMax, serves }` (CAT-R21): per one kg net, one pack or one
 /// piece. Missing values stay null; the app never scales them to another quantity.
 class Serving {
-  const Serving({required this.basis, this.piecesMin, this.piecesMax, this.serves});
+  const Serving({required this.basis, this.netWeightGrams, this.piecesMin, this.piecesMax, this.serves});
 
   static Serving? fromJsonOrNull(Object? value) {
     if (value is! Map) return null;
@@ -401,6 +435,7 @@ class Serving {
     if (basis == null) return null;
     return Serving(
       basis: basis,
+      netWeightGrams: optInt(j, 'netWeightGrams'),
       piecesMin: optInt(j, 'piecesMin'),
       piecesMax: optInt(j, 'piecesMax'),
       serves: optInt(j, 'serves'),
@@ -408,6 +443,9 @@ class Serving {
   }
 
   final Quantity basis;
+
+  /// Net weight (after cleaning) of [basis]; null when not stated.
+  final int? netWeightGrams;
   final int? piecesMin;
   final int? piecesMax;
   final int? serves;

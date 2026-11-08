@@ -100,7 +100,9 @@ public sealed record OrderPlacement(
     DateTimeOffset? PaymentDueAt);
 
 /// <summary>One line of a pack request.</summary>
-public sealed record PackLine(Guid OrderItemId, int PackedQuantity, string Unit);
+/// <param name="PackedNetGrams">Net grams weighed for a fixed net-weight pack line (D348), all packs together; recorded
+/// only, the charge never changes. Null when not weighed; refused on a line not sold per PACK.</param>
+public sealed record PackLine(Guid OrderItemId, int PackedQuantity, string Unit, int? PackedNetGrams = null);
 
 /// <summary>Per-line pack outcome (API §4.15 pack response).</summary>
 public sealed record PackedLineResult(

@@ -222,6 +222,46 @@ void main() {
   });
 
   group('ProductCard', () {
+    testWidgets('D348: a PACK default size reads "₹749 · 500 g net", never a per-kg price', (tester) async {
+      final pack = ProductSummary.fromJson({
+        'id': 'p1',
+        'slug': 'seer-fish-vanjaram',
+        'name': 'Seer Fish',
+        'localNames': ['Vanjaram'],
+        'sourceType': 'WILD',
+        'imageUrl': null,
+        'fromPrice': {'unitPricePaise': 74900, 'compareAtPaise': null, 'perUnit': 'PACK'},
+        'availability': {'status': 'IN_STOCK', 'message': null},
+        'locationRequired': false,
+        'defaultVariant': {
+          'id': 'v2',
+          'name': 'Steaks, 500 g net',
+          'sellUnit': 'PACK',
+          'minOrder': {'value': 1, 'unit': 'PACK'},
+          'maxOrder': {'value': 10, 'unit': 'PACK'},
+          'orderStep': {'value': 1, 'unit': 'PACK'},
+          'defaultPreparationCode': 'STEAK',
+          'serving': {
+            'basis': {'value': 1, 'unit': 'PACK'},
+            'netWeightGrams': 500,
+            'piecesMin': 5,
+            'piecesMax': 7,
+            'serves': 3,
+          },
+        },
+      });
+      expect(pack.defaultVariant!.packNetGrams, 500);
+      await _pump(
+        tester,
+        SizedBox(width: 180, height: 250, child: ProductCard(product: pack, onTap: () {})),
+      );
+
+      final price = find.byKey(const Key('cardPrice'));
+      expect(find.descendant(of: price, matching: find.text('₹749 · 500 g net')), findsOneWidget);
+      expect(find.textContaining('/kg'), findsNothing);
+      expect(find.textContaining('/pack'), findsNothing);
+    });
+
     testWidgets('ADD sits on the picture edge and adds', (tester) async {
       final handle = tester.ensureSemantics();
       var added = 0;

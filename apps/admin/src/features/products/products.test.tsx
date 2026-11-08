@@ -229,6 +229,52 @@ describe("products", () => {
     expect(sent).toMatchObject({ piecesMin: 10, piecesMax: 14, serves: 4 });
   });
 
+  it("describes a fixed pack by its net weight after cleaning and pieces per pack (D348)", async () => {
+    catalogHandlers();
+    const saved = product().variants[0]!;
+    const pack = {
+      ...saved,
+      sellUnit: "PACK",
+      stockUnit: "PACK",
+      packSizeGrams: 500,
+      minOrder: 1,
+      maxOrder: 6,
+      orderStep: 1,
+      isWeightVariable: false,
+      piecesMin: 5,
+      piecesMax: 7,
+    };
+    let sent: Record<string, unknown> | undefined;
+    server.use(
+      http.get(`${API}/admin/products/${PRODUCT_ID}`, () =>
+        HttpResponse.json(product({ variants: [pack] as (typeof saved)[] })),
+      ),
+      http.get(`${API}/admin/preparation-methods`, () => HttpResponse.json([])),
+      http.put(`${API}/admin/products/${PRODUCT_ID}/variants/variant-1`, async ({ request }) => {
+        sent = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(product());
+      }),
+    );
+    const { user } = renderApp({
+      path: `/products/${PRODUCT_ID}`,
+      permissions: ["catalog.manage"],
+    });
+
+    await user.click(await screen.findByRole("tab", { name: /Variants/ }));
+    await user.click(screen.getByRole("button", { name: "Edit variant SEER-STEAK" }));
+    const net = await screen.findByLabelText(/Net weight per pack \(g\) — after cleaning/);
+    expect(net).toHaveValue("500");
+    expect(screen.getByLabelText(/Pieces per pack — from/)).toHaveValue("5");
+    expect(screen.getByLabelText(/Pieces per pack — to/)).toHaveValue("7");
+    expect(screen.getByText(/sold at one fixed price and packed to at least/)).toBeInTheDocument();
+    await user.clear(net);
+    await user.type(net, "1000");
+    await user.click(screen.getByRole("button", { name: "Save variant" }));
+
+    await waitFor(() => expect(sent).toBeDefined());
+    expect(sent).toMatchObject({ packSizeGrams: 1000, piecesMin: 5, piecesMax: 7 });
+  });
+
   describe("photos", () => {
     const photos = [
       {

@@ -132,6 +132,10 @@ export function VariantDialog({
   const sellUnit = useWatch({ control: form.control, name: "sellUnit" });
   const unitWord = sellUnit === "KG" ? "grams" : sellUnit === "PIECE" ? "pieces" : "packs";
   const basisWord = BASIS_WORDS[sellUnit];
+  const piecesMinLabel =
+    sellUnit === "PACK" ? "Pieces per pack — from" : `Fewest pieces (${basisWord})`;
+  const piecesMaxLabel =
+    sellUnit === "PACK" ? "Pieces per pack — to" : `Most pieces (${basisWord})`;
 
   const aliases = Object.fromEntries(
     preps.fields.flatMap((_, i) => [
@@ -209,8 +213,9 @@ export function VariantDialog({
               <TextField
                 form={form}
                 name="packSizeGrams"
-                label="Pack size (grams)"
+                label="Net weight per pack (g) — after cleaning"
                 inputMode="numeric"
+                hint="The pack is sold at one fixed price and packed to at least this net weight."
               />
             )}
             {sellUnit === "PIECE" && (
@@ -255,13 +260,13 @@ export function VariantDialog({
                   <TextField
                     form={form}
                     name="piecesMin"
-                    label={`Fewest pieces (${basisWord})`}
+                    label={piecesMinLabel}
                     inputMode="numeric"
                   />
                   <TextField
                     form={form}
                     name="piecesMax"
-                    label={`Most pieces (${basisWord})`}
+                    label={piecesMaxLabel}
                     inputMode="numeric"
                   />
                 </>

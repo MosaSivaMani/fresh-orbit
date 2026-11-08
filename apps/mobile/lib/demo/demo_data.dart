@@ -181,11 +181,49 @@ Json? demoProductDetail(String slug) {
           'message': null,
         },
       },
+      if (p['id'] == 'p1') _seerSteaksPack,
     ],
     'netWeightNote': 'Prices are for net weight after cleaning. If your pack weighs less, you pay less.',
     'isWishlisted': false,
   };
 }
+
+/// D348: a fixed net-weight pack, one price per pack that never changes.
+const _seerSteaksPack = <String, Object?>{
+  'id': 'v-p1-pack',
+  'name': 'Steaks, 500 g net',
+  'sellUnit': 'PACK',
+  'isWeightVariable': false,
+  'packSizeGrams': 500,
+  'avgPieceGrams': null,
+  'minOrder': {'value': 1, 'unit': 'PACK'},
+  'maxOrder': {'value': 5, 'unit': 'PACK'},
+  'orderStep': {'value': 1, 'unit': 'PACK'},
+  'unitPricePaise': 74900,
+  'compareAtPaise': null,
+  'preparations': [
+    {
+      'code': 'STEAK',
+      'name': 'Steaks (1 cm)',
+      'yieldBp': 10000,
+      'isDefault': true,
+      'chargePaise': 0,
+      'chargeBasis': 'FLAT',
+    },
+  ],
+  'availability': {
+    'status': 'IN_STOCK',
+    'maxOrderableNow': {'value': 5, 'unit': 'PACK'},
+    'message': null,
+  },
+  'serving': {
+    'basis': {'value': 1, 'unit': 'PACK'},
+    'netWeightGrams': 500,
+    'piecesMin': 5,
+    'piecesMax': 7,
+    'serves': 3,
+  },
+};
 
 Json demoServiceability(String pincode) => pincode == demoUnservedPincode
     ? {'pincode': pincode, 'serviceable': false, 'reasonCode': 'PINCODE_NOT_SERVICEABLE'}
@@ -278,18 +316,50 @@ final _cartLines = [
     prepPaise: 1500,
     estimated: 46450,
   ),
+  _seerSteaksPackLine,
 ];
 
+/// D348: one pack of seer steaks; the line price is the pack price and never changes.
+const _seerSteaksPackLine = <String, Object?>{
+  'id': 'line3',
+  'productId': 'p1',
+  'productSlug': 'seer-fish',
+  'productName': 'Seer Fish',
+  'variantId': 'v-p1-pack',
+  'variantName': 'Steaks, 500 g net',
+  'sellUnit': 'PACK',
+  'imageUrl': null,
+  'preparation': {'code': 'STEAK', 'name': 'Steaks (1 cm)', 'yieldBp': 10000},
+  'quantity': {'value': 1, 'unit': 'PACK'},
+  'estimatedNetQuantity': {'value': 1, 'unit': 'PACK'},
+  'maxChargeableQuantity': {'value': 1, 'unit': 'PACK'},
+  'unitPricePaise': 74900,
+  'priceUnit': 'PACK',
+  'itemPaise': 74900,
+  'preparationChargePaise': 0,
+  'preparationChargeBasis': null,
+  'taxRateBp': 0,
+  'taxPaise': 0,
+  'estimatedLineTotalPaise': 74900,
+  'maxLineTotalPaise': 74900,
+  'packNetGrams': 500,
+  'piecesMin': 5,
+  'piecesMax': 7,
+  'availability': {'status': 'IN_STOCK', 'message': null},
+  'isSellable': true,
+  'issues': <Object?>[],
+};
+
 const _cartTotals = <String, Object?>{
-  'itemsPaise': 109900,
+  'itemsPaise': 184800,
   'preparationPaise': 3000,
-  'subtotalPaise': 112900,
+  'subtotalPaise': 187800,
   'discountPaise': 0,
   'deliveryFeePaise': 0,
   'deliveryFeeWaived': true,
   'taxPaise': 0,
-  'estimatedTotalPaise': 112900,
-  'maxTotalPaise': 112900,
+  'estimatedTotalPaise': 187800,
+  'maxTotalPaise': 187800,
   'minOrderPaise': 29900,
   'minOrderShortfallPaise': 0,
   'freeDeliveryShortfallPaise': 0,
@@ -336,7 +406,7 @@ Json demoPreview(String addressId, String slotId, String paymentMethod) => {
   ],
   'canPlaceOrder': true,
   'blockers': <Object?>[],
-  'expectedTotalPaise': 112900,
+  'expectedTotalPaise': 187800,
 };
 
 /// Demo orders: one per tracking state, so every illustration can be seen.

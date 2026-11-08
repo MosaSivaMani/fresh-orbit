@@ -5085,6 +5085,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/dead-letters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    Status?: string;
+                    Page?: number;
+                    PageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfDeadLetterView"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/dead-letters/{deadLetterId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    deadLetterId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DeadLetterView"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/business-profile": {
         parameters: {
             query?: never;
@@ -9537,6 +9640,12 @@ export interface components {
             minOrder?: null | components["schemas"]["QuantityView"];
             maxOrder?: null | components["schemas"]["QuantityView"];
             orderStep?: null | components["schemas"]["QuantityView"];
+            /** Format: int32 */
+            packNetGrams?: null | number;
+            /** Format: int32 */
+            piecesMin?: null | number;
+            /** Format: int32 */
+            piecesMax?: null | number;
         };
         CartLocationRequest: {
             pincode: string;
@@ -10242,6 +10351,23 @@ export interface components {
         };
         /** @enum {string} */
         DayOfWeek: "SUNDAY" | "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY";
+        DeadLetterView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            eventId: string;
+            eventType: string;
+            handler: string;
+            error: string;
+            /** Format: date-time */
+            failedAt: string;
+            /** Format: int32 */
+            attempts: number;
+            /** Format: date-time */
+            replayedAt: null | string;
+            /** Format: uuid */
+            replayedBy: null | string;
+        };
         DecideComplaintRequest: {
             status: null | string;
             resolution: null | string;
@@ -10667,6 +10793,8 @@ export interface components {
             status: string;
             /** Format: uuid */
             substitutedFromItemId: null | string;
+            /** Format: int32 */
+            packedNetGrams?: null | number;
         };
         OrderLineBatchDto: {
             /** Format: uuid */
@@ -10798,6 +10926,8 @@ export interface components {
             /** Format: uuid */
             orderItemId: string;
             packedQuantity: null | components["schemas"]["OrderingQuantityDto"];
+            /** Format: int32 */
+            packedNetGrams?: null | number;
         };
         PackOrderRequest: {
             lines: null | components["schemas"]["PackLineRequest"][];
@@ -10911,6 +11041,15 @@ export interface components {
         };
         PagedResponseOfCouponResponse: {
             items: components["schemas"]["CouponResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
+        };
+        PagedResponseOfDeadLetterView: {
+            items: components["schemas"]["DeadLetterView"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */

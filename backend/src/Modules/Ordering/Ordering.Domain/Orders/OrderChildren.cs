@@ -122,6 +122,9 @@ public sealed class OrderItem : Entity
 
     public int? PackedQuantity { get; private set; }
 
+    /// <summary>Net grams weighed at pack for a fixed net-weight pack line (D348); recorded only, never charged.</summary>
+    public int? PackedNetGrams { get; private set; }
+
     public int? ChargedQuantity { get; private set; }
 
     public long? FinalItemPaise { get; private set; }
@@ -146,6 +149,8 @@ public sealed class OrderItem : Entity
         : $"{ProductName} – {VariantName}";
 
     internal LinePriceFacts Facts => new(OrderUnits.PricedUnitOf(SellUnit), UnitPricePaise, PreparationChargePaise, OrderUnits.BasisOf(ChargeBasis), TaxRateBp);
+
+    internal void RecordPackedNetGrams(int? grams) => PackedNetGrams = grams;
 
     internal void SetFinal(int packed, int charged, LineAmounts amounts)
     {
