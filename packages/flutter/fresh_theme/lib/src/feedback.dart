@@ -2,6 +2,7 @@
 // snack bar, badges, the primary button and the product photo frame.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 
 /// Grey placeholder block. Hidden from screen readers; the container announces "Loading".
@@ -98,13 +99,50 @@ class GridSkeleton extends StatelessWidget {
   );
 }
 
-/// Two columns on phones; more on wide screens. Tall enough for text scaling.
-const productGridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
-  maxCrossAxisExtent: 240,
-  mainAxisSpacing: FreshLayout.cardGap,
-  crossAxisSpacing: FreshLayout.cardGap,
-  childAspectRatio: 0.72,
-);
+/// Two columns on phones; more on wide screens. At text scale 1.0 a card is 0.72 as wide as it is tall. With a
+/// larger phone text size the card's text part grows (MB-6): [textScale] above 1 adds
+/// [extraHeightPerScale] × (scale − 1) to every card, so the two-line name, the local names and the price never
+/// overflow at 1.3, 1.5 or 2.0. Use [productGridDelegateOf] in screens.
+class FreshProductGridDelegate extends SliverGridDelegate {
+  const FreshProductGridDelegate({this.textScale = 1.0});
+
+  final double textScale;
+
+  static const maxCrossAxisExtent = 240.0;
+  static const childAspectRatio = 0.72;
+
+  /// Extra card height per 1.0 of text scale above 1.0: the name, local names and price grow, and at 2.0 the price
+  /// row wraps on a narrow card, so the text part needs about 180 dp more there (measured in CI at 360 dp).
+  static const extraHeightPerScale = 200.0;
+
+  @override
+  SliverGridLayout getLayout(SliverConstraints constraints) {
+    const gap = FreshLayout.cardGap;
+    final width = constraints.crossAxisExtent;
+    final columns = (width / (maxCrossAxisExtent + gap)).ceil().clamp(1, 12);
+    final tileWidth = ((width - gap * (columns - 1)) / columns).clamp(0.0, double.infinity);
+    final extra = textScale > 1 ? extraHeightPerScale * (textScale - 1) : 0.0;
+    final tileHeight = tileWidth / childAspectRatio + extra;
+    return SliverGridRegularTileLayout(
+      crossAxisCount: columns,
+      mainAxisStride: tileHeight + gap,
+      crossAxisStride: tileWidth + gap,
+      childMainAxisExtent: tileHeight,
+      childCrossAxisExtent: tileWidth,
+      reverseCrossAxis: axisDirectionIsReversed(constraints.crossAxisDirection),
+    );
+  }
+
+  @override
+  bool shouldRelayout(FreshProductGridDelegate oldDelegate) => oldDelegate.textScale != textScale;
+}
+
+/// The product grid at text scale 1.0 (skeletons, tests).
+const productGridDelegate = FreshProductGridDelegate();
+
+/// The product grid for the phone's text size (MB-6).
+FreshProductGridDelegate productGridDelegateOf(BuildContext context) =>
+    FreshProductGridDelegate(textScale: MediaQuery.textScalerOf(context).scale(14) / 14);
 
 /// Inline banner for blockers, availability notes and server messages. Tone is shown with an icon and text,
 /// never colour alone.
@@ -222,7 +260,7 @@ class ProductPhoto extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         child: url == null
             ? ExcludeSemantics(child: placeholder)
-            : Image.network(
+            : FreshNetworkImage(
                 url!,
                 fit: BoxFit.cover,
                 semanticLabel: semanticLabel,

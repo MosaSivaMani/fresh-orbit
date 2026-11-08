@@ -150,9 +150,53 @@ void main() {
     expect(tokens.hasSession, isFalse);
   });
 
-  test('other 401 codes and auth endpoints are not refreshed', () async {
+  test('the server\'s real 401 UNAUTHENTICATED refreshes once and retries (ME-2)', () async {
     final tokens = await _signedIn();
-    final adapter = FakeAdapter((o) async => FakeReply(401, problem(401, 'UNAUTHENTICATED')));
+    final adapter = FakeAdapter((o) async {
+      if (o.path.endsWith('auth/refresh')) return FakeReply(200, _pair('a2', 'r2'));
+      return o.headers['Authorization'] == 'Bearer a2'
+          ? const FakeReply(200, {'ok': true})
+          : FakeReply(401, problem(401, 'UNAUTHENTICATED'));
+    });
+    final api = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
+    );
+
+    expect(await api.get('me'), {'ok': true});
+    expect(adapter.to('auth/refresh'), hasLength(1));
+    expect(adapter.to('me').map((r) => r.headers['Authorization']), ['Bearer a1', 'Bearer a2']);
+  });
+
+  test('UNAUTHENTICATED again after the refresh signs out without looping', () async {
+    final tokens = await _signedIn();
+    var ended = 0;
+    final adapter = FakeAdapter((o) async {
+      if (o.path.endsWith('auth/refresh')) return FakeReply(200, _pair('a2', 'r2'));
+      return FakeReply(401, problem(401, 'UNAUTHENTICATED'));
+    });
+    final api = ApiClient(
+      createDio(
+        baseUrl: 'https://api.test',
+        tokens: tokens,
+        pincode: () => null,
+        adapter: adapter,
+        clock: () => _now,
+        onSessionEnded: () => ended++,
+      ),
+    );
+
+    final error = await api.get('me').then<ApiError?>((_) => null, onError: (Object e) => e as ApiError);
+
+    expect(error!.code, 'UNAUTHENTICATED');
+    expect(adapter.to('me'), hasLength(2));
+    expect(adapter.to('auth/refresh'), hasLength(1));
+    expect(ended, 1);
+    expect(tokens.hasSession, isFalse);
+  });
+
+  test('business 401s, guests and auth endpoints are not refreshed', () async {
+    final tokens = await _signedIn();
+    final adapter = FakeAdapter((o) async => FakeReply(401, problem(401, 'LOGIN_REQUIRED')));
     final api = ApiClient(
       createDio(baseUrl: 'https://api.test', tokens: tokens, pincode: () => null, adapter: adapter, clock: () => _now),
     );
@@ -163,6 +207,14 @@ void main() {
     expect(adapter.to('auth/refresh'), isEmpty);
     expect(adapter.to('auth/otp/verify').single.headers.containsKey('Authorization'), isFalse);
     expect(tokens.hasSession, isTrue);
+
+    final guest = TokenStore(MemorySecretStore());
+    final guestAdapter = FakeAdapter((o) async => FakeReply(401, problem(401, 'UNAUTHENTICATED')));
+    final guestApi = ApiClient(
+      createDio(baseUrl: 'https://api.test', tokens: guest, pincode: () => null, adapter: guestAdapter, clock: () => _now),
+    );
+    await expectLater(guestApi.get('me'), throwsA(isA<ApiError>()));
+    expect(guestAdapter.to('auth/refresh'), isEmpty);
   });
 
   test('a network error during refresh keeps the session', () async {

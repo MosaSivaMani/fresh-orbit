@@ -33,11 +33,14 @@ class ProductSummary {
     this.availability,
     required this.locationRequired,
     this.freshness,
+    this.defaultVariant,
   });
 
   factory ProductSummary.fromJson(Json j) {
     final price = asJsonOrNull(j['fromPrice'], 'fromPrice');
+    final variant = asJsonOrNull(j['defaultVariant'], 'defaultVariant');
     return ProductSummary(
+      defaultVariant: variant == null ? null : ListVariant.tryParse(variant),
       id: reqString(j, 'id'),
       slug: reqString(j, 'slug'),
       name: reqString(j, 'name'),
@@ -63,6 +66,38 @@ class ProductSummary {
 
   /// The default variant's next batch (CAT-R25); null without a pincode or sellable stock.
   final Freshness? freshness;
+
+  /// The size the card's "from" price belongs to and the one ADD puts in the cart (CAT-R23, MB-2); null only when
+  /// the product has no visible size.
+  final ListVariant? defaultVariant;
+}
+
+/// `defaultVariant` of a list item: the size, its order rules and its default cut, so ADD needs no detail call.
+class ListVariant {
+  const ListVariant({required this.id, required this.name, required this.minOrder, this.defaultPreparationCode});
+
+  factory ListVariant.fromJson(Json j) => ListVariant(
+    id: reqString(j, 'id'),
+    name: reqString(j, 'name'),
+    minOrder: reqQuantity(j, 'minOrder'),
+    defaultPreparationCode: optString(j, 'defaultPreparationCode'),
+  );
+
+  /// Null when the shape is incomplete: the card then reads the product detail before adding, as before.
+  static ListVariant? tryParse(Json j) {
+    try {
+      return ListVariant.fromJson(j);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  final String id;
+  final String name;
+  final Quantity minOrder;
+
+  /// The cut the cart uses when none is sent; null when the size has no cuts.
+  final String? defaultPreparationCode;
 }
 
 /// `{ caughtOn, receivedAt }` of the batch the next order is packed from (CAT-R25). Shown as given; nothing is
