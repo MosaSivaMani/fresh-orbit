@@ -2,6 +2,10 @@
 
 Last updated: 2026-10-29 (see the pause block below). Older note: 2026-10-24, after the manager merged security round 2 (Track A, `security/round-2`), the sample-data loaders (L1, `backend/sample-loaders`) and the illustrated design system (U1) to `main`: `dotnet test` 999/999, all `pnpm` checks pass, no pending model changes. Start here when work resumes.
 
+## Month plan (2026-11-08)
+
+- **The plan for 9 November – 6 December is `team/plan-2026-11.md`** (proposed; the owner confirms the goal, the Must picks and the owner track). Goal: soft launch by 6 December, one store, COD, invite-only until the policies are final.
+
 ## Paused 2026-10-29 night (owner called off the day): resume here
 
 - **State:** main is `b1f834a`. Live APK `demo-apk-b1f834a` (`fresh-orbit-live-b1f834a.apk`, 56 MB, arm64 only, D321). Main is protected (D305): merge only through PRs with green CI; the owner approved merging each PR once green.
