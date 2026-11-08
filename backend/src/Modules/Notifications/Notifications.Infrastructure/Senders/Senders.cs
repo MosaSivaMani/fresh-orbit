@@ -131,7 +131,8 @@ public sealed partial class LoggingEmailSender(ILogger<LoggingEmailSender> logge
         ArgumentNullException.ThrowIfNull(message);
         if (logger.IsEnabled(LogLevel.Information))
         {
-            LogEmail(EmailMasking.Mask(message.To), message.Subject);
+            var maskedTo = EmailMasking.Mask(message.To);
+            LogEmail(maskedTo, message.Subject);
         }
 
         return Task.FromResult<string?>(DevelopmentDelivery.NotDelivered);
