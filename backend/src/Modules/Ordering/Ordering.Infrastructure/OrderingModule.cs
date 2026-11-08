@@ -9,12 +9,15 @@ using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Application.Checkout;
 using FreshOrbit.Ordering.Application.Complaints;
 using FreshOrbit.Ordering.Application.Events;
+using FreshOrbit.Ordering.Application.Invoices;
 using FreshOrbit.Ordering.Application.Orders;
 using FreshOrbit.Ordering.Infrastructure.Endpoints;
+using FreshOrbit.Ordering.Infrastructure.Invoices;
 using FreshOrbit.Ordering.Infrastructure.Jobs;
 using FreshOrbit.Ordering.Infrastructure.Persistence;
 using FreshOrbit.Ordering.Infrastructure.Public;
 using FreshOrbit.Ordering.Public;
+using FreshOrbit.Ordering.Public.Events;
 using FreshOrbit.SharedKernel.EntityFramework;
 using FreshOrbit.SharedKernel.Jobs;
 using FreshOrbit.SharedKernel.Web.Modules;
@@ -64,6 +67,9 @@ public sealed class OrderingModule : IModule
         services.AddEventHandler<DeliveryAttemptFailed, OrderingDeliveryAttemptFailedHandler>();
         services.AddEventHandler<ShipmentReattempted, OrderingShipmentReattemptedHandler>();
         services.AddEventHandler<ShipmentReturned, OrderingShipmentReturnedHandler>();
+        services.TryAddSingleton<IInvoicePdfRenderer, SkiaInvoicePdfRenderer>();
+        services.AddScoped<InvoicePdfService>();
+        services.AddEventHandler<InvoiceIssued, OrderingInvoicePdfHandler>();
         services.AddScoped<OrderExpiryService>();
 
         services.AddScoped<IOrderingApi, OrderingApi>();

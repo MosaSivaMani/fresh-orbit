@@ -7,8 +7,12 @@ using FreshOrbit.SharedKernel.Units;
 
 namespace FreshOrbit.Ordering.Domain.Invoices;
 
-/// <summary>Seller facts printed on an invoice (Settings business profile).</summary>
-public sealed record InvoiceSeller(string LegalName, string Gstin);
+/// <summary>
+/// Seller facts frozen onto an invoice when it is issued (D342): legal name, registered address and GSTIN from the
+/// Settings business profile; the FSSAI licence of the fulfillment location that supplied the order (Locations), because
+/// an FSSAI licence belongs to the premises.
+/// </summary>
+public sealed record InvoiceSeller(string LegalName, string Gstin, string Address, string FssaiLicenseNo);
 
 /// <summary>
 /// A frozen GST invoice issued at delivery from the order's final amounts (<c>ordering.invoices</c>, ORD-R48..R52).
@@ -29,6 +33,8 @@ public sealed class Invoice : AggregateRoot
         InvoiceNumber = invoiceNumber;
         SellerGstin = seller.Gstin;
         SellerLegalName = seller.LegalName;
+        SellerAddress = seller.Address;
+        SellerFssaiLicenseNo = seller.FssaiLicenseNo;
         IssuedAt = issuedAt;
     }
 
@@ -42,6 +48,12 @@ public sealed class Invoice : AggregateRoot
 
     public string SellerLegalName { get; private set; }
 
+    /// <summary>The seller's registered address at issue (D342); null only on invoices issued before it was frozen.</summary>
+    public string? SellerAddress { get; private set; }
+
+    /// <summary>FSSAI licence of the supplying premises at issue (D342); null only on invoices issued before it was frozen.</summary>
+    public string? SellerFssaiLicenseNo { get; private set; }
+
     public long TaxablePaise { get; private set; }
 
     public long TaxPaise { get; private set; }
@@ -51,6 +63,15 @@ public sealed class Invoice : AggregateRoot
     public string? PdfStorageKey { get; private set; }
 
     public IReadOnlyList<InvoiceLine> Lines => _lines;
+
+    /// <summary>Media type of the rendered invoice (ORD-R53).</summary>
+    public const string PdfContentType = "application/pdf";
+
+    /// <summary>
+    /// Storage key of the rendered PDF (D343). The <c>.pdf</c> extension is never served by <c>/media</c>, so the file is
+    /// read only through the authenticated invoice endpoints.
+    /// </summary>
+    public static string PdfKey(Guid invoiceId) => $"invoices/{invoiceId:D}.pdf";
 
     /// <summary>
     /// Indian financial-year period <c>yy-yy</c> of <paramref name="at"/> in <paramref name="timeZone"/> (April–March).
@@ -72,6 +93,10 @@ public sealed class Invoice : AggregateRoot
         ArgumentNullException.ThrowIfNull(order);
         ArgumentNullException.ThrowIfNull(seller);
         ArgumentException.ThrowIfNullOrWhiteSpace(invoiceNumber);
+        ArgumentException.ThrowIfNullOrWhiteSpace(seller.LegalName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(seller.Gstin);
+        ArgumentException.ThrowIfNullOrWhiteSpace(seller.Address);
+        ArgumentException.ThrowIfNullOrWhiteSpace(seller.FssaiLicenseNo);
         if (order.FinalTotalPaise is not { } finalTotal)
         {
             throw new InvalidOperationException("An invoice needs the order's final amounts (packed order).");
@@ -103,7 +128,12 @@ public sealed class Invoice : AggregateRoot
         return invoice;
     }
 
-    public void SetPdf(string storageKey) => PdfStorageKey = storageKey;
+    /// <summary>Records the rendered PDF's storage key (ORD-R53); the invoice's amounts never change.</summary>
+    public void SetPdf(string storageKey)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(storageKey);
+        PdfStorageKey = storageKey;
+    }
 }
 
 /// <summary>One frozen invoice line (<c>ordering.invoice_lines</c>).</summary>

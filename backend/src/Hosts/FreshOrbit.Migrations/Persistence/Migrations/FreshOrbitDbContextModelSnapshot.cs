@@ -3505,6 +3505,16 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("pdf_storage_key");
 
+                    b.Property<string>("SellerAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("seller_address");
+
+                    b.Property<string>("SellerFssaiLicenseNo")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("seller_fssai_license_no");
+
                     b.Property<string>("SellerGstin")
                         .IsRequired()
                         .HasMaxLength(15)

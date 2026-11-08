@@ -41,6 +41,9 @@ public interface IInvoiceRepository
 {
     Task<Invoice?> FindByOrderAsync(Guid orderId, CancellationToken cancellationToken);
 
+    /// <summary>The invoice with its lines (tracked), or null.</summary>
+    Task<Invoice?> GetAsync(Guid invoiceId, CancellationToken cancellationToken);
+
     void Add(Invoice invoice);
 }
 

@@ -1,9 +1,11 @@
 using System.Globalization;
 using FreshOrbit.Ordering.Application.Checkout;
 using FreshOrbit.Ordering.Application.Complaints;
+using FreshOrbit.Ordering.Application.Invoices;
 using FreshOrbit.Ordering.Application.Orders;
 using FreshOrbit.Ordering.Application.Shared;
 using FreshOrbit.Ordering.Domain.Complaints;
+using FreshOrbit.Ordering.Domain.Invoices;
 using FreshOrbit.Ordering.Domain.Shared;
 using FreshOrbit.SharedKernel.Actors;
 using FreshOrbit.SharedKernel.Errors;
@@ -101,6 +103,10 @@ internal static class OrderingEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
         orders.MapGet("/{orderId:guid}/invoice", async (Guid orderId, ICurrentActor actor, OrderQueryService queries, CancellationToken ct)
             => TypedResults.Ok(await queries.CustomerInvoiceAsync(CustomerOf(actor), orderId, ct)));
+        orders.MapGet("/{orderId:guid}/invoice/pdf", async (Guid orderId, ICurrentActor actor, InvoicePdfService pdfs, HttpResponse response, CancellationToken ct)
+                => PdfResult(response, await pdfs.OpenForCustomerAsync(CustomerOf(actor), orderId, ct)))
+            .Produces(StatusCodes.Status200OK, contentType: Invoice.PdfContentType)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         orders.MapPost("/{orderId:guid}/reorder", async (Guid orderId, ICurrentActor actor, OrderCommandService commands, CancellationToken ct)
             => TypedResults.Ok(await commands.ReorderAsync(CustomerOf(actor), orderId, ct)));
     }
@@ -166,6 +172,12 @@ internal static class OrderingEndpoints
         orders.MapGet("/{orderId:guid}/invoice", async (Guid orderId, ICurrentActor actor, OrderQueryService queries, CancellationToken ct)
                 => TypedResults.Ok(await queries.StaffInvoiceAsync(actor, orderId, ct)))
             .RequirePermission(OrdersView);
+        orders.MapGet("/{orderId:guid}/invoice/pdf", async (Guid orderId, ICurrentActor actor, InvoicePdfService pdfs, HttpResponse response, CancellationToken ct)
+                => PdfResult(response, await pdfs.OpenForStaffAsync(actor, orderId, ct)))
+            .RequirePermission(OrdersView)
+            .Produces(StatusCodes.Status200OK, contentType: Invoice.PdfContentType)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var complaints = root.MapGroup("/admin/complaints").RequirePermission(ComplaintsManage).WithTags("Admin complaints");
         complaints.MapGet(string.Empty, async ([FromQuery] string? status, [FromQuery] string? kind, [FromQuery] Guid? fulfillmentLocationId, [FromQuery] int? page, [FromQuery] int? pageSize, ICurrentActor actor, ComplaintService service, CancellationToken ct) =>
@@ -240,6 +252,14 @@ internal static class OrderingEndpoints
         response.Headers.CacheControl = "private, max-age=300";
         response.Headers.XContentTypeOptions = "nosniff";
         return TypedResults.Stream(photo.Content, photo.ContentType);
+    }
+
+    /// <summary>The invoice PDF as a download (D343): private, not sniffed, named after the invoice number.</summary>
+    private static Microsoft.AspNetCore.Http.HttpResults.FileStreamHttpResult PdfResult(HttpResponse response, InvoicePdfFile pdf)
+    {
+        response.Headers.CacheControl = "private, max-age=300";
+        response.Headers.XContentTypeOptions = "nosniff";
+        return TypedResults.Stream(pdf.Content, Invoice.PdfContentType, pdf.FileName);
     }
 
     private static void SetETag(HttpResponse response, string version)

@@ -2,7 +2,9 @@ using FreshOrbit.Delivery.Public;
 using FreshOrbit.Inventory.Public;
 using FreshOrbit.Locations.Public;
 using FreshOrbit.Ordering.Application.Abstractions;
+using FreshOrbit.Ordering.Application.Invoices;
 using FreshOrbit.Ordering.Application.Shared;
+using FreshOrbit.Ordering.Domain.Invoices;
 using FreshOrbit.Ordering.Domain.Orders;
 using FreshOrbit.Ordering.Domain.Shared;
 using FreshOrbit.Payments.Public;
@@ -152,10 +154,10 @@ public sealed class OrderQueryService(
     }
 
     public async Task<InvoiceResponse> CustomerInvoiceAsync(Guid customerId, Guid orderId, CancellationToken cancellationToken)
-        => await InvoiceOfAsync(await GetOwnedAsync(customerId, orderId, cancellationToken), cancellationToken);
+        => await InvoiceOfAsync(await GetOwnedAsync(customerId, orderId, cancellationToken), InvoicePdfService.CustomerUrl, cancellationToken);
 
     public async Task<InvoiceResponse> StaffInvoiceAsync(ICurrentActor actor, Guid orderId, CancellationToken cancellationToken)
-        => await InvoiceOfAsync(await GetForStaffAsync(actor, orderId, cancellationToken), cancellationToken);
+        => await InvoiceOfAsync(await GetForStaffAsync(actor, orderId, cancellationToken), InvoicePdfService.StaffUrl, cancellationToken);
 
     internal static TEnum? ParseOptional<TEnum>(string? code, string field)
         where TEnum : struct, Enum
@@ -189,10 +191,10 @@ public sealed class OrderQueryService(
         return parsed;
     }
 
-    private async Task<InvoiceResponse> InvoiceOfAsync(Order order, CancellationToken cancellationToken)
+    private async Task<InvoiceResponse> InvoiceOfAsync(Order order, Func<Invoice, string?> pdfUrl, CancellationToken cancellationToken)
     {
         var invoice = await invoices.FindByOrderAsync(order.Id, cancellationToken)
             ?? throw new NotFoundException(OrderingErrors.InvoiceNotIssued, "The invoice is issued when the order is delivered.");
-        return OrderViews.Invoice(order, invoice);
+        return OrderViews.Invoice(order, invoice, pdfUrl(invoice));
     }
 }
