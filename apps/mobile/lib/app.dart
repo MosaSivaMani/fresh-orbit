@@ -23,12 +23,20 @@ class ThemeModeController extends Notifier<ThemeMode> {
   }
 }
 
-/// The chosen app language code ('en', 'te', 'hi'). Screens are English only for now (docs/design/mobile.md).
+/// Languages whose screen texts exist (D312, MA-8). Only English today, so the language choice is hidden: a picker
+/// that offers Telugu or Hindi and then shows English is a broken promise. Add a code here in the same change that
+/// adds its translations (flutter_localizations + ARB files), and the choice comes back in Settings.
+const availableLanguages = {'en'};
+
+/// The app language code. A stored choice without translations (picked in an earlier version) reads as English.
 final languageProvider = NotifierProvider<LanguageController, String>(LanguageController.new);
 
 class LanguageController extends Notifier<String> {
   @override
-  String build() => ref.read(appPrefsProvider).language;
+  String build() {
+    final stored = ref.read(appPrefsProvider).language;
+    return availableLanguages.contains(stored) ? stored : 'en';
+  }
 
   Future<void> set(String code) async {
     await ref.read(appPrefsProvider).setLanguage(code);
