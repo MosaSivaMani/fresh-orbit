@@ -57,7 +57,7 @@ public sealed class EmailOptions
     {
         ArgumentNullException.ThrowIfNull(email);
         ArgumentNullException.ThrowIfNull(smtp);
-        var provider = email.Provider.Trim();
+        var provider = (email.Provider ?? string.Empty).Trim();
         if (provider.Length > 0)
         {
             return provider;

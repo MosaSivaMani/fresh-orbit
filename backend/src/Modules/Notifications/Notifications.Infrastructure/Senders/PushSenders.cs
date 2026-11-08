@@ -57,7 +57,7 @@ internal sealed class PushOptionsValidator(IHostEnvironment environment) : IVali
     public ValidateOptionsResult Validate(string? name, PushOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        var provider = options.Provider.Trim();
+        var provider = (options.Provider ?? string.Empty).Trim();
         switch (provider)
         {
             case "" or PushOptions.DevelopmentProvider when !DevelopmentSenderEnvironments.Allow(environment):
@@ -120,7 +120,7 @@ public static class PushSenderRegistration
             });
         services.TryAdd(ServiceDescriptor.Singleton<IPushSender>(provider =>
         {
-            var configured = provider.GetRequiredService<IOptions<PushOptions>>().Value.Provider.Trim();
+            var configured = (provider.GetRequiredService<IOptions<PushOptions>>().Value.Provider ?? string.Empty).Trim();
             return configured switch
             {
                 PushOptions.FcmProvider => ActivatorUtilities.CreateInstance<FcmPushSender>(provider),
@@ -146,7 +146,7 @@ internal sealed partial class DisabledChannelsStartupReport(IOptions<EmailOption
             LogDisabled(EmailOptions.SectionName + ":Provider", "EMAIL_DISABLED");
         }
 
-        if (push.Value.Provider.Trim() == PushOptions.DisabledProvider)
+        if ((push.Value.Provider ?? string.Empty).Trim() == PushOptions.DisabledProvider)
         {
             LogDisabled(PushOptions.SectionName + ":Provider", "PUSH_DISABLED");
         }
