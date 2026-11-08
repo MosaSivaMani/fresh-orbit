@@ -70,7 +70,12 @@ public sealed record PricedLine(
             Issues,
             Variant is null ? null : new QuantityView(Variant.MinOrder, unit),
             Variant is null ? null : new QuantityView(Variant.MaxOrder, unit),
-            Variant is null ? null : new QuantityView(Variant.OrderStep, unit));
+            Variant is null ? null : new QuantityView(Variant.OrderStep, unit))
+        {
+            PackNetGrams = sellUnit == SellUnit.Pack ? Variant?.PackSizeGrams : null,
+            PiecesMin = sellUnit == SellUnit.Pack ? Variant?.PiecesMin : null,
+            PiecesMax = sellUnit == SellUnit.Pack ? Variant?.PiecesMax : null,
+        };
     }
 
     public QuoteLine ToQuote(long discountPaise, long taxPaise)

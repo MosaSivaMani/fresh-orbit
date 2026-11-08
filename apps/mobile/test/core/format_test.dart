@@ -46,6 +46,37 @@ void main() {
     expect(formatQuantity(const Quantity(2, 'PACK')), '2 packs');
   });
 
+  group('fixed packs (D348)', () {
+    test('formatNetWeight says net, in g or kg', () {
+      expect(formatNetWeight(500), '500 g net');
+      expect(formatNetWeight(1000), '1 kg net');
+      expect(formatNetWeight(1500), '1.5 kg net');
+    });
+
+    test('formatPieces shows a range, a single count, or nothing when unknown', () {
+      expect(formatPieces(5, 7), '5–7 pieces');
+      expect(formatPieces(6, 6), '6 pieces');
+      expect(formatPieces(1, 1), '1 piece');
+      expect(formatPieces(null, null), isNull);
+    });
+
+    test('formatPackFacts leaves the pieces out when the server states none', () {
+      expect(formatPackFacts(500, piecesMin: 5, piecesMax: 7), '500 g net · 5–7 pieces');
+      expect(formatPackFacts(1000, piecesMin: 6, piecesMax: 6), '1 kg net · 6 pieces');
+      expect(formatPackFacts(500), '500 g net');
+    });
+
+    test('withNetWeight adds the net weight to a size name unless it is already there', () {
+      expect(withNetWeight('Steaks', 500), 'Steaks · 500 g net');
+      expect(withNetWeight('Steaks, 500 g net', 500), 'Steaks, 500 g net');
+      expect(withNetWeight('Medium', null), 'Medium');
+    });
+
+    test('the caption calls net weight the weight after cleaning', () {
+      expect(netWeightCaption, contains('after cleaning'));
+    });
+  });
+
   test('formatPercentFromBp and per-unit suffix', () {
     expect(formatPercentFromBp(500), '5%');
     expect(formatPercentFromBp(1250), '12.5%');

@@ -145,7 +145,17 @@ public sealed record CartLineView(
     IReadOnlyList<CartIssueView> Issues,
     QuantityView? MinOrder = null,
     QuantityView? MaxOrder = null,
-    QuantityView? OrderStep = null);
+    QuantityView? OrderStep = null)
+{
+    /// <summary>Net grams (after cleaning) in one pack of a fixed net-weight pack (D348); null unless sold per PACK.</summary>
+    public int? PackNetGrams { get; init; }
+
+    /// <summary>Fewest pieces in one pack (D348); null unless sold per PACK with a stated pieces range.</summary>
+    public int? PiecesMin { get; init; }
+
+    /// <summary>Most pieces in one pack (D348); null like <see cref="PiecesMin"/>.</summary>
+    public int? PiecesMax { get; init; }
+}
 
 /// <param name="Status">APPLIED / NOT_APPLICABLE / INVALID.</param>
 /// <param name="ReasonCode">COUPON_* reason when not applied.</param>

@@ -4159,6 +4159,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("ordered_quantity");
 
+                    b.Property<int?>("PackedNetGrams")
+                        .HasColumnType("integer")
+                        .HasColumnName("packed_net_grams");
+
                     b.Property<int?>("PackedQuantity")
                         .HasColumnType("integer")
                         .HasColumnName("packed_quantity");

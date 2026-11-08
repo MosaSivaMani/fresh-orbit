@@ -9537,6 +9537,12 @@ export interface components {
             minOrder?: null | components["schemas"]["QuantityView"];
             maxOrder?: null | components["schemas"]["QuantityView"];
             orderStep?: null | components["schemas"]["QuantityView"];
+            /** Format: int32 */
+            packNetGrams?: null | number;
+            /** Format: int32 */
+            piecesMin?: null | number;
+            /** Format: int32 */
+            piecesMax?: null | number;
         };
         CartLocationRequest: {
             pincode: string;
@@ -10667,6 +10673,8 @@ export interface components {
             status: string;
             /** Format: uuid */
             substitutedFromItemId: null | string;
+            /** Format: int32 */
+            packedNetGrams?: null | number;
         };
         OrderLineBatchDto: {
             /** Format: uuid */
@@ -10798,6 +10806,8 @@ export interface components {
             /** Format: uuid */
             orderItemId: string;
             packedQuantity: null | components["schemas"]["OrderingQuantityDto"];
+            /** Format: int32 */
+            packedNetGrams?: null | number;
         };
         PackOrderRequest: {
             lines: null | components["schemas"]["PackLineRequest"][];

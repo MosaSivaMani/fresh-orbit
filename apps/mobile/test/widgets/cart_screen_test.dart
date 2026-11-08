@@ -180,4 +180,36 @@ void main() {
     expect(deps.cart.calls, contains('applyCoupon:FRESH100'));
     expect(find.byKey(const Key('offersSheet')), findsNothing);
   });
+
+  testWidgets('D348: a PACK line shows what one pack holds and its price plainly', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.cart.current = cart(lines: [cartLineJson(), packCartLineJson(id: 'line2')]);
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    final facts = find.byKey(const ValueKey('linePackFacts-line2'));
+    expect(find.descendant(of: facts, matching: find.text('500 g net · 5–7 pieces')), findsOneWidget);
+    final price = find.byKey(const ValueKey('linePrice-line2'));
+    expect(find.descendant(of: price, matching: find.text('₹749')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lineMax-line2')), findsNothing);
+    expect(find.text('1 pack'), findsOneWidget); // the stepper counts packs
+    // The weighed line has no pack facts.
+    expect(find.byKey(const ValueKey('linePackFacts-line1')), findsNothing);
+    expect(find.textContaining('Estimated'), findsNothing);
+  });
+
+  testWidgets('a PACK line from an older server without pack facts still shows its price', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    final old = packCartLineJson()
+      ..remove('packNetGrams')
+      ..remove('piecesMin')
+      ..remove('piecesMax');
+    deps.cart.current = cart(lines: [old]);
+    await pumpScreen(tester, deps, const CartScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('linePackFacts-line2')), findsNothing);
+    final price = find.byKey(const ValueKey('linePrice-line2'));
+    expect(find.descendant(of: price, matching: find.text('₹749')), findsOneWidget);
+  });
 }

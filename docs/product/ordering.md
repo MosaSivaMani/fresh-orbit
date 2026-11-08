@@ -137,7 +137,7 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 | Key | Rule |
 |---|---|
 | ORD-R25 | `POST /admin/orders/{id}/pack` only from `PREPARING` with `If-Match`. Any `PROPOSED` substitution → 409 `INVALID_STATUS_TRANSITION`. |
-| ORD-R26 | Every `ACTIVE` line exactly once, unit = line unit, `packedQuantity >= 0` → else 422 `PACKED_QUANTITY_INVALID` keyed `lines[i]`. |
+| ORD-R26 | Every `ACTIVE` line exactly once, unit = line unit, `packedQuantity >= 0` → else 422 `PACKED_QUANTITY_INVALID` keyed `lines[i]`. Optional `packedNetGrams` on PACK lines only (ORD-R67). |
 | ORD-R27 | `charged = min(packed, max_chargeable_quantity)`; `capped = packed > max_chargeable_quantity`. |
 | ORD-R28 | Final line = shared line formula (CART-R3..R6) at `charged` with the item snapshot (price, prep rate + basis, tax rate). Stored split per line (D16): `charged_quantity`, `final_item_paise`, `final_preparation_paise`, `final_tax_paise`, `final_total_paise`; order stores the same split for `final`. |
 | ORD-R29 | `packed = 0` → item `SHORT_SUPPLIED`, final 0, adjustment `SHORT_SUPPLY` = −estimated. Non-weight-variable `0 < packed < ordered` → `ACTIVE`, adjustment `SHORT_SUPPLY` = final − estimated. Weight-variable, final ≠ estimated → adjustment `WEIGHT` = final − estimated (signed). |
@@ -203,6 +203,7 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 | ORD-R64 | Account deletion check (CUS-R7): `OrderingCustomerDeletionCheck` reports `ACTIVE_ORDERS_EXIST` and `OPEN_COMPLAINT` (a complaint `OPEN` or `APPROVED`). `IOrderingApi.GetOrderNumbers(ids)` answers order numbers in one query (G16). |
 | ORD-R65 | An order keeps the IANA time zone of its fulfillment location; placing an order whose location has no time zone is refused (422 `CONFIGURATION_MISSING`, field `deliveryAddressId`). Order detail, list and tracking return `timeZone` so clients show slot times in the store's local time (W10). |
 | ORD-R66 | Complaint photo retention: a daily job (`ordering.purge-complaint-photos`, 03:45 UTC) deletes the photos (rows in one save, then the private files) of complaints closed more than `Ordering:ComplaintPhotoRetentionDays` ago, at most 500 per run. Closed means RESOLVED (from `resolvedAt`) or REJECTED (from `decidedAt`); OPEN and APPROVED complaints keep theirs. Unset means the owner has not chosen the period (privacy policy): nothing is deleted and the job logs a warning; a value below 1 fails the run. Photo uploads use the `upload` rate limit (20 per hour per customer). |
+| ORD-R67 | **Fixed net-weight packs (D348).** A pack line may send `packedNetGrams` (> 0, the net grams weighed for all packs of the line together); it is stored on the item (`packed_net_grams`) and returned as `packedNetGrams`, recorded only: the charge stays packs × pack price (non-weight-variable, ORD-R27). Sent on a line not sold per PACK, or ≤ 0 → 422 `PACKED_QUANTITY_INVALID` keyed `lines[i].packedNetGrams`. Packs are packed to at least the stated net weight; the give-away is in the price (business readiness §1). |
 
 ## 4. Events
 

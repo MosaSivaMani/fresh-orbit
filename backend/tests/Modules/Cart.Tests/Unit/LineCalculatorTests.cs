@@ -98,6 +98,7 @@ public sealed class LineCalculatorTests
 
         none.MaxChargeableQuantity.Should().Be(new QuantityView(750, "GRAM"));
         none.MaxLineTotalPaise.Should().Be(none.EstimatedLineTotalPaise);
+        none.PackNetGrams.Should().BeNull();
         allowance.MaxChargeableQuantity.Should().Be(new QuantityView(825, "GRAM"));
         allowance.MaxLineTotalPaise.Should().BeGreaterThan(allowance.EstimatedLineTotalPaise);
     }
@@ -107,7 +108,11 @@ public sealed class LineCalculatorTests
     {
         var pack = new VariantInfo(
             Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), "Seer Fish", "seer-fish", "Steaks 500 g net", "SEER-P500", null, "0302", "SEAFOOD",
-            SellUnit.Pack, StockUnit.Piece, 500, null, 1, 10, 1, false, true, []);
+            SellUnit.Pack, StockUnit.Piece, 500, null, 1, 10, 1, false, true, [])
+        {
+            PiecesMin = 5,
+            PiecesMax = 7,
+        };
         var line = new PricingLine(Guid.CreateVersion7(), pack.VariantId, null, 2);
         var price = new LinePrice(pack.VariantId, null, 74900, null, 0, null, 500);
 
@@ -116,5 +121,8 @@ public sealed class LineCalculatorTests
         view.MaxChargeableQuantity.Should().Be(new QuantityView(2, "PACK"));
         view.EstimatedLineTotalPaise.Should().Be(149800);
         view.MaxLineTotalPaise.Should().Be(149800);
+        view.PackNetGrams.Should().Be(500);
+        view.PiecesMin.Should().Be(5);
+        view.PiecesMax.Should().Be(7);
     }
 }

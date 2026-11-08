@@ -4,6 +4,7 @@ import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 import {
   cartWithAllowance,
+  cartWithPack,
   cartWithSeer,
   emptyCart,
   problem,
@@ -88,6 +89,27 @@ describe("CartView", () => {
     const bill = screen.getByRole("region", { name: "Bill details" });
     expect(within(bill).getByText(/You pay at most/)).toHaveTextContent("₹736.45");
     expect(within(bill).queryByText(/never more/)).not.toBeInTheDocument();
+  });
+
+  it("describes a pack line by one pack's net weight and pieces (D348)", async () => {
+    server.use(...cartReads(cartWithPack));
+    renderWithProviders(<CartView />);
+
+    const items = await screen.findByRole("list", { name: "Items in your cart" });
+    expect(within(items).getByText("500 g net · 5–7 pieces")).toHaveAttribute(
+      "title",
+      "Net weight is the weight after cleaning.",
+    );
+    expect(within(items).getByText("₹1,498")).toBeInTheDocument();
+    expect(within(items).queryByText(/at most/i)).not.toBeInTheDocument();
+  });
+
+  it("shows no pack facts on a line sold by weight", async () => {
+    server.use(...cartReads());
+    renderWithProviders(<CartView />);
+
+    const items = await screen.findByRole("list", { name: "Items in your cart" });
+    expect(within(items).queryByText(/ net · /)).not.toBeInTheDocument();
   });
 
   it("steps the quantity by the cart line's order step and shows the server's new line", async () => {

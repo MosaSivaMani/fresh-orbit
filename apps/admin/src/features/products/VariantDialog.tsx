@@ -209,8 +209,9 @@ export function VariantDialog({
               <TextField
                 form={form}
                 name="packSizeGrams"
-                label="Pack size (grams)"
+                label="Net weight per pack (g) — after cleaning"
                 inputMode="numeric"
+                hint="The pack is sold at one fixed price and packed to at least this net weight."
               />
             )}
             {sellUnit === "PIECE" && (
@@ -255,13 +256,21 @@ export function VariantDialog({
                   <TextField
                     form={form}
                     name="piecesMin"
-                    label={`Fewest pieces (${basisWord})`}
+                    label={
+                      sellUnit === "PACK"
+                        ? "Pieces per pack — from"
+                        : `Fewest pieces (${basisWord})`
+                    }
                     inputMode="numeric"
                   />
                   <TextField
                     form={form}
                     name="piecesMax"
-                    label={`Most pieces (${basisWord})`}
+                    label={
+                      sellUnit === "PACK"
+                        ? "Pieces per pack — to"
+                        : `Most pieces (${basisWord})`
+                    }
                     inputMode="numeric"
                   />
                 </>

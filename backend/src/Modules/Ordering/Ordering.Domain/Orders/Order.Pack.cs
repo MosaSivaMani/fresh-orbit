@@ -29,7 +29,7 @@ public sealed partial class Order
             throw new ConflictException(OrderingErrors.InvalidStatusTransition, "A substitution is waiting for the customer's answer; pack after it is answered or expired.");
         }
 
-        var packedById = ValidatePackLines(lines);
+        var packedById = ValidatePackLines(lines, out var netGramsById);
         var adjustmentByItem = new Dictionary<Guid, long>();
         foreach (var item in _items)
         {
@@ -40,6 +40,7 @@ public sealed partial class Order
             }
 
             var packed = packedById[item.Id];
+            item.RecordPackedNetGrams(netGramsById.TryGetValue(item.Id, out var netGrams) ? netGrams : null);
             if (packed == 0)
             {
                 item.SetFinal(0, 0, default);
@@ -155,10 +156,11 @@ public sealed partial class Order
         return adjustment;
     }
 
-    private Dictionary<Guid, int> ValidatePackLines(IReadOnlyList<PackLine> lines)
+    private Dictionary<Guid, int> ValidatePackLines(IReadOnlyList<PackLine> lines, out Dictionary<Guid, int> netGrams)
     {
         var errors = new List<FieldError>();
         var packed = new Dictionary<Guid, int>();
+        netGrams = [];
         for (var i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
@@ -180,9 +182,21 @@ public sealed partial class Order
             {
                 errors.Add(new FieldError(field, OrderingErrors.PackedQuantityInvalid, "The packed quantity cannot be negative."));
             }
+            else if (line.PackedNetGrams is not null && !string.Equals(item.SellUnit, OrderUnits.Pack, StringComparison.Ordinal))
+            {
+                errors.Add(new FieldError($"{field}.packedNetGrams", OrderingErrors.PackedQuantityInvalid, "Send packedNetGrams only for a line sold per pack."));
+            }
+            else if (line.PackedNetGrams is <= 0)
+            {
+                errors.Add(new FieldError($"{field}.packedNetGrams", OrderingErrors.PackedQuantityInvalid, "Enter packedNetGrams as the weighed net grams, above 0."));
+            }
             else
             {
                 packed[item.Id] = line.PackedQuantity;
+                if (line.PackedNetGrams is { } grams)
+                {
+                    netGrams[item.Id] = grams;
+                }
             }
         }
 

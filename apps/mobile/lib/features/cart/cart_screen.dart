@@ -218,6 +218,7 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall?.copyWith(color: c.muted, fontSize: 11);
     final tints = softTints(c);
+    final hasAllowance = !line.isPack && line.maxLineTotalPaise > line.estimatedLineTotalPaise;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -256,6 +257,15 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                       [line.variantName, if (line.preparation != null) line.preparation!.name].join(' · '),
                       style: muted,
                     ),
+                    // D348: what one pack holds, as the server states it; the caption is read out, not shown.
+                    if (line.packNetGrams case final grams?)
+                      FreshPackFacts(
+                        key: ValueKey('linePackFacts-${line.id}'),
+                        facts: formatPackFacts(grams, piecesMin: line.piecesMin, piecesMax: line.piecesMax),
+                        caption: netWeightCaption,
+                        showCaption: false,
+                        dense: true,
+                      ),
                     if (line.preparation != null)
                       InkWell(
                         key: ValueKey('changeCut-${line.id}'),
@@ -277,13 +287,14 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                     const SizedBox(height: 2),
                     // D347: max == estimated is the normal case, so the line price is shown plainly; the
                     // "Estimated" / "At most" wording appears only when the server sends a larger maximum.
+                    // D348: a pack's price never changes, so a PACK line is always shown plainly.
                     PriceTag(
                       key: ValueKey('linePrice-${line.id}'),
                       paise: line.estimatedLineTotalPaise,
-                      prefix: line.maxLineTotalPaise > line.estimatedLineTotalPaise ? 'Estimated' : null,
+                      prefix: hasAllowance ? 'Estimated' : null,
                       style: AppText.price(c.ink, size: 14),
                     ),
-                    if (line.maxLineTotalPaise > line.estimatedLineTotalPaise)
+                    if (hasAllowance)
                       Text(
                         'At most ${formatRupees(line.maxLineTotalPaise)} for up to ${formatQuantity(line.maxChargeableQuantity)}',
                         key: ValueKey('lineMax-${line.id}'),

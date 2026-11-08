@@ -43,6 +43,9 @@ class CartLine {
     this.availability,
     required this.isSellable,
     required this.issues,
+    this.packNetGrams,
+    this.piecesMin,
+    this.piecesMax,
   });
 
   factory CartLine.fromJson(Json j) {
@@ -72,6 +75,9 @@ class CartLine {
       availability: optAvailability(j, 'availability'),
       isSellable: optBool(j, 'isSellable') ?? true,
       issues: listOrEmpty(j, 'issues', CodedMessage.fromJson),
+      packNetGrams: optInt(j, 'packNetGrams'),
+      piecesMin: optInt(j, 'piecesMin'),
+      piecesMax: optInt(j, 'piecesMax'),
     );
   }
 
@@ -99,6 +105,15 @@ class CartLine {
   final Availability? availability;
   final bool isSellable;
   final List<CodedMessage> issues;
+
+  /// Net grams in one pack (D348); null unless [sellUnit] is PACK (and on older payloads).
+  final int? packNetGrams;
+
+  /// Fewest and most pieces in one pack; null unless a PACK and stated.
+  final int? piecesMin;
+  final int? piecesMax;
+
+  bool get isPack => sellUnit == 'PACK';
 }
 
 /// Coupon status APPLIED, NOT_APPLICABLE or INVALID (§5.3).

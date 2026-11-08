@@ -37,6 +37,65 @@ class PriceEstimateRow extends StatelessWidget {
   }
 }
 
+/// What one fixed pack holds (D348), already formatted from the server's values: "500 g net · 5–7 pieces", with
+/// the price when the screen gives it ("500 g net · 5–7 pieces · ₹749"), and a small [caption] that says net
+/// weight is the weight after cleaning. [showCaption] false keeps the caption for screen readers only (a dense
+/// cart row). Gross weight is never shown.
+class FreshPackFacts extends StatelessWidget {
+  const FreshPackFacts({super.key, required this.facts, this.caption, this.showCaption = true, this.dense = false});
+
+  /// For example "500 g net · 5–7 pieces · ₹749".
+  final String facts;
+
+  /// For example "Net weight is the weight after cleaning."
+  final String? caption;
+  final bool showCaption;
+
+  /// A smaller line without the scale icon, for a cart row.
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = illustratedColors(context);
+    final factsText = Text(
+      facts,
+      key: const ValueKey('packFactsText'),
+      style: TextStyle(
+        fontFamily: AppFonts.body,
+        fontSize: dense ? 12 : 14,
+        height: 1.3,
+        fontWeight: FontWeight.w700,
+        color: dense ? c.ink : c.tealDeep,
+      ),
+    );
+    return Semantics(
+      label: caption == null ? facts : '$facts. $caption',
+      excludeSemantics: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (dense)
+            factsText
+          else
+            Row(
+              children: [
+                Icon(Icons.scale_outlined, size: 16, color: c.tealDeep),
+                const SizedBox(width: 6),
+                Flexible(child: factsText),
+              ],
+            ),
+          if (caption != null && showCaption)
+            Text(
+              caption!,
+              style: TextStyle(fontFamily: AppFonts.body, fontSize: 11.5, height: 1.3, color: c.muted),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// A coupon the customer may use: its code on a dashed-looking pill, the owner's description and the minimum
 /// order, with one action (Apply). Values arrive formatted.
 class CouponTile extends StatelessWidget {

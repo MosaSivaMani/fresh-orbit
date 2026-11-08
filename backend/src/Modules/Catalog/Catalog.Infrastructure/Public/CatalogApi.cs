@@ -190,6 +190,8 @@ public sealed class CatalogApi(FreshOrbitDbContext db, IFileStorage storage) : I
                     .Select(x => new PreparationInfo(x.Method.Id, x.Method.Code, x.Method.Name, x.Preparation.YieldBp, x.Preparation.IsDefault, x.Preparation.IsActive))])
             {
                 ProductStatus = Map(product.Status),
+                PiecesMin = v.PiecesMin,
+                PiecesMax = v.PiecesMax,
             };
         })];
     }

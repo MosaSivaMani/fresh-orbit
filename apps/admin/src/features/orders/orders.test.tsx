@@ -8,6 +8,7 @@ import {
   type ComplaintDetail,
   type CustomerOrderDetail,
   type Invoice,
+  type OrderItem,
 } from "../../api/types/orders";
 import { page } from "../../test/fixtures";
 import { AdminLayout } from "../../app/AdminLayout";
@@ -204,6 +205,146 @@ describe("order detail: weigh and pack", () => {
       coldBoxUsed: true,
       lines: [{ orderItemId: "item-1", packedQuantity: { value: 600, unit: "GRAM" } }],
     });
+  });
+
+  it("records the packed net weight of a fixed pack line only (D348)", async () => {
+    let body: unknown = null;
+    const order = customerOrder({});
+    const packItem: OrderItem = {
+      ...order.items[0]!,
+      id: "item-2",
+      lineNo: 2,
+      variantId: "variant-2",
+      productName: "Seer steaks",
+      variantName: "500 g pack",
+      preparationName: null,
+      orderedQuantity: { value: 2, unit: "PACK" },
+      maxChargeableQuantity: { value: 2, unit: "PACK" },
+      unitPricePaise: 74900,
+      estimatedTotalPaise: 149800,
+    };
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () =>
+        HttpResponse.json(orderDetail({ items: [order.items[0]!, packItem] })),
+      ),
+      http.post(`${API}/admin/orders/${ORDER_ID}/pack`, async ({ request }) => {
+        body = await request.json();
+        return problem(412, "CONCURRENCY_CONFLICT");
+      }),
+    );
+    const { user } = renderApp({
+      path: `/orders/${ORDER_ID}`,
+      permissions: ["orders.view", "orders.pack"],
+    });
+
+    await user.type(await screen.findByLabelText(/Weighed quantity for line 1/), "500");
+    expect(screen.queryByLabelText(/Packed net weight \(g\) for line 1/)).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText(/Weighed quantity for line 2/), "2");
+    await user.type(screen.getByLabelText(/Packed net weight \(g\) for line 2/), "1040");
+    expect(screen.getByText("Recorded only; the price does not change.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Mark packed" }));
+
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body).toEqual({
+      coldBoxUsed: true,
+      lines: [
+        { orderItemId: "item-1", packedQuantity: { value: 500, unit: "GRAM" } },
+        {
+          orderItemId: "item-2",
+          packedQuantity: { value: 2, unit: "PACK" },
+          packedNetGrams: 1040,
+        },
+      ],
+    });
+  });
+
+  it("leaves the packed net weight out when it is not entered", async () => {
+    let body: unknown = null;
+    const order = customerOrder({});
+    const packItem: OrderItem = {
+      ...order.items[0]!,
+      id: "item-2",
+      lineNo: 1,
+      orderedQuantity: { value: 1, unit: "PACK" },
+      maxChargeableQuantity: { value: 1, unit: "PACK" },
+    };
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () =>
+        HttpResponse.json(orderDetail({ items: [packItem] })),
+      ),
+      http.post(`${API}/admin/orders/${ORDER_ID}/pack`, async ({ request }) => {
+        body = await request.json();
+        return problem(412, "CONCURRENCY_CONFLICT");
+      }),
+    );
+    const { user } = renderApp({
+      path: `/orders/${ORDER_ID}`,
+      permissions: ["orders.view", "orders.pack"],
+    });
+
+    await user.type(await screen.findByLabelText(/Weighed quantity for line 1/), "1");
+    await user.click(screen.getByRole("button", { name: "Mark packed" }));
+
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body).toEqual({
+      coldBoxUsed: true,
+      lines: [{ orderItemId: "item-2", packedQuantity: { value: 1, unit: "PACK" } }],
+    });
+  });
+
+  it("shows the server's refusal of the packed net weight at that line", async () => {
+    const order = customerOrder({});
+    const packItem: OrderItem = {
+      ...order.items[0]!,
+      orderedQuantity: { value: 1, unit: "PACK" },
+      maxChargeableQuantity: { value: 1, unit: "PACK" },
+    };
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () =>
+        HttpResponse.json(orderDetail({ items: [packItem] })),
+      ),
+      http.post(`${API}/admin/orders/${ORDER_ID}/pack`, () =>
+        problem(422, "PACKED_QUANTITY_INVALID", {
+          errors: {
+            "lines[0].packedNetGrams": [
+              { code: "PACKED_QUANTITY_INVALID", message: "Enter a packed net weight above 0 g." },
+            ],
+          },
+        }),
+      ),
+    );
+    const { user } = renderApp({
+      path: `/orders/${ORDER_ID}`,
+      permissions: ["orders.view", "orders.pack"],
+    });
+
+    await user.type(await screen.findByLabelText(/Weighed quantity for line 1/), "1");
+    await user.type(screen.getByLabelText(/Packed net weight \(g\) for line 1/), "480");
+    await user.click(screen.getByRole("button", { name: "Mark packed" }));
+
+    const input = screen.getByLabelText(/Packed net weight \(g\) for line 1/);
+    await waitFor(() => expect(input).toHaveAttribute("aria-invalid", "true"));
+  });
+
+  it("shows the packed net weight of a packed fixed pack line", async () => {
+    const order = customerOrder({});
+    const packed: OrderItem = {
+      ...order.items[0]!,
+      orderedQuantity: { value: 2, unit: "PACK" },
+      maxChargeableQuantity: { value: 2, unit: "PACK" },
+      packedQuantity: { value: 2, unit: "PACK" },
+      chargedQuantity: { value: 2, unit: "PACK" },
+      finalTotalPaise: 149800,
+      packedNetGrams: 1040,
+    };
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () =>
+        HttpResponse.json(orderDetail({ items: [packed] })),
+      ),
+    );
+    renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
+
+    expect(await screen.findByText("1.04 kg net")).toBeInTheDocument();
   });
 
   it("shows a line's field error from the server at that line", async () => {

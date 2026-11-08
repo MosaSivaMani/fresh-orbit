@@ -37,7 +37,11 @@ public sealed record OrderItemDto(
     long EstimatedTotalPaise,
     long? FinalTotalPaise,
     string Status,
-    Guid? SubstitutedFromItemId);
+    Guid? SubstitutedFromItemId)
+{
+    /// <summary>Net grams weighed at pack for a fixed net-weight pack line (D348); null when not recorded.</summary>
+    public int? PackedNetGrams { get; init; }
+}
 
 public sealed record AmountsDto(long ItemsPaise, long PreparationPaise, long DiscountPaise, long DeliveryFeePaise, long TaxPaise, long TotalPaise);
 
@@ -214,7 +218,9 @@ public sealed record InvoiceResponse(
 
 public sealed record CancelOrderRequest(string? ReasonCode, string? Note);
 
-public sealed record PackLineRequest(Guid OrderItemId, QuantityDto? PackedQuantity);
+/// <param name="PackedNetGrams">Optional: net grams weighed for a line sold per PACK (D348), all packs together; recorded
+/// only, the charge never changes.</param>
+public sealed record PackLineRequest(Guid OrderItemId, QuantityDto? PackedQuantity, int? PackedNetGrams = null);
 
 public sealed record PackOrderRequest(IReadOnlyList<PackLineRequest>? Lines, bool ColdBoxUsed);
 
@@ -388,7 +394,10 @@ public static class OrderViews
             item.EstimatedTotalPaise,
             item.FinalTotalPaise,
             item.Status.ToCode(),
-            item.SubstitutedFromItemId);
+            item.SubstitutedFromItemId)
+        {
+            PackedNetGrams = item.PackedNetGrams,
+        };
     }
 
     private static SubstitutionDto Substitution(Substitution substitution) => new(

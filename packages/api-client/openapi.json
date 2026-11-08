@@ -11082,6 +11082,27 @@
                 "$ref": "#/components/schemas/QuantityView"
               }
             ]
+          },
+          "packNetGrams": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMin": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "piecesMax": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -15380,6 +15401,13 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "packedNetGrams": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -15848,6 +15876,13 @@
                 "$ref": "#/components/schemas/OrderingQuantityDto"
               }
             ]
+          },
+          "packedNetGrams": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
