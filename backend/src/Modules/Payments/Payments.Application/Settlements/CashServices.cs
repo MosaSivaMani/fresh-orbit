@@ -44,7 +44,7 @@ public sealed class CashCollectionService(
     }
 }
 
-/// <summary>Rider cash settlements (PAY-R19, R20; G2).</summary>
+/// <summary>Rider cash settlements (PAY-R19, R20; G2; D328: a settlement sweeps all earlier unsettled cash).</summary>
 public sealed class CashSettlementService(
     IShipmentFacts shipments,
     IPaymentRepository payments,
@@ -74,8 +74,10 @@ public sealed class CashSettlementService(
             throw new ConflictException(PaymentsErrors.SettlementExists, "A settlement for this rider and date already exists.", "date");
         }
 
-        var (fromUtc, toUtc) = LocalDay(request.Date, zone);
-        var collections = await payments.ListUnsettledCashAsync(request.RiderId, fromUtc, toUtc, cancellationToken);
+        // D328: a settlement takes every unsettled cash collection of the rider up to the end of its date, so cash
+        // collected after an earlier settlement (later the same day, or a day nobody settled) goes into the next one.
+        var (_, endUtc) = LocalDay(request.Date, zone);
+        var collections = await payments.ListUnsettledCashAsync(request.RiderId, endUtc, cancellationToken);
         var expected = collections.Sum(p => p.PaidPaise);
         var settlement = CashSettlement.Create(request.RiderId, rider.FulfillmentLocationId, request.Date, expected, request.ReceivedPaise, collections.Count, user, request.Note, now);
         settlements.Add(settlement);

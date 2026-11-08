@@ -59,10 +59,10 @@ internal sealed class PaymentRepository(FreshOrbitDbContext db) : IPaymentReposi
     public Task<Payment?> FindByProviderRefundIdAsync(string provider, string providerRefundId, CancellationToken cancellationToken)
         => Payments.FirstOrDefaultAsync(p => p.Provider == provider && p.Refunds.Any(r => r.ProviderRefundId == providerRefundId), cancellationToken);
 
-    public async Task<IReadOnlyList<Payment>> ListUnsettledCashAsync(Guid riderId, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Payment>> ListUnsettledCashAsync(Guid riderId, DateTimeOffset collectedBeforeUtc, CancellationToken cancellationToken)
         => await Payments
             .Where(p => p.Status == PaymentStatus.Collected && p.CollectionMode == CollectionMode.Cash && p.CashSettlementId == null
-                && p.CollectedByRiderId == riderId && p.CollectedAt >= fromUtc && p.CollectedAt < toUtc)
+                && p.CollectedByRiderId == riderId && p.CollectedAt < collectedBeforeUtc)
             .OrderBy(p => p.CollectedAt)
             .ToListAsync(cancellationToken);
 

@@ -44,8 +44,8 @@ public interface IPaymentRepository
 
     Task<Payment?> FindByProviderRefundIdAsync(string provider, string providerRefundId, CancellationToken cancellationToken);
 
-    /// <summary>COLLECTED CASH payments of a rider collected in [fromUtc, toUtc) and not yet settled.</summary>
-    Task<IReadOnlyList<Payment>> ListUnsettledCashAsync(Guid riderId, DateTimeOffset fromUtc, DateTimeOffset toUtc, CancellationToken cancellationToken);
+    /// <summary>COLLECTED CASH payments of a rider collected before <paramref name="collectedBeforeUtc"/> and not yet settled (D328).</summary>
+    Task<IReadOnlyList<Payment>> ListUnsettledCashAsync(Guid riderId, DateTimeOffset collectedBeforeUtc, CancellationToken cancellationToken);
 
     /// <summary>Online PENDING/AUTHORIZED attempts created in [createdFrom, createdTo), oldest first.</summary>
     Task<IReadOnlyList<Payment>> ListOpenOnlineAttemptsAsync(DateTimeOffset createdFrom, DateTimeOffset createdTo, int limit, CancellationToken cancellationToken);
