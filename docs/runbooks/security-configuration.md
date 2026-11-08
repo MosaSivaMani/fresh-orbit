@@ -82,6 +82,20 @@ DLT registration is done by the business, not by us. Each step's id goes into `.
    - **Text:** exactly the "DLT text" column, character for character. Each `{#var#}` is one variable. Our text
      must match the registered one exactly (spaces, full stops, dashes), or the operator drops the message.
    - After approval, copy each **content template id** → its `SMS_DLT_TEMPLATE_<CODE>`.
+   - **Whitelist the link domain (L-31).** Two texts carry a link: `PAYMENT_FAILED` (`retryUrl`) and
+     `SUBSTITUTION_PROPOSED` (`orderUrl`). Since TRAI's direction of August 2024 (in force 1 October 2024), operators
+     block any SMS whose URL is not whitelisted on the DLT portal for that header and template. On the portal, open
+     the URL / CTA whitelisting page (the name differs by operator), add the website address `https://<domain>`
+     (the `DOMAIN` of `.env.prod`; the links are meant to open the order on the website, so confirm the host in
+     `notifications.md` once the code fills `retryUrl` and `orderUrl`) and link it to both templates.
+     Whitelist the full domain, not one page, so every order link passes. Register the two templates **with** the
+     link variable, in the same order as the table. A link on a different host (for example a URL shortener or
+     `api.<domain>`) needs its own whitelisting first.
+   - **Check with Fast2SMS** (by its support or account manager) that the whitelisted domain is linked to the header
+     and both templates, and whether the portal also asks to whitelist call-back numbers: `DELIVERY_FAILED` ends
+     with `supportPhone` (a fixed number: whitelist `SUPPORT_PHONE` if asked) and `ORDER_OUT_FOR_DELIVERY` carries
+     `riderPhone` (changes per rider, so it cannot be whitelisted one by one; ask how they treat a phone number
+     variable). Not verified with a live account; record the answer in `docs/research/sms-provider-2026-10.md`.
    - Variables are filled in this order: the "Variables" column. Keep each value within the portal's variable
      length limit (30 characters on the portals we know of, not verified). `businessName` is the Settings trade
      name (or `Notifications:BusinessName`).
@@ -219,3 +233,28 @@ run as Production. Production and Staging behave exactly as before; nothing abov
 | Data Protection keys | Not required (ephemeral). Nothing uses them yet |
 | Images | Files on the container disk vanish on every restart; a missing `/media/…` image (`.webp`, `.png`, `.jpg`) is answered with the sample placeholder drawing |
 | Rate limits | Raised in `appsettings.Demo.json`: every tester reaches the Api through Render's proxy or the website's server, so they share one client IP |
+
+## 7. Rotating a secret
+
+When a secret may have leaked (`incident-response.md`), when someone who knew it leaves, or once a year (gap audit
+L-67). Work on the server as `deploy` in `/opt/freshorbit`. Save the new value in the team password manager
+**before** you use it, and keep the old one until the rotation is checked. "Redeploy" means
+`infra/scripts/deploy.sh "$(cat .deploy/current-tag)"`, which recreates only the services whose settings changed
+(`deploy.md` §3). In the table, `dc` is short for
+`IMAGE_TAG=$(cat .deploy/current-tag) docker compose --env-file infra/compose/.env.prod -f infra/compose/docker-compose.prod.yml`.
+
+| Secret | Steps, in order | Effect on users |
+|---|---|---|
+| `JWT_SIGNING_KEY` | `openssl rand -hex 32`, put it in `.env.prod`, redeploy | Every customer and staff member is signed out at once, and OTPs in flight stop working (the key also keys OTP hashes). Pick a quiet hour, unless the point is to end stolen sessions |
+| `POSTGRES_PASSWORD` | The Postgres image reads it only when the database is first created, so change the database user first: `dc exec postgres psql -U freshorbit -d freshorbit -c "ALTER USER freshorbit PASSWORD '<new hex value>'"`. Then put the same value in `.env.prod` and redeploy | api and worker restart with the new connection string (a few seconds of errors). Backups are unaffected (they run inside the container) |
+| `SMS_DLT_API_KEY` | Create a new API key in the Fast2SMS dashboard, put it in `.env.prod`, redeploy, request an OTP for your own phone (§2.1 step 6), then delete the old key at Fast2SMS | None in this order |
+| `SMTP_PASSWORD` | New password or app key at the SMTP provider, put it in `.env.prod`, redeploy, make one e-mail go out (for example a staff password reset on a test account), then revoke the old one | None |
+| `DEPLOY_SSH_KEY` (GitHub) | `ssh-keygen -t ed25519 -f freshorbit-ci -C ci` on your own computer, add the new `.pub` line to `/home/deploy/.ssh/authorized_keys`, replace the environment secret in GitHub, run the Deploy workflow with the current tag, then delete the old line from `authorized_keys` | None |
+| Backup bucket key (`rclone.conf`) | Create a new bucket-scoped token at R2 or B2 (`backup-restore.md` §2), replace the key id and secret in `infra/compose/rclone.conf`, run `infra/scripts/backup.sh --label key-rotation`, check that it reached the remote with `infra/scripts/restore.sh --list`, then revoke the old token | None |
+| rclone crypt passwords | Do **not** rotate casually: offsite backups made with the old passwords can be read only with them. If they leaked, make a new crypt remote with new passwords and a new bucket path, point `BACKUP_REMOTE` at it, keep the old passwords until the old backups age out (`BACKUP_REMOTE_RETENTION_DAYS`), and treat the old backups as read | None |
+| `GRAFANA_ADMIN_PASSWORD` | Change it in Grafana (Profile › Change password) and in `.env.prod` | None |
+| Play upload key (`UPLOAD_KEYSTORE_*`) | We cannot rotate it alone: ask Google Play support for an upload key reset (Play Console › App integrity), then make a new keystore and secrets (`mobile-release.md` parts 2 and 3) | None for users; uploads wait for Google |
+| Staff passwords | Each person: admin › My account (`POST /admin/auth/password`). For someone else: Settings › Staff & roles › Reset password (§5) | That person only |
+
+After each rotation, add one line to the incident log or `docs/team/progress.md` (what was rotated, when and by
+whom; never the value).

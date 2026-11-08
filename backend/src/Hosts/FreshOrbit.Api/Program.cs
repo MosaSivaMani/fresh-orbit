@@ -12,6 +12,8 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddFreshOrbitSerilog(builder.Configuration, builder.Environment);
+// OpenTelemetry traces and metrics; off unless Telemetry:OtlpEndpoint is set (BE-8, D332).
+builder.Services.AddFreshOrbitTelemetry(builder.Configuration, "fresh-orbit-api", web: true);
 builder.Services.AddFreshOrbitWeb();
 builder.Services.AddFreshOrbitAuthentication();
 builder.Services.AddFreshOrbitDataProtection();

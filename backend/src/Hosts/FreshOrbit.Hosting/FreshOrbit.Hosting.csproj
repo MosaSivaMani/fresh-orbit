@@ -12,6 +12,11 @@
     <PackageReference Include="Hangfire.NetCore" />
     <PackageReference Include="Hangfire.PostgreSql" />
     <PackageReference Include="Newtonsoft.Json" />
+    <!-- Traces and metrics (BE-8, D332). -->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SharedKernel\FreshOrbit.SharedKernel.Web\FreshOrbit.SharedKernel.Web.csproj" />

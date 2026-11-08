@@ -225,7 +225,7 @@ MEDIA_STATUS=$(curl -s -o /dev/null -w '%{http_code}' "$MEDIA_URL")
 [ "$MEDIA_STATUS" = 200 ] && pass "product image served from /media" || fail "product image served from /media" "HTTP $MEDIA_STATUS for $MEDIA_URL"
 
 # The OTP sign-in needs the development SMS outbox (Development/Testing only). Against a Production-mode stack, where
-# the DLT sender is configured (and still a stub), SMOKE_STOP_BEFORE_OTP=true ends the run here.
+# the DLT sender (Fast2SMS adapter, E2E-1) is configured, SMOKE_STOP_BEFORE_OTP=true ends the run here.
 if [ "${SMOKE_STOP_BEFORE_OTP:-false}" = true ]; then
   echo "SMOKE_STOP_BEFORE_OTP=true: customer sign-in, order and fulfilment steps skipped."
   summary
