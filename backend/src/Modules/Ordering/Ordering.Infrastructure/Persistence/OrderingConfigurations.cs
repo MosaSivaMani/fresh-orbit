@@ -178,6 +178,8 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(x => x.InvoiceNumber).HasMaxLength(16);
         builder.Property(x => x.SellerGstin).HasMaxLength(15);
         builder.Property(x => x.SellerLegalName).HasMaxLength(200);
+        builder.Property(x => x.SellerAddress).HasMaxLength(500);
+        builder.Property(x => x.SellerFssaiLicenseNo).HasMaxLength(20);
         builder.Property(x => x.PdfStorageKey).HasMaxLength(300);
         builder.HasIndex(x => x.OrderId).IsUnique();
         builder.HasIndex(x => x.InvoiceNumber).IsUnique();

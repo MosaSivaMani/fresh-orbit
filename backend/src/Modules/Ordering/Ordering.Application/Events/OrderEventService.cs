@@ -1,3 +1,4 @@
+using FreshOrbit.Locations.Public;
 using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Domain.Invoices;
 using FreshOrbit.Ordering.Domain.Orders;
@@ -18,6 +19,7 @@ public sealed partial class OrderEventService(
     IOrderRepository orders,
     IInvoiceRepository invoices,
     ISettingsApi settings,
+    ILocationsApi locations,
     OrderingOptions options,
     IClock clock,
     ILogger<OrderEventService> logger)
@@ -87,8 +89,9 @@ public sealed partial class OrderEventService(
             throw new DomainException(OrderingErrors.ConfigurationMissing, "The business GSTIN is not configured; invoices cannot be issued.");
         }
 
+        var seller = await SellerAsync(order, profile, profile.Gstin, cancellationToken);
         var number = await settings.NextNumberAsync(InvoiceSeries, deliveredAt, cancellationToken);
-        var invoice = Invoice.Issue(order, number, new InvoiceSeller(profile.LegalName, profile.Gstin), options.DeliveryServiceCode, clock.UtcNow);
+        var invoice = Invoice.Issue(order, number, seller, options.DeliveryServiceCode, clock.UtcNow);
         invoices.Add(invoice);
         return order.Deliver(shipmentId, invoice.Id, invoice.InvoiceNumber, deliveredAt);
     }
@@ -113,6 +116,33 @@ public sealed partial class OrderEventService(
     {
         var order = await RequireAsync(orderId, cancellationToken);
         return Report(order, order.Return(shipmentId, returnedAt), "ShipmentReturned");
+    }
+
+    /// <summary>
+    /// D342: the seller facts frozen on the invoice. Legal name, registered address and GSTIN come from the Settings
+    /// business profile; the FSSAI licence is the supplying fulfillment location's (a licence belongs to the premises,
+    /// and Locations refuses to activate a location without one). Missing → <c>CONFIGURATION_MISSING</c> naming the field.
+    /// </summary>
+    private async Task<InvoiceSeller> SellerAsync(Order order, BusinessProfile profile, string gstin, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(profile.LegalName))
+        {
+            throw new DomainException(OrderingErrors.ConfigurationMissing, "The business legalName is not configured; invoices cannot be issued.", "legalName");
+        }
+
+        if (string.IsNullOrWhiteSpace(profile.Address))
+        {
+            throw new DomainException(OrderingErrors.ConfigurationMissing, "The business address is not configured; invoices cannot be issued.", "address");
+        }
+
+        var locationRows = await locations.GetFulfillmentLocationsAsync([order.FulfillmentLocationId], cancellationToken);
+        var fssai = locationRows.FirstOrDefault(l => l.Id == order.FulfillmentLocationId)?.FssaiLicenseNo;
+        if (string.IsNullOrWhiteSpace(fssai))
+        {
+            throw new DomainException(OrderingErrors.ConfigurationMissing, "The fulfillment location's fssaiLicenseNo is not configured; invoices cannot be issued.", "fssaiLicenseNo");
+        }
+
+        return new InvoiceSeller(profile.LegalName.Trim(), gstin, profile.Address.Trim(), fssai.Trim());
     }
 
     private async Task<Order> RequireAsync(Guid orderId, CancellationToken cancellationToken)

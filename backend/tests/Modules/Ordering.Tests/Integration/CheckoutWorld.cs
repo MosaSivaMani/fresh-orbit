@@ -31,6 +31,9 @@ public sealed class CheckoutWorld
     public const string Pincode = "600041";
     public const string TimeZone = "Asia/Kolkata";
 
+    /// <summary>The location's FSSAI licence, frozen on invoices (D342).</summary>
+    public const string LocationFssai = "12426999000123";
+
     public CheckoutWorld(DateTimeOffset now)
     {
         Now = now;
@@ -48,7 +51,7 @@ public sealed class CheckoutWorld
         Locations.ResolvePincodeAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(ci => new Serviceability(true, ci.Arg<string>(), CityId, "CHN", TimeZone, LocationId, ServiceAreaId, 0, 50000, 20000));
         Locations.GetFulfillmentLocationsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
-            .Returns([new FulfillmentLocationSummary(LocationId, CityId, "CHN-TVM", "Thiruvanmiyur", FulfillmentLocationStatus.Active, TimeZone)]);
+            .Returns([new FulfillmentLocationSummary(LocationId, CityId, "CHN-TVM", "Thiruvanmiyur", FulfillmentLocationStatus.Active, TimeZone) { FssaiLicenseNo = LocationFssai }]);
         Delivery.GetOpenSlotsAsync(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
             .Returns(_ => [new SlotInfo(SlotId, Now.AddHours(5), Now.AddHours(7), Now.AddHours(3), SlotRemaining)]);
         Delivery.BookSlotAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -133,7 +136,10 @@ public sealed class CheckoutWorld
         MaxDeliveryAttempts = 3,
     };
 
-    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com");
+    public BusinessProfile Profile { get; set; } = new("Fresh Orbit Foods Pvt Ltd", "Fresh Orbit", "33ABCDE1234F1Z5", null, "Chennai", "+914400000000", "care@example.com")
+    {
+        TimeZone = "Asia/Kolkata",
+    };
 
     public static QuoteLine Fish(int grams) => Quote("KG", "GRAM", 129900, 4000, "PER_KG", grams, true, 8000, "Seer Fish", "Medium", "STEAKS", "Steaks");
 

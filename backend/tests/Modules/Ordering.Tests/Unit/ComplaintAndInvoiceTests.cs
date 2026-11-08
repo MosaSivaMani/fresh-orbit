@@ -75,7 +75,7 @@ public sealed class ComplaintAndInvoiceTests
         order.Preparing();
         order.Pack([new PackLine(order.Items[0].Id, 540, "GRAM"), new PackLine(order.Items[1].Id, 2, "PIECE")], false, 0, OrderFactory.Staff, DeliveredAt.AddHours(-2));
 
-        var invoice = Invoice.Issue(order, "INV/26-27/000001", new InvoiceSeller("Fresh Orbit Foods Pvt Ltd", "33ABCDE1234F1Z5"), "996813", DeliveredAt);
+        var invoice = Invoice.Issue(order, "INV/26-27/000001", new InvoiceSeller("Fresh Orbit Foods Pvt Ltd", "33ABCDE1234F1Z5", "1 Beach Road, Chennai 600041", "12426999000123"), "996813", DeliveredAt);
 
         invoice.Lines.Should().HaveCount(3);
         invoice.TotalPaise.Should().Be(order.FinalTotalPaise);
@@ -91,7 +91,7 @@ public sealed class ComplaintAndInvoiceTests
         var order = OrderFactory.Place([OrderFactory.SeerFish(), OrderFactory.Crabs()]).Preparing();
         order.Pack([new PackLine(order.Items[0].Id, 0, "GRAM"), new PackLine(order.Items[1].Id, 2, "PIECE")], false, 0, OrderFactory.Staff, DeliveredAt);
 
-        var invoice = Invoice.Issue(order, "INV/26-27/000002", new InvoiceSeller("Seller", "33ABCDE1234F1Z5"), "996813", DeliveredAt);
+        var invoice = Invoice.Issue(order, "INV/26-27/000002", new InvoiceSeller("Seller", "33ABCDE1234F1Z5", "1 Beach Road, Chennai 600041", "12426999000123"), "996813", DeliveredAt);
 
         invoice.Lines.Should().ContainSingle().Which.Quantity.Should().Be(2);
         invoice.TotalPaise.Should().Be(130000);

@@ -25,6 +25,15 @@ public static class OrderingErrors
     public const string ComplaintPhotoLimitReached = "COMPLAINT_PHOTO_LIMIT_REACHED";
     public const string ImageInvalid = "IMAGE_INVALID";
     public const string InvoiceNotIssued = "INVOICE_NOT_ISSUED";
+
+    /// <summary>The invoice exists but its PDF has not been rendered yet (ORD-R53, D343): 404, try again shortly.</summary>
+    public const string InvoicePdfNotReady = "INVOICE_PDF_NOT_READY";
+
+    /// <summary>
+    /// The PDF cannot state a lawful place of supply (D344): the delivery state is not an Indian state or UT, or it
+    /// differs from the seller GSTIN's state (an inter-state supply needs IGST, which invoices do not compute yet).
+    /// </summary>
+    public const string PlaceOfSupplyUnsupported = "PLACE_OF_SUPPLY_UNSUPPORTED";
     public const string LoginRequired = "LOGIN_REQUIRED";
     public const string CustomerDeleted = "CUSTOMER_DELETED";
     public const string LocationAccessDenied = "LOCATION_ACCESS_DENIED";

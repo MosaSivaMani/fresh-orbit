@@ -329,6 +329,7 @@ for that phone (newest first), so OTPs can be read without being logged (SEC-1).
 | COMPLAINT_PHOTO_LIMIT_REACHED | 422 | Complaint already has 4 photos (field `file`) |
 | IMAGE_INVALID | 422 | Complaint photo is not JPEG/PNG/WebP, over 5 MB, shortest side under 320 px, or over the SEC-5 size limits (field `file`) |
 | INVOICE_NOT_ISSUED | 404 | Invoice exists only after `DELIVERED` |
+| INVOICE_PDF_NOT_READY | 404 | Invoice issued but its PDF is not rendered yet (`pdfUrl` is null); try again shortly (D343) |
 
 ### Payments
 | Code | HTTP | Meaning |
@@ -743,7 +744,8 @@ Cart writes return the full priced cart (same shape as GET). No If-Match on cart
 | GET | `/api/v1/orders/{orderId}/complaints` | customer | | Complaints and their status, with `productName`, `variantName`, `preparationName`, `maxRefundPaise` and `photos[]` (`id`, `url`, `width`, `height`, `uploadedAt`) (G15, W12) |
 | POST | `/api/v1/orders/{orderId}/complaints/{complaintId}/photos` | customer | multipart, IK optional | W12: add one photo (form field `file`) to an `OPEN` complaint of the caller's order; ≤ 4 photos, JPEG/PNG/WebP ≤ 5 MB, shortest side ≥ 320 px. Stored re-encoded as WebP ≤ 1280 px wide, EXIF dropped, original not kept, private. 201 with the complaint; 404 not the caller's, 409 decided, 413 body too large, 422 `IMAGE_INVALID` / `COMPLAINT_PHOTO_LIMIT_REACHED` |
 | GET | `/api/v1/orders/{orderId}/complaints/{complaintId}/photos/{photoId}` | customer | | The photo (`image/webp`, `Cache-Control: private`), owner only |
-| GET | `/api/v1/orders/{orderId}/invoice` | customer | | Invoice JSON + `pdfUrl` (signed, 10 min); 404 `INVOICE_NOT_ISSUED` before delivery |
+| GET | `/api/v1/orders/{orderId}/invoice` | customer | | Invoice JSON with `sellerAddress`, `sellerFssaiLicenseNo` and `pdfUrl` (the authenticated path below once rendered, else null; D343); 404 `INVOICE_NOT_ISSUED` before delivery |
+| GET | `/api/v1/orders/{orderId}/invoice/pdf` | customer | | The GST invoice PDF (`application/pdf`, `Content-Disposition: attachment; filename=INV-26-27-000001.pdf`, `Cache-Control: private`); 404 for another customer's order, `INVOICE_NOT_ISSUED` before delivery, `INVOICE_PDF_NOT_READY` until rendered |
 | POST | `/api/v1/orders/{orderId}/reorder` | customer | | Add the order's sellable lines to the cart; returns priced cart |
 
 **POST /api/v1/checkout/preview** → 200
@@ -1013,7 +1015,8 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 | POST | `/api/v1/admin/orders/{orderId}/substitutions/{substitutionId}/record-response` | orders.pack | IM | Record answer taken by phone (`CALL_ME`) |
 | POST | `/api/v1/admin/orders/{orderId}/cancel` | orders.cancel | IM | Cancel with `reasonCode` (`OUT_OF_STOCK`, `CUSTOMER_REQUEST`, `ADDRESS_ISSUE`, `QUALITY_ISSUE`, `OTHER`) |
 | POST | `/api/v1/admin/orders/{orderId}/goodwill` | refunds.request | IM | Goodwill adjustment (negative amount) |
-| GET | `/api/v1/admin/orders/{orderId}/invoice` | orders.view | | Invoice + PDF URL |
+| GET | `/api/v1/admin/orders/{orderId}/invoice` | orders.view | | Invoice + `pdfUrl` (the staff PDF path below once rendered, else null) |
+| GET | `/api/v1/admin/orders/{orderId}/invoice/pdf` | orders.view | | The GST invoice PDF, as the customer route; 403 outside the staff member's locations (D343) |
 | GET | `/api/v1/admin/complaints` | complaints.manage | | List: `status`, `kind`, `fulfillmentLocationId` |
 | GET | `/api/v1/admin/complaints/{complaintId}` | complaints.manage | ETag | Detail with `productName`, `variantName`, `preparationName`, `maxRefundPaise` (the refund bound `decide` enforces) and `photos[]` / `attachmentUrls` pointing at the staff photo URL (G15, W12) |
 | GET | `/api/v1/admin/complaints/{complaintId}/photos/{photoId}` | complaints.manage | | The photo (`image/webp`, `Cache-Control: private`), location-scoped |
@@ -1061,7 +1064,7 @@ Receipt temperature above 4.0 °C is accepted but also writes an out-of-range co
 
 Implementation notes (Phase 2, Cart / Promotions / Ordering):
 - Every endpoint in §4.6, §4.7, §4.8 (except the Payments-owned `/payments` and `/refunds` rows) §4.13 coupons and §4.15 is implemented. `GET /api/v1/promotions` (public banners, LOC optional) and `GET/POST/PUT /api/v1/admin/promotions[/{id}]` are implemented in Promotions.
-- `GET .../invoice` returns the frozen invoice with `pdfUrl: null`: PDF rendering is deferred to the `InvoiceIssued` consumer. Invoice before delivery → 404 `INVOICE_NOT_ISSUED`.
+- `GET .../invoice` returns the frozen invoice. The `InvoiceIssued` handler renders the PDF (L-12, D343–D345); until then `pdfUrl` is null and `GET .../invoice/pdf` answers 404 `INVOICE_PDF_NOT_READY`. `pdfUrl` is an authenticated API path (customer or staff, matching the caller), not a signed URL: clients fetch it with their bearer token, like complaint photos (D303). Invoice before delivery → 404 `INVOICE_NOT_ISSUED`.
 - Complaints are created from JSON (`orderItemId`, `kind`, `description`); attachment upload is not implemented yet.
 - Staff order access outside the staff member's locations → 403 `LOCATION_ACCESS_DENIED`; lists are filtered to the staff member's locations. Customer access to another customer's order → 404 `NOT_FOUND` (not visible).
 - `PRICE_CHANGED` (409) is stored by the idempotency record with its `preview`; confirming the new total needs a new `Idempotency-Key`.
