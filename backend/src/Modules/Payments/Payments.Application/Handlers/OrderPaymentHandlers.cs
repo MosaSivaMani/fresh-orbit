@@ -71,15 +71,37 @@ public sealed class OrderPaymentHandlers(IPaymentRepository payments, IPaymentPr
         }
     }
 
-    /// <summary>PAY-H3: amount due follows; ONLINE refund due → GOODWILL refund REQUESTED by the staff who adjusted.</summary>
+    /// <summary>
+    /// PAY-H3: amount due follows; ONLINE refund due → GOODWILL refund REQUESTED by the staff who adjusted. A refund due
+    /// on a COLLECTED delivery payment (COD / UPI on delivery) cannot go back to the original instrument, so an issue
+    /// REFUND_METHOD_REQUIRED is opened for staff to refund by CASH or UPI (D327).
+    /// </summary>
     public async Task OnOrderAdjustedAsync(OrderAdjustedInput input, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(input);
         var attempts = await payments.ListByOrderAsync(input.OrderId, cancellationToken);
         await FollowAmountDueAsync(attempts, input.AmountDuePaise, cancellationToken);
-        if (input.RefundDuePaise > 0 && PaidOnline(attempts) is { } paid)
+        if (input.RefundDuePaise <= 0)
+        {
+            return;
+        }
+
+        if (PaidOnline(attempts) is { } paid)
         {
             await CreateSystemRefundAsync(paid, RefundReason.Goodwill, input.RefundDuePaise, $"OrderAdjusted:{input.AdjustmentId}", requiresApproval: true, input.RequestedBy, cancellationToken);
+            return;
+        }
+
+        if (attempts.FirstOrDefault(p => p.IsDeliveryCollected && p.Status == PaymentStatus.Collected && !p.IsExcess) is { } collected)
+        {
+            await issues.OpenAsync(
+                IssueKind.RefundMethodRequired,
+                IssueSubjectType.Payment,
+                collected.Id,
+                collected.OrderId,
+                collected.FulfillmentLocationId,
+                new { reasonCode = RefundReason.Goodwill.ToCode(), adjustmentId = input.AdjustmentId, refundDuePaise = input.RefundDuePaise, refundablePaise = collected.RefundablePaise },
+                cancellationToken);
         }
     }
 
@@ -179,7 +201,9 @@ public sealed class OrderPaymentHandlers(IPaymentRepository payments, IPaymentPr
 
         var supportsRefunds = providers.CapabilitiesOf(paid.Provider).HasFlag(ProviderCapabilities.ProviderRefunds);
         RefundMethod method;
-        if (input.RefundMethod is not null && EnumCodes.TryToEnum<RefundMethod>(input.RefundMethod, out var given) && given != RefundMethod.Upi)
+        // ORIGINAL on a payment whose provider cannot refund (COD, UPI on delivery) is not payable either (D329).
+        if (input.RefundMethod is not null && EnumCodes.TryToEnum<RefundMethod>(input.RefundMethod, out var given) && given != RefundMethod.Upi
+            && (given != RefundMethod.Original || supportsRefunds))
         {
             method = given;
         }
@@ -202,7 +226,7 @@ public sealed class OrderPaymentHandlers(IPaymentRepository payments, IPaymentPr
         }
 
         var amount = Math.Min(input.RefundAmountPaise.Value, paid.RefundablePaise);
-        if (amount <= 0 || (method == RefundMethod.Original && !supportsRefunds))
+        if (amount <= 0)
         {
             return;
         }
