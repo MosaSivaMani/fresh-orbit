@@ -66,7 +66,16 @@ public sealed class TemplateAdminService(
         switch (template.Channel)
         {
             case Channel.Email when !string.IsNullOrEmpty(user?.Email):
-                await email.SendAsync(new EmailMessage(user.Email, "[TEST] " + subject, body), cancellationToken);
+                try
+                {
+                    await email.SendAsync(new EmailMessage(user.Email, "[TEST] " + subject, body), cancellationToken);
+                }
+                catch (ChannelDisabledException)
+                {
+                    // D322: e-mail is switched off by configuration; nothing was sent.
+                    return new TestSendResponse(false, channelCode, null, subject, body);
+                }
+
                 return new TestSendResponse(true, channelCode, user.Email, subject, body);
             case Channel.Sms when !string.IsNullOrEmpty(user?.Phone):
                 await sms.SendAsync(new SmsMessage(user.Phone, template.Code, body, TemplateText.OrderedValues(template.Body, values)), cancellationToken);

@@ -12,7 +12,7 @@
 #   monitoring profile: loki 512 MB · grafana 256 MB · alloy 256 MB                            ≈ 1.0 GB
 #   OS, Docker, page cache                                                                    ≈ 1.9 GB
 #
-# Security settings (forwarded headers, SMS): docs/runbooks/security-configuration.md.
+# Security settings (forwarded headers, SMS, e-mail, push): docs/runbooks/security-configuration.md.
 # Only Caddy publishes ports (80, 443). Docker-published ports bypass UFW, so nothing else is published except
 # Grafana on 127.0.0.1 (reach it with an SSH tunnel).
 
@@ -29,6 +29,17 @@ x-backend-env: &backend-env
   Serilog__MinimumLevel__Default: ${LOG_LEVEL:-Information}
   # Stamped into logs; times in the database are UTC regardless.
   TZ: UTC
+
+# E-mail and push (api and worker; D322, D325). Outside Development the hosts refuse to start without SMTP_HOST and
+# SMTP_FROM_ADDRESS (or EMAIL_PROVIDER=DISABLED), and without PUSH_PROVIDER=FCM plus FCM_PROJECT_ID and
+# FCM_SERVICE_ACCOUNT_JSON (or PUSH_PROVIDER=DISABLED). DISABLED is logged Critical at every start and fails each
+# such message (EMAIL_DISABLED / PUSH_DISABLED): docs/runbooks/security-configuration.md §2.2 and §2.3.
+x-email-push-env: &email-push-env
+  Notifications__Email__Provider: ${EMAIL_PROVIDER:-}
+  Notifications__Push__Provider: ${PUSH_PROVIDER:-}
+  Notifications__Push__Fcm__ProjectId: ${FCM_PROJECT_ID:-}
+  Notifications__Push__Fcm__ServiceAccountJson: ${FCM_SERVICE_ACCOUNT_JSON:-}
+  Notifications__Push__Fcm__TimeoutSeconds: ${FCM_TIMEOUT_SECONDS:-10}
 
 # SMS through the DLT adapter (api and worker); the hosts refuse to start outside Development without every value,
 # including a DLT template id per SMS template (E2E-1, docs/runbooks/security-configuration.md §2).
@@ -148,7 +159,7 @@ services:
       migrations:
         condition: service_completed_successfully
     environment:
-      <<: [*backend-env, *sms-env]
+      <<: [*backend-env, *sms-env, *email-push-env]
       ASPNETCORE_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
       # Trust X-Forwarded-For/-Proto only from the edge network (Caddy and the web server's /api/v1 proxy). Left
       # empty, every client shares one rate-limit bucket (docs/runbooks/security-configuration.md §1).
@@ -199,7 +210,7 @@ services:
       migrations:
         condition: service_completed_successfully
     environment:
-      <<: [*backend-env, *sms-env]
+      <<: [*backend-env, *sms-env, *email-push-env]
       DOTNET_ENVIRONMENT: ${APP_ENVIRONMENT:-Production}
       Outbox__BatchSize: ${OUTBOX_BATCH_SIZE:-50}
       Outbox__MaxAttempts: ${OUTBOX_MAX_ATTEMPTS:-5}

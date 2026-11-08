@@ -26,7 +26,7 @@ namespace FreshOrbit.Notifications.Tests.Integration;
 /// </summary>
 public sealed partial class SmsSenderStartupTests(E1Database database) : IAsyncLifetime
 {
-    private static readonly Dictionary<string, string?> FullDlt = FullDltSettings();
+    internal static readonly Dictionary<string, string?> FullDlt = FullDltSettings();
 
     private readonly List<SmsHostFactory> _factories = [];
 
@@ -283,6 +283,10 @@ public sealed class SmsHostFactory(E1Database database, string environment, IRea
         // Production refuses to start without a media root or an absolute https media URL (W15); these tests are about SMS only.
         builder.UseSetting("FileStorage:RootPath", Path.Combine(Path.GetTempPath(), "freshorbit-sms-host-tests"));
         builder.UseSetting("FileStorage:PublicBaseUrl", "https://api.example.test/media");
+
+        // Production also refuses to start without e-mail and push settings (D322, D325); a test may override them.
+        builder.UseSetting("Notifications:Smtp:Host", "smtp.example.invalid");
+        builder.UseSetting("Notifications:Push:Provider", "DISABLED");
         foreach (var (key, value) in settings)
         {
             builder.UseSetting(key, value);

@@ -138,6 +138,84 @@ public sealed class NotificationsTests(E1Database database) : E1ApiTestBase(data
     }
 
     [Fact]
+    public async Task Push_is_not_sent_when_every_device_is_unregistered_and_the_tokens_are_removed()
+    {
+        var (userId, pushToken) = await QueuePushAsync();
+
+        Factory.Push.AllUnregistered = true;
+        try
+        {
+            await DispatchAllAsync();
+        }
+        finally
+        {
+            Factory.Push.AllUnregistered = false;
+        }
+
+        var message = (await MessagesAsync(userId)).Single();
+        message.Status.Should().Be(MessageStatus.Failed);
+        message.LastError.Should().Be(NotificationsErrors.NoRecipientAddress);
+        message.SentAt.Should().BeNull();
+        (await DeviceTokensAsync(userId)).Should().NotContain(pushToken);
+    }
+
+    [Theory]
+    [InlineData(PushFailureKind.Rejected, MessageStatus.Failed)]
+    [InlineData(PushFailureKind.NotConfigured, MessageStatus.Failed)]
+    [InlineData(PushFailureKind.Unreachable, MessageStatus.Queued)]
+    [InlineData(PushFailureKind.Unauthorized, MessageStatus.Queued)]
+    public async Task Push_provider_failures_are_recorded_by_code_and_retried_only_when_they_can_pass(PushFailureKind kind, MessageStatus expected)
+    {
+        var (userId, pushToken) = await QueuePushAsync();
+
+        Factory.Push.Throw = new PushDeliveryException(kind, [pushToken]);
+        try
+        {
+            await DispatchAllAsync();
+        }
+        finally
+        {
+            Factory.Push.Throw = null;
+        }
+
+        var message = (await MessagesAsync(userId)).Single();
+        message.Status.Should().Be(expected);
+        message.LastError.Should().Be("PUSH_" + EnumCodes.ToCode(kind));
+        message.SentAt.Should().BeNull();
+        (await DeviceTokensAsync(userId)).Should().NotContain(pushToken, "a token the provider reported as unregistered is removed even when the send failed");
+    }
+
+    [Fact]
+    public async Task Disabled_channels_fail_their_messages_and_never_mark_them_sent()
+    {
+        var (userId, _) = await QueuePushAsync();
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        await SetEmailAsync(session.UserId);
+        await QueueAsync(new QueueCustomerNotificationRequest(await CustomerIdAsync(session.UserId), "ORDER_CONFIRMED", OrderData, [NotificationChannel.Email], null));
+
+        Factory.Push.Throw = new ChannelDisabledException(Channel.Push);
+        Factory.Email.Throw = new ChannelDisabledException(Channel.Email);
+        try
+        {
+            await DispatchAllAsync();
+        }
+        finally
+        {
+            Factory.Push.Throw = null;
+            Factory.Email.Throw = null;
+        }
+
+        var push = (await MessagesAsync(userId)).Single();
+        push.Status.Should().Be(MessageStatus.Failed);
+        push.LastError.Should().Be("PUSH_DISABLED");
+        push.Attempts.Should().Be(1);
+        var email = (await MessagesAsync(session.UserId)).Single();
+        email.Status.Should().Be(MessageStatus.Failed);
+        email.LastError.Should().Be("EMAIL_DISABLED");
+        email.SentAt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task In_app_inbox_lists_and_marks_read()
     {
         var session = await Factory.SignInCustomerAsync(null, Ct);
@@ -272,4 +350,24 @@ public sealed class NotificationsTests(E1Database database) : E1ApiTestBase(data
     private Task<Guid> CustomerIdAsync(Guid userId) => QueryAsync(db => db.Set<Customer>().Where(c => c.UserId == userId).Select(c => c.Id).SingleAsync(Ct));
 
     private Task<List<Message>> MessagesAsync(Guid userId) => QueryAsync(db => db.Set<Message>().AsNoTracking().Where(m => m.UserId == userId).ToListAsync(Ct));
+
+    private Task<List<string>> DeviceTokensAsync(Guid userId) => QueryAsync(db => db.Set<DeviceToken>().AsNoTracking().Where(t => t.UserId == userId).Select(t => t.PushToken).ToListAsync(Ct));
+
+    /// <summary>A signed-in customer with one registered device and one queued PUSH message.</summary>
+    private async Task<(Guid UserId, string PushToken)> QueuePushAsync()
+    {
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        using var client = Factory.CreateClient(session.AccessToken);
+        var pushToken = "fcm-" + Guid.NewGuid().ToString("N");
+        (await client.PutAsJsonAsync("/api/v1/me/device-tokens", new { pushToken, provider = "FCM", platform = "ANDROID" }, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+        await QueueAsync(new QueueCustomerNotificationRequest(await CustomerIdAsync(session.UserId), "ORDER_PREPARING", new Dictionary<string, string> { ["orderNumber"] = "FO-1" }, [NotificationChannel.Push], null));
+        return (session.UserId, pushToken);
+    }
+
+    /// <summary>Gives the user an e-mail address (customers sign in by phone and have none at first).</summary>
+    private Task<int> SetEmailAsync(Guid userId)
+    {
+        var email = $"customer-{Guid.NewGuid():N}@example.test";
+        return QueryAsync(db => db.Database.ExecuteSqlAsync($"UPDATE identity.users SET email = {email} WHERE id = {userId}", Ct));
+    }
 }
