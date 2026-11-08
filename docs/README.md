@@ -28,4 +28,4 @@
 | **Google Play Console answers** (data safety, content rating, target audience, deletion URL) | `runbooks/play-store.md` |
 | **Go-live** (new production server, empty database, first admin, business profile, first city and store, DNS and mail records) | `runbooks/go-live.md` |
 | **Security incident and data breach** (DPDP 72-hour report, notices, roles, checklist) | `runbooks/incident-response.md` |
-| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`) |
+| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`; telemetry and retention purges: `runbooks/telemetry.md`) |
