@@ -78,7 +78,7 @@ public sealed class EmailPushSenderStartupTests(E1Database database) : IAsyncLif
     [InlineData("Production", "DISABLED", null, typeof(DisabledEmailSender))]
     public async Task Host_starts_with_a_valid_email_configuration_and_uses_its_sender(string environment, string? provider, string? host, Type expected)
     {
-        using var app = SenderHost(environment, new() { ["Notifications:Email:Provider"] = provider, ["Notifications:Smtp:Host"] = host });
+        using var app = SenderHost(environment, new() { ["Notifications:Email:Provider"] = provider, ["Notifications:Smtp:Host"] = host }, push: false);
 
         await app.StartAsync(Ct);
         app.Services.GetRequiredService<IEmailSender>().Should().BeOfType(expected);
@@ -133,7 +133,7 @@ public sealed class EmailPushSenderStartupTests(E1Database database) : IAsyncLif
             settings["Notifications:Push:Fcm:ServiceAccountJson"] = FcmPushSenderTests.ServiceAccountJson();
         }
 
-        using var app = SenderHost(environment, settings);
+        using var app = SenderHost(environment, settings, email: false);
 
         await app.StartAsync(Ct);
         app.Services.GetRequiredService<IPushSender>().Should().BeOfType(expected);
