@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Release builds talk to the API. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android 13+ order-update notifications (MA-6). Declared only: the app asks at a natural moment (after the
+         first order) once push is wired (docs/design/mobile.md §10), never at launch. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- No backup or device transfer (ME-6): restored preferences and keystore-encrypted files do not match the
+         new phone's keystore key. A new phone starts signed out; the account and orders live on the server. -->
     <application
         android:label="Fresh Orbitt"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round">
@@ -27,6 +35,22 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- App Links (D308, MB-4): website links open the app. The host is build configuration
+                 (-PfreshOrbitAppLinkHost or FRESH_ORBIT_APP_LINK_HOST, android/app/build.gradle.kts); unset, it is a
+                 reserved .invalid name that never verifies, so no link opens the app. The website serves
+                 /.well-known/assetlinks.json (docs/runbooks/mobile-release.md, "App links"). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="${appLinkHost}"/>
+                <data android:pathPrefix="/products/"/>
+                <data android:pathPrefix="/shop"/>
+                <data android:pathPrefix="/orders"/>
+                <data android:pathPrefix="/search"/>
+                <data android:path="/cart"/>
+            </intent-filter>
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="true"/>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
