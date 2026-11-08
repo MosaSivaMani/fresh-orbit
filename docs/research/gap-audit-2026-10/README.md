@@ -36,6 +36,13 @@ e-mail and push fall-backs: BE-3/BE-4, L-19/L-20; release signing: MA-1, L-21), 
 | L-3 SMS DLT registration | Register sender, templates and link domains on DLT | **Owner** |
 | L-5 FSSAI licence | Licence number into the business profile | **Owner** |
 
+## High items taken
+
+| Item | Fix | Status |
+|---|---|---|
+| BE-4 / L-19 Silent e-mail fall-back, full address in logs | Refuse start-up without SMTP outside Development/Testing/Demo, explicit `EMAIL_PROVIDER=DISABLED` (logged Critical), masked address | Engineer, branch `backend/notifications-senders` (D322–D323) |
+| BE-3 / L-20 No FCM adapter, push marked SENT in Production | FCM HTTP v1 adapter, refuse start-up without push settings, SENT only when a device accepted | Same branch (D324–D325); owner creates the Firebase project; app `PushService` is a follow-up |
+
 ## Order of work after the blockers
 
 1. High items per area, one engineer per area, after that area's blocker branch merges (to avoid conflicts);

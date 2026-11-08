@@ -142,7 +142,7 @@ No prices are stored; the cart is priced on every read. Guest carts are allowed;
 | substitutions | id, order_item_id, proposed_variant_id, proposed_name, proposed_quantity, price_difference_paise, status PROPOSED/ACCEPTED/REJECTED/EXPIRED, expires_at, responded_at | unique (order_item_id) where PROPOSED |
 | complaints | id, order_id, order_item_id, kind MISSING/DAMAGED/QUALITY/WRONG_ITEM/LATE, description, status OPEN/APPROVED/REJECTED/RESOLVED, resolution REFUND/REPLACEMENT/NONE, resolved_by, resolved_at | index (status, created_at) |
 | complaint_attachments | id, complaint_id, storage_key | |
-| invoices | id, order_id, invoice_number, issued_at, seller_gstin, taxable_paise, tax_paise, total_paise, pdf_storage_key | unique order_id; unique invoice_number |
+| invoices | id, order_id, invoice_number, issued_at, seller_legal_name, seller_gstin, seller_address, seller_fssai_license_no (D342), taxable_paise, tax_paise, total_paise, pdf_storage_key | unique order_id; unique invoice_number |
 | invoice_lines | id, invoice_id, line_no, description, hsn_code, quantity, unit_price_paise, taxable_paise, tax_rate_bp, tax_paise, total_paise | frozen |
 
 Weight rule (decided): charge actual packed net weight up to `max_chargeable_quantity` = ordered × (1 + `order_policies.max_overweight_bp`, default 0 since D347 — the price shown is the most the customer pays, extra packed weight is free; data patch `20261108090000_NoOverweightCharge` moves rows still at the old 1000 to 0); any shortfall reduces the amount due (COD) or creates a refund (prepaid). GST invoice is issued at delivery from final amounts (decided).

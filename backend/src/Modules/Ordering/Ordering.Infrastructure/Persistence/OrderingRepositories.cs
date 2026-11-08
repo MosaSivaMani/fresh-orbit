@@ -79,6 +79,9 @@ internal sealed class InvoiceRepository(FreshOrbitDbContext db) : IInvoiceReposi
     public Task<Invoice?> FindByOrderAsync(Guid orderId, CancellationToken cancellationToken)
         => db.Set<Invoice>().Include(i => i.Lines).FirstOrDefaultAsync(i => i.OrderId == orderId, cancellationToken);
 
+    public Task<Invoice?> GetAsync(Guid invoiceId, CancellationToken cancellationToken)
+        => db.Set<Invoice>().Include(i => i.Lines).FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
+
     public void Add(Invoice invoice) => db.Add(invoice);
 }
 

@@ -3,6 +3,15 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Invoice PDF (D345): SkiaSharp's PDF backend, the same MIT package Catalog uses for images. -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Inter (SIL OFL 1.1, Invoices/Fonts/Inter-OFL.txt) embedded so the PDF needs no system fonts. -->
+    <EmbeddedResource Include="Invoices\Fonts\*.ttf" LogicalName="FreshOrbit.Ordering.Invoices.Fonts.%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Ordering.Application\Ordering.Application.csproj" />
     <ProjectReference Include="..\Ordering.Public\Ordering.Public.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\FreshOrbit.SharedKernel.EntityFramework\FreshOrbit.SharedKernel.EntityFramework.csproj" />

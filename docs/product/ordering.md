@@ -94,7 +94,10 @@ Status order for policy comparison: `PENDING_PAYMENT < CONFIRMED < PREPARING < P
 
 ### Invoice
 
-Created once at `DELIVERED`; no states; never edited or deleted.
+Created once at `DELIVERED`; no states; never edited or deleted. The only later write is `pdf_storage_key`, set once
+by the PDF handler (ORD-R53). Seller facts are frozen on it at issue (D342): `seller_legal_name`, `seller_gstin`,
+`seller_address` (business profile) and `seller_fssai_license_no` (the fulfillment location's FSSAI licence); the two
+new columns are null on invoices issued before L-12.
 
 ## 3. Business rules
 
@@ -184,8 +187,8 @@ Created once at `DELIVERED`; no states; never edited or deleted.
 | ORD-R49 | Lines: one per item with `charged > 0` (incl. substitution lines), description "product – variant – preparation", hsn, charged quantity + unit, unit price, `total` = final line − allocated discount, `tax` contained at snapshot rate, `taxable = total − tax`; plus a delivery-fee line when fee > 0. |
 | ORD-R50 | Invoice `total_paise` = Σ lines = order `final_total_paise`; mismatch throws (handler retried, then dead letter). |
 | ORD-R51 | Number `INV/26-27/000001` (D17; ≤ 16 chars for GST): prefix `INV/`, period = Indian FY `yy-yy` in the business time zone, 6-digit counter; Settings owns the series. Gapless: number taken only in the transaction that inserts the invoice; rollback returns it; row lock serializes concurrent deliveries; invoices never deleted. |
-| ORD-R52 | `seller_gstin` from Settings business profile; missing → `CONFIGURATION_MISSING` (handler fails and retries). |
-| ORD-R53 | PDF rendered by a follow-on handler of `InvoiceIssued` (sets `pdf_storage_key`); `GET …/invoice` returns JSON + signed `pdfUrl` (10 min); before `DELIVERED` → 404 `INVOICE_NOT_ISSUED`. |
+| ORD-R52 | Seller snapshot (D342): `seller_legal_name`, `seller_gstin` and `seller_address` from the Settings business profile (`ISettingsApi.GetBusinessProfileAsync`), `seller_fssai_license_no` from the order's fulfillment location (`ILocationsApi.GetFulfillmentLocationsAsync`; FSSAI licences belong to premises, and Locations refuses to activate a location without one). Any of them missing → `CONFIGURATION_MISSING` with field `gstin`, `legalName`, `address` or `fssaiLicenseNo` (handler fails and retries, then dead letter; fix the profile or location and replay). |
+| ORD-R53 | **PDF (L-12, D343–D345).** `OrderingInvoicePdfHandler` (Ordering's own follow-on of `InvoiceIssued`) loads the invoice and order, builds `InvoicePdfContent` (title "Tax invoice"; invoice no., invoice date = local date of `issued_at` in the business time zone; order no.; seller legal name, address, GSTIN, FSSAI licence; buyer name and delivery address; place of supply = state name and GST code of the delivery address (`GstStates`), reverse charge "No"; per line HSN/SAC, quantity, rate, taxable value, GST %, CGST, SGST, total; totals taxable, CGST, SGST, IGST 0, invoice total; rupees from paise with Indian grouping), renders it with `SkiaInvoicePdfRenderer` (A4, Inter embedded, more pages when lines overflow), saves it through `IFileStorage` at `invoices/{invoiceId}.pdf` (never served by `/media`) and sets `pdf_storage_key`. Already set → nothing (replayed event). A delivery state outside the GST list, or different from the seller GSTIN's state (inter-state supply needs IGST, not computed yet) → `PLACE_OF_SUPPLY_UNSUPPORTED`; a business time zone that is not a known zone → `CONFIGURATION_MISSING` (`timeZone`). Failures retry and dead-letter; delivery is already committed. `GET …/invoice` returns JSON with `pdfUrl` = `/api/v1/orders/{id}/invoice/pdf` (customer) or `/api/v1/admin/orders/{id}/invoice/pdf` (staff) once rendered, else null; the PDF routes answer 404 `INVOICE_NOT_ISSUED` before delivery and 404 `INVOICE_PDF_NOT_READY` until rendered. **Open (L-13):** the CA has not confirmed whether exempt fresh fish needs a bill of supply instead of a tax invoice, nor the layout; the title and tax columns change with that answer. |
 
 ### Complaints, goodwill, reorder, pick list
 
@@ -246,7 +249,7 @@ Reporting reads tables through views; no event consumer.
 | `ShipmentReattempted` (Delivery) | `shipmentId`, `orderId` | → `OUT_FOR_DELIVERY` | inbox + status |
 | `ShipmentReturned` (Delivery) | `shipmentId`, `orderId`, `returnedAt` | → `RETURNED`, `OrderReturned` | inbox + status |
 | `PaymentCollected`, `RefundSucceeded` (Payments) | — | Not consumed: amounts read live from Payments.Public | — |
-| `OrderPlaced`, `SubstitutionProposed`, `InvoiceIssued` (own) | ids, due times | Schedule delayed jobs / render PDF | inbox; jobs re-check state |
+| `OrderPlaced`, `SubstitutionProposed`, `InvoiceIssued` (own) | ids, due times | Schedule delayed jobs / render PDF (ORD-R53) | inbox; jobs re-check state; PDF skipped when `pdf_storage_key` is set |
 
 ## 5. Commands
 
@@ -259,7 +262,8 @@ Reporting reads tables through views; no event consumer.
 | AnswerSubstitution | `POST /orders/{id}/substitutions/{sid}/accept` \| `/reject` | Order, substitution, (accept) price + stock | R35–R37 | Order (+ `Inventory.Reserve`/`Release` on accept, D6) | `SubstitutionResolved` |
 | RaiseComplaint | `POST /orders/{id}/complaints` (IK, multipart) | Order, open complaints | R54–R56 | Complaint | `ComplaintRaised` |
 | ListComplaints | `GET /orders/{id}/complaints` | — | — | — | — |
-| GetInvoice | `GET /orders/{id}/invoice`, `GET /admin/orders/{id}/invoice` | Invoice | R53 | — | Signed URL |
+| GetInvoice | `GET /orders/{id}/invoice`, `GET /admin/orders/{id}/invoice` | Invoice | R53 | — | `pdfUrl` (authenticated path, D343) |
+| DownloadInvoicePdf | `GET /orders/{id}/invoice/pdf`, `GET /admin/orders/{id}/invoice/pdf` | Order (owner / staff location), invoice, stored file | R53 | — | `application/pdf` |
 | Reorder | `POST /orders/{id}/reorder` | Order items | R59 | Cart (via Cart.Public) | Priced cart |
 | AdminList / AdminDetail | `GET /admin/orders`, `/admin/orders/{id}` | Orders; reservations, batches (Inventory reads) | R21 | — | ETag |
 | PickList | `GET /admin/orders/pick-list` | Items for slot | R60 | — | — |
@@ -300,7 +304,7 @@ All jobs: primary trigger is a Hangfire delayed job scheduled at the due time by
 |---|---|---|---|
 | `ExpireUnpaidOrder(orderId)` | Scheduled at `payment_due_at` from `OrderPlaced` (ONLINE) | Every 5 min: `orders where status = PENDING_PAYMENT and payment_due_at <= now` | ORD-R45; skip when status changed (captured first) |
 | `ExpireSubstitution(substitutionId)` | Scheduled at `expires_at` from `SubstitutionProposed` | Every 2 min: `substitutions where status = PROPOSED and expires_at <= now` | ORD-R36 with status `EXPIRED`; skip when answered |
-| `RenderInvoicePdf(invoiceId)` | `InvoiceIssued` handler | Hourly: `invoices where pdf_storage_key is null` | Render, upload, set key |
+| `RenderInvoicePdf(invoiceId)` | `InvoiceIssued` handler (built, D343) | Not built: a failed render is retried by the outbox backoff and then replayed from the dead letter (D296); an hourly sweep of `invoices where pdf_storage_key is null` is a follow-up | Render, upload, set key |
 | `AbandonCarts` | Cart module | see `cart.md` | — |
 
 ## 7. Test scenarios

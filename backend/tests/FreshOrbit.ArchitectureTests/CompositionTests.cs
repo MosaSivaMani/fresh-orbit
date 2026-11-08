@@ -51,6 +51,7 @@ public sealed class CompositionTests
         { "Delivery", "DeliveryAttemptFailed", "Ordering" },
         { "Delivery", "ShipmentReattempted", "Ordering" },
         { "Delivery", "ShipmentReturned", "Ordering" },
+        { "Ordering", "InvoiceIssued", "Ordering" },
         { "Identity", "CustomerSignedIn", "Cart" },
         { "Ordering", "OrderPlaced", "Notifications" },
         { "Ordering", "OrderConfirmed", "Notifications" },
