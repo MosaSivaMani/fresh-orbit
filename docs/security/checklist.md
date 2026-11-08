@@ -81,7 +81,7 @@ Background for each item is in `docs/security/review-2026-10.md` (SEC-n referenc
 
 - [ ] **[block]** No OTP codes, refresh or access tokens, guest-cart tokens, passwords or full card data in the logs. Grep a day of staging logs for `rt_`, `eyJ`, 6-digit codes next to "SMS", and `+91`.
 - [ ] Account deletion anonymises the profile, **all** addresses (active and removed), the user's phone and email, and revokes sessions (SEC-8).
-- [ ] Retention jobs run: OTP challenges (24 h), processed outbox rows, webhook payloads (SEC-13).
+- [ ] Retention jobs run: OTP challenges (24 h), staff login failures (1 day), processed outbox rows (7 days), webhook payloads (30 days) (SEC-13, D334–D336). Check the Worker log or `freshorbit.jobs.failures` for `identity.purge-retention`, `platform.purge-outbox` and `payments.purge-webhook-payloads` the morning after a deploy.
 - [ ] The audit trail records every admin write (staff and roles, refunds, prices and tax, customer block, settings), and `GET /admin/audit` shows the release-test actions (SEC-7).
 - [ ] The privacy notice and consent text on the website and app match what is collected (phone, name, email, addresses, device tokens).
 - [ ] No card or PAN data is stored. Webhook payloads from real gateways are checked for `card` objects and redacted before storage.

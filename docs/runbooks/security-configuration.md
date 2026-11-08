@@ -82,6 +82,20 @@ DLT registration is done by the business, not by us. Each step's id goes into `.
    - **Text:** exactly the "DLT text" column, character for character. Each `{#var#}` is one variable. Our text
      must match the registered one exactly (spaces, full stops, dashes), or the operator drops the message.
    - After approval, copy each **content template id** → its `SMS_DLT_TEMPLATE_<CODE>`.
+   - **Whitelist the link domain (L-31).** Two texts carry a link: `PAYMENT_FAILED` (`retryUrl`) and
+     `SUBSTITUTION_PROPOSED` (`orderUrl`). Since TRAI's direction of August 2024 (in force 1 October 2024), operators
+     block any SMS whose URL is not whitelisted on the DLT portal for that header and template. On the portal, open
+     the URL / CTA whitelisting page (the name differs by operator), add the website address `https://<domain>`
+     (the `DOMAIN` of `.env.prod`; the links are meant to open the order on the website, so confirm the host in
+     `notifications.md` once the code fills `retryUrl` and `orderUrl`) and link it to both templates.
+     Whitelist the full domain, not one page, so every order link passes. Register the two templates **with** the
+     link variable, in the same order as the table. A link on a different host (for example a URL shortener or
+     `api.<domain>`) needs its own whitelisting first.
+   - **Check with Fast2SMS** (by its support or account manager) that the whitelisted domain is linked to the header
+     and both templates, and whether the portal also asks to whitelist call-back numbers: `DELIVERY_FAILED` ends
+     with `supportPhone` (a fixed number: whitelist `SUPPORT_PHONE` if asked) and `ORDER_OUT_FOR_DELIVERY` carries
+     `riderPhone` (changes per rider, so it cannot be whitelisted one by one; ask how they treat a phone number
+     variable). Not verified with a live account; record the answer in `docs/research/sms-provider-2026-10.md`.
    - Variables are filled in this order: the "Variables" column. Keep each value within the portal's variable
      length limit (30 characters on the portals we know of, not verified). `businessName` is the Settings trade
      name (or `Notifications:BusinessName`).
@@ -116,6 +130,62 @@ DLT registration is done by the business, not by us. Each step's id goes into `.
 must stay equal to its registered DLT text: register the new text on the DLT portal first, wait for approval, put
 the new id in `SMS_DLT_TEMPLATE_<CODE>`, redeploy, and only then save the edited text. The `dltTemplateId` shown on
 a template in the admin API is not used for sending; the configuration is the source (E2E-1).
+
+### 2.2 E-mail sender: `Notifications:Email` and `Notifications:Smtp` (Api and Worker)
+
+Outside Development, Testing and Demo (§6), e-mail goes through SMTP or is switched off **on purpose** (D322, BE-4 /
+L-19). There is no silent "log it instead" any more.
+
+| Key (environment variable in `.env.prod`) | Values |
+|---|---|
+| `Notifications:Email:Provider` (`EMAIL_PROVIDER`) | `SMTP`, `DISABLED`, or `DEVELOPMENT` (Development, Testing, Demo only). Empty means `SMTP` when `SMTP_HOST` is set, otherwise `DEVELOPMENT` |
+| `Notifications:Smtp:Host` (`SMTP_HOST`) | The SMTP relay host. Required for `SMTP` |
+| `Notifications:Smtp:Port` (`SMTP_PORT`) | 1 to 65535, default 587 in `docker-compose.prod.yml` |
+| `Notifications:Smtp:UseTls` (`SMTP_USE_TLS`) | `true` for STARTTLS |
+| `Notifications:Smtp:UserName` / `Password` (`SMTP_USERNAME`, `SMTP_PASSWORD`) | The relay login. A secret: `.env.prod` on the server only |
+| `Notifications:Smtp:FromAddress` (`SMTP_FROM_ADDRESS`) | The sender address, for example `orders@<domain>`. Required for `SMTP` |
+
+What the hosts refuse:
+- Outside Development, Testing and Demo, the Api and Worker refuse to start (one Critical log line, exit code 1) when
+  no provider is set and `SMTP_HOST` is empty, when the provider is unknown, or when `SMTP` lacks a host or a valid
+  `SMTP_FROM_ADDRESS`.
+- `EMAIL_PROVIDER=DISABLED` is allowed but never quiet: the hosts log a Critical line at every start, and each e-mail
+  message is marked FAILED with `last_error` `EMAIL_DISABLED` (never SENT). Use it only when the business has decided
+  to launch without e-mail (order updates then reach customers by SMS, push and the in-app inbox).
+- The development sender (Development, Testing, Demo) logs only a masked address (`r***@example.com`) and the subject,
+  and stores `provider_message_id` = `DEVELOPMENT_NOT_DELIVERED` (D323).
+
+### 2.3 Push sender: `Notifications:Push` (Api and Worker)
+
+Push goes through Firebase Cloud Messaging, HTTP v1 API (D324, BE-3 / L-20). The service account key is a secret: it
+lives only in `.env.prod` on the server, never in a committed file.
+
+| Key (environment variable in `.env.prod`) | Values |
+|---|---|
+| `Notifications:Push:Provider` (`PUSH_PROVIDER`) | `FCM`, `DISABLED`, or `DEVELOPMENT` (Development, Testing, Demo only; also what empty means) |
+| `Notifications:Push:Fcm:ProjectId` (`FCM_PROJECT_ID`) | The Firebase project id, lower-case letters, digits and dashes |
+| `Notifications:Push:Fcm:ServiceAccountJson` (`FCM_SERVICE_ACCOUNT_JSON`) | The whole service account key JSON on one line, in single quotes in `.env.prod`. It must have `client_email` and `private_key` |
+| `Notifications:Push:Fcm:TimeoutSeconds` (`FCM_TIMEOUT_SECONDS`) | 1 to 60, default 10 |
+
+What the owner does (once):
+1. In the Firebase console, create the project (the free Spark plan includes FCM) and add the Android and iOS apps
+   with the app's bundle ids. Copy the **Project ID** → `FCM_PROJECT_ID`.
+2. Project settings → Service accounts → **Generate new private key**. Put the file's content on one line (it is
+   already valid JSON on one line once the line breaks between fields are removed; keep the `\n` inside
+   `private_key` as they are) and set `FCM_SERVICE_ACCOUNT_JSON='<that line>'`. Delete the downloaded file afterwards.
+3. Set `PUSH_PROVIDER=FCM` and redeploy. Until the mobile app registers real FCM tokens (the app's `PushService` is
+   still a stub, a follow-up), no customer device receives push; the in-app inbox still shows every notice.
+
+What the hosts refuse:
+- Outside Development, Testing and Demo, the Api and Worker refuse to start when `PUSH_PROVIDER` is empty,
+  `DEVELOPMENT` or unknown, or when `FCM` lacks a valid project id or service account key (the refusal names the key
+  and the problem, never the key's content).
+- `PUSH_PROVIDER=DISABLED` logs a Critical line at every start, and each push message is marked FAILED with
+  `last_error` `PUSH_DISABLED`.
+- A push message is SENT only when FCM accepted it for at least one device. Tokens FCM reports as `UNREGISTERED` or
+  `SENDER_ID_MISMATCH` are removed. An outage, a timeout or a refused key is retried (`PUSH_UNREACHABLE`,
+  `PUSH_UNAUTHORIZED`, up to 5 attempts); a message FCM rejects fails at once (`PUSH_REJECTED`). Logs carry counts and
+  codes only, never a token or the key.
 
 ## 3. Rate limits: `RateLimiting:<Rule>` (Api)
 
@@ -219,3 +289,28 @@ run as Production. Production and Staging behave exactly as before; nothing abov
 | Data Protection keys | Not required (ephemeral). Nothing uses them yet |
 | Images | Files on the container disk vanish on every restart; a missing `/media/…` image (`.webp`, `.png`, `.jpg`) is answered with the sample placeholder drawing |
 | Rate limits | Raised in `appsettings.Demo.json`: every tester reaches the Api through Render's proxy or the website's server, so they share one client IP |
+
+## 7. Rotating a secret
+
+When a secret may have leaked (`incident-response.md`), when someone who knew it leaves, or once a year (gap audit
+L-67). Work on the server as `deploy` in `/opt/freshorbit`. Save the new value in the team password manager
+**before** you use it, and keep the old one until the rotation is checked. "Redeploy" means
+`infra/scripts/deploy.sh "$(cat .deploy/current-tag)"`, which recreates only the services whose settings changed
+(`deploy.md` §3). In the table, `dc` is short for
+`IMAGE_TAG=$(cat .deploy/current-tag) docker compose --env-file infra/compose/.env.prod -f infra/compose/docker-compose.prod.yml`.
+
+| Secret | Steps, in order | Effect on users |
+|---|---|---|
+| `JWT_SIGNING_KEY` | `openssl rand -hex 32`, put it in `.env.prod`, redeploy | Every customer and staff member is signed out at once, and OTPs in flight stop working (the key also keys OTP hashes). Pick a quiet hour, unless the point is to end stolen sessions |
+| `POSTGRES_PASSWORD` | The Postgres image reads it only when the database is first created, so change the database user first: `dc exec postgres psql -U freshorbit -d freshorbit -c "ALTER USER freshorbit PASSWORD '<new hex value>'"`. Then put the same value in `.env.prod` and redeploy | api and worker restart with the new connection string (a few seconds of errors). Backups are unaffected (they run inside the container) |
+| `SMS_DLT_API_KEY` | Create a new API key in the Fast2SMS dashboard, put it in `.env.prod`, redeploy, request an OTP for your own phone (§2.1 step 6), then delete the old key at Fast2SMS | None in this order |
+| `SMTP_PASSWORD` | New password or app key at the SMTP provider, put it in `.env.prod`, redeploy, make one e-mail go out (for example a staff password reset on a test account), then revoke the old one | None |
+| `DEPLOY_SSH_KEY` (GitHub) | `ssh-keygen -t ed25519 -f freshorbit-ci -C ci` on your own computer, add the new `.pub` line to `/home/deploy/.ssh/authorized_keys`, replace the environment secret in GitHub, run the Deploy workflow with the current tag, then delete the old line from `authorized_keys` | None |
+| Backup bucket key (`rclone.conf`) | Create a new bucket-scoped token at R2 or B2 (`backup-restore.md` §2), replace the key id and secret in `infra/compose/rclone.conf`, run `infra/scripts/backup.sh --label key-rotation`, check that it reached the remote with `infra/scripts/restore.sh --list`, then revoke the old token | None |
+| rclone crypt passwords | Do **not** rotate casually: offsite backups made with the old passwords can be read only with them. If they leaked, make a new crypt remote with new passwords and a new bucket path, point `BACKUP_REMOTE` at it, keep the old passwords until the old backups age out (`BACKUP_REMOTE_RETENTION_DAYS`), and treat the old backups as read | None |
+| `GRAFANA_ADMIN_PASSWORD` | Change it in Grafana (Profile › Change password) and in `.env.prod` | None |
+| Play upload key (`UPLOAD_KEYSTORE_*`) | We cannot rotate it alone: ask Google Play support for an upload key reset (Play Console › App integrity), then make a new keystore and secrets (`mobile-release.md` parts 2 and 3) | None for users; uploads wait for Google |
+| Staff passwords | Each person: admin › My account (`POST /admin/auth/password`). For someone else: Settings › Staff & roles › Reset password (§5) | That person only |
+
+After each rotation, add one line to the incident log or `docs/team/progress.md` (what was rotated, when and by
+whom; never the value).

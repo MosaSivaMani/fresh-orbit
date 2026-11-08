@@ -86,11 +86,13 @@ backend/
 | Staff auth | Email + password (ASP.NET Core `PasswordHasher`), same JWT; permissions in claims; optional location scope |
 | Authorization | Policies per permission code (`orders.pack`); endpoints declare `.RequirePermission("...")` |
 | Validation | FluentValidation, field-keyed 422 |
-| Events | Aggregate raises `DomainEvent`; `SaveChanges` writes `platform.outbox` in the same transaction; Worker dispatches to `IEventHandler<T>`; `platform.inbox` makes each handler run once; failures go to `platform.dead_letters` |
+| Events | Aggregate raises `DomainEvent`; `SaveChanges` writes `platform.outbox` in the same transaction; Worker dispatches to `IEventHandler<T>`; `platform.inbox` makes each handler run once; a failure is retried with exponential backoff and jitter (`next_attempt_at`, required `Outbox` settings, D296) and after `Outbox:MaxAttempts` goes to `platform.dead_letters` (Critical log; staff replay it with `platform.manage`) |
 | Jobs | Hangfire with PostgreSQL storage, in the Worker (inside the Api only in the free Demo, `Hosting:RunBackgroundJobsInApi`, `runbooks/render-demo.md`) |
 | Files | `IFileStorage` with MinIO (S3 API) implementation |
 | Payments | `IPaymentProvider`: `CashOnDelivery` (launch), `Fake` (tests), gateway adapter later |
-| Logging | Serilog to console (JSON in production) + OpenTelemetry traces |
+| Logging | Serilog to console (JSON in production) |
+| Telemetry | OpenTelemetry (official .NET packages, D332): traces of ASP.NET Core requests (not `/health`), HttpClient calls, Npgsql commands (the SQL behind EF Core) and recurring job runs; metrics of ASP.NET Core, Kestrel, HttpClient, the runtime, the Npgsql pool and the `FreshOrbit` meter (outbox pending and lag, dead letters of the last 24 h, job runs / failures / duration, D333). Exported over OTLP/HTTP only when `Telemetry:OtlpEndpoint` is set; empty = off by explicit configuration, nothing registered (the 512 MB demo runs so). `runbooks/telemetry.md` |
+| Retention | Each owner purges its own tables in a daily recurring job (SEC-13): Identity OTP challenges after 24 h and staff login failures after 1 day (D334), Payments webhook bodies after 30 days (D335), platform processed outbox and inbox rows after 7 days (D336) |
 | Rate limits | ASP.NET Core rate limiter (Api host): OTP and login strict, checkout moderate, `refresh` and `search` per IP (API §1.9) |
 
 ## Key flows

@@ -86,7 +86,8 @@ public sealed partial class OrderEventService(
         var profile = await settings.GetBusinessProfileAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(profile.Gstin))
         {
-            throw new DomainException(OrderingErrors.ConfigurationMissing, "The business GSTIN is not configured; invoices cannot be issued.");
+            // Checkout refuses orders while the GSTIN is missing (D295); this guards a profile edited after the order.
+            throw new DomainException(OrderingErrors.ConfigurationMissing, "The business gstin is not configured; invoices cannot be issued.", "gstin");
         }
 
         var seller = await SellerAsync(order, profile, profile.Gstin, cancellationToken);

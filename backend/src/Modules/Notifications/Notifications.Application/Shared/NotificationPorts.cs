@@ -30,8 +30,17 @@ public sealed record EmailMessage(string To, string Subject, string Body);
 /// <param name="Tokens">FCM registration tokens of the user's devices.</param>
 public sealed record PushMessage(IReadOnlyList<string> Tokens, string Title, string Body, IReadOnlyDictionary<string, string> Data);
 
+/// <param name="ProviderMessageId">The provider's id of the first accepted send, or <see cref="DevelopmentDelivery.NotDelivered"/>.</param>
 /// <param name="InvalidTokens">Tokens the provider reported as no longer registered; they are removed.</param>
-public sealed record PushResult(string? ProviderMessageId, IReadOnlyList<string> InvalidTokens);
+/// <param name="AcceptedCount">Devices the provider accepted the message for; 0 (every token invalid) fails the message (D324).</param>
+public sealed record PushResult(string? ProviderMessageId, IReadOnlyList<string> InvalidTokens, int AcceptedCount);
+
+/// <summary>D323: what the development senders (Development, Testing and Demo only) record as the provider message id.</summary>
+public static class DevelopmentDelivery
+{
+    /// <summary>Stored in <c>provider_message_id</c>: the message went to a development sender and reached nobody.</summary>
+    public const string NotDelivered = "DEVELOPMENT_NOT_DELIVERED";
+}
 
 /// <summary>
 /// SMS adapter: a DLT-registered provider outside Development and Testing (refused at startup otherwise, SEC-1).
@@ -44,13 +53,20 @@ public interface ISmsSender
     Task<string?> SendAsync(SmsMessage message, CancellationToken cancellationToken);
 }
 
-/// <summary>E-mail adapter (SMTP via MailKit; Mailpit in dev). Throws on a provider error.</summary>
+/// <summary>
+/// E-mail adapter (SMTP via MailKit; Mailpit in dev). Throws on a provider error, and
+/// <see cref="ChannelDisabledException"/> when e-mail is switched off by configuration (D322).
+/// </summary>
 public interface IEmailSender
 {
     Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
 
-/// <summary>Push adapter (Ruling D28: FCM later; dev no-op that logs). Throws on a provider error.</summary>
+/// <summary>
+/// Push adapter (Ruling D28; D324: FCM HTTP v1, or a development sender that only logs, in Development, Testing and
+/// Demo only). Throws <see cref="PushDeliveryException"/> when no device accepted the message for a provider reason,
+/// and <see cref="ChannelDisabledException"/> when push is switched off by configuration. Other exceptions are retried.
+/// </summary>
 public interface IPushSender
 {
     Task<PushResult> SendAsync(PushMessage message, CancellationToken cancellationToken);
