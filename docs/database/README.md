@@ -46,7 +46,7 @@ ordering.orders 1─N payments.payments 1─N payments.refunds; orders 0─1 pro
 | Table | Columns | Constraints |
 |---|---|---|
 | users | id, phone (E.164), email citext, password_hash, user_type CUSTOMER/STAFF, status ACTIVE/LOCKED/DISABLED, phone_verified_at, last_login_at, failed_login_count, locked_until, lockout_count, anonymised_at | unique phone, unique email; check phone or email (unless anonymised). `locked_until` ends a staff lock; `lockout_count` drives the D33 doubling |
-| staff_login_failures | id, email_hash (SHA-256 hex of the normalised email, char 64), client_ip, failed_at | append-only; index (email_hash, client_ip, failed_at desc); counted for the per email + IP login limit (IDN-R20); purge rows older than 1 day once the retention job exists (SEC-13) |
+| staff_login_failures | id, email_hash (SHA-256 hex of the normalised email, char 64), client_ip, failed_at | append-only; index (email_hash, client_ip, failed_at desc); counted for the per email + IP login limit (IDN-R20); rows older than 1 day are purged daily (SEC-13, D77, D334) |
 | otp_challenges | id, phone, purpose LOGIN/VERIFY_PHONE, code_hash (HMAC-SHA256), requested_at, expires_at, attempt_count, consumed_at, request_ip | index (phone, requested_at desc), (request_ip, requested_at desc) |
 | refresh_tokens | id, user_id, token_hash, family_id, issued_at, expires_at, revoked_at, revoke_reason, replaced_by_id, device_label | unique token_hash; reuse of a rotated token revokes the family |
 | staff_members | id, user_id, full_name, all_locations, is_active, revision | unique user_id; `revision` bumps on role/location changes so If-Match covers them |
@@ -203,6 +203,22 @@ A job generates slots from templates 7 days ahead, skipping closures.
 | Table | Columns | Constraints |
 |---|---|---|
 | refresh_state | view_name, refreshed_at, source_watermark, duration_ms, last_error | PK view_name |
+
+### retention (SEC-13)
+
+Daily recurring jobs delete or blank personal data that is no longer needed. Each owner purges only its own tables with
+set-based statements (`ExecuteDelete` / `ExecuteUpdate`, no rows loaded); `runbooks/telemetry.md` §5.
+
+| Table | Purge | Owner, job, decision |
+|---|---|---|
+| identity.otp_challenges | rows with `requested_at` older than 24 h (longest OTP limit window is one day) | Identity, `identity.purge-retention`, D334 |
+| identity.staff_login_failures | rows with `failed_at` older than 1 day, or than the login-failure window if longer | Identity, `identity.purge-retention`, D77, D334 |
+| payments.webhook_events | `payload` becomes `"PURGED"` and `headers` `{}` for PROCESSED / IGNORED / REJECTED rows received more than 30 days ago; the row and its summary columns stay (duplicate guard, SHA-256) | Payments, `payments.purge-webhook-payloads`, D335 |
+| platform.outbox | rows with `processed_at` older than 7 days; waiting and dead-lettered rows are never purged | platform, `platform.purge-outbox`, D336 |
+| platform.inbox | rows older than 7 days whose event is not still waiting in the outbox | platform, `platform.purge-outbox`, D336 |
+
+Not purged yet (follow-ups): `identity.refresh_tokens` (expired or revoked), `platform.idempotency_keys`,
+`platform.dead_letters`, Hangfire history, abandoned carts (BE-11 to BE-13).
 
 ## 4. Transaction boundaries
 

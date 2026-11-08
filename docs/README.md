@@ -24,5 +24,8 @@
 | Admin dashboard screens, routes, permissions, API gaps (Phase 6) | `design/admin.md` |
 | **Owner testing** (demo app on an Android phone; whole store in a GitHub Codespace) | `runbooks/owner-testing.md` |
 | **Free public demo** (website, admin and API on Render + Neon free plans, sample store only, shareable links) | `runbooks/render-demo.md` |
-| **Mobile signing and release builds** (demo key secrets, upload key, launcher icons) | `runbooks/mobile-release.md` |
-| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`) |
+| **Mobile signing and release builds** (demo key secrets, upload key, the signed Play bundle workflow, launcher icons) | `runbooks/mobile-release.md` |
+| **Google Play Console answers** (data safety, content rating, target audience, deletion URL) | `runbooks/play-store.md` |
+| **Go-live** (new production server, empty database, first admin, business profile, first city and store, DNS and mail records) | `runbooks/go-live.md` |
+| **Security incident and data breach** (DPDP 72-hour report, notices, roles, checklist) | `runbooks/incident-response.md` |
+| Runbooks (Phase 9) | `runbooks/` (security settings: `runbooks/security-configuration.md`; local deploy check: `runbooks/e2e-check.md`; telemetry and retention purges: `runbooks/telemetry.md`) |

@@ -119,6 +119,7 @@ is lost, Play can reset it, but keep a backup anyway.
 
 4. In Play Console create the app `in.freshorbit.app`, enrol in **Play App Signing**, and upload the bundle to the
    internal testing track first. Give Play the privacy policy address `https://<website host>/support/privacy-policy`.
+   The data-safety, content-rating and target-audience answers are prepared in `play-store.md`.
 
 ## Launcher icons
 
@@ -145,7 +146,19 @@ Run workflow** on `main`. Once, before the first run, the owner adds:
 The run refuses to start when a required value is missing. It uploads two artifacts: the `.aab` (upload it in Play
 Console › Internal testing) and the `debug-info` symbols (keep them: `flutter symbolize -i <stack> -d debug-info/`
 turns an obfuscated crash stack back into file and line). The build number is the run number plus the
-`build-number-offset` input (default 100); raise the offset if Play says the version code was used.
+`build-number-offset` input (default 100); raise the offset if Play says the version code was used. The version
+name comes from `pubspec.yaml`: set it (for example `1.0.0+1`) in a mobile change before the first store upload
+(L-80).
+
+What else the run refuses before building (D337): a ref other than `main` or a `v*` tag; an address that is not
+`https://<host>` with no path; a keystore that does not open with `UPLOAD_KEYSTORE_PASSWORD` and `UPLOAD_KEY_ALIAS`.
+After the build it checks that the bundle is signed with that upload certificate, writes the certificate's SHA-256
+in the run summary (it must equal the upload key in Play Console › App integrity) and deletes the decoded key.
+
+Secrets as repository secrets, with the GitHub CLI from the folder holding the files:
+`gh secret set UPLOAD_KEYSTORE_BASE64 < upload.b64` (make `upload.b64` with `base64 -w0 upload.jks` on Linux or
+`base64 -i upload.jks | tr -d '\n'` on macOS), then `gh secret set UPLOAD_KEYSTORE_PASSWORD` and the other two, and
+`gh variable set API_BASE_URL --body https://api.<domain>`.
 
 ## App links (D308, MB-4)
 
