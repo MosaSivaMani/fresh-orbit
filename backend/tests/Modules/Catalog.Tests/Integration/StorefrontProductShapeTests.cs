@@ -63,6 +63,49 @@ public sealed class StorefrontProductShapeTests(CatalogDatabase database) : Stor
         withoutLocation.GetProperty("fromPrice").ValueKind.Should().Be(JsonValueKind.Null);
     }
 
+    /// <summary>MB-1: sizes come smallest first (pack size or piece weight in grams, no-size KG last), whatever the insert order.</summary>
+    [Fact]
+    public async Task Detail_variants_come_smallest_size_first_and_the_default_variant_is_stable_on_a_price_tie()
+    {
+        var served = await CreateServedLocationAsync();
+        var category = await CreateCategoryAsync();
+        var product = await CreatePublishedProductAsync(category, "Prawns");
+        var version = product.Version;
+        var ids = new Dictionary<string, Guid>();
+        foreach (var (name, body) in new (string, object)[]
+        {
+            ("1 kg pack", PackVariant(UniqueSku("PK1000"), "1 kg pack", 1000)),
+            ("250 g pack", PackVariant(UniqueSku("PK250"), "250 g pack", 250)),
+            ("Jumbo piece", PieceVariant(UniqueSku("PC400"), "Jumbo piece", 400)),
+            ("500 g pack", PackVariant(UniqueSku("PK500"), "500 g pack", 500)),
+        })
+        {
+            var saved = await OkAsync(HttpMethod.Post, $"/api/v1/admin/products/{product.ProductId}/variants", body, version);
+            version = saved.GetProperty("version").GetString()!;
+            ids[name] = saved.GetProperty("variants").EnumerateArray().Single(v => v.GetProperty("name").GetString() == name).GetProperty("id").GetGuid();
+        }
+
+        Guid[] expected = [ids["250 g pack"], ids["Jumbo piece"], ids["500 g pack"], ids["1 kg pack"], product.VariantId];
+
+        var detail = await GetPublicAsync($"/api/v1/products/{product.Slug}");
+        detail.GetProperty("variants").EnumerateArray().Select(v => v.GetProperty("id").GetGuid()).Should().Equal(expected);
+        detail.GetProperty("variants")[0].GetProperty("packSizeGrams").GetInt32().Should().Be(250);
+
+        // Without a location the list's default variant is the first size.
+        (await ListItemAsync(category, null, product.ProductId)).GetProperty("defaultVariant").GetProperty("id").GetGuid().Should().Be(ids["250 g pack"]);
+
+        // At a location every variant has the same price: the cheapest-variant tie goes to the smallest size.
+        foreach (var id in expected)
+        {
+            await OkAsync(HttpMethod.Put, $"/api/v1/admin/pricing/locations/{served.LocationId}/variants/{id}/price", new { unitPricePaise = 49900L, compareAtPaise = (long?)null }, ifNoneMatchAny: true);
+            await AddStockAsync(served.LocationId, id, 20000);
+        }
+
+        var atLocation = await GetPublicAsync($"/api/v1/products/{product.Slug}", served.Pincode);
+        atLocation.GetProperty("variants").EnumerateArray().Select(v => v.GetProperty("id").GetGuid()).Should().Equal(expected);
+        (await ListItemAsync(category, served.Pincode, product.ProductId)).GetProperty("defaultVariant").GetProperty("id").GetGuid().Should().Be(ids["250 g pack"]);
+    }
+
     [Fact]
     public async Task No_discount_is_shown_without_a_compare_at_price()
     {
@@ -299,6 +342,30 @@ public sealed class StorefrontProductShapeTests(CatalogDatabase database) : Stor
         piecesMax,
         serves,
         preparations = new[] { new { code = "WHOLE", yieldBp = 10000, isDefault = false }, new { code = "CURRY_CUT", yieldBp = 6500, isDefault = true } },
+    };
+
+    private static object PackVariant(string sku, string name, int packSizeGrams) => new
+    {
+        sku,
+        name,
+        sellUnit = "PACK",
+        packSizeGrams,
+        minOrder = 1,
+        maxOrder = 10,
+        orderStep = 1,
+        preparations = new[] { new { code = "WHOLE", yieldBp = 10000, isDefault = true } },
+    };
+
+    private static object PieceVariant(string sku, string name, int avgPieceGrams) => new
+    {
+        sku,
+        name,
+        sellUnit = "PIECE",
+        avgPieceGrams,
+        minOrder = 1,
+        maxOrder = 10,
+        orderStep = 1,
+        preparations = new[] { new { code = "WHOLE", yieldBp = 10000, isDefault = true } },
     };
 
     private async Task SetServingAsync(PublishedProduct product, int piecesMin, int piecesMax, int serves)

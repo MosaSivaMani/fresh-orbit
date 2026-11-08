@@ -8,11 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../api/api_error.dart';
 import '../../api/models/account.dart';
 import '../../api/models/checkout.dart';
 import '../../api/models/locations.dart';
 import '../../core/format.dart';
 import '../../state/account_state.dart';
+import '../../state/cart_state.dart';
 import '../../state/checkout_state.dart';
 import '../../state/location_state.dart';
 import '../../widgets/commerce.dart';
@@ -20,6 +22,9 @@ import '../../widgets/states.dart';
 import '../cart/totals_card.dart';
 
 const _fallbackMethods = ['COD', 'UPI_ON_DELIVERY'];
+
+/// Payment methods the app can complete end to end (D311). Paid-on-delivery only until the app has a pay-now flow.
+const appPaymentMethods = {'COD', 'UPI_ON_DELIVERY'};
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -59,6 +64,50 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     if (order != null && mounted) context.go('/order-success/${order.id}');
   }
 
+  bool _movingCart = false;
+
+  /// "Deliver this cart to (pincode)" (MO-1): moves the cart to the store that serves the chosen address. When
+  /// some items are not sold there (409 CART_LOCATION_CHANGED), the customer is asked before they are removed.
+  /// Then the server prices the order again.
+  Future<void> _moveCart(String pincode) async {
+    final cart = ref.read(cartProvider.notifier);
+    setState(() => _movingCart = true);
+    try {
+      try {
+        await cart.changeLocation(pincode);
+      } on ApiError catch (e) {
+        if (e.code != 'CART_LOCATION_CHANGED' || !mounted) rethrow;
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            key: const Key('moveCartConfirm'),
+            title: const Text('Some cart items will be removed'),
+            content: Text(e.detail ?? 'A few items in your cart are not sold at the store that delivers to $pincode.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Keep my cart')),
+              FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Remove and continue')),
+            ],
+          ),
+        );
+        if (ok != true) return;
+        await cart.changeLocation(pincode, force: true);
+      }
+      await ref.read(pincodeProvider.notifier).set(pincode);
+      await _checkout.refreshPreview();
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _movingCart = false);
+    }
+  }
+
+  /// Back while the order is being placed (MO-3): stay, so the answer is shown here.
+  void _stayWhilePlacing() => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      const SnackBar(key: Key('placingNote'), content: Text('We are placing your order. Please wait a moment.')),
+    );
+
   Future<void> _showPriceChanged(CheckoutPreview? before, CheckoutPreview after) async {
     if (_dialogOpen) return;
     _dialogOpen = true;
@@ -90,8 +139,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final theme = Theme.of(context);
     final preview = state.preview;
 
-    return Scaffold(
-      appBar: const PageHeader(text: 'Almost', brushed: 'there'),
+    return PopScope(
+      canPop: !state.placing,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _stayWhilePlacing();
+      },
+      child: Scaffold(
+      appBar: PageHeader(text: 'Almost', brushed: 'there', onBack: state.placing ? _stayWhilePlacing : null),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(FreshLayout.gutter, 0, FreshLayout.gutter, FreshLayout.sectionGap),
         children: [
@@ -216,7 +270,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     value: preview,
                     onRetry: _checkout.refreshPreview,
                     loading: const LoadingSemantics(label: 'Pricing your order', child: SkeletonBox(height: 220)),
-                    data: (p) => _Review(preview: p),
+                    data: (p) => _Review(
+                      preview: p,
+                      pincode: state.addressPincode,
+                      onMoveCart: _moveCart,
+                      movingCart: _movingCart,
+                    ),
                   ),
           ),
           if (state.placeError != null) ...[
@@ -244,6 +303,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           loading: state.placing,
           onPressed: state.canPlace ? _place : null,
         ),
+      ),
       ),
     );
   }
@@ -419,7 +479,12 @@ class _PaymentPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final list = options ?? [for (final m in _fallbackMethods) PaymentMethodOption(method: m, enabled: true)];
+    // Only methods the app can complete (MO-5, D311): an ONLINE order needs a pay-now flow the app does not have
+    // yet, so it is not offered even when the server enables it; it would wait in PENDING_PAYMENT and expire.
+    final list = [
+      for (final o in options ?? [for (final m in _fallbackMethods) PaymentMethodOption(method: m, enabled: true)])
+        if (appPaymentMethods.contains(o.method)) o,
+    ];
     return RadioGroup<String>(
       groupValue: selected,
       onChanged: (m) => onSelected(m!),
@@ -440,26 +505,53 @@ class _PaymentPicker extends StatelessWidget {
 }
 
 class _Review extends StatelessWidget {
-  const _Review({required this.preview});
+  const _Review({required this.preview, required this.pincode, required this.onMoveCart, required this.movingCart});
 
   final CheckoutPreview preview;
+
+  /// The chosen address's pincode, for "Deliver this cart to …" (MO-1).
+  final String? pincode;
+  final ValueChanged<String> onMoveCart;
+  final bool movingCart;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final slot = preview.slot;
+    final start = slot?.startAt;
+    final end = slot?.endAt;
+    final target = preview.address?.pincode ?? pincode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final b in preview.blockers)
+        for (final b in preview.blockers) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
             child: InfoBanner(tone: BannerTone.danger, text: b.message.isEmpty ? humanizeCode(b.code) : b.message),
           ),
-        if (preview.slot != null)
-          Text(
-            'Delivery ${formatSlotWindow(preview.slot!.startAt, preview.slot!.endAt)}',
-            style: theme.textTheme.bodyMedium,
-          ),
+          // The way out of each blocker that has one in the app.
+          if (b.code == 'CART_LOCATION_CHANGED' && target != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
+              child: FilledButton.icon(
+                key: const Key('moveCartToAddress'),
+                onPressed: movingCart ? null : () => onMoveCart(target),
+                icon: const Icon(Icons.local_shipping_outlined),
+                label: Text('Deliver this cart to $target'),
+              ),
+            )
+          else if (b.code == 'CART_EMPTY')
+            Padding(
+              padding: const EdgeInsets.only(bottom: FreshSpacing.s2),
+              child: OutlinedButton(
+                key: const Key('backToCart'),
+                onPressed: () => context.go('/cart'),
+                child: const Text('Back to cart'),
+              ),
+            ),
+        ],
+        if (start != null && end != null)
+          Text('Delivery ${formatSlotWindow(start, end)}', style: theme.textTheme.bodyMedium),
         const SizedBox(height: FreshSpacing.s2),
         for (final l in preview.lines)
           ListTile(

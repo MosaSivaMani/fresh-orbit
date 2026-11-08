@@ -36,6 +36,17 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
 
     private const string CurrentOffer = "o.valid_from <= @at AND (o.valid_to IS NULL OR o.valid_to > @at)";
 
+    /// <summary>
+    /// MB-1: the storefront order of a product's variants, smallest size first: pack size (PACK) or average piece
+    /// weight (PIECE) in grams ascending, variants with no size (KG) last, then the variant id (UUIDv7, so creation
+    /// order). Same rule as <see cref="InStorefrontOrder"/>; <paramref name="alias"/> is the variant table alias.
+    /// </summary>
+    private static string VariantSizeOrder(string alias) => $"COALESCE({alias}.pack_size_grams, {alias}.avg_piece_grams) ASC NULLS LAST, {alias}.id";
+
+    /// <summary>MB-1: <see cref="VariantSizeOrder"/> in memory, for variants already loaded.</summary>
+    internal static IEnumerable<ProductVariant> InStorefrontOrder(IEnumerable<ProductVariant> variants)
+        => variants.OrderBy(v => (v.PackSizeGrams ?? v.AvgPieceGrams) is null).ThenBy(v => v.PackSizeGrams ?? v.AvgPieceGrams).ThenBy(v => v.Id);
+
     public async Task<StorefrontLocation?> ResolveLocationAsync(string pincode, CancellationToken cancellationToken)
     {
         var rows = await QueryAsync(
@@ -56,7 +67,7 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             new("take", NpgsqlDbType.Integer) { Value = query.Take },
         };
         var sql = new StringBuilder("WITH base AS (SELECT p.id, p.slug, p.name, p.local_names, p.source_type, p.published_at, p.featured_rank, c.sort_order AS category_sort, p.category_id, ");
-        sql.Append("(SELECT v.id FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active AND EXISTS (SELECT 1 FROM catalog.variant_preparations x WHERE x.variant_id = v.id AND x.is_active) ORDER BY v.id LIMIT 1) AS first_variant_id, ");
+        sql.Append("(SELECT v.id FROM catalog.product_variants v WHERE v.product_id = p.id AND v.is_active AND EXISTS (SELECT 1 FROM catalog.variant_preparations x WHERE x.variant_id = v.id AND x.is_active) ORDER BY ").Append(VariantSizeOrder("v")).Append(" LIMIT 1) AS first_variant_id, ");
         sql.Append(SearchRank(query.Q, parameters)).Append(" AS rank, ");
         sql.Append("(SELECT i.storage_key FROM catalog.product_images i WHERE i.product_id = p.id ORDER BY i.sort_order LIMIT 1) AS image_key ");
         sql.Append(VisibleProductsFrom);
@@ -106,7 +117,9 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
                 sql.Append(" AND ").Append(PreparationExists("o.variant_id", query.PreparationCodes, parameters));
             }
 
-            sql.Append("), best AS (SELECT DISTINCT ON (product_id) product_id, variant_id, unit_price_paise, compare_at_paise, sell_unit FROM offer_rows ORDER BY product_id, unit_price_paise, variant_id)");
+            // The cheapest variant; on a price tie the storefront variant order (MB-1) decides, so the default is stable.
+            sql.Append("), best AS (SELECT DISTINCT ON (r.product_id) r.product_id, r.variant_id, r.unit_price_paise, r.compare_at_paise, r.sell_unit FROM offer_rows r JOIN catalog.product_variants pv ON pv.id = r.variant_id ORDER BY r.product_id, r.unit_price_paise, ")
+                .Append(VariantSizeOrder("pv")).Append(')');
             sql.Append(", stock AS (SELECT product_id, max(available) AS available, bool_or(available > low_stock_threshold) AS above_threshold FROM offer_rows GROUP BY product_id)");
             sql.Append(" SELECT b.id, b.slug, b.name, b.local_names, b.source_type, b.image_key, best.unit_price_paise, best.compare_at_paise, best.sell_unit, s.available, s.above_threshold, count(*) OVER (), best.variant_id, b.category_id");
             sql.Append(" FROM base b JOIN best ON best.product_id = b.id JOIN stock s ON s.product_id = b.id WHERE true");
@@ -227,7 +240,7 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
         }
 
         var methods = await db.Set<PreparationMethod>().AsNoTracking().ToDictionaryAsync(m => m.Id, cancellationToken);
-        var variants = product.Variants.Where(v => v.IsActive && v.Preparations.Any(p => p.IsActive)).ToList();
+        var variants = InStorefrontOrder(product.Variants.Where(v => v.IsActive && v.Preparations.Any(p => p.IsActive))).ToList();
         var offers = location is null ? [] : await OffersAsync(location, [.. variants.Select(v => v.Id)], at, cancellationToken);
         var charges = location is null ? [] : await ChargesAsync(location, [.. variants.Select(v => v.Id)], at, cancellationToken);
 

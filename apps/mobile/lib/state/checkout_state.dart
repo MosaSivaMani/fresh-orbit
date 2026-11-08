@@ -111,6 +111,38 @@ class PreferredSlotController extends Notifier<String?> {
   void choose(String? slotId) => state = slotId;
 }
 
+/// Orders placed in this run of the app, by id (MO-4): the order-placed screen shows the `POST /orders` answer at
+/// once and keeps showing it when the read that follows fails (a cold server, offline).
+final placedOrdersProvider = NotifierProvider<PlacedOrdersController, Map<String, OrderDetail>>(
+  PlacedOrdersController.new,
+);
+
+class PlacedOrdersController extends Notifier<Map<String, OrderDetail>> {
+  @override
+  Map<String, OrderDetail> build() => const {};
+
+  void remember(OrderDetail order) => state = {...state, order.id: order};
+}
+
+/// A place-order attempt whose outcome is unknown (network error, 5xx), kept outside the checkout screen (MO-3):
+/// coming back to checkout with the same order body reuses its Idempotency-Key, so the server answers with the
+/// order it may already have made instead of making a second one.
+class PendingPlace {
+  const PendingPlace({required this.key, required this.body});
+
+  final String key;
+  final String body;
+}
+
+final pendingPlaceProvider = NotifierProvider<PendingPlaceController, PendingPlace?>(PendingPlaceController.new);
+
+class PendingPlaceController extends Notifier<PendingPlace?> {
+  @override
+  PendingPlace? build() => null;
+
+  void set(PendingPlace? pending) => state = pending;
+}
+
 final checkoutProvider = NotifierProvider.autoDispose<CheckoutController, CheckoutState>(CheckoutController.new);
 
 /// Refusals about the chosen slot: the slot list is read again so the customer sees what is still open.
@@ -228,21 +260,35 @@ class CheckoutController extends Notifier<CheckoutState> {
       customerNotes: state.notes.trim().isEmpty ? null : state.notes.trim(),
     );
     final body = jsonEncode(request.toJson());
+    // An earlier attempt with this same body ended with an unknown outcome (possibly on a checkout screen that was
+    // closed since): reuse its key so the server replays the order it may have made (MO-3).
+    final pending = ref.read(pendingPlaceProvider);
+    if (pending != null && pending.body == body) {
+      _idempotencyKey = pending.key;
+      _keyBody = body;
+    }
     if (_idempotencyKey == null || _keyBody != body) {
       _idempotencyKey = newIdempotencyKey();
       _keyBody = body;
     }
+    final pendingPlace = ref.read(pendingPlaceProvider.notifier);
+    pendingPlace.set(PendingPlace(key: _idempotencyKey!, body: body));
+    // The controller stays alive until the answer arrives, even if the screen goes away, so the cart, the orders
+    // and the preferred slot are always refreshed after an order is placed (MO-3).
+    final keepAlive = ref.keepAlive();
     state = state.copyWith(placing: true, clearPlaceError: true);
     try {
       final order = await ref.read(orderRepositoryProvider).placeOrder(request, idempotencyKey: _idempotencyKey!);
       _idempotencyKey = null;
-      if (!ref.mounted) return order;
-      state = state.copyWith(placing: false, placedOrder: order);
+      pendingPlace.set(null);
+      ref.read(placedOrdersProvider.notifier).remember(order);
       ref.invalidate(cartProvider);
       ref.invalidate(ordersProvider);
       ref.read(preferredSlotProvider.notifier).choose(null);
+      state = state.copyWith(placing: false, placedOrder: order);
       return order;
     } on ApiError catch (e) {
+      if (!e.isTransient) pendingPlace.set(null);
       if (!ref.mounted) return null;
       if (e.code == 'PRICE_CHANGED') {
         _idempotencyKey = null;
@@ -262,6 +308,8 @@ class CheckoutController extends Notifier<CheckoutState> {
       state = state.copyWith(placing: false, placeError: e);
       if (!e.isTransient) await refreshPreview(); // show the server's current blockers
       return null;
+    } finally {
+      keepAlive.close();
     }
   }
 

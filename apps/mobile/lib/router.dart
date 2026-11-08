@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/app_links.dart';
 import 'core/format.dart';
 import 'features/account/account_screens.dart';
 import 'features/account/address_screens.dart';
@@ -32,6 +33,7 @@ import 'state/cart_state.dart';
 import 'state/first_run.dart';
 import 'state/session.dart';
 import 'widgets/bold.dart';
+import 'widgets/refresh_on_resume.dart';
 import 'widgets/states.dart';
 
 /// Paths that need a signed-in customer.
@@ -61,6 +63,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: sessionChanges,
     errorBuilder: (context, state) => NotFoundScreen(onHome: () => context.go('/home')),
     redirect: (context, state) {
+      // A website link (App Links / Universal Links, D308) uses the website's paths.
+      final link = appRouteForWebsitePath(state.uri);
+      if (link != null) return link;
       final signedIn = ref.read(sessionProvider).signedIn;
       final path = state.uri.path;
       if (!signedIn && _needsLogin(path)) {
@@ -81,7 +86,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/product/:slug',
-        builder: (_, state) => ProductScreen(slug: state.pathParameters['slug']!),
+        builder: (_, state) =>
+            ProductScreen(slug: state.pathParameters['slug']!, variantId: state.uri.queryParameters['variant']),
       ),
       GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
       GoRoute(
@@ -232,7 +238,8 @@ class _AppShellState extends ConsumerState<AppShell> {
       canPop: false,
       onPopInvokedWithResult: _onBack,
       child: Scaffold(
-        body: shell,
+        // Back from the background after a while: the tabs read the server again (D313).
+        body: RefreshOnResume(child: shell),
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

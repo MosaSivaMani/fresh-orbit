@@ -13,6 +13,10 @@ import '../../widgets/bold.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 
+/// True for a scroll of the grid itself (depth 0, vertical) within 400 px of its end.
+bool isGridScrollNearEnd(ScrollNotification n) =>
+    n.depth == 0 && n.metrics.axis == Axis.vertical && n.metrics.extentAfter < 400;
+
 /// Paged product grid for a query: skeleton while loading, error with retry, empty state, load more on scroll.
 class ProductGrid extends ConsumerWidget {
   const ProductGrid({super.key, required this.query, this.empty, this.header});
@@ -52,7 +56,10 @@ class ProductGrid extends ConsumerWidget {
         }
         return NotificationListener<ScrollNotification>(
           onNotification: (n) {
-            if (n.metrics.extentAfter < 400 && list.hasMore && !list.loadingMore) {
+            // Only the grid's own vertical scroll: the category and filter rows in the header scroll sideways and
+            // must not load the next pages (MB-8).
+            if (!isGridScrollNearEnd(n)) return false;
+            if (list.hasMore && !list.loadingMore) {
               ref.read(provider.notifier).loadMore().catchError((Object e) {
                 if (context.mounted) showErrorSnack(context, e);
               });
@@ -67,7 +74,7 @@ class ProductGrid extends ConsumerWidget {
                 SliverPadding(
                   padding: FreshLayout.list,
                   sliver: SliverGrid.builder(
-                    gridDelegate: productGridDelegate,
+                    gridDelegate: productGridDelegateOf(context),
                     itemCount: list.items.length,
                     itemBuilder: (context, i) => ShopProductCard(product: list.items[i], index: i),
                   ),
@@ -106,7 +113,11 @@ class ShopProductCard extends ConsumerStatefulWidget {
 class _ShopProductCardState extends ConsumerState<ShopProductCard> {
   bool _pending = false;
 
-  String get _path => '/product/${widget.product.slug}';
+  /// The product page, opened on the card's default size (MB-3).
+  String get _path => Uri(
+    path: '/product/${widget.product.slug}',
+    queryParameters: widget.product.defaultVariant == null ? null : {'variant': widget.product.defaultVariant!.id},
+  ).toString();
 
   Future<void> _run(Future<void> Function() op) async {
     if (_pending) return;
@@ -128,19 +139,22 @@ class _ShopProductCardState extends ConsumerState<ShopProductCard> {
   }
 
   Future<void> _add() => _run(() async {
-    final choice = await ref.read(cartProvider.notifier).quickAdd(widget.product.slug);
+    final choice = await ref.read(cartProvider.notifier).quickAdd(widget.product);
     if (!mounted) return;
     if (choice == null) {
       await context.push(_path);
       return;
     }
-    final cut = choice.preparation == null ? '' : ', ${choice.preparation!.name}';
+    final cut = choice.preparationName == null ? '' : ', ${choice.preparationName}';
+    // Names the size added (MB-2). The action opens the cart, where the line's cut is changed in place: opening the
+    // product page would add a second line with the new cut (MB-9).
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('Added ${formatQuantity(choice.quantity)}$cut.'),
-          action: SnackBarAction(label: 'Change cut', onPressed: () => context.push(_path)),
+          key: const ValueKey('quickAddSnack'),
+          content: Text('Added ${choice.sizeName}, ${formatQuantity(choice.quantity)}$cut.'),
+          action: SnackBarAction(key: const ValueKey('quickAddViewCart'), label: 'View cart', onPressed: () => context.go('/cart')),
         ),
       );
   });

@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../api/models/orders.dart';
 import '../../core/format.dart';
 import '../../illustrations/illustration.dart';
+import '../../state/checkout_state.dart';
 import '../../state/orders_state.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
@@ -23,6 +24,8 @@ class OrderSuccessScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = illustratedColors(context);
+    final live = ref.watch(orderDetailProvider(orderId));
+    final placed = ref.watch(placedOrdersProvider)[orderId];
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -31,7 +34,9 @@ class OrderSuccessScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: c.sand,
         body: AsyncValueView<OrderDetail>(
-          value: ref.watch(orderDetailProvider(orderId)),
+          // The order `POST /orders` returned is shown at once, and stays when the fresh read fails (MO-4): the
+          // customer always sees "Order placed" with the number and Track order.
+          value: placed != null && !live.hasValue ? AsyncData(placed) : live,
           onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
           loading: const SafeArea(child: ListSkeleton()),
           data: (order) => _OrderPlaced(order: order),
