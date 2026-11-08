@@ -5,6 +5,7 @@
 | **Project plan (start here)** | `project-plan.md` |
 | Progress log | `team/progress.md` |
 | Team and ownership | `team/plan.md` |
+| **This month's plan (9 Nov – 6 Dec 2026)** | `team/plan-2026-11.md` |
 | Decisions (rulings D1…) | `decisions/log.md` |
 | Architecture | `architecture/README.md` |
 | Database | `database/README.md` |
