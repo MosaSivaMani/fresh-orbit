@@ -247,7 +247,16 @@ public sealed class FcmPushSenderTests
     }
 
     private static string ErrorBody(HttpStatusCode status, string errorCode)
-        => $$"""{"error":{"code":{{(int)status}},"message":"test","status":"{{(status == HttpStatusCode.NotFound ? "NOT_FOUND" : "FAILED")}}","details":[{"@type":"type.googleapis.com/google.firebase.fcm.v1.FcmError","errorCode":"{{errorCode}}"}]}}""";
+        => JsonSerializer.Serialize(new Dictionary<string, object>
+        {
+            ["error"] = new Dictionary<string, object>
+            {
+                ["code"] = (int)status,
+                ["message"] = "test",
+                ["status"] = status == HttpStatusCode.NotFound ? "NOT_FOUND" : "FAILED",
+                ["details"] = new[] { new Dictionary<string, string> { ["@type"] = "type.googleapis.com/google.firebase.fcm.v1.FcmError", ["errorCode"] = errorCode } },
+            },
+        });
 
     private static HttpResponseMessage Json(HttpStatusCode status, string body)
         => new(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
