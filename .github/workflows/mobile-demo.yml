@@ -16,6 +16,9 @@
 # A second APK, `fresh-orbit-live-<sha>.apk`, is a profile build WITHOUT DEMO, pointed at the free Render demo API
 # (vars.DEMO_API_ORIGIN, default below), so the owner sees the real sample catalogue, pictures, OTP sign-in and orders.
 #
+# Both APKs hold only the 64-bit ARM code (D321): the owner's phone download of the two-ABI APK (79 MB) kept stalling
+# on mobile data; nearly every Android phone since 2019 is arm64, and 32-bit-only phones cannot install these builds.
+#
 # Every run uploads the APK as a workflow artifact. A manual run from main also publishes it as a GitHub
 # prerelease `demo-apk-<short sha>`, so the owner can download it on the phone from the Releases page.
 name: Mobile demo APK
@@ -91,7 +94,7 @@ jobs:
       - name: Build profile APK with DEMO=true
         env:
           WEB_ORIGIN: ${{ vars.DEMO_WEB_ORIGIN || 'https://fresh-orbit-demo-web.onrender.com' }}
-        run: flutter build apk --profile --dart-define=DEMO=true --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" --target-platform android-arm,android-arm64
+        run: flutter build apk --profile --dart-define=DEMO=true --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" --target-platform android-arm64
       - name: Name and measure the APK
         id: apk
         run: |
@@ -107,7 +110,7 @@ jobs:
         env:
           API_ORIGIN: ${{ vars.DEMO_API_ORIGIN || 'https://fresh-orbit-demo-api.onrender.com' }}
           WEB_ORIGIN: ${{ vars.DEMO_WEB_ORIGIN || 'https://fresh-orbit-demo-web.onrender.com' }}
-        run: flutter build apk --profile --dart-define=API_BASE_URL="$API_ORIGIN" --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" --target-platform android-arm,android-arm64
+        run: flutter build apk --profile --dart-define=API_BASE_URL="$API_ORIGIN" --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" --target-platform android-arm64
       - name: Name the live APK
         id: live
         run: |
