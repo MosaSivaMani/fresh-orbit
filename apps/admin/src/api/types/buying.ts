@@ -79,7 +79,11 @@ export interface TodaysPricesQuery {
   categoryTargets?: string;
 }
 
-export type TodaysPriceIssue = "PRICE_MISSING" | "BATCH_MISSING" | "YIELD_MISSING" | "TAX_RULE_MISSING";
+export type TodaysPriceIssue =
+  | "PRICE_MISSING"
+  | "BATCH_MISSING"
+  | "YIELD_MISSING"
+  | "TAX_RULE_MISSING";
 
 export interface TodaysPriceItem {
   variantId: Id;
