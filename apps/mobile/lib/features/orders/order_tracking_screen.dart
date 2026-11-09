@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import '../../api/api_client.dart';
 import '../../api/api_error.dart';
 import '../../api/models/orders.dart';
+import '../../core/document_share.dart';
 import '../../core/format.dart';
 import '../../core/launch.dart';
 import '../../core/photo_picker.dart';
@@ -497,37 +498,67 @@ class _Actions extends ConsumerWidget {
               }
             },
           ),
-        if (a.downloadInvoice)
-          OutlinedButton.icon(
-            key: const Key('orderInvoice'),
-            icon: const Icon(Icons.receipt_outlined),
-            label: const Text('Invoice'),
-            onPressed: () async {
-              try {
-                final link = await ref.read(orderRepositoryProvider).invoice(order.id);
-                if (!context.mounted) return;
-                if (link.pdfUrl == null) {
-                  showInfoSnack(context, 'The invoice is not ready yet.');
-                } else {
-                  await openExternal(context, Uri.parse(link.pdfUrl!));
-                }
-              } on ApiError catch (e) {
-                if (!context.mounted) return;
-                // 404 INVOICE_NOT_ISSUED: the bill is made after delivery; not a failure (D271).
-                if (e.code == 'INVOICE_NOT_ISSUED') {
-                  showInfoSnack(context, 'The invoice is not ready yet.');
-                } else {
-                  showErrorSnack(context, e);
-                }
-              } catch (e) {
-                if (context.mounted) showErrorSnack(context, e);
-              }
-            },
-          ),
+        if (a.downloadInvoice) _InvoiceButton(orderId: order.id),
       ],
     );
   }
 }
+
+/// "Download invoice" (ORD-R53): shown only when the server allows it (`allowedActions.downloadInvoice`, the
+/// invoice exists after delivery). Fetches the PDF with the customer's token, saves it in the app's cache and
+/// offers it through the platform share sheet. A PDF still being rendered is a calm note, not an error.
+class _InvoiceButton extends ConsumerStatefulWidget {
+  const _InvoiceButton({required this.orderId});
+
+  final String orderId;
+
+  @override
+  ConsumerState<_InvoiceButton> createState() => _InvoiceButtonState();
+}
+
+class _InvoiceButtonState extends ConsumerState<_InvoiceButton> {
+  bool _busy = false;
+
+  Future<void> _download() async {
+    setState(() => _busy = true);
+    try {
+      final pdf = await ref.read(orderRepositoryProvider).invoicePdf(widget.orderId);
+      if (!mounted) return;
+      final share = ref.read(documentSharerProvider);
+      await share(context, bytes: pdf.bytes, fileName: pdf.fileName, mimeType: 'application/pdf');
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      switch (e.code) {
+        case 'INVOICE_PDF_NOT_READY':
+          showInfoSnack(context, invoicePreparingMessage);
+        case 'INVOICE_NOT_ISSUED':
+          showInfoSnack(context, invoiceAfterDeliveryMessage);
+        default:
+          showErrorSnack(context, e);
+      }
+    } catch (e) {
+      if (mounted) showErrorSnack(context, e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    key: const Key('orderInvoice'),
+    icon: _busy
+        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+        : const Icon(Icons.download_outlined),
+    label: Text(_busy ? 'Downloading invoice' : 'Download invoice'),
+    onPressed: _busy ? null : _download,
+  );
+}
+
+/// INVOICE_PDF_NOT_READY: the invoice is issued, its PDF is still being rendered (D343).
+const invoicePreparingMessage = 'Invoice is being prepared, try again in a minute.';
+
+/// INVOICE_NOT_ISSUED: the invoice is made when the order is delivered.
+const invoiceAfterDeliveryMessage = 'The invoice is made when your order is delivered.';
 
 /// One Idempotency-Key per sheet (one user action), reused when the outcome is unknown, renewed after a
 /// definitive refusal.

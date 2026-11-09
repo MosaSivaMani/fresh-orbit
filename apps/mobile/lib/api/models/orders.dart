@@ -390,8 +390,8 @@ class Complaint {
   final String? description;
 }
 
-/// `GET /orders/{id}/invoice`: invoice JSON plus a signed `pdfUrl` (10 minutes). 404 INVOICE_NOT_ISSUED before
-/// delivery. Only the fields the app shows are read.
+/// `GET /orders/{id}/invoice`: invoice JSON plus `pdfUrl`, the authenticated path of the PDF once it is rendered
+/// (null until then; D343). 404 INVOICE_NOT_ISSUED before delivery. Only the fields the app shows are read.
 class InvoiceLink {
   const InvoiceLink({this.invoiceNumber, this.pdfUrl});
 
@@ -400,4 +400,13 @@ class InvoiceLink {
 
   final String? invoiceNumber;
   final String? pdfUrl;
+}
+
+/// `GET /orders/{id}/invoice/pdf`: the GST invoice PDF, fetched with the customer's token (ORD-R53). The file name
+/// is the server's (`Content-Disposition`, e.g. `INV-26-27-000001.pdf`).
+class InvoicePdf {
+  const InvoicePdf({required this.bytes, required this.fileName});
+
+  final List<int> bytes;
+  final String fileName;
 }

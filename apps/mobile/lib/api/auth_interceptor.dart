@@ -11,6 +11,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import 'api_error.dart';
 import 'models/auth.dart';
 import 'models/json.dart';
 import 'token_store.dart';
@@ -122,5 +123,8 @@ class AuthInterceptor extends Interceptor {
   /// business refusals, not token problems.
   static const _refreshCodes = {'UNAUTHENTICATED', 'TOKEN_EXPIRED'};
 
-  static String? _code(Object? data) => data is Map && data['code'] is String ? data['code'] as String : null;
+  static String? _code(Object? data) {
+    final body = problemBody(data);
+    return body != null && body['code'] is String ? body['code'] as String : null;
+  }
 }
