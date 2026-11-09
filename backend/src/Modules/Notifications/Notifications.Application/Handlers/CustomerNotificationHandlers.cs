@@ -15,6 +15,7 @@ namespace FreshOrbit.Notifications.Application.Handlers;
 // Event adapters (docs/product/notifications.md §4): customer messages for order, payment and delivery events. Each
 // queues through INotificationsApi with the event id as DedupeKey (NOT-R4) and never saves; the outbox dispatcher
 // saves the queued messages with the inbox row. Variables a payload cannot give render as empty text (NOT-R5).
+// Every order message also carries `orderId` (D351), which the push dispatcher sends as data for the app's tap.
 
 /// <summary>Shared formatting and queuing for the customer notification adapters.</summary>
 public sealed class CustomerNotifier(INotificationsApi notifications, ISettingsApi settings)
@@ -26,6 +27,12 @@ public sealed class CustomerNotifier(INotificationsApi notifications, ISettingsA
             new QueueCustomerNotificationRequest(customerId, templateCode, data, null, source.EventId.ToString("N")),
             cancellationToken);
     }
+
+    /// <summary>
+    /// The order id as push data (D351): the app opens <c>/orders/{orderId}</c> when the notification is tapped. Only
+    /// the dispatcher forwards it; templates do not use it.
+    /// </summary>
+    public static string Id(Guid orderId) => orderId.ToString("D", CultureInfo.InvariantCulture);
 
     /// <summary>The business time zone (Settings business profile); UTC until the profile is saved.</summary>
     public async Task<TimeZoneInfo> TimeZoneAsync(CancellationToken cancellationToken)
@@ -90,6 +97,7 @@ public sealed class NotifyOrderPlaced(CustomerNotifier notifier) : IEventHandler
         var zone = await notifier.TimeZoneAsync(cancellationToken);
         await notifier.QueueAsync(domainEvent.CustomerId, "ORDER_CONFIRMED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["slotDateText"] = CustomerNotifier.DateText(domainEvent.SlotStartAt, zone),
             ["slotWindowText"] = CustomerNotifier.WindowText(domainEvent.SlotStartAt, domainEvent.SlotEndAt, zone),
@@ -107,6 +115,7 @@ public sealed class NotifyOrderConfirmed(CustomerNotifier notifier, IOrderingApi
         var summary = await orders.GetOrderSummaryAsync(domainEvent.OrderId, cancellationToken);
         await notifier.QueueAsync(domainEvent.CustomerId, "ORDER_CONFIRMED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["estimatedTotalText"] = summary is null ? string.Empty : CustomerNotifier.Money(summary.TotalPaise),
             ["paymentMethodText"] = CustomerNotifier.PaymentMethodText("ONLINE"),
@@ -121,9 +130,10 @@ public sealed class NotifyOrderStatusChanged(CustomerNotifier notifier) : IEvent
         ArgumentNullException.ThrowIfNull(domainEvent);
         return domainEvent.To switch
         {
-            "PREPARING" => notifier.QueueAsync(domainEvent.CustomerId, "ORDER_PREPARING", new(StringComparer.Ordinal) { ["orderNumber"] = domainEvent.OrderNumber }, domainEvent, cancellationToken),
+            "PREPARING" => notifier.QueueAsync(domainEvent.CustomerId, "ORDER_PREPARING", new(StringComparer.Ordinal) { ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId), ["orderNumber"] = domainEvent.OrderNumber }, domainEvent, cancellationToken),
             "DELIVERY_FAILED" => notifier.QueueAsync(domainEvent.CustomerId, "DELIVERY_FAILED", new(StringComparer.Ordinal)
             {
+                ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
                 ["orderNumber"] = domainEvent.OrderNumber,
                 ["reasonText"] = CustomerNotifier.Humanize(domainEvent.ReasonCode),
             }, domainEvent, cancellationToken),
@@ -139,6 +149,7 @@ public sealed class NotifyOrderPacked(CustomerNotifier notifier) : IEventHandler
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "ORDER_PACKED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["finalTotalText"] = CustomerNotifier.Money(domainEvent.FinalTotalPaise),
             ["amountDueText"] = CustomerNotifier.Money(domainEvent.AmountDuePaise),
@@ -156,6 +167,7 @@ public sealed class NotifyOrderDispatched(CustomerNotifier notifier, IDeliveryAp
         var summary = await orders.GetOrderSummaryAsync(domainEvent.OrderId, cancellationToken);
         await notifier.QueueAsync(domainEvent.CustomerId, "ORDER_OUT_FOR_DELIVERY", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["riderName"] = shipment?.RiderName ?? string.Empty,
             ["riderPhone"] = shipment?.RiderPhone ?? string.Empty,
@@ -172,6 +184,7 @@ public sealed class NotifyOrderDelivered(CustomerNotifier notifier) : IEventHand
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "ORDER_DELIVERED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["invoiceNumber"] = domainEvent.InvoiceNumber,
             ["finalTotalText"] = CustomerNotifier.Money(domainEvent.FinalTotalPaise),
@@ -186,6 +199,7 @@ public sealed class NotifyOrderCancelled(CustomerNotifier notifier) : IEventHand
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "ORDER_CANCELLED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["reasonText"] = CustomerNotifier.Humanize(domainEvent.ReasonCode),
         }, domainEvent, cancellationToken);
@@ -199,6 +213,7 @@ public sealed class NotifyOrderPaymentFailed(CustomerNotifier notifier) : IEvent
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "ORDER_CANCELLED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["reasonText"] = domainEvent.Reason == "PAYMENT_TIMEOUT" ? "Payment was not completed in time" : "Payment failed",
         }, domainEvent, cancellationToken);
@@ -213,6 +228,7 @@ public sealed class NotifySubstitutionProposed(CustomerNotifier notifier) : IEve
         var zone = await notifier.TimeZoneAsync(cancellationToken);
         await notifier.QueueAsync(domainEvent.CustomerId, "SUBSTITUTION_PROPOSED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["itemName"] = domainEvent.OriginalName,
             ["proposedItemName"] = domainEvent.ProposedName,
@@ -230,6 +246,7 @@ public sealed class NotifyComplaintRaised(CustomerNotifier notifier) : IEventHan
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "COMPLAINT_RECEIVED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["complaintKindText"] = CustomerNotifier.Humanize(domainEvent.Kind),
         }, domainEvent, cancellationToken);
@@ -243,6 +260,7 @@ public sealed class NotifyComplaintDecided(CustomerNotifier notifier) : IEventHa
         ArgumentNullException.ThrowIfNull(domainEvent);
         return notifier.QueueAsync(domainEvent.CustomerId, "COMPLAINT_RESOLVED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = domainEvent.OrderNumber,
             ["resolutionText"] = CustomerNotifier.Humanize(domainEvent.Resolution),
             ["refundAmountText"] = domainEvent.RefundAmountPaise is { } refund ? CustomerNotifier.Money(refund) : string.Empty,
@@ -262,6 +280,7 @@ public sealed class NotifyPaymentCaptured(CustomerNotifier notifier, IOrderingAp
 
         await notifier.QueueAsync(order.CustomerId, "PAYMENT_RECEIVED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = order.OrderNumber,
             ["amountText"] = CustomerNotifier.Money(domainEvent.AmountPaise),
             ["paymentMethodText"] = CustomerNotifier.PaymentMethodText("ONLINE"),
@@ -281,6 +300,7 @@ public sealed class NotifyPaymentFailed(CustomerNotifier notifier, IOrderingApi 
 
         await notifier.QueueAsync(order.CustomerId, "PAYMENT_FAILED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = order.OrderNumber,
             ["amountText"] = CustomerNotifier.Money(order.AmountDuePaise),
         }, domainEvent, cancellationToken);
@@ -299,6 +319,7 @@ public sealed class NotifyRefundApproved(CustomerNotifier notifier, IOrderingApi
 
         await notifier.QueueAsync(order.CustomerId, "REFUND_INITIATED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = order.OrderNumber,
             ["amountText"] = CustomerNotifier.Money(domainEvent.AmountPaise),
             ["refundMethodText"] = CustomerNotifier.Humanize(domainEvent.Method),
@@ -318,6 +339,7 @@ public sealed class NotifyRefundSucceeded(CustomerNotifier notifier, IOrderingAp
 
         await notifier.QueueAsync(order.CustomerId, "REFUND_SUCCEEDED", new(StringComparer.Ordinal)
         {
+            ["orderId"] = CustomerNotifier.Id(domainEvent.OrderId),
             ["orderNumber"] = order.OrderNumber,
             ["amountText"] = CustomerNotifier.Money(domainEvent.AmountPaise),
             ["refundMethodText"] = CustomerNotifier.Humanize(domainEvent.Method),

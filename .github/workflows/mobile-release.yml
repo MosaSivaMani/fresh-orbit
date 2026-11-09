@@ -9,6 +9,8 @@
 #   offset, so every upload is higher than the last one.
 # - Addresses are repository variables, never defaults (rule 7): API_BASE_URL, WEBSITE_BASE_URL (D299),
 #   APP_LINK_HOST (App Links, D308) and the optional CRASH_REPORT_DSN (D309).
+# - Push (D350): the secrets FIREBASE_API_KEY, FIREBASE_APP_ID, FIREBASE_MESSAGING_SENDER_ID and FIREBASE_PROJECT_ID
+#   are all set (push on) or all empty (push off, said in the summary); some but not all of them refuse the run.
 # - Refused before anything is built (D337): a ref other than main or a v* tag, a missing secret or variable, an
 #   address that is not https://<host>, a keystore that does not open with its password and alias. After the build,
 #   the bundle's certificate must be the upload key's. The decoded key is deleted at the end.
@@ -65,6 +67,10 @@ jobs:
           UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
           UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
           failed=false
           if [[ "$REF" != refs/heads/main && "$REF" != refs/tags/v* ]]; then
@@ -84,6 +90,15 @@ jobs:
           [ -n "$UPLOAD_KEY_PASSWORD" ] || missing="$missing secrets.UPLOAD_KEY_PASSWORD"
           if [ -n "$missing" ]; then
             echo "::error title=Release not configured::Missing:$missing (docs/runbooks/mobile-release.md, Store build)."
+            failed=true
+          fi
+          firebase_set=0
+          firebase_missing=""
+          for name in FIREBASE_API_KEY FIREBASE_APP_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_PROJECT_ID; do
+            if [ -n "${!name}" ]; then firebase_set=$((firebase_set + 1)); else firebase_missing="$firebase_missing secrets.$name"; fi
+          done
+          if [ "$firebase_set" -gt 0 ] && [ -n "$firebase_missing" ]; then
+            echo "::error title=Firebase values incomplete::Missing:$firebase_missing (docs/runbooks/mobile-release.md, Push notifications)."
             failed=true
           fi
           for name in API_BASE_URL WEBSITE_BASE_URL; do
@@ -138,6 +153,10 @@ jobs:
           WEBSITE_BASE_URL: ${{ vars.WEBSITE_BASE_URL }}
           CRASH_REPORT_DSN: ${{ vars.CRASH_REPORT_DSN }}
           FRESH_ORBIT_APP_LINK_HOST: ${{ vars.APP_LINK_HOST }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           OFFSET: ${{ inputs.build-number-offset }}
         run: |
           build_number=$(( GITHUB_RUN_NUMBER + OFFSET ))
@@ -148,6 +167,10 @@ jobs:
             --dart-define=API_BASE_URL="$API_BASE_URL" \
             --dart-define=WEBSITE_BASE_URL="$WEBSITE_BASE_URL" \
             --dart-define=CRASH_REPORT_DSN="$CRASH_REPORT_DSN" \
+            --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \
+            --dart-define=FIREBASE_APP_ID="$FIREBASE_APP_ID" \
+            --dart-define=FIREBASE_MESSAGING_SENDER_ID="$FIREBASE_MESSAGING_SENDER_ID" \
+            --dart-define=FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
             --dart-define=APP_ENVIRONMENT=Production
           {
             echo "### Store build"
@@ -155,6 +178,7 @@ jobs:
             echo "API: $API_BASE_URL"
             [ -n "$FRESH_ORBIT_APP_LINK_HOST" ] || echo "App Links: not configured (vars.APP_LINK_HOST is empty), website links open the browser."
             [ -n "$CRASH_REPORT_DSN" ] || echo "Crash reports: device log only (vars.CRASH_REPORT_DSN is empty)."
+            [ -n "$FIREBASE_PROJECT_ID" ] || echo "Push notifications: off (no Firebase secrets)."
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Check the bundle is signed with the upload key
         run: |

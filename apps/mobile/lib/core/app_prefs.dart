@@ -1,5 +1,5 @@
-// Non-secret device preferences: chosen pincode, onboarding seen, first-run sign-in offered (D277), theme,
-// language. Secrets live in TokenStore.
+// Non-secret device preferences: chosen pincode, onboarding seen, first-run sign-in offered (D277), notification
+// permission asked (D352), theme, language. Secrets live in TokenStore.
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,6 +13,10 @@ abstract class AppPrefs {
   /// The first-run "Sign in or create your account" step was shown once (D277); it is never offered again.
   bool get welcomeSignInShown;
   Future<void> setWelcomeSignInShown();
+
+  /// The notification permission was asked once, after the first order (D352); later only from Settings.
+  bool get pushPermissionAsked;
+  Future<void> setPushPermissionAsked();
 
   /// 'system', 'light' or 'dark'.
   String get themeMode;
@@ -49,6 +53,12 @@ class SharedAppPrefs implements AppPrefs {
   Future<void> setWelcomeSignInShown() => _prefs.setBool('fo.welcomeSignInShown', true);
 
   @override
+  bool get pushPermissionAsked => _prefs.getBool('fo.pushPermissionAsked') ?? false;
+
+  @override
+  Future<void> setPushPermissionAsked() => _prefs.setBool('fo.pushPermissionAsked', true);
+
+  @override
   String get themeMode => _prefs.getString('fo.themeMode') ?? 'system';
 
   @override
@@ -66,6 +76,7 @@ class MemoryAppPrefs implements AppPrefs {
     this.pincode,
     this.onboardingDone = false,
     this.welcomeSignInShown = false,
+    this.pushPermissionAsked = false,
     this.themeMode = 'system',
     this.language = 'en',
   });
@@ -90,6 +101,12 @@ class MemoryAppPrefs implements AppPrefs {
 
   @override
   Future<void> setWelcomeSignInShown() async => welcomeSignInShown = true;
+
+  @override
+  bool pushPermissionAsked;
+
+  @override
+  Future<void> setPushPermissionAsked() async => pushPermissionAsked = true;
 
   @override
   Future<void> setThemeMode(String mode) async => themeMode = mode;

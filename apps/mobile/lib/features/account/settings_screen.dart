@@ -1,4 +1,4 @@
-// Settings (D88): notification toggles (the server's preferences), language, theme, log out, and the policy pages
+// Settings (D88): this phone's notification permission (D352), notification toggles (the server's preferences), language, theme, log out, and the policy pages
 // on the website (D299). Works signed out for language and theme. Only English copy exists so far, so the language
 // choice is hidden until a second language has its translations (D312, MA-8).
 
@@ -10,8 +10,10 @@ import 'package:go_router/go_router.dart';
 import '../../api/models/account.dart';
 import '../../app.dart';
 import '../../core/format.dart';
+import '../../core/push_service.dart';
 import '../../state/account_state.dart';
 import '../../state/core_providers.dart';
+import '../../state/push_state.dart';
 import '../../state/session.dart';
 import '../../widgets/policy_links.dart';
 import '../../widgets/states.dart';
@@ -46,7 +48,12 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               )
-            else
+            else ...[
+              // This phone's permission (D352): shown only when the build has push (D350).
+              if (ref.watch(pushServiceProvider).available) ...[
+                const _PhonePushCard(),
+                const SizedBox(height: 10),
+              ],
               AsyncValueView<List<NotificationPreference>>(
                 value: ref.watch(preferencesProvider),
                 onRetry: () => ref.invalidate(preferencesProvider),
@@ -75,6 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+            ],
             const MenuLabel('App'),
             MenuCard(
               children: [
@@ -146,4 +154,37 @@ class SettingsScreen extends ConsumerWidget {
     'OFFERS' || 'MARKETING' || 'PROMOTIONS' => Icons.local_offer_outlined,
     _ => Icons.sms_outlined,
   };
+}
+
+/// "Notifications on this phone" (D352): the phone's permission for this app. Off offers "Turn on", which asks the
+/// system question; when the phone no longer asks (refused before), the customer is told where to allow it.
+class _PhonePushCard extends ConsumerWidget {
+  const _PhonePushCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(pushPermissionProvider).value == PushPermission.granted;
+    return MenuCard(
+      children: [
+        MenuRow(
+          key: const Key('phonePush'),
+          icon: on ? Icons.notifications_active_outlined : Icons.notifications_off_outlined,
+          title: 'Notifications on this phone',
+          subtitle: on ? 'On' : 'Off',
+          trailing: on
+              ? const SizedBox.shrink()
+              : TextButton(
+                  key: const Key('phonePushTurnOn'),
+                  onPressed: () async {
+                    final answer = await ref.read(pushCoordinatorProvider).askFromSettings();
+                    if (answer != PushPermission.granted && context.mounted) {
+                      showInfoSnack(context, 'Allow notifications for Fresh Orbitt in your phone settings.');
+                    }
+                  },
+                  child: const Text('Turn on'),
+                ),
+        ),
+      ],
+    );
+  }
 }
