@@ -1,6 +1,6 @@
 import { formatDateTime, formatRupees } from "@fresh/core";
 import { Badge, Button, type ColumnDef, DataTable, FilterBar, Switch } from "@fresh/ui";
-import { Percent, Upload } from "lucide-react";
+import { Percent, TrendingUp, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { usePrices } from "../../api/pricing";
@@ -25,6 +25,9 @@ export function PricesPage() {
         }
         actions={
           <>
+            <Button asChild variant="outline" leadingIcon={<TrendingUp aria-hidden="true" />}>
+              <Link to="/pricing/today">Today's prices</Link>
+            </Button>
             <Button asChild variant="outline" leadingIcon={<Percent aria-hidden="true" />}>
               <Link to="/pricing/tax-rules">Tax rules</Link>
             </Button>

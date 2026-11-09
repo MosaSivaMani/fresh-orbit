@@ -82,10 +82,10 @@ public static class ReportCsv
     }
 
     /// <summary>Prefixes formula-looking text with <c>'</c> so spreadsheets do not evaluate it.</summary>
-    private static string Neutralize(string text)
+    internal static string Neutralize(string text)
         => text.Length > 0 && text[0] is '=' or '+' or '-' or '@' ? "'" + text : text;
 
-    private static string Line(IEnumerable<string> cells)
+    internal static string Line(IEnumerable<string> cells)
     {
         var builder = new StringBuilder();
         var first = true;

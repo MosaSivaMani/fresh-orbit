@@ -32,6 +32,11 @@ export const inventoryRoutes: RouteObject[] = [
         async () => (await import("./ColdChainPage")).ColdChainPage,
       ),
       screen(
+        "buying-list",
+        "inventory.view",
+        async () => (await import("./BuyingListPage")).BuyingListPage,
+      ),
+      screen(
         "reservations",
         "inventory.view",
         async () => (await import("./ReservationsPage")).ReservationsPage,
