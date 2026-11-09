@@ -153,6 +153,28 @@ public sealed class RefundTests(PaymentsDatabase database) : PaymentsTestBase(da
     }
 
     [Fact]
+    public async Task D373_each_goodwill_on_an_online_order_requests_only_its_own_amount()
+    {
+        var (order, paymentId) = await GivenCapturedOnlineOrderAsync(66950);
+        var packed = new OrderPackedInput(order.OrderId, "ONLINE", 60255, 6695, new Dictionary<string, long>(StringComparer.Ordinal) { ["WEIGHT_SHORTFALL"] = 6695 });
+        var staffId = Guid.CreateVersion7();
+
+        // The order's refund due grows with each event (shortfall, then each goodwill); Payments must not re-ask for it.
+        var first = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), -5000, 60255, 6695 + 5000, staffId);
+        var second = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), -3000, 60255, 6695 + 5000 + 3000, staffId);
+        await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderPackedAsync(packed, Ct));
+        await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(first, Ct));
+        await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(second, Ct));
+        await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(second, Ct));
+
+        var refunds = (await LoadPaymentAsync(paymentId)).Refunds;
+        refunds.Should().HaveCount(3);
+        refunds.Where(r => r.ReasonCode == RefundReason.Goodwill).Select(r => r.AmountPaise).Should().BeEquivalentTo([5000L, 3000L]);
+        refunds.Where(r => r.ReasonCode == RefundReason.Goodwill).Should().OnlyContain(r => r.Status == RefundStatus.Requested);
+        refunds.Sum(r => r.AmountPaise).Should().Be(6695 + 5000 + 3000);
+    }
+
+    [Fact]
     public async Task Customer_sees_own_refunds_without_staff_fields()
     {
         var (order, _) = await GivenCapturedOnlineOrderAsync(5000);

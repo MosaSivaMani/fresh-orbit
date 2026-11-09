@@ -2,7 +2,7 @@ name: fresh_orbit_app
 description: "Fresh Orbit customer app (Android and iOS). Business values come from the API; the app renders them."
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 1.0.0+1
 
 environment:
   sdk: ^3.13.5

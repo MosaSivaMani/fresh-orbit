@@ -73,6 +73,12 @@ public sealed class StorefrontTests(CatalogDatabase database) : StorefrontTestBa
         item.GetProperty("fromPrice").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
         item.GetProperty("locationRequired").GetBoolean().Should().BeTrue();
 
+        // D375 (audit W-9): every rendition of the primary image, like the gallery; imageUrl stays the 640 px one.
+        var sources = item.GetProperty("imageSources").EnumerateArray().ToList();
+        sources.Select(s => s.GetProperty("width").GetInt32()).Should().Equal(320, 640, 1280);
+        sources.Should().OnlyContain(s => s.GetProperty("url").GetString()!.EndsWith($"/{s.GetProperty("width").GetInt32()}.webp", StringComparison.Ordinal));
+        item.GetProperty("imageUrl").GetString().Should().Be(sources[1].GetProperty("url").GetString());
+
         using var client = Factory.CreateClient();
         var priceFilter = await client.GetAsync("/api/v1/products?minPricePaise=1000", Ct);
         priceFilter.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);

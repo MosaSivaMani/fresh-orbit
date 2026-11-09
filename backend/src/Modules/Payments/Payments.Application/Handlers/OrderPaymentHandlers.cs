@@ -16,8 +16,10 @@ public sealed record OrderPlacedInput(Guid OrderId, Guid CustomerId, Guid Fulfil
 /// <param name="RefundDueByReason">Prepaid refund due per reason code (WEIGHT_SHORTFALL, SHORT_SUPPLY).</param>
 public sealed record OrderPackedInput(Guid OrderId, string PaymentMethod, long AmountDuePaise, long RefundDuePaise, IReadOnlyDictionary<string, long> RefundDueByReason);
 
+/// <param name="AdjustmentPaise">This adjustment's own signed amount (negative = in the customer's favour).</param>
+/// <param name="RefundDuePaise">The order's whole refund due so far (earlier adjustments and packing included).</param>
 /// <param name="RequestedBy">Staff user who made the goodwill adjustment (the refund requester).</param>
-public sealed record OrderAdjustedInput(Guid OrderId, Guid AdjustmentId, long AmountDuePaise, long RefundDuePaise, Guid? RequestedBy);
+public sealed record OrderAdjustedInput(Guid OrderId, Guid AdjustmentId, long AdjustmentPaise, long AmountDuePaise, long RefundDuePaise, Guid? RequestedBy);
 
 /// <param name="CashCollectedPaise">Cash entered by the rider at deliver, if any.</param>
 /// <param name="CashMode">CASH or UPI.</param>
@@ -74,21 +76,26 @@ public sealed class OrderPaymentHandlers(IPaymentRepository payments, IPaymentPr
     /// <summary>
     /// PAY-H3: amount due follows; ONLINE refund due → GOODWILL refund REQUESTED by the staff who adjusted. A refund due
     /// on a COLLECTED delivery payment (COD / UPI on delivery) cannot go back to the original instrument, so an issue
-    /// REFUND_METHOD_REQUIRED is opened for staff to refund by CASH or UPI (D327).
+    /// REFUND_METHOD_REQUIRED is opened for staff to refund by CASH or UPI (D327). Each adjustment refunds only its own
+    /// amount, never the order's whole refund due (D373).
     /// </summary>
     public async Task OnOrderAdjustedAsync(OrderAdjustedInput input, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(input);
         var attempts = await payments.ListByOrderAsync(input.OrderId, cancellationToken);
         await FollowAmountDueAsync(attempts, input.AmountDuePaise, cancellationToken);
-        if (input.RefundDuePaise <= 0)
+
+        // Only this adjustment's own amount is refunded; the order's refund due also holds earlier goodwill and the
+        // packing shortfall, which are refunded under their own source references (D373).
+        var refundPaise = Math.Min(-input.AdjustmentPaise, input.RefundDuePaise);
+        if (refundPaise <= 0)
         {
             return;
         }
 
         if (PaidOnline(attempts) is { } paid)
         {
-            await CreateSystemRefundAsync(paid, RefundReason.Goodwill, input.RefundDuePaise, $"OrderAdjusted:{input.AdjustmentId}", requiresApproval: true, input.RequestedBy, cancellationToken);
+            await CreateSystemRefundAsync(paid, RefundReason.Goodwill, refundPaise, $"OrderAdjusted:{input.AdjustmentId}", requiresApproval: true, input.RequestedBy, cancellationToken);
             return;
         }
 
@@ -100,7 +107,7 @@ public sealed class OrderPaymentHandlers(IPaymentRepository payments, IPaymentPr
                 collected.Id,
                 collected.OrderId,
                 collected.FulfillmentLocationId,
-                new { reasonCode = RefundReason.Goodwill.ToCode(), adjustmentId = input.AdjustmentId, refundDuePaise = input.RefundDuePaise, refundablePaise = collected.RefundablePaise },
+                new { reasonCode = RefundReason.Goodwill.ToCode(), adjustmentId = input.AdjustmentId, refundDuePaise = refundPaise, refundablePaise = collected.RefundablePaise },
                 cancellationToken);
         }
     }

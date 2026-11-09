@@ -207,6 +207,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('helpStoreDetails')), findsNothing);
+    expect(find.byKey(const Key('helpGrievanceOfficer')), findsNothing);
+  });
+
+  testWidgets('help shows the grievance officer from the business profile (D374)', (tester) async {
+    final deps = TestDeps(pincode: '600041');
+    deps.catalog.profile = BusinessProfile.fromJson({
+      'supportPhone': '+919999900101',
+      'grievanceOfficer': {
+        'name': 'Sample Officer',
+        'designation': null,
+        'email': 'grievance@example.in',
+        'phone': '+919999900102',
+        'responseTime': null,
+      },
+    });
+    await pumpScreen(tester, deps, const HelpScreen());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('helpGrievanceOfficer')), findsOneWidget);
+    expect(find.byKey(const Key('emailGrievanceOfficer')), findsOneWidget);
+    expect(find.byKey(const Key('callGrievanceOfficer')), findsOneWidget);
+    expect(find.text('Sample Officer'), findsOneWidget);
   });
 
   test('a 429 without a sentence carries the wait from Retry-After, not the bare title', () {

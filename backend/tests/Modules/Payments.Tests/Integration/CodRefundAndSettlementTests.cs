@@ -28,7 +28,7 @@ public sealed class CodRefundAndSettlementTests(PaymentsDatabase database) : Pay
         var approver = Factory.CreateStaffClient(RefundPermissions, [locationId]);
         var (order, shipmentId) = await GivenCodShipmentAsync(riderId, locationId, 50000);
         (await CashCollectedAsync(rider, shipmentId, 50000)).EnsureSuccessStatusCode();
-        var adjusted = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), 50000, 7500, Guid.CreateVersion7());
+        var adjusted = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), -7500, 50000, 7500, Guid.CreateVersion7());
 
         await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(adjusted, Ct));
         await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(adjusted, Ct));
@@ -66,7 +66,7 @@ public sealed class CodRefundAndSettlementTests(PaymentsDatabase database) : Pay
     {
         var locationId = Guid.CreateVersion7();
         var (order, _) = await GivenCodShipmentAsync(Guid.CreateVersion7(), locationId, 50000);
-        var adjusted = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), 42500, 0, Guid.CreateVersion7());
+        var adjusted = new OrderAdjustedInput(order.OrderId, Guid.CreateVersion7(), -7500, 42500, 0, Guid.CreateVersion7());
 
         await InScopeAsync(sp => sp.GetRequiredService<OrderPaymentHandlers>().OnOrderAdjustedAsync(adjusted, Ct));
 

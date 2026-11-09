@@ -1,17 +1,19 @@
 import { Fish } from "lucide-react";
-import Image from "next/image";
 import { type HomeBanner, type ProductListItem } from "@/api/types/catalog";
 import { cx } from "@/lib/cx";
+import { CardPicture, type PictureSource } from "./card-picture";
 import { ShopProductCard } from "./shop-product-card";
 
 export function ProductImage({
   src,
+  sources,
   alt,
   sizes,
   priority = false,
   className,
 }: {
   src: string | null;
+  sources?: readonly PictureSource[] | null;
   alt: string;
   sizes: string;
   priority?: boolean;
@@ -20,10 +22,10 @@ export function ProductImage({
   return (
     <div className={cx("bg-muted relative aspect-[4/3] overflow-hidden", className)}>
       {src ? (
-        <Image
+        <CardPicture
           src={src}
+          sources={sources}
           alt={alt}
-          fill
           sizes={sizes}
           priority={priority}
           className="object-cover"

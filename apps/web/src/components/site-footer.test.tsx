@@ -75,6 +75,7 @@ describe("SiteFooter", () => {
       "/support/refund-policy",
       "/support/privacy-policy",
       "/support/terms",
+      "/support/delete-account",
     ]) {
       expect(document.querySelector(`footer a[href="${href}"]`)).not.toBeNull();
     }
@@ -137,7 +138,7 @@ describe("SiteFooter", () => {
     warn.mockRestore();
   });
 
-  it("links the contact section, and the grievance officer only once configured (L-7)", async () => {
+  it("links contact, and the grievance officer once the profile names one (D374)", async () => {
     getCities.mockResolvedValue([]);
 
     render(await SiteFooter());
@@ -145,9 +146,10 @@ describe("SiteFooter", () => {
     expect(document.querySelector('footer a[href="/support#grievance"]')).toBeNull();
     cleanup();
 
-    vi.stubEnv("FRESH_GRIEVANCE_OFFICER_NAME", "A. Officer");
-    vi.stubEnv("FRESH_GRIEVANCE_OFFICER_EMAIL", "grievance@example.in");
-    vi.stubEnv("FRESH_GRIEVANCE_RESPONSE_TIME", "Within 48 hours");
+    getBusinessProfile.mockResolvedValue({
+      ...fullProfile,
+      grievanceOfficer: { name: "A. Officer", email: "grievance@example.in" },
+    });
     render(await SiteFooter());
     expect(document.querySelector('footer a[href="/support#grievance"]')).not.toBeNull();
   });

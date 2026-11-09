@@ -9,7 +9,11 @@ export type ProductSort = "relevance" | "price" | "-price" | "name" | "-newest";
 
 export type FromPrice = Schema<"FromPrice">;
 
-export type ProductListItem = Schema<"ProductListItem">;
+/**
+ * `imageSources` (320 / 640 / 1280 px renditions, D375) is declared here until the API client is regenerated from the
+ * OpenAPI document of that change; the intersection stays correct afterwards.
+ */
+export type ProductListItem = Schema<"ProductListItem"> & { imageSources?: ImageSource[] };
 
 /** Query of `GET /products` (the OpenAPI document lists it as query parameters, not a schema). */
 export interface ProductListParams {

@@ -17,7 +17,12 @@ public sealed record SaveBusinessProfileRequest(
     string SupportPhone,
     string SupportEmail,
     string TimeZone,
-    string? SupportHours = null);
+    string? SupportHours = null,
+    string? GrievanceOfficerName = null,
+    string? GrievanceOfficerDesignation = null,
+    string? GrievanceOfficerEmail = null,
+    string? GrievanceOfficerPhone = null,
+    string? GrievanceResponseTime = null);
 
 public sealed record BusinessProfileResponse(
     string LegalName,
@@ -31,12 +36,23 @@ public sealed record BusinessProfileResponse(
     string Version)
 {
     public string? SupportHours { get; init; }
+
+    public string? GrievanceOfficerName { get; init; }
+
+    public string? GrievanceOfficerDesignation { get; init; }
+
+    public string? GrievanceOfficerEmail { get; init; }
+
+    public string? GrievanceOfficerPhone { get; init; }
+
+    public string? GrievanceResponseTime { get; init; }
 }
 
 /// <summary>
 /// <c>GET /api/v1/business-profile</c> (public, W7): who the seller is and how to reach support. GSTIN, FSSAI licence
 /// number, legal name and address are printed on every invoice and the FSSAI number must be shown to e-commerce
-/// customers, so they are public; nothing else of the profile (version, internal fields) is exposed.
+/// customers, so they are public. The grievance officer is public by law (Consumer Protection (E-Commerce) Rules 2020,
+/// D374); null until entered. Nothing else of the profile (version, internal fields) is exposed.
 /// </summary>
 public sealed record PublicBusinessProfileResponse(
     string LegalName,
@@ -47,7 +63,14 @@ public sealed record PublicBusinessProfileResponse(
     string SupportPhone,
     string SupportEmail,
     string? SupportHours,
-    string TimeZone);
+    string TimeZone)
+{
+    /// <summary>The grievance officer, or null until an admin enters a name and e-mail (D374).</summary>
+    public GrievanceOfficerResponse? GrievanceOfficer { get; init; }
+}
+
+/// <summary>The grievance officer shown on the website footer, the support page and the app Help (D374).</summary>
+public sealed record GrievanceOfficerResponse(string Name, string? Designation, string Email, string? Phone, string? ResponseTime);
 
 public sealed class SaveBusinessProfileRequestValidator : AbstractValidator<SaveBusinessProfileRequest>
 {
@@ -62,6 +85,19 @@ public sealed class SaveBusinessProfileRequestValidator : AbstractValidator<Save
         RuleFor(x => x.FssaiLicenseNo).Matches("^[0-9]{14}$").When(x => !string.IsNullOrWhiteSpace(x.FssaiLicenseNo))
             .WithErrorCode("FSSAI_INVALID").WithMessage("The fssaiLicenseNo must be 14 digits.");
         RuleFor(x => x.SupportHours).MaximumLength(200);
+        // The grievance officer is optional until entered, but a name without an e-mail (or the reverse) is refused (D374).
+        RuleFor(x => x.GrievanceOfficerName).MaximumLength(200);
+        RuleFor(x => x.GrievanceOfficerName).NotEmpty().WithErrorCode("GRIEVANCE_OFFICER_INCOMPLETE")
+            .WithMessage("The grievanceOfficerName is required when a grievance officer e-mail is given.")
+            .When(x => !string.IsNullOrWhiteSpace(x.GrievanceOfficerEmail));
+        RuleFor(x => x.GrievanceOfficerEmail).MaximumLength(254).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.GrievanceOfficerEmail));
+        RuleFor(x => x.GrievanceOfficerEmail).NotEmpty().WithErrorCode("GRIEVANCE_OFFICER_INCOMPLETE")
+            .WithMessage("The grievanceOfficerEmail is required when a grievance officer name is given.")
+            .When(x => !string.IsNullOrWhiteSpace(x.GrievanceOfficerName));
+        RuleFor(x => x.GrievanceOfficerDesignation).MaximumLength(200);
+        RuleFor(x => x.GrievanceOfficerPhone).Matches(@"^\+[1-9][0-9]{7,14}$").When(x => !string.IsNullOrWhiteSpace(x.GrievanceOfficerPhone))
+            .WithErrorCode("PHONE_INVALID").WithMessage("The grievanceOfficerPhone must be an E.164 number such as +919876543210.");
+        RuleFor(x => x.GrievanceResponseTime).MaximumLength(200);
         RuleFor(x => x.TimeZone).NotEmpty().Must(BeKnownTimeZone).WithErrorCode("TIME_ZONE_INVALID")
             .WithMessage("The timeZone must be an IANA time zone id such as Asia/Kolkata.");
     }
@@ -101,7 +137,12 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
             profile.SupportPhone,
             profile.SupportEmail,
             profile.SupportHours,
-            profile.TimeZone);
+            profile.TimeZone)
+        {
+            GrievanceOfficer = profile.GrievanceOfficerName is { } name && profile.GrievanceOfficerEmail is { } email
+                ? new GrievanceOfficerResponse(name, profile.GrievanceOfficerDesignation, email, profile.GrievanceOfficerPhone, profile.GrievanceResponseTime)
+                : null,
+        };
     }
 
     public async Task<BusinessProfileResponse> SaveAsync(SaveBusinessProfileRequest request, WriteCondition condition, CancellationToken cancellationToken)
@@ -109,7 +150,8 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(condition);
         var existing = await repository.GetBusinessProfileAsync(cancellationToken);
-        var data = new BusinessProfileData(request.LegalName, request.TradeName, request.Gstin, request.FssaiLicenseNo, request.Address, request.SupportPhone, request.SupportEmail, request.TimeZone, request.SupportHours);
+        var data = new BusinessProfileData(request.LegalName, request.TradeName, request.Gstin, request.FssaiLicenseNo, request.Address, request.SupportPhone, request.SupportEmail, request.TimeZone, request.SupportHours,
+            request.GrievanceOfficerName, request.GrievanceOfficerDesignation, request.GrievanceOfficerEmail, request.GrievanceOfficerPhone, request.GrievanceResponseTime);
         var before = existing is null ? null : ToResponse(existing);
         BusinessProfile profile;
         if (condition.ShouldCreate(existing, unitOfWork, "business profile"))
@@ -143,6 +185,11 @@ public sealed class BusinessProfileService(ISettingsRepository repository, IUnit
             profile.Version.ToString(System.Globalization.CultureInfo.InvariantCulture))
         {
             SupportHours = profile.SupportHours,
+            GrievanceOfficerName = profile.GrievanceOfficerName,
+            GrievanceOfficerDesignation = profile.GrievanceOfficerDesignation,
+            GrievanceOfficerEmail = profile.GrievanceOfficerEmail,
+            GrievanceOfficerPhone = profile.GrievanceOfficerPhone,
+            GrievanceResponseTime = profile.GrievanceResponseTime,
         };
     }
 }
