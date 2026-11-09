@@ -52,3 +52,24 @@ export type RecordAttemptRequest = Coded<
 
 /** `POST /admin/delivery/shipments/{id}/cash-collected` (Payments, D14); Idempotency-Key required. */
 export type CashCollectedRequest = Schema<"CashCollectedRequest">;
+
+// D365 delivery and packaging cost rates per fulfillment location. Written by hand until the API client is
+// regenerated from the OpenAPI document (`GET/PUT /admin/delivery/locations/{fulfillmentLocationId}/cost-rates`).
+
+/** A location's cost rates; `version` is null (and both costs null) until they are first saved. */
+export interface LocationCostRates {
+  fulfillmentLocationId: string;
+  /** Rider pay per delivered order in paise; null = not configured. */
+  deliveryCostPerDropPaise: number | null;
+  /** Packaging and ice per delivered order in paise; null = not configured. */
+  packagingCostPerOrderPaise: number | null;
+  /** Both costs are set. */
+  configured: boolean;
+  version: string | null;
+}
+
+/** Both fields are sent; null clears a cost back to "not configured". */
+export interface SaveLocationCostRatesRequest {
+  deliveryCostPerDropPaise: number | null;
+  packagingCostPerOrderPaise: number | null;
+}

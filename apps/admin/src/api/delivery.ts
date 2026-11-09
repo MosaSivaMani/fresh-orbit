@@ -1,4 +1,4 @@
-import { type Page } from "@fresh/core";
+import { IF_NONE_MATCH_ANY, type Page } from "@fresh/core";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useHttp } from "../app/services";
 import { WORK_LIST_POLL_MS } from "./orders";
@@ -12,8 +12,10 @@ import {
   type DeliverShipmentRequest,
   type DeliverySlot,
   type DispatchShipmentRequest,
+  type LocationCostRates,
   type RecordAttemptRequest,
   type Rider,
+  type SaveLocationCostRatesRequest,
   type Shipment,
   type SlotTemplate,
   type UpdateRiderRequest,
@@ -205,4 +207,38 @@ export function useRecordCashCollected() {
         idempotencyKey,
       }),
   );
+}
+
+// D365: delivery and packaging cost rates per location. `If-None-Match: *` creates them, `If-Match` updates them.
+
+export const costRatesKey = (locationId: Id) => ["delivery", "cost-rates", locationId] as const;
+
+export function useLocationCostRates(locationId: Id, enabled = true) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: costRatesKey(locationId),
+    queryFn: ({ signal }) =>
+      http.get<LocationCostRates>(`/admin/delivery/locations/${locationId}/cost-rates`, { signal }),
+    enabled,
+  });
+}
+
+export function useSaveLocationCostRates(locationId: Id) {
+  const http = useHttp();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      body,
+      version,
+    }: {
+      body: SaveLocationCostRatesRequest;
+      version: Version | null;
+    }) =>
+      http.put<LocationCostRates>(
+        `/admin/delivery/locations/${locationId}/cost-rates`,
+        body,
+        version ? { ifMatch: version } : { headers: IF_NONE_MATCH_ANY },
+      ),
+    onSuccess: (data) => qc.setQueryData(costRatesKey(locationId), data),
+  });
 }

@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Public.Events;
@@ -47,10 +48,10 @@ public sealed class ShipmentTests
 
         for (var i = 0; i < 5; i++)
         {
-            shipment.Deliver(wrong, null, Now).Should().Be(DeliverOutcome.CodeInvalid);
+            shipment.Deliver(wrong, null, OrderCostSnapshot.NotConfigured, Now).Should().Be(DeliverOutcome.CodeInvalid);
         }
 
-        var right = () => shipment.Deliver(shipment.DeliveryCode!, null, Now);
+        var right = () => shipment.Deliver(shipment.DeliveryCode!, null, OrderCostSnapshot.NotConfigured, Now);
         right.Should().Throw<DomainException>().Which.Code.Should().Be("DELIVERY_CODE_LOCKED");
         shipment.DeliveryCodeFailures.Should().Be(5);
         shipment.Status.Should().Be(ShipmentStatus.OutForDelivery);
@@ -61,7 +62,7 @@ public sealed class ShipmentTests
     {
         var (shipment, rider) = Dispatched();
 
-        shipment.Deliver(shipment.DeliveryCode!, new CashReceipt(66950, CashMode.Upi, "UPI123"), Now).Should().Be(DeliverOutcome.Delivered);
+        shipment.Deliver(shipment.DeliveryCode!, new CashReceipt(66950, CashMode.Upi, "UPI123"), OrderCostSnapshot.NotConfigured, Now).Should().Be(DeliverOutcome.Delivered);
 
         shipment.Status.Should().Be(ShipmentStatus.Delivered);
         shipment.CashCollectedPaise.Should().Be(66950);
@@ -70,6 +71,59 @@ public sealed class ShipmentTests
         delivered.CashCollectedPaise.Should().Be(66950);
         delivered.CashMode.Should().Be("UPI");
         delivered.UpiReference.Should().Be("UPI123");
+    }
+
+    [Fact]
+    public void DEL_R28_delivery_freezes_the_location_costs_on_the_shipment_and_event()
+    {
+        var (shipment, _) = Dispatched();
+        var rates = LocationCostRates.Create(Location, 4500, 2000);
+
+        shipment.Deliver(shipment.DeliveryCode!, null, rates.Snapshot(), Now).Should().Be(DeliverOutcome.Delivered);
+        rates.Update(6000, 2500);
+
+        shipment.DeliveryCostPaise.Should().Be(4500, "a later rate change never rewrites a delivered shipment");
+        shipment.PackagingCostPaise.Should().Be(2000);
+        var delivered = shipment.DomainEvents.OfType<ShipmentDelivered>().Single();
+        delivered.DeliveryCostPaise.Should().Be(4500);
+        delivered.PackagingCostPaise.Should().Be(2000);
+    }
+
+    [Fact]
+    public void DEL_R28_a_wrong_code_records_no_cost_and_a_location_without_rates_records_null()
+    {
+        var (shipment, _) = Dispatched();
+        var wrong = shipment.DeliveryCode == "0000" ? "1111" : "0000";
+
+        shipment.Deliver(wrong, null, new OrderCostSnapshot(4500, 2000), Now).Should().Be(DeliverOutcome.CodeInvalid);
+        shipment.DeliveryCostPaise.Should().BeNull();
+
+        shipment.Deliver(shipment.DeliveryCode!, null, OrderCostSnapshot.NotConfigured, Now).Should().Be(DeliverOutcome.Delivered);
+        shipment.DeliveryCostPaise.Should().BeNull("not configured is recorded as such, never as 0");
+        shipment.PackagingCostPaise.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(-1L, 0L, "deliveryCostPerDropPaise")]
+    [InlineData(100_001L, 0L, "deliveryCostPerDropPaise")]
+    [InlineData(0L, -1L, "packagingCostPerOrderPaise")]
+    [InlineData(0L, 50_001L, "packagingCostPerOrderPaise")]
+    public void Cost_rates_outside_their_range_are_refused(long delivery, long packaging, string field)
+    {
+        var act = () => LocationCostRates.Create(Location, delivery, packaging);
+
+        act.Should().Throw<RefusalException>().Which.Errors.Single().Field.Should().Be(field);
+    }
+
+    [Fact]
+    public void Cost_rates_take_zero_maximum_and_not_configured()
+    {
+        var rates = LocationCostRates.Create(Location, 0, LocationCostRates.MaxPackagingCostPerOrderPaise);
+        rates.Snapshot().Should().Be(new OrderCostSnapshot(0, 50_000));
+
+        rates.Update(LocationCostRates.MaxDeliveryCostPerDropPaise, null);
+
+        rates.Snapshot().Should().Be(new OrderCostSnapshot(100_000, null));
     }
 
     [Fact]
@@ -98,14 +152,14 @@ public sealed class ShipmentTests
         var (shipment, _) = Dispatched();
         for (var i = 0; i < 5; i++)
         {
-            shipment.Deliver(shipment.DeliveryCode == "0000" ? "1111" : "0000", null, Now);
+            shipment.Deliver(shipment.DeliveryCode == "0000" ? "1111" : "0000", null, OrderCostSnapshot.NotConfigured, Now);
         }
 
         shipment.RecordFailedAttempt(AttemptOutcome.Other, "Code locked", Now);
         shipment.Reattempt(3, SlotDate, SlotDate);
 
         shipment.DeliveryCodeFailures.Should().Be(0);
-        shipment.Deliver(shipment.DeliveryCode!, null, Now).Should().Be(DeliverOutcome.Delivered);
+        shipment.Deliver(shipment.DeliveryCode!, null, OrderCostSnapshot.NotConfigured, Now).Should().Be(DeliverOutcome.Delivered);
     }
 
     [Fact]
@@ -115,7 +169,7 @@ public sealed class ShipmentTests
         shipment.RecordFailedAttempt(AttemptOutcome.CustomerUnavailable, null, Now);
         shipment.Reattempt(3, SlotDate, SlotDate);
 
-        shipment.Deliver(shipment.DeliveryCode!, null, Now);
+        shipment.Deliver(shipment.DeliveryCode!, null, OrderCostSnapshot.NotConfigured, Now);
 
         shipment.Attempts.Select(a => (a.AttemptNo, a.Outcome)).Should().Equal((1, AttemptOutcome.CustomerUnavailable), (2, AttemptOutcome.Delivered));
     }

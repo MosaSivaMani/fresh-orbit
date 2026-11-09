@@ -16,6 +16,8 @@ public sealed record ShipmentDispatched(
     bool ColdBoxUsed) : DomainEvent;
 
 /// <summary>Ordering moves the order to DELIVERED and issues the invoice; Payments records cash given at the door.</summary>
+/// <param name="DeliveryCostPaise">Rider pay for this drop as recorded on the shipment (D366); null = not configured at the location.</param>
+/// <param name="PackagingCostPaise">Packaging and ice for this order as recorded on the shipment (D366); null = not configured.</param>
 public sealed record ShipmentDelivered(
     Guid ShipmentId,
     Guid OrderId,
@@ -24,7 +26,9 @@ public sealed record ShipmentDelivered(
     DateTimeOffset DeliveredAt,
     long? CashCollectedPaise,
     string? CashMode,
-    string? UpiReference) : DomainEvent;
+    string? UpiReference,
+    long? DeliveryCostPaise = null,
+    long? PackagingCostPaise = null) : DomainEvent;
 
 /// <summary>Ordering moves the order to DELIVERY_FAILED.</summary>
 public sealed record DeliveryAttemptFailed(
