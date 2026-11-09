@@ -1,3 +1,4 @@
+using FreshOrbit.Reporting.Infrastructure.Buying;
 using FreshOrbit.Reporting.Infrastructure.Endpoints;
 using FreshOrbit.Reporting.Infrastructure.Jobs;
 using FreshOrbit.Reporting.Infrastructure.Persistence;
@@ -21,9 +22,14 @@ public sealed class ReportingModule : IModule
     {
         services.AddModuleModel<ReportingModuleModel>();
         services.TryAddScoped<ReportReader>();
+        services.TryAddScoped<BuyingReader>();
         services.TryAddScoped<RefreshReportsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, ReportingJobRegistration>());
     }
 
-    public void MapEndpoints(IEndpointRouteBuilder endpoints) => ReportingEndpoints.Map(endpoints);
+    public void MapEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        ReportingEndpoints.Map(endpoints);
+        BuyingEndpoints.Map(endpoints);
+    }
 }

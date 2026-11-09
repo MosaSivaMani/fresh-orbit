@@ -10,6 +10,11 @@ export const pricingRoutes: RouteObject[] = [
     async () => (await import("./BulkUploadPage")).BulkUploadPage,
   ),
   screen(
+    "pricing/today",
+    "pricing.manage",
+    async () => (await import("./TodaysPricesPage")).TodaysPricesPage,
+  ),
+  screen(
     "pricing/tax-rules",
     TAX_RULES_READ,
     async () => (await import("./TaxRulesPage")).TaxRulesPage,

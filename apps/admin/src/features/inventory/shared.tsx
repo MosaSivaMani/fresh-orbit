@@ -4,6 +4,7 @@ import { type Permission } from "../../auth/permissions";
 
 const TABS: readonly { to: string; label: string; perm: Permission; end?: boolean }[] = [
   { to: "/inventory", label: "Stock", perm: "inventory.view", end: true },
+  { to: "/inventory/buying-list", label: "Buying list", perm: "inventory.view" },
   { to: "/inventory/batches", label: "Batches", perm: "inventory.view" },
   { to: "/inventory/movements", label: "Movements", perm: "inventory.view" },
   { to: "/inventory/reservations", label: "Reservations", perm: "inventory.view" },
