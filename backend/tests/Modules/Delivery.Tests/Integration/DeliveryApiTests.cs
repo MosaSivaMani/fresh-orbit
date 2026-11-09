@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using AwesomeAssertions;
 using FreshOrbit.Delivery.Application.Handlers;
+using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
 using FreshOrbit.Delivery.Public;
 using FreshOrbit.Delivery.Tests.Support;
@@ -368,6 +369,114 @@ public sealed class DeliveryApiTests(DeliveryDatabase database) : IAsyncLifetime
         var assignedBody = await JsonAsync(assigned);
         assignedBody.GetProperty("orderNumber").GetString().Should().Be("FO-26-000101");
         assignedBody.GetProperty("amountToCollectPaise").GetInt64().Should().Be(66950);
+    }
+
+    [Fact]
+    public async Task D365_cost_rates_are_created_with_if_none_match_and_updated_with_if_match()
+    {
+        var location = _factory.Locations.AddLocation();
+        var client = Staff(location.Id);
+        var url = CostRatesUrl(location.Id);
+
+        var empty = await client.GetAsync(url, Ct);
+        empty.StatusCode.Should().Be(HttpStatusCode.OK);
+        var emptyBody = await JsonAsync(empty);
+        emptyBody.GetProperty("configured").GetBoolean().Should().BeFalse();
+        emptyBody.GetProperty("deliveryCostPerDropPaise").ValueKind.Should().Be(JsonValueKind.Null);
+        emptyBody.GetProperty("version").ValueKind.Should().Be(JsonValueKind.Null);
+
+        var noCondition = await SendAsync(client, HttpMethod.Put, url, new { deliveryCostPerDropPaise = 4500, packagingCostPerOrderPaise = 2000 }, null);
+        noCondition.StatusCode.Should().Be((HttpStatusCode)428);
+
+        var created = await CreateCostRatesAsync(client, location.Id, 4500, 2000);
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var createdBody = await JsonAsync(created);
+        createdBody.GetProperty("deliveryCostPerDropPaise").GetInt64().Should().Be(4500);
+        createdBody.GetProperty("packagingCostPerOrderPaise").GetInt64().Should().Be(2000);
+        createdBody.GetProperty("configured").GetBoolean().Should().BeTrue();
+        var etag = created.Headers.ETag!.Tag;
+
+        var again = await CreateCostRatesAsync(client, location.Id, 4500, 2000);
+        again.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await JsonAsync(again)).GetProperty("code").GetString().Should().Be("DUPLICATE");
+
+        var outOfRange = await SendAsync(client, HttpMethod.Put, url, new { deliveryCostPerDropPaise = 100_001, packagingCostPerOrderPaise = -1 }, etag);
+        outOfRange.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        var errors = (await JsonAsync(outOfRange)).GetProperty("errors");
+        errors.TryGetProperty("deliveryCostPerDropPaise", out _).Should().BeTrue();
+        errors.TryGetProperty("packagingCostPerOrderPaise", out _).Should().BeTrue();
+
+        var updated = await SendAsync(client, HttpMethod.Put, url, new { deliveryCostPerDropPaise = 6000, packagingCostPerOrderPaise = (long?)null }, etag);
+        updated.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updatedBody = await JsonAsync(updated);
+        updatedBody.GetProperty("deliveryCostPerDropPaise").GetInt64().Should().Be(6000);
+        updatedBody.GetProperty("packagingCostPerOrderPaise").ValueKind.Should().Be(JsonValueKind.Null);
+        updatedBody.GetProperty("configured").GetBoolean().Should().BeFalse("packaging is not configured any more");
+
+        var stale = await SendAsync(client, HttpMethod.Put, url, new { deliveryCostPerDropPaise = 5000, packagingCostPerOrderPaise = 2000 }, etag);
+        stale.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        (await JsonAsync(stale)).GetProperty("code").GetString().Should().Be("CONCURRENCY_CONFLICT");
+
+        var read = await client.GetAsync(url, Ct);
+        read.Headers.ETag!.Tag.Should().Be(updated.Headers.ETag!.Tag);
+
+        var other = _factory.Locations.AddLocation();
+        var denied = await client.GetAsync(CostRatesUrl(other.Id), Ct);
+        denied.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await JsonAsync(denied)).GetProperty("code").GetString().Should().Be("LOCATION_ACCESS_DENIED");
+
+        var unknown = await _factory.CreateStaffClient(["delivery.manage"], allLocations: true).GetAsync(CostRatesUrl(Guid.CreateVersion7()), Ct);
+        unknown.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DEL_R28_delivery_records_the_costs_configured_then_and_later_changes_do_not_rewrite_them()
+    {
+        var location = _factory.Locations.AddLocation();
+        var client = Staff(location.Id);
+        var created = await CreateCostRatesAsync(client, location.Id, 4500, 2000);
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var (first, _) = await DeliveredShipmentAsync(client, location.Id);
+        var changed = await SendAsync(client, HttpMethod.Put, CostRatesUrl(location.Id), new { deliveryCostPerDropPaise = 6000, packagingCostPerOrderPaise = 2500 }, created.Headers.ETag!.Tag);
+        changed.StatusCode.Should().Be(HttpStatusCode.OK);
+        var (second, _) = await DeliveredShipmentAsync(client, location.Id);
+
+        (await CostsOfAsync(first)).Should().Be(((long?)4500, (long?)2000), "the snapshot of the first delivery is kept");
+        (await CostsOfAsync(second)).Should().Be(((long?)6000, (long?)2500));
+        (await OutboxEventsAsync(first)).Should().EndWith("ShipmentDelivered");
+
+        var unconfigured = _factory.Locations.AddLocation();
+        var (third, _) = await DeliveredShipmentAsync(Staff(unconfigured.Id), unconfigured.Id);
+        (await CostsOfAsync(third)).Should().Be(((long?)null, (long?)null), "a location without rates records not configured, never 0");
+    }
+
+    private static string CostRatesUrl(Guid locationId) => $"{Admin}/locations/{locationId}/cost-rates";
+
+    private static async Task<HttpResponseMessage> CreateCostRatesAsync(HttpClient client, Guid locationId, long? delivery, long? packaging)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Put, CostRatesUrl(locationId))
+        {
+            Content = JsonContent.Create(new { deliveryCostPerDropPaise = delivery, packagingCostPerOrderPaise = packaging }),
+        };
+        request.Headers.TryAddWithoutValidation("If-None-Match", "*");
+        return await client.SendAsync(request, Ct);
+    }
+
+    private async Task<(Guid ShipmentId, Guid OrderId)> DeliveredShipmentAsync(HttpClient client, Guid locationId)
+    {
+        var (shipmentId, orderId) = await DispatchedShipmentAsync(client, locationId);
+        var code = (await InScopeAsync(sp => sp.GetRequiredService<IDeliveryApi>().GetShipmentForOrderAsync(orderId, Ct)))!.DeliveryCode;
+        var delivered = await SendAsync(client, HttpMethod.Post, $"{Admin}/shipments/{shipmentId}/deliver", new { deliveryCode = code }, await EtagAsync(client, shipmentId));
+        delivered.StatusCode.Should().Be(HttpStatusCode.OK);
+        return (shipmentId, orderId);
+    }
+
+    private async Task<(long? Delivery, long? Packaging)> CostsOfAsync(Guid shipmentId)
+    {
+        await using var db = database.CreateDbContext();
+        var shipment = await db.Set<Shipment>().AsNoTracking().SingleAsync(s => s.Id == shipmentId, Ct);
+        return (shipment.DeliveryCostPaise, shipment.PackagingCostPaise);
     }
 
     private static async Task<List<Guid>> IdsAsync(HttpClient client, string url)

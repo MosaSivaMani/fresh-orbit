@@ -14,7 +14,8 @@ Times: stored UTC; template times and `slot_date` are in the location's city tim
 | SlotTemplate | `slot_templates` | — | Weekly pattern: day, start, end, capacity, cutoff; active flag | `xmin` |
 | DeliverySlot | `delivery_slots` | — | Bookability (open, cutoff, capacity, location), booked count, manual capacity / close | `xmin` |
 | Rider | `riders` | — | Active, location | `xmin` |
-| Shipment | `shipments` | `delivery_attempts` (insert-only) | Shipment state machine, rider assignment, packed/dispatch facts, delivery code check, attempt numbering, reattempt limit, cash record | `xmin` |
+| Shipment | `shipments` | `delivery_attempts` (insert-only) | Shipment state machine, rider assignment, packed/dispatch facts, delivery code check, attempt numbering, reattempt limit, cash record, delivery and packaging cost frozen at delivery (D366) | `xmin` |
+| LocationCostRates | `location_cost_rates` | — | Rider pay per drop and packaging per order of one fulfillment location; each nullable = not configured (D365) | `xmin` |
 
 | Boundary rule |
 |---|
@@ -277,3 +278,13 @@ Reads: `GET /api/v1/delivery-slots?date=` (public, LOC; today + 6, displayed sta
 |---|---|
 | DEL-R25 | Every admin shipment read (`GET /admin/delivery/shipments`, `GET …/shipments/{id}`) and every shipment command response (assign, dispatch, deliver, attempts, reattempt, return) carries `orderNumber`, `recipientName`, `phone`, `addressLine`, `pincode`, `paymentMethod` and `amountToCollectPaise`. Delivery reads them from Ordering through `IOrderingApi.GetOrderDeliveryFactsAsync` once per request (never per row) and stores none of them. They are null when the order is not found. |
 | DEL-R26 | `amountToCollectPaise` is Ordering's `amountDuePaise` for `COD` and `UPI_ON_DELIVERY` and `0` for `ONLINE`; the admin shows it and prefills Record cash with it, and the cash rule (amount must equal the amount due, `CASH_AMOUNT_MISMATCH`) is still checked by Payments. |
+
+## 12. Delivery and packaging cost per order (D365–D368, business readiness §2.1)
+
+| Rule | Behaviour |
+|---|---|
+| DEL-R27 | **Cost rates.** One `location_cost_rates` row per fulfillment location: `delivery_cost_per_drop_paise` (rider pay per delivered order, 0–100 000) and `packaging_cost_per_order_paise` (bag, ice, label per order, 0–50 000), each nullable = **not configured** (0 is an explicit "costs nothing"). `GET /api/v1/admin/delivery/locations/{fulfillmentLocationId}/cost-rates` returns them (`configured` = both set; nulls and `version: null` before the first save; unknown location 404; other location 403 `LOCATION_ACCESS_DENIED`). `PUT` with body `{ deliveryCostPerDropPaise, packagingCostPerOrderPaise }` creates with `If-None-Match: *` (409 `DUPLICATE` when they exist) or updates with `If-Match` (412 `CONCURRENCY_CONFLICT` stale, 428 `VERSION_REQUIRED` neither); out of range → 422 `VALIDATION_FAILED` on the field. Permission `delivery.manage`. Admin: "Delivery and packaging cost" on the location page. |
+| DEL-R28 | **Snapshot at delivery.** `deliver` reads the location's rates (Read) and the shipment records `delivery_cost_paise` and `packaging_cost_paise` in the save that marks it DELIVERED; `ShipmentDelivered` (outbox) carries both. A missing rate records null and never blocks the delivery; a wrong code records nothing; a later rate change never rewrites a delivered shipment. Reporting reads the shipment columns (`contribution_margin`, D367). |
+| DEL-R29 | **Pay model.** Only per-drop rider pay exists. Per-shift or salaried pay (owner to choose) adds a pay-model code and a daily job that spreads the day's rider cost over that day's delivered shipments into the same `delivery_cost_paise` (D368); the report does not change. |
+
+Tests: unit `ShipmentTests` (snapshot on shipment and event, wrong code, not configured, rate ranges); integration `DeliveryApiTests` (`D365_cost_rates_…`: create / duplicate / 422 / update / 412 / 428 / 403 / 404; `DEL_R28_…`: snapshot at delivery, a later change does not rewrite it, a location without rates records null).

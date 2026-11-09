@@ -1,3 +1,4 @@
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
@@ -80,6 +81,8 @@ internal sealed class ShipmentConfiguration : IEntityTypeConfiguration<Shipment>
             t.HasCheckConstraint("ck_shipments_cash_mode", $"cash_mode IS NULL OR {Checks.In<CashMode>("cash_mode")}");
             t.HasCheckConstraint("ck_shipments_code_failures", "delivery_code_failures >= 0");
             t.HasCheckConstraint("ck_shipments_cash", "cash_collected_paise IS NULL OR cash_collected_paise >= 0");
+            t.HasCheckConstraint("ck_shipments_delivery_cost", "delivery_cost_paise IS NULL OR delivery_cost_paise >= 0");
+            t.HasCheckConstraint("ck_shipments_packaging_cost", "packaging_cost_paise IS NULL OR packaging_cost_paise >= 0");
         });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedNever();
@@ -108,5 +111,24 @@ internal sealed class DeliveryAttemptConfiguration : IEntityTypeConfiguration<De
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Notes).HasMaxLength(Shipment.MaxNotesLength);
         builder.HasIndex(x => new { x.ShipmentId, x.AttemptNo }).IsUnique();
+    }
+}
+
+internal sealed class LocationCostRatesConfiguration : IEntityTypeConfiguration<LocationCostRates>
+{
+    public void Configure(EntityTypeBuilder<LocationCostRates> builder)
+    {
+        builder.ToTable("location_cost_rates", t =>
+        {
+            t.HasCheckConstraint(
+                "ck_location_cost_rates_delivery",
+                $"delivery_cost_per_drop_paise IS NULL OR delivery_cost_per_drop_paise BETWEEN 0 AND {LocationCostRates.MaxDeliveryCostPerDropPaise}");
+            t.HasCheckConstraint(
+                "ck_location_cost_rates_packaging",
+                $"packaging_cost_per_order_paise IS NULL OR packaging_cost_per_order_paise BETWEEN 0 AND {LocationCostRates.MaxPackagingCostPerOrderPaise}");
+        });
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.HasIndex(x => x.FulfillmentLocationId).IsUnique();
     }
 }

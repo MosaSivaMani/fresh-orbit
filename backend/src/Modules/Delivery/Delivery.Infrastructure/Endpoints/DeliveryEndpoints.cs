@@ -1,4 +1,5 @@
 using FreshOrbit.Delivery.Application.Common;
+using FreshOrbit.Delivery.Application.Costs;
 using FreshOrbit.Delivery.Application.Reads;
 using FreshOrbit.Delivery.Application.Riders;
 using FreshOrbit.Delivery.Application.Shipments;
@@ -16,6 +17,7 @@ using FreshOrbit.SharedKernel.Errors;
 using FreshOrbit.SharedKernel.Time;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
+using FreshOrbit.SharedKernel.Web.Errors;
 using FreshOrbit.SharedKernel.Web.Paging;
 using FreshOrbit.SharedKernel.Web.RateLimiting;
 using FreshOrbit.SharedKernel.Web.Validation;
@@ -58,6 +60,18 @@ internal static class DeliveryEndpoints
         admin.MapGet("/riders", ListRidersAsync).Produces<PagedResponse<RiderResponse>>();
         admin.MapPost("/riders", CreateRiderAsync).WithValidation<CreateRiderRequest>().Produces<RiderResponse>(StatusCodes.Status201Created);
         admin.MapPut("/riders/{riderId:guid}", UpdateRiderAsync).WithValidation<UpdateRiderRequest>().Produces<RiderResponse>();
+
+        // D365: per-location delivery and packaging cost rates (If-None-Match: * to create, If-Match to update).
+        admin.MapGet("/locations/{fulfillmentLocationId:guid}/cost-rates", GetCostRatesAsync)
+            .Produces<LocationCostRatesResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        admin.MapPut("/locations/{fulfillmentLocationId:guid}/cost-rates", SaveCostRatesAsync).WithValidation<SaveLocationCostRatesRequest>()
+            .Produces<LocationCostRatesResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status412PreconditionFailed)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .ProducesProblem(StatusCodes.Status428PreconditionRequired);
 
         admin.MapGet("/shipments", ListShipmentsAsync).Produces<PagedResponse<ShipmentResponse>>().ProducesProblem(StatusCodes.Status422UnprocessableEntity);
         admin.MapGet("/shipments/{shipmentId:guid}", GetShipmentAsync).Produces<ShipmentResponse>();
@@ -175,6 +189,34 @@ internal static class DeliveryEndpoints
         var rider = await SaveSupport.MapAsync(() => service.UpdateAsync(riderId, request, version, cancellationToken));
         http.HttpContext.Response.SetETag(rider.Version);
         return TypedResults.Ok(rider.ToResponse());
+    }
+
+    // ---- cost rates (D365) ------------------------------------------------------------------------------------
+
+    private static async Task<IResult> GetCostRatesAsync(Guid fulfillmentLocationId, LocationCostRatesService service, HttpResponse response, CancellationToken cancellationToken)
+    {
+        var rates = await service.GetAsync(fulfillmentLocationId, cancellationToken);
+        if (rates.Version is { } version)
+        {
+            response.Headers.ETag = $"\"{version}\"";
+        }
+
+        return TypedResults.Ok(rates);
+    }
+
+    private static async Task<IResult> SaveCostRatesAsync(Guid fulfillmentLocationId, SaveLocationCostRatesRequest request, LocationCostRatesService service, HttpRequest http, CancellationToken cancellationToken)
+    {
+        var version = IfMatch.TryGetVersion(http);
+        var createOnly = http.Headers.IfNoneMatch.ToString().Trim() == "*";
+        if (version is null && !createOnly)
+        {
+            throw new VersionRequiredException();
+        }
+
+        var condition = new CostRatesWriteCondition(version, createOnly && version is null);
+        var rates = await SaveSupport.MapAsync(() => service.SaveAsync(fulfillmentLocationId, request, condition, cancellationToken));
+        http.HttpContext.Response.SetETag(rates.Version);
+        return TypedResults.Ok(LocationCostRatesService.ToResponse(rates));
     }
 
     // ---- shipments --------------------------------------------------------------------------------------------

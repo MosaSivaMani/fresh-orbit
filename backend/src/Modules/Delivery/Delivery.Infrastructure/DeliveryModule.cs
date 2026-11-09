@@ -4,12 +4,14 @@ using FreshOrbit.Locations.Public.Events;
 using FreshOrbit.Ordering.Public.Events;
 using FluentValidation;
 using FreshOrbit.Delivery.Application.Common;
+using FreshOrbit.Delivery.Application.Costs;
 using FreshOrbit.Delivery.Application.Handlers;
 using FreshOrbit.Delivery.Application.Reads;
 using FreshOrbit.Delivery.Application.Riders;
 using FreshOrbit.Delivery.Application.Shipments;
 using FreshOrbit.Delivery.Application.Slots;
 using FreshOrbit.Delivery.Application.Templates;
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
@@ -47,6 +49,7 @@ public sealed class DeliveryModule : IModule
         services.AddScoped<IDeliverySlotRepository, DeliverySlotRepository>();
         services.AddScoped<IRiderRepository, RiderRepository>();
         services.AddScoped<IShipmentRepository, ShipmentRepository>();
+        services.AddScoped<ILocationCostRatesRepository, LocationCostRatesRepository>();
         services.AddScoped<IDeliveryReads, DeliveryReads>();
 
         services.TryAddScoped<ILocationCalendar, LocationsPublicCalendar>();
@@ -56,6 +59,7 @@ public sealed class DeliveryModule : IModule
         services.AddScoped<SlotService>();
         services.AddScoped<RiderService>();
         services.AddScoped<ShipmentService>();
+        services.AddScoped<LocationCostRatesService>();
         services.AddScoped<SlotGenerationService>();
         services.AddScoped<OrderEventHandlers>();
         services.AddScoped<LocationEventHandlers>();

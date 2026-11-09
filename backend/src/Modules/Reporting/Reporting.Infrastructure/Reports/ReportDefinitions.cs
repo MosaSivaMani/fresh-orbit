@@ -10,6 +10,9 @@ public enum ColumnKind
     Count,
     Money,
     BasisPoints,
+
+    /// <summary>A true/false flag (JSON boolean, CSV <c>true</c>/<c>false</c>).</summary>
+    Flag,
 }
 
 /// <summary>A report column: snake_case <paramref name="Name"/> (view column, CSV header); JSON uses camelCase.</summary>
@@ -101,16 +104,21 @@ public static class ReportDefinitions
         [
             new("business_date", ColumnKind.Date),
             new("fulfillment_location_id", ColumnKind.Uuid),
+            new("orders_delivered", ColumnKind.Count, Summed: true),
             new("revenue_ex_tax_paise", ColumnKind.Money, Summed: true),
             new("sale_cost_paise", ColumnKind.Money, Summed: true),
             new("refunds_paise", ColumnKind.Money, Summed: true),
+            new("gross_contribution_paise", ColumnKind.Money, Summed: true),
             new("delivery_cost_paise", ColumnKind.Money, Summed: true),
+            new("packaging_cost_paise", ColumnKind.Money, Summed: true),
             new("contribution_paise", ColumnKind.Money, Summed: true),
             new("contribution_margin_bp", ColumnKind.BasisPoints),
+            new("orders_without_costs", ColumnKind.Count, Summed: true),
+            new("costs_not_configured", ColumnKind.Flag),
         ],
         ["business_date", "fulfillment_location_id"],
         [],
-        totals => totals["contribution_margin_bp"] = Ratio(totals, "contribution_paise", "revenue_ex_tax_paise", 10_000));
+        ContributionTotals);
 
     public static readonly ReportDefinition Waste = new(
         "waste",
@@ -143,6 +151,26 @@ public static class ReportDefinitions
         });
 
     public static IReadOnlyList<ReportDefinition> All { get; } = [DailySales, ProductPerformance, ContributionMargin, Waste];
+
+    /// <summary>
+    /// D367: when any delivered order in the range has no recorded delivery or packaging cost, the cost totals and the
+    /// contribution after them are null ("not configured"), never the partial sum of the configured rows.
+    /// </summary>
+    private static void ContributionTotals(Dictionary<string, object?> totals)
+    {
+        var notConfigured = (totals["orders_without_costs"] as long? ?? 0) > 0;
+        totals["costs_not_configured"] = notConfigured;
+        if (notConfigured)
+        {
+            totals["delivery_cost_paise"] = null;
+            totals["packaging_cost_paise"] = null;
+            totals["contribution_paise"] = null;
+            totals["contribution_margin_bp"] = null;
+            return;
+        }
+
+        totals["contribution_margin_bp"] = Ratio(totals, "contribution_paise", "revenue_ex_tax_paise", 10_000);
+    }
 
     /// <summary><c>numerator × scale / denominator</c> truncated toward zero; null when the denominator is 0.</summary>
     private static long? Ratio(Dictionary<string, object?> totals, string numerator, string denominator, long scale)
