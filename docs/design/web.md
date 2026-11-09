@@ -104,7 +104,7 @@ prerendered, data fetched in the browser with TanStack Query through the same-or
 | `/login?next=` | Phone → OTP, resend timer, guest cart merge, safe redirect; 429 waits for `Retry-After` (default 30 s) with the buttons disabled; 503 `SMS_PROVIDER_UNAVAILABLE` shows the server's message and "Try sending again" to the same number | Done | SSR shell (reads `next`) + client form (noindex) | `POST /auth/otp/request`; `POST /bff/auth/verify` |
 | `/checkout?slot=` | Address choose/add/edit (`If-Match`), slot by day (preselected from the cart's `?slot=`), pay on delivery (COD / UPI on delivery from `paymentMethods`), substitution preference, notes, live preview with blockers, sticky Place order bar with `Idempotency-Key`, `PRICE_CHANGED` confirm, `CART_LOCATION_CHANGED` move | Done | SSR shell (reads `slot`) + client, signed in | `GET /cart`, `GET/POST /me/addresses`, `PUT /me/addresses/{id}`, `GET /delivery-slots?pincode=`, `POST /checkout/preview`, `POST /orders`, `PUT /cart/location` |
 | `/orders/[orderId]/success` | Order-placed screen: ORDER_PLACED character, number, slot, payment, bill from the server's estimate | Done | Client, signed in | `GET /orders/{id}` |
-| `/orders/[orderId]` | Coral band with number and status character, status steps, delivery code (only when sent), slot, address, rider, items ordered vs charged, the bill (estimate or final), amount due, cancel (reason, IK), substitutions accept/reject, report a problem (JSON with IK, then photos one by one — W12), invoice, order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST …/complaints/{id}/photos`, `POST …/substitutions/{id}/accept|reject`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice`, `POST /orders/{id}/reorder` |
+| `/orders/[orderId]` | Coral band with number and status character, status steps, delivery code (only when sent), slot, address, rider, items ordered vs charged, the bill (estimate or final), amount due, cancel (reason, IK), substitutions accept/reject, report a problem (JSON with IK, then photos one by one — W12), download invoice (D361), order again — each only when `allowedActions` says so | Done | Client, signed in | `GET /orders/{id}`, `GET /orders/{id}/tracking` (polls every 60 s until closed), `GET/POST /orders/{id}/complaints`, `POST …/complaints/{id}/photos`, `POST …/substitutions/{id}/accept|reject`, `POST /orders/{id}/cancel`, `GET /orders/{id}/invoice/pdf`, `POST /orders/{id}/reorder` |
 | `/account` | Profile (PATCH with `If-Match`) | Done | Client, signed in | `GET/PATCH /me` |
 | `/account/settings` | Contact preferences (moved from notifications), sign out, delete account (typed confirmation, `If-Match`) | Done | Client, signed in | `GET/PUT /me/notification-preferences`, `GET/DELETE /me`, `POST /bff/auth/logout` |
 | `/account/orders` | Order cards with the status character, paginated | Done | Client, signed in | `GET /orders` (no `sort` parameter; server order) |
@@ -183,8 +183,10 @@ browser ──/api/v1/* (Authorization: Bearer <access token from memory>)──
   takes a new key when the order body changes: address, slot, payment, substitution, notes or the cart (lines,
   quantities, preparations, coupon). After `PRICE_CHANGED` the customer confirms the new total with a **new** key and
   the new `expectedTotalPaise`.
-- The invoice opens in a tab opened inside the click and sent to the PDF once the server answers, so popup blockers
-  allow it (W-10, D315).
+- "Download invoice" fetches `GET /orders/{id}/invoice/pdf` with the session's bearer token and saves it under the
+  server's file name (`<a download>` on an object URL); "being prepared" (`INVOICE_PDF_NOT_READY`) and errors show
+  under the actions (ORD-R53a, D361; replaces the W-10 tab of D315, which opened an authenticated path without the
+  token).
 - Images: `images.unoptimized` stays on (the API already serves WebP renditions). The home hero uses WebP copies at
   their drawn size in `public/home/*.webp`; the product gallery renders the server's `sources` as `srcset` through
   `ProductGallery` (`next/image` drops `srcset` in this mode); cards use the 640 px `imageUrl` (W-8, W-9, D318).
