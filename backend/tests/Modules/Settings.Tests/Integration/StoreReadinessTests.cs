@@ -84,7 +84,7 @@ public sealed class StoreReadinessTests(E1Database database) : E1ApiTestBase(dat
         after.GetProperty("locations").EnumerateArray().Should().OnlyContain(l => l.GetProperty("fssaiLicenseStatus").GetString() == "OK");
     }
 
-    private async Task SaveCompleteProfileAsync(HttpClient admin)
+    private static async Task SaveCompleteProfileAsync(HttpClient admin)
     {
         const string first14 = "33AAACF1234A1Z";
         var body = new
