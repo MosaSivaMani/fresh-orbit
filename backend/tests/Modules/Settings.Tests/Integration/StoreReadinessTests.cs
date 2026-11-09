@@ -55,6 +55,23 @@ public sealed class StoreReadinessTests(E1Database database) : E1ApiTestBase(dat
         Factory.AdditionalServices = services => services.Replace(ServiceDescriptor.Singleton<INotificationProviders>(new RealProviders()));
         using var admin = Factory.CreateStaffClient(["settings.manage"]);
         await SaveCompleteProfileAsync(admin);
+        try
+        {
+            await AssertReadinessAsync(admin);
+        }
+        finally
+        {
+            // The assembly shares one database: leave no business profile behind for SettingsApiTests.
+            await InScopeAsync(async provider =>
+            {
+                var db = provider.GetRequiredService<FreshOrbitDbContext>();
+                return await db.Set<BusinessProfile>().ExecuteDeleteAsync(Ct);
+            });
+        }
+    }
+
+    private async Task AssertReadinessAsync(HttpClient admin)
+    {
         var (licensedId, unlicensedId) = await SeedLocationsAsync();
 
         var before = await ReadJsonAsync(await admin.GetAsync(Url, Ct));
