@@ -253,6 +253,10 @@ abstract class OrderRepository {
   Future<List<Complaint>> complaints(String orderId);
   Future<InvoiceLink> invoice(String orderId);
 
+  /// `GET /orders/{id}/invoice/pdf`. 404 INVOICE_NOT_ISSUED before delivery, 404 INVOICE_PDF_NOT_READY until the
+  /// PDF is rendered (ORD-R53).
+  Future<InvoicePdf> invoicePdf(String orderId);
+
   /// `POST /orders/{id}/substitutions/{sid}/accept` or `/reject`; returns the updated order.
   Future<OrderDetail> answerSubstitution(String orderId, String substitutionId, {required bool accept});
 }
@@ -343,6 +347,13 @@ class HttpOrderRepository implements OrderRepository {
   @override
   Future<InvoiceLink> invoice(String orderId) async =>
       parseObject(await _api.get('orders/${_seg(orderId)}/invoice'), InvoiceLink.fromJson);
+
+  @override
+  Future<InvoicePdf> invoicePdf(String orderId) async {
+    final response = await _api.getBytes('orders/${_seg(orderId)}/invoice/pdf', accept: 'application/pdf');
+    if (response.bytes.isEmpty) throw const ApiError(status: 0, code: ApiError.responseInvalid);
+    return InvoicePdf(bytes: response.bytes, fileName: response.fileName ?? 'invoice.pdf');
+  }
 }
 
 // ---------------------------------------------------------------- account

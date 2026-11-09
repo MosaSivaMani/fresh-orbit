@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fresh_orbit_app/api/api_error.dart';
 import 'package:fresh_orbit_app/api/models/orders.dart';
+import 'package:fresh_orbit_app/core/document_share.dart';
 import 'package:fresh_orbit_app/core/photo_picker.dart';
 import 'package:fresh_orbit_app/features/orders/order_tracking_screen.dart';
 import 'package:fresh_orbit_app/state/orders_state.dart';
@@ -36,6 +37,7 @@ void main() {
     expect(find.byKey(const Key('deliveryCode')), findsOneWidget);
     expect(find.text('4821'), findsOneWidget);
     expect(find.byKey(const Key('cancelOrder')), findsNothing);
+    expect(find.byKey(const Key('orderInvoice')), findsNothing); // no invoice before delivery
     // The tracking illustration follows the server status.
     expect(find.byKey(const ValueKey('illustration-placeholder-ORDER_ON_THE_WAY')), findsOneWidget);
   });
@@ -238,19 +240,70 @@ void main() {
       expect(find.byKey(const Key('sendComplaint')), findsNothing); // the sheet closed
     });
 
-    testWidgets('an invoice that is not issued yet is a calm note, not an error', (tester) async {
-      deps.orders.onInvoice = () async => throw const ApiError(status: 404, code: 'INVOICE_NOT_ISSUED');
-      await pumpScreen(tester, deps, const OrderTrackingScreen(orderId: 'o1'));
+    Future<List<String>> openInvoice(WidgetTester tester) async {
+      final shared = <String>[];
+      await pumpScreen(
+        tester,
+        deps,
+        const OrderTrackingScreen(orderId: 'o1'),
+        overrides: [
+          documentSharerProvider.overrideWithValue((
+            context, {
+            required List<int> bytes,
+            required String fileName,
+            required String mimeType,
+          }) async {
+            shared.add('$fileName:$mimeType:${bytes.length}');
+          }),
+        ],
+      );
       await tester.pumpAndSettle();
-
       await tester.ensureVisible(find.byKey(const Key('orderInvoice')));
       await tester.pumpAndSettle();
+      expect(find.text('Download invoice'), findsOneWidget);
       await tester.tap(find.byKey(const Key('orderInvoice')));
       await tester.pumpAndSettle();
+      return shared;
+    }
 
-      expect(find.byType(SnackBar), findsOneWidget);
-      // Not the error snack bar (that one shows the problem's own sentence).
-      expect(find.text(const ApiError(status: 404, code: 'INVOICE_NOT_ISSUED').message), findsNothing);
+    testWidgets('"Download invoice" fetches the PDF and hands it to the platform', (tester) async {
+      deps.orders.onInvoicePdf = () async => const InvoicePdf(bytes: [37, 80, 68, 70], fileName: 'INV-26-27-000001.pdf');
+
+      final shared = await openInvoice(tester);
+
+      expect(deps.orders.invoicePdfCalls, ['o1']);
+      expect(shared, ['INV-26-27-000001.pdf:application/pdf:4']);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('a PDF still being prepared is a calm note, not an error', (tester) async {
+      deps.orders.onInvoicePdf = () async => throw const ApiError(status: 404, code: 'INVOICE_PDF_NOT_READY');
+
+      final shared = await openInvoice(tester);
+
+      expect(shared, isEmpty);
+      expect(find.text(invoicePreparingMessage), findsOneWidget);
+      // The button is ready for another try.
+      expect(tester.widget<OutlinedButton>(find.byKey(const Key('orderInvoice'))).onPressed, isNotNull);
+    });
+
+    testWidgets('an invoice that is not issued yet is a calm note, not an error', (tester) async {
+      deps.orders.onInvoicePdf = () async => throw const ApiError(status: 404, code: 'INVOICE_NOT_ISSUED');
+
+      final shared = await openInvoice(tester);
+
+      expect(shared, isEmpty);
+      expect(find.text(invoiceAfterDeliveryMessage), findsOneWidget);
+    });
+
+    testWidgets('a failed download shows the error', (tester) async {
+      const failure = ApiError(status: 0, code: ApiError.networkError);
+      deps.orders.onInvoicePdf = () async => throw failure;
+
+      final shared = await openInvoice(tester);
+
+      expect(shared, isEmpty);
+      expect(find.text(failure.message), findsOneWidget);
     });
   });
 }

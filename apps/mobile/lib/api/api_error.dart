@@ -1,6 +1,8 @@
 // Problem Details (RFC 7807, docs/api/README.md §1.6) → typed ApiError. Screens branch on [ApiError.code],
 // never on message text.
 
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import 'models/json.dart';
@@ -124,11 +126,11 @@ class ApiError implements Exception {
       );
     }
     final status = response.statusCode ?? 0;
-    final data = response.data;
-    if (data is Map) {
+    final data = problemBody(response.data);
+    if (data != null) {
       return ApiError.fromProblem(
         status,
-        data.cast<String, dynamic>(),
+        data,
         retryAfterHeader: response.headers.value('retry-after'),
       );
     }
@@ -170,4 +172,19 @@ class ApiError implements Exception {
 
   @override
   String toString() => 'ApiError($status $code${traceId == null ? '' : ' trace=$traceId'})';
+}
+
+/// The Problem Details object of an error response: the decoded map, or a byte body (a download asked for
+/// `ResponseType.bytes`, so its error arrives as UTF-8 JSON bytes) decoded here. Null when it is neither.
+Json? problemBody(Object? data) {
+  if (data is Map) return data.cast<String, dynamic>();
+  if (data is List<int>) {
+    try {
+      final decoded = jsonDecode(utf8.decode(data));
+      return decoded is Map ? decoded.cast<String, dynamic>() : null;
+    } on FormatException {
+      return null;
+    }
+  }
+  return null;
 }

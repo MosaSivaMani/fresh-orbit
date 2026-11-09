@@ -247,6 +247,15 @@ class FakeOrderRepository implements OrderRepository {
 
   @override
   Future<InvoiceLink> invoice(String orderId) => (onInvoice ?? () async => const InvoiceLink())();
+
+  Future<InvoicePdf> Function()? onInvoicePdf;
+  final List<String> invoicePdfCalls = [];
+
+  @override
+  Future<InvoicePdf> invoicePdf(String orderId) {
+    invoicePdfCalls.add(orderId);
+    return (onInvoicePdf ?? () => _unexpected('invoicePdf'))();
+  }
 }
 
 class FakeAccountRepository implements AccountRepository {
