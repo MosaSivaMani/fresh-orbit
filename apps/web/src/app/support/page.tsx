@@ -6,8 +6,7 @@ import { getBusinessProfile } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
 import { type PublicBusinessProfile } from "@/api/types/locations";
 import { ContentPage } from "@/components/content-page";
-import { GrievanceOfficerCard } from "@/components/grievance-officer";
-import { getGrievanceOfficer } from "@/server/config";
+import { GrievanceOfficerCard, grievanceOfficerOf } from "@/components/grievance-officer";
 
 export const metadata: Metadata = {
   title: "Help and FAQ",
@@ -134,8 +133,8 @@ function ContactCard({ profile }: { profile: PublicBusinessProfile | null }) {
 
 export default async function SupportPage() {
   const profile = await loadProfile();
-  // Shown only when configured (L-7, D300); the business profile has no grievance fields yet.
-  const officer = getGrievanceOfficer();
+  // Shown only once the business profile names a grievance officer (L-7, D374).
+  const officer = grievanceOfficerOf(profile);
   return (
     <ContentPage
       title={

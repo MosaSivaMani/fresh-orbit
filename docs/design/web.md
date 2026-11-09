@@ -308,9 +308,9 @@ Spec issues still open (backend, not metadata-only, so not fixed in D63):
   and `NEXT_PUBLIC_SITE_URL`. Anywhere else `robots.txt` disallows `/` and the root layout adds `noindex, nofollow`.
 - Legal block (D300): the footer shows the business profile's `legalName`, `address`, `gstin`, `fssaiLicenseNo`,
   `supportPhone` and `supportEmail` (`GET /business-profile`), each only when the server sends it, and links every policy
-  page and "Contact us" (`/support#contact`). The grievance officer (`/support#grievance`, footer link) is shown only
-  when `FRESH_GRIEVANCE_OFFICER_NAME`, `FRESH_GRIEVANCE_OFFICER_EMAIL` and `FRESH_GRIEVANCE_RESPONSE_TIME` are set
-  (designation optional); the business profile has no grievance fields yet.
+  page and "Contact us" (`/support#contact`). The grievance officer (`/support#grievance`, footer link) comes from the
+  business profile's `grievanceOfficer` (D374, replacing the `FRESH_GRIEVANCE_*` configuration of D300) and is shown
+  only when it has a name and an e-mail; designation, phone and response time appear when entered.
 - Sign-in consent (D300): "By continuing you agree to our Terms and Privacy policy" sits above "Send code" and "Verify
   and sign in"; both links open in a new tab, so the form keeps what was typed.
 - Skip link, landmarks, labelled form fields with field-level errors (`aria-invalid`, described by), keyboard-usable

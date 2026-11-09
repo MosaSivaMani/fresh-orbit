@@ -192,6 +192,9 @@ public sealed class CatalogApi(FreshOrbitDbContext db, IFileStorage storage) : I
                 ProductStatus = Map(product.Status),
                 PiecesMin = v.PiecesMin,
                 PiecesMax = v.PiecesMax,
+                ImageSources = product.ImageKey is { } key
+                    ? [.. ImageRenditions.Widths.Select(w => new ImageRenditionInfo(w, storage.GetPublicUrl(ImageRenditions.Key(key, w))))]
+                    : [],
             };
         })];
     }

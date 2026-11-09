@@ -243,7 +243,7 @@ class _CartLineRowState extends ConsumerState<_CartLineRow> {
                       borderRadius: BorderRadius.circular(FreshLayout.tileRadius),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: ProductPhoto(url: line.imageUrl, radius: 0, transparent: true),
+                    child: ProductPhoto(url: line.imageUrl, sources: line.imageSources, radius: 0, transparent: true),
                   ),
                 ),
               ),

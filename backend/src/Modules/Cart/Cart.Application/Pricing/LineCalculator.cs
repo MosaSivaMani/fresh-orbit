@@ -50,7 +50,8 @@ public sealed record PricedLine(
             Line.VariantId,
             Variant?.VariantName ?? string.Empty,
             sellUnit.ToCode(),
-            Variant?.ImageKey is { } key ? $"/media/{key}" : null,
+            // The smallest rendition's public URL; the storage key alone is not an image (D375).
+            Variant?.ImageSources.OrderBy(i => i.Width).Select(i => i.Url).FirstOrDefault(),
             Preparation is null ? null : new CartPreparationView(Preparation.Code, Preparation.Name, Preparation.YieldBp),
             new QuantityView(Line.Quantity, unit),
             new QuantityView(Line.Quantity, unit),
@@ -75,6 +76,7 @@ public sealed record PricedLine(
             PackNetGrams = sellUnit == SellUnit.Pack ? Variant?.PackSizeGrams : null,
             PiecesMin = sellUnit == SellUnit.Pack ? Variant?.PiecesMin : null,
             PiecesMax = sellUnit == SellUnit.Pack ? Variant?.PiecesMax : null,
+            ImageSources = Variant is null ? [] : [.. Variant.ImageSources.Select(i => new CartImageSourceView(i.Width, i.Url))],
         };
     }
 

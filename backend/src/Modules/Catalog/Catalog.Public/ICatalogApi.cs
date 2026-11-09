@@ -115,7 +115,13 @@ public sealed record VariantInfo(
 
     /// <summary>Most pieces per serving basis; null when not stated.</summary>
     public int? PiecesMax { get; init; }
+
+    /// <summary>Public URLs of the primary image's renditions (320, 640, 1280 px wide, D375); empty without an image.</summary>
+    public IReadOnlyList<ImageRenditionInfo> ImageSources { get; init; } = [];
 }
+
+/// <summary>One rendition of a product image: its width in pixels and public URL.</summary>
+public sealed record ImageRenditionInfo(int Width, string Url);
 
 /// <param name="YieldBp">Net weight after preparation as basis points of raw weight (6500 = 65 %).</param>
 public sealed record PreparationInfo(Guid PreparationMethodId, string Code, string Name, int YieldBp, bool IsDefault, bool IsActive);

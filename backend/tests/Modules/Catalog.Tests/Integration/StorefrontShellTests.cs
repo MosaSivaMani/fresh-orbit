@@ -181,6 +181,42 @@ public sealed class StorefrontShellTests(CatalogDatabase database) : StorefrontT
         profile.GetProperty("supportEmail").GetString().Should().Be("support@freshorbit.in");
         profile.GetProperty("supportHours").GetString().Should().Be("7 am - 9 pm, all days");
         profile.GetProperty("timeZone").GetString().Should().Be("Asia/Kolkata");
+        (profile.TryGetProperty("grievanceOfficer", out var none) && none.ValueKind != JsonValueKind.Null).Should().BeFalse();
+
+        // D374: the grievance officer is data in the business profile; a name without an e-mail is refused.
+        var body = new
+        {
+            legalName = "Fresh Orbit Private Limited",
+            tradeName = "Fresh Orbit",
+            gstin,
+            fssaiLicenseNo = "12345678901234",
+            address = "1 Anna Salai, Chennai 600002",
+            supportPhone = "+914412345678",
+            supportEmail = "support@freshorbit.in",
+            supportHours = "7 am - 9 pm, all days",
+            timeZone = "Asia/Kolkata",
+            grievanceOfficerName = "A. Officer",
+            grievanceOfficerDesignation = "Grievance Officer",
+            grievanceOfficerEmail = "grievance@freshorbit.in",
+            grievanceOfficerPhone = "+914412345679",
+            grievanceResponseTime = "Acknowledged within 48 hours, resolved within one month",
+        };
+        var version = saved.Headers.ETag!.Tag;
+        var incomplete = await SendAsync(settings, HttpMethod.Put, "/api/v1/admin/settings/business-profile", body with { grievanceOfficerEmail = "" }, ifMatch: version);
+        incomplete.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await ReadJsonAsync(incomplete)).GetProperty("errors").GetProperty("grievanceOfficerEmail").EnumerateArray()
+            .Select(e => e.GetProperty("code").GetString()).Should().Contain("GRIEVANCE_OFFICER_INCOMPLETE");
+
+        var withOfficer = await SendAsync(settings, HttpMethod.Put, "/api/v1/admin/settings/business-profile", body, ifMatch: version);
+        withOfficer.StatusCode.Should().Be(HttpStatusCode.OK, await withOfficer.Content.ReadAsStringAsync(Ct));
+        (await ReadJsonAsync(withOfficer)).GetProperty("grievanceOfficerName").GetString().Should().Be("A. Officer");
+
+        var officer = (await GetPublicAsync("/api/v1/business-profile")).GetProperty("grievanceOfficer");
+        officer.GetProperty("name").GetString().Should().Be("A. Officer");
+        officer.GetProperty("designation").GetString().Should().Be("Grievance Officer");
+        officer.GetProperty("email").GetString().Should().Be("grievance@freshorbit.in");
+        officer.GetProperty("phone").GetString().Should().Be("+914412345679");
+        officer.GetProperty("responseTime").GetString().Should().Be("Acknowledged within 48 hours, resolved within one month");
     }
 
     private static (int Value, string? Unit) Quantity(JsonElement quantity)

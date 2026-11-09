@@ -503,7 +503,7 @@ Errors: `REFRESH_TOKEN_INVALID`, `REFRESH_TOKEN_REUSED`.
 | GET | `/api/v1/me/stock-alerts` | customer | | Back-in-stock alerts `[{ id, variantId, fulfillmentLocationId, createdAt }]` |
 | POST | `/api/v1/me/stock-alerts` | customer | | `{ variantId, fulfillmentLocationId }` → 201 new, 200 existing (idempotent); 422 `STOCK_AVAILABLE`, `PRODUCT_NOT_AVAILABLE`, `STOCK_ALERT_LIMIT_REACHED` (CUS-R10) |
 | DELETE | `/api/v1/me/stock-alerts/{alertId}` | customer | | Remove (204, also when unknown) |
-| GET | `/api/v1/business-profile` | public | | Legal footer and contacts: `legalName, tradeName, gstin, fssaiLicenseNo, address, supportPhone, supportEmail, supportHours, timeZone`; 404 `BUSINESS_PROFILE_NOT_CONFIGURED` (SET-R8) |
+| GET | `/api/v1/business-profile` | public | | Legal footer and contacts: `legalName, tradeName, gstin, fssaiLicenseNo, address, supportPhone, supportEmail, supportHours, timeZone` and `grievanceOfficer { name, designation, email, phone, responseTime }` (null until named, SET-R10, D374); 404 `BUSINESS_PROFILE_NOT_CONFIGURED` (SET-R8) |
 
 ### 4.3 Locations / serviceability (public)
 
@@ -537,7 +537,7 @@ city (admin `stateName`) and is `null` when not configured, never derived from t
 
 Storefront shell fields (W4, W10, W11): cart lines carry `minOrder`, `maxOrder`, `orderStep` (`{ value, unit }`,
 CART-R31) and, on lines sold per PACK, `packNetGrams`, `piecesMin`, `piecesMax` (one pack, D348, CART-R33; null otherwise); `GET /delivery-slots` returns `timeZone`; order detail, list and tracking return `timeZone` (ORD-R65);
-Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14), and `badge`, an optional short label the admin set ("NEW", "20% OFF"; null when none; shown as given, PROMO-R29).
+Image URLs (`imageUrl`, `url`) are absolute https URLs on a Production server and `/media/...` paths in Development and Testing (CAT-R18, W15). Product list items and cart lines also carry `imageSources: [{ width, url }]`, the 320 / 640 / 1280 px renditions, so a card can use `srcset` (CAT-R31, CART-R34, D375). `GET /promotions` banners and `/home` `banners[]` carry `imageUrl` (PROMO-R27, CAT-R28) and `linkSlug`, the slug of a CATEGORY or PRODUCT target (PROMO-R28, W14), and `badge`, an optional short label the admin set ("NEW", "20% OFF"; null when none; shown as given, PROMO-R29).
 
 ### 4.4 Catalog and search (public)
 
