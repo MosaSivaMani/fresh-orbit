@@ -220,6 +220,11 @@ weeks in a row and waste under the target. Growth on loss-making orders only los
 
 ## 5. Owner decisions this page needs
 
+**Decided 2026-11-09 (owner delegated to the lead, after `research/competitors-2026-11.md`):** item 1 → D377
+(next-morning delivery, 22:00 cut-off, slots 07:00–10:00 and 10:00–13:00); item 2 → D378 (₹40 per drop, packaging
+₹20 per order, planning figures); item 5 → D380 (3–5 pincodes within about 4 km, one rider per slot, about 100 invited
+families); target margins by category → D379. Items 3, 4, 6 and 7 are still open.
+
 1. **Buying rhythm:** next-morning delivery with an evening cut-off, or same-day slots too?
 2. **Rider pay model:** per drop, per shift or salary; this becomes the delivery cost.
 3. **Quality promise:** "not fresh, full refund" or case by case?
