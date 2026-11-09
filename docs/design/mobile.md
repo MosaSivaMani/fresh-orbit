@@ -296,7 +296,7 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | `firebase_core` | 5.1.0 | BSD-3-Clause (Firebase Android/iOS SDKs Apache-2.0) | Starts Firebase from the build's values (D350) |
 | `firebase_messaging` | 17.0.1 | BSD-3-Clause (Firebase SDKs Apache-2.0) | Push: token, permission, taps (D349) |
 | `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF, website policy pages (D299) |
-| `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem; `pubspec.lock` must be refreshed with `flutter pub get` |
+| `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem |
 | `fresh_theme` | path | Ours | Theme from design tokens |
 | `flutter_lints` (dev) | 6.0.0 | BSD-3-Clause | Lints |
 

@@ -40,7 +40,7 @@ Future<void> main() async {
   final push = selectPushService(
     values: FirebaseValues.fromDefines,
     isWeb: kIsWeb,
-    firebase: (values) => FcmPushService(values, log: debugPrint),
+    firebase: (values) => FcmPushService(values, debugPrint),
     log: debugPrint,
   );
   runApp(

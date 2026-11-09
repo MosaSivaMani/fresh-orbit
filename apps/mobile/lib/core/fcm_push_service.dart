@@ -6,6 +6,11 @@
 // Notification messages (the server sends `notification` + `data`, FcmPushSender) are shown by the system while the
 // app is in the background or closed; a tap arrives through [opened] or [takeInitialOpen]. While the app is open
 // Android shows nothing; the screens refresh on their own (pull to refresh, reload on resume).
+//
+// Tokens: firebase_messaging 17 deprecates getToken/onTokenRefresh in favour of register()/onRegistered, which give a
+// Firebase Installation ID (FID) as a "direct-send target". The server's FcmPushSender sends to FCM registration
+// tokens (`message.token`, HTTP v1), so the app keeps the registration-token calls until the server can send to an
+// FID (follow-up; D349).
 
 import 'dart:async';
 
@@ -16,7 +21,7 @@ import 'push_config.dart';
 import 'push_service.dart';
 
 class FcmPushService implements PushService {
-  FcmPushService(this._values, {required void Function(String message) log}) : _log = log;
+  FcmPushService(this._values, this._log);
 
   final FirebaseValues _values;
   final void Function(String message) _log;
@@ -45,6 +50,8 @@ class FcmPushService implements PushService {
       );
       final messaging = FirebaseMessaging.instance;
       FirebaseMessaging.onMessageOpenedApp.listen((m) => _opened.add(_open(m)));
+      // Registration tokens, not FIDs (note at the top).
+      // ignore: deprecated_member_use
       messaging.onTokenRefresh.listen(_refreshes.add);
       _initial = await messaging.getInitialMessage();
       _started = true;
@@ -90,6 +97,8 @@ class FcmPushService implements PushService {
     await initialize();
     if (!_started) return null;
     try {
+      // Registration tokens, not FIDs (note at the top).
+      // ignore: deprecated_member_use
       return await FirebaseMessaging.instance.getToken();
     } catch (_) {
       // No network or no Google Play services: tried again on the next sign-in, launch or token refresh.
