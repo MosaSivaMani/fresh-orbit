@@ -21,6 +21,9 @@ public sealed class MessageDispatcher(
     IUnitOfWork unitOfWork,
     IClock clock)
 {
+    /// <summary>Payload keys sent as push data so a tap opens the right screen in the app (D351).</summary>
+    public static readonly IReadOnlyList<string> PushLinkKeys = ["orderId", "productSlug"];
+
     /// <returns>The number of messages handled (sent or failed).</returns>
     public Task<int> SendBatchAsync(CancellationToken cancellationToken)
         => repository.InTransactionAsync(
@@ -107,6 +110,16 @@ public sealed class MessageDispatcher(
         }
 
         var data = new Dictionary<string, string>(StringComparer.Ordinal) { ["templateCode"] = message.TemplateCode, ["messageId"] = message.Id.ToString() };
+        // D351: the keys the app opens a screen with (orderId → order detail, productSlug → product). Only these leave
+        // the payload; the rest (names, amounts, the delivery code) stays in the notification text.
+        foreach (var key in PushLinkKeys)
+        {
+            if (message.Payload.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
+            {
+                data[key] = value;
+            }
+        }
+
         PushResult result;
         try
         {

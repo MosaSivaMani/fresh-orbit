@@ -32,6 +32,7 @@ final policyLinksProvider = Provider<Map<PolicyPage, Uri>>((ref) => policyLinks(
 /// Opens a link outside the app ([openExternal]); tests override it to record the address.
 final externalLauncherProvider = Provider<ExternalLauncher>((ref) => openExternal);
 
+/// Overridden in main.dart with the build's push service (D350); without Firebase values, and in tests, push is off.
 final pushServiceProvider = Provider<PushService>((ref) => NoopPushService());
 
 /// Overridden in main.dart with the build's reporter (D309); tests get the no-op.
