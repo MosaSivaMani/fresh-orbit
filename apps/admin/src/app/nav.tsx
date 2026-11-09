@@ -6,6 +6,7 @@ import {
   Building2,
   ClipboardCheck,
   ClipboardList,
+  FileText,
   Images,
   Inbox,
   Hash,
@@ -61,6 +62,13 @@ export const NAVIGATION: readonly NavGroup[] = [
         label: "Orders",
         href: "/orders",
         icon: <ShoppingBag aria-hidden="true" />,
+        perm: "orders.view",
+      },
+      {
+        id: "invoices",
+        label: "Invoices",
+        href: "/invoices",
+        icon: <FileText aria-hidden="true" />,
         perm: "orders.view",
       },
       {

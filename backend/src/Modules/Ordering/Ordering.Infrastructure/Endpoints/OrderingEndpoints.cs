@@ -179,6 +179,29 @@ internal static class OrderingEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // The invoice register (D353): the same permission and location scope as the invoice and its PDF.
+        root.MapGet("/admin/invoices", async (
+                [FromQuery] Guid? fulfillmentLocationId,
+                [FromQuery] string? fromDate,
+                [FromQuery] string? toDate,
+                [FromQuery] string? q,
+                [FromQuery] int? page,
+                [FromQuery] int? pageSize,
+                ICurrentActor actor,
+                OrderQueryService queries,
+                CancellationToken ct) =>
+            {
+                var (p, size) = Paging(page, pageSize);
+                var query = new AdminInvoiceListQuery(fulfillmentLocationId, ParseDate(fromDate, "fromDate"), ParseDate(toDate, "toDate"), q, p, size);
+                var (items, total) = await queries.AdminInvoicesAsync(actor, query, ct);
+                return TypedResults.Ok(new PagedResponse<AdminInvoiceListItem>(items, p, size, total));
+            })
+            .RequirePermission(OrdersView)
+            .WithTags("Admin invoices")
+            .Produces<PagedResponse<AdminInvoiceListItem>>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
         var complaints = root.MapGroup("/admin/complaints").RequirePermission(ComplaintsManage).WithTags("Admin complaints");
         complaints.MapGet(string.Empty, async ([FromQuery] string? status, [FromQuery] string? kind, [FromQuery] Guid? fulfillmentLocationId, [FromQuery] int? page, [FromQuery] int? pageSize, ICurrentActor actor, ComplaintService service, CancellationToken ct) =>
         {
@@ -270,7 +293,7 @@ internal static class OrderingEndpoints
         }
     }
 
-    private static DateOnly? ParseDate(string? value)
+    private static DateOnly? ParseDate(string? value, string field = "slotDate")
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -279,7 +302,7 @@ internal static class OrderingEndpoints
 
         return DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date
-            : throw new RefusalException(new FieldError("slotDate", OrderingErrors.ValidationFailed, "Use the date format yyyy-MM-dd."));
+            : throw new RefusalException(new FieldError(field, OrderingErrors.ValidationFailed, $"Use the date format yyyy-MM-dd for {field}."));
     }
 
     private static (int Page, int PageSize) Paging(int? page, int? pageSize)

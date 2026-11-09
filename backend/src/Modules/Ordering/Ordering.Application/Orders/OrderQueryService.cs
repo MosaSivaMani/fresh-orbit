@@ -159,6 +159,58 @@ public sealed class OrderQueryService(
     public async Task<InvoiceResponse> StaffInvoiceAsync(ICurrentActor actor, Guid orderId, CancellationToken cancellationToken)
         => await InvoiceOfAsync(await GetForStaffAsync(actor, orderId, cancellationToken), InvoicePdfService.StaffUrl, cancellationToken);
 
+    /// <summary>
+    /// The staff invoice register (D353, D354): orders.view, location-scoped like the order list (a named location the
+    /// staff member cannot see → 403; otherwise rows silently limited to their locations). Dates are invoice dates in the
+    /// business time zone, the zone printed on the PDF; an inverted range is refused on <c>toDate</c>.
+    /// </summary>
+    public async Task<(IReadOnlyList<AdminInvoiceListItem> Items, int Total)> AdminInvoicesAsync(ICurrentActor actor, AdminInvoiceListQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(actor);
+        ArgumentNullException.ThrowIfNull(query);
+        if (query.FulfillmentLocationId is { } locationId && !actor.CanAccessLocation(locationId))
+        {
+            throw OrderingAccess.LocationDenied();
+        }
+
+        if (query is { FromDate: { } fromDate, ToDate: { } toDate } && fromDate > toDate)
+        {
+            throw new RefusalException(new FieldError("toDate", OrderingErrors.ValidationFailed, "To date must not be before from date."));
+        }
+
+        var zone = InvoicePdfService.BusinessTimeZone(await settings.GetBusinessProfileAsync(cancellationToken));
+        var filter = new AdminInvoiceFilter(
+            query.FulfillmentLocationId,
+            query.FromDate is { } from ? StartOfDay(from, zone) : null,
+            query.ToDate is { } to ? StartOfDay(to.AddDays(1), zone) : null,
+            query.Q,
+            actor.IsAllLocations ? null : actor.LocationIds,
+            query.Page,
+            query.PageSize);
+        var (rows, total) = await reads.ListInvoicesAsync(filter, cancellationToken);
+        return ([.. rows.Select(r => new AdminInvoiceListItem(
+            r.Id,
+            r.InvoiceNumber,
+            r.IssuedAt,
+            DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(r.IssuedAt, zone).DateTime),
+            r.OrderId,
+            r.OrderNumber,
+            r.CustomerName,
+            r.FulfillmentLocationId,
+            r.TaxablePaise,
+            r.TaxPaise,
+            r.TotalPaise,
+            r.PdfReady,
+            r.PdfReady ? InvoicePdfService.StaffPdfPath(r.OrderId) : null))], total);
+    }
+
+    /// <summary>Midnight starting <paramref name="date"/> in <paramref name="zone"/>, as a UTC instant.</summary>
+    private static DateTimeOffset StartOfDay(DateOnly date, TimeZoneInfo zone)
+    {
+        var start = date.ToDateTime(TimeOnly.MinValue);
+        return new DateTimeOffset(start, zone.GetUtcOffset(start)).ToUniversalTime();
+    }
+
     internal static TEnum? ParseOptional<TEnum>(string? code, string field)
         where TEnum : struct, Enum
     {

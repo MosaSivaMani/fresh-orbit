@@ -3,6 +3,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useHttp } from "../app/services";
 import { type Id, type Version } from "./types/common";
 import {
+  type AdminInvoiceListQuery,
+  type AdminInvoiceSummary,
   type AdminOrderDetail,
   type AdminOrderDetailResponse,
   type AdminOrderListQuery,
@@ -28,6 +30,7 @@ export const orderKeys = {
   list: (q: object) => ["orders", "list", q] as const,
   detail: (id: Id) => ["orders", "detail", id] as const,
   invoice: (id: Id) => ["orders", "invoice", id] as const,
+  invoices: (q: object) => ["orders", "invoices", q] as const,
   pickList: (q: object) => ["orders", "pick-list", q] as const,
   complaints: (q: object) => ["orders", "complaints", q] as const,
   complaint: (id: Id) => ["orders", "complaint", id] as const,
@@ -77,6 +80,17 @@ export function useOrderInvoice(orderId: Id) {
   return useQuery({
     queryKey: orderKeys.invoice(orderId),
     queryFn: ({ signal }) => http.get<Invoice>(`/admin/orders/${orderId}/invoice`, { signal }),
+  });
+}
+
+/** The invoice register (D353): newest first, location-scoped by the server like the order list. */
+export function useInvoices(query: AdminInvoiceListQuery) {
+  const http = useHttp();
+  return useQuery({
+    queryKey: orderKeys.invoices(query),
+    queryFn: ({ signal }) =>
+      http.get<Page<AdminInvoiceSummary>>("/admin/invoices", { query: { ...query }, signal }),
+    placeholderData: keepPreviousData,
   });
 }
 
