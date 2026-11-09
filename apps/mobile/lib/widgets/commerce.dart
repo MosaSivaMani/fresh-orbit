@@ -320,6 +320,7 @@ class ProductCard extends StatelessWidget {
                           // The 3:2 picture frame of every card (D193).
                           child: ProductPhoto(
                             url: product.imageUrl,
+                            sources: product.imageSources,
                             aspectRatio: FreshLayout.pictureAspect,
                             radius: 0,
                             transparent: true,

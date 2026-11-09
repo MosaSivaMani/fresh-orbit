@@ -7,8 +7,23 @@ export type ServiceabilityResponse = Schema<"ServiceabilityResponse">;
 
 export type PublicCity = Schema<"PublicCityResponse">;
 
-/** The store's public contact details (`GET /business-profile`): support phone, email and hours. */
-export type PublicBusinessProfile = Schema<"PublicBusinessProfileResponse">;
+/** The grievance officer the business profile names (D374): name and e-mail always, the rest when entered. */
+export interface GrievanceOfficer {
+  name: string;
+  designation?: string | null;
+  email: string;
+  phone?: string | null;
+  /** How soon a complaint is answered, in the owner's words. */
+  responseTime?: string | null;
+}
+
+/**
+ * The store's public contact details (`GET /business-profile`): support phone, email and hours, and the grievance
+ * officer (null until entered). `grievanceOfficer` is declared here until the API client is regenerated (D374).
+ */
+export type PublicBusinessProfile = Schema<"PublicBusinessProfileResponse"> & {
+  grievanceOfficer?: GrievanceOfficer | null;
+};
 
 export type SlotStatus = Schema<"SlotDisplayStatus">;
 

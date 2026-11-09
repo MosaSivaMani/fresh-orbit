@@ -5818,6 +5818,31 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("character varying(14)")
                         .HasColumnName("fssai_license_no");
 
+                    b.Property<string>("GrievanceOfficerDesignation")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("grievance_officer_designation");
+
+                    b.Property<string>("GrievanceOfficerEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("grievance_officer_email");
+
+                    b.Property<string>("GrievanceOfficerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("grievance_officer_name");
+
+                    b.Property<string>("GrievanceOfficerPhone")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("grievance_officer_phone");
+
+                    b.Property<string>("GrievanceResponseTime")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("grievance_response_time");
+
                     b.Property<string>("Gstin")
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)")

@@ -3,6 +3,9 @@
 // docs/api/README.md §4.6 (GET /cart and every cart write) and §5 (pricing contract). Every money value here is
 // computed by the server; the app only formats it.
 
+import 'package:fresh_theme/fresh_theme.dart' show PhotoSource;
+
+import 'catalog.dart' show imageSourcesOf;
 import 'common.dart';
 import 'json.dart';
 
@@ -46,6 +49,7 @@ class CartLine {
     this.packNetGrams,
     this.piecesMin,
     this.piecesMax,
+    this.imageSources = const [],
   });
 
   factory CartLine.fromJson(Json j) {
@@ -59,6 +63,7 @@ class CartLine {
       variantName: reqString(j, 'variantName'),
       sellUnit: reqString(j, 'sellUnit'),
       imageUrl: optString(j, 'imageUrl'),
+      imageSources: imageSourcesOf(j, 'imageSources'),
       preparation: prep == null ? null : CartPreparation.fromJson(prep),
       quantity: reqQuantity(j, 'quantity'),
       estimatedNetQuantity: reqQuantity(j, 'estimatedNetQuantity'),
@@ -89,6 +94,9 @@ class CartLine {
   final String variantName;
   final String sellUnit;
   final String? imageUrl;
+
+  /// The product image's renditions (320, 640, 1280 px) so the row downloads the size it shows (D375).
+  final List<PhotoSource> imageSources;
   final CartPreparation? preparation;
   final Quantity quantity;
   final Quantity estimatedNetQuantity;

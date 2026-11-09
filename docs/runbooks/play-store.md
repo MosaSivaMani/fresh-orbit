@@ -87,11 +87,12 @@ Check this once with the lawyer (L-9).
 
 Play asks for a web page that explains how to delete the account and data **without** the app.
 
-- Use `https://<domain>/support/privacy-policy` (§6 "Erase") until a dedicated page exists. It must say: sign in on
-  the website › `/account/settings` › Delete account, or e-mail `SUPPORT_EMAIL` from the registered number's owner;
-  what is deleted; what is kept 72 months (orders and invoices) and why.
-- The dedicated `/support/delete-account` page is still to be built (gap audit L-82, website). Switch the URL in Play
-  Console when it ships.
+- Use **`https://<domain>/support/delete-account`** (gap audit L-82, D376). The page says how to delete without the
+  app: in the app (Account › Settings › Delete my account), on the website after sign-in (`/account/settings` ›
+  Delete account), or by e-mail to the business profile's support e-mail from the account's e-mail or registered
+  number; that the account is deleted straight away; what is deleted; what is kept 72 months (orders, invoices,
+  payment and refund records) and why (CGST Act s.36); and that deletion waits while an order, complaint or refund
+  is open. The website footer links it ("Delete your account").
 
 ## 3. Content rating questionnaire (IARC)
 

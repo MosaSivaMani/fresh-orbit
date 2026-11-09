@@ -8,6 +8,7 @@ import {
   type RequestBody,
   type SellUnit,
 } from "./common";
+import { type ImageSource } from "./catalog";
 
 /** A cart quantity; the spec types `unit` as a string, the server writes GRAM / PIECE / PACK. */
 export type CartQuantity = Coded<Schema<"QuantityView">, { unit: QuantityUnit }>;
@@ -22,7 +23,10 @@ export type CartLine = Coded<
     maxChargeableQuantity: CartQuantity;
     availability: Coded<Schema<"CartAvailabilityView">, { status: AvailabilityStatus }>;
   }
->;
+> & {
+  /** The 320 / 640 / 1280 px renditions (D375); declared here until the API client is regenerated. */
+  imageSources?: ImageSource[];
+};
 
 export type CouponStatus = "APPLIED" | "NOT_APPLICABLE" | "INVALID";
 

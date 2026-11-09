@@ -1,11 +1,22 @@
-import { Clock, Mail, User } from "lucide-react";
-import { type GrievanceOfficer } from "@/server/config";
+import { Clock, Mail, Phone, User } from "lucide-react";
+import { type GrievanceOfficer, type PublicBusinessProfile } from "@/api/types/locations";
 
 /**
- * The grievance officer block on the help page (L-7, D300): name, designation, email and response time, exactly as
- * configured (`FRESH_GRIEVANCE_*`). The page shows it only when `getGrievanceOfficer()` returns an officer.
+ * The grievance officer the business profile names (D374), or null: shown only with a name and an e-mail, never
+ * guessed and never taken from web configuration.
+ */
+export function grievanceOfficerOf(profile: PublicBusinessProfile | null): GrievanceOfficer | null {
+  const officer = profile?.grievanceOfficer;
+  if (!officer || !officer.name.trim() || !officer.email.trim()) return null;
+  return officer;
+}
+
+/**
+ * The grievance officer block on the help page (L-7, D300, D374): name, designation, e-mail, phone and response
+ * time, exactly as the business profile holds them. Each optional line appears only when the server sends it.
  */
 export function GrievanceOfficerCard({ officer }: { officer: GrievanceOfficer }) {
+  const phone = officer.phone?.replace(/\s+/g, "");
   return (
     <section
       id="grievance"
@@ -32,10 +43,20 @@ export function GrievanceOfficerCard({ officer }: { officer: GrievanceOfficer })
             {officer.email}
           </a>
         </li>
-        <li className="flex items-center gap-2">
-          <Clock aria-hidden="true" className="text-accent-text size-4 shrink-0" />
-          {officer.responseTime}
-        </li>
+        {phone && (
+          <li className="flex items-center gap-2">
+            <Phone aria-hidden="true" className="text-accent-text size-4 shrink-0" />
+            <a href={`tel:${phone}`} className="font-semibold underline-offset-4 hover:underline">
+              {officer.phone}
+            </a>
+          </li>
+        )}
+        {officer.responseTime && (
+          <li className="flex items-center gap-2">
+            <Clock aria-hidden="true" className="text-accent-text size-4 shrink-0" />
+            {officer.responseTime}
+          </li>
+        )}
       </ul>
     </section>
   );

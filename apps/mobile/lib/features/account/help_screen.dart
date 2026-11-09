@@ -116,6 +116,16 @@ class HelpScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             const PolicyMenuCard(key: Key('helpPolicies')),
           ],
+          // The grievance officer from the business profile (D374); left out until the owner names one.
+          if (profile.value?.grievanceOfficer case final officer?) ...[
+            const SizedBox(height: FreshLayout.sectionGap),
+            const Padding(
+              padding: FreshLayout.page,
+              child: PageTitle(text: 'Grievance', brushed: 'officer', size: 20),
+            ),
+            const SizedBox(height: 8),
+            Padding(padding: FreshLayout.page, child: _GrievanceOfficer(officer: officer)),
+          ],
           if (profile.value case final p? when _StoreDetails.hasAny(p)) ...[
             const SizedBox(height: FreshLayout.sectionGap),
             const Padding(
@@ -165,6 +175,48 @@ class _Contacts extends StatelessWidget {
               subtitle: Text(email),
               onTap: () => openExternal(context, Uri(scheme: 'mailto', path: email)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The grievance officer's name, e-mail, phone and response time, exactly as the business profile holds them (D374).
+class _GrievanceOfficer extends StatelessWidget {
+  const _GrievanceOfficer({required this.officer});
+
+  final GrievanceOfficer officer;
+
+  @override
+  Widget build(BuildContext context) {
+    final designation = officer.designation;
+    final phone = officer.phone;
+    final responseTime = officer.responseTime;
+    return SectionBox(
+      key: const Key('helpGrievanceOfficer'),
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: Text(officer.name),
+            subtitle: designation == null ? null : Text(designation),
+          ),
+          ListTile(
+            key: const Key('emailGrievanceOfficer'),
+            leading: const Icon(Icons.mail_outline),
+            title: Text(officer.email),
+            onTap: () => openExternal(context, Uri(scheme: 'mailto', path: officer.email)),
+          ),
+          if (phone != null)
+            ListTile(
+              key: const Key('callGrievanceOfficer'),
+              leading: const Icon(Icons.call_outlined),
+              title: Text(phone),
+              onTap: () => openExternal(context, telUri(phone)),
+            ),
+          if (responseTime != null)
+            ListTile(leading: const Icon(Icons.schedule_outlined), title: Text(responseTime)),
         ],
       ),
     );

@@ -125,4 +125,38 @@ public sealed class LineCalculatorTests
         view.PiecesMin.Should().Be(5);
         view.PiecesMax.Should().Be(7);
     }
+
+    [Fact]
+    public void D375_line_carries_every_image_rendition_and_the_smallest_as_its_image_url()
+    {
+        var variant = new VariantInfo(
+            Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), "Seer Fish", "seer-fish", "Steaks 500 g net", "SEER-P500", "products/p/i", "0302", "SEAFOOD",
+            SellUnit.Pack, StockUnit.Piece, 500, null, 1, 10, 1, false, true, [])
+        {
+            ImageSources = [new ImageRenditionInfo(640, "/media/products/p/i/640.webp"), new ImageRenditionInfo(320, "/media/products/p/i/320.webp"), new ImageRenditionInfo(1280, "/media/products/p/i/1280.webp")],
+        };
+        var line = new PricingLine(Guid.CreateVersion7(), variant.VariantId, null, 1);
+        var price = new LinePrice(variant.VariantId, null, 74900, null, 0, null, 500);
+
+        var view = LineCalculator.Price(new ResolvedLine(line, variant, null, null), price, new VariantAvailability(variant.VariantId, 10, QuantityUnit.Piece), 1000).ToView(0);
+
+        view.ImageUrl.Should().Be("/media/products/p/i/320.webp");
+        view.ImageSources.Select(s => s.Width).Should().BeEquivalentTo([640, 320, 1280]);
+        view.ImageSources.Should().OnlyContain(s => s.Url.EndsWith($"/{s.Width}.webp", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void D375_line_without_an_image_has_no_url_and_no_sources()
+    {
+        var variant = new VariantInfo(
+            Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), "Seer Fish", "seer-fish", "Steaks 500 g net", "SEER-P500", null, "0302", "SEAFOOD",
+            SellUnit.Pack, StockUnit.Piece, 500, null, 1, 10, 1, false, true, []);
+        var line = new PricingLine(Guid.CreateVersion7(), variant.VariantId, null, 1);
+        var price = new LinePrice(variant.VariantId, null, 74900, null, 0, null, 500);
+
+        var view = LineCalculator.Price(new ResolvedLine(line, variant, null, null), price, new VariantAvailability(variant.VariantId, 10, QuantityUnit.Piece), 1000).ToView(0);
+
+        view.ImageUrl.Should().BeNull();
+        view.ImageSources.Should().BeEmpty();
+    }
 }
