@@ -77,6 +77,27 @@ public sealed class NotificationsTests(E1Database database) : E1ApiTestBase(data
     }
 
     [Fact]
+    public async Task Push_data_carries_the_order_id_for_the_app_and_nothing_else_from_the_payload()
+    {
+        // D351: the app opens the order a tapped notification names; names, amounts and codes stay in the text.
+        var session = await Factory.SignInCustomerAsync(null, Ct);
+        using var client = Factory.CreateClient(session.AccessToken);
+        var pushToken = "fcm-" + Guid.NewGuid().ToString("N");
+        (await client.PutAsJsonAsync("/api/v1/me/device-tokens", new { pushToken, provider = "FCM", platform = "ANDROID" }, Ct)).StatusCode.Should().Be(HttpStatusCode.OK);
+        var orderId = Guid.CreateVersion7().ToString("D");
+        var payload = new Dictionary<string, string> { ["orderId"] = orderId, ["orderNumber"] = "FO-77", ["deliveryCode"] = "4821" };
+
+        await QueueAsync(new QueueCustomerNotificationRequest(await CustomerIdAsync(session.UserId), "ORDER_PREPARING", payload, [NotificationChannel.Push], null));
+        await DispatchAllAsync();
+
+        var sent = Factory.Push.Sent.Single(p => p.Tokens.Contains(pushToken));
+        sent.Data.Should().ContainKey("templateCode").WhoseValue.Should().Be("ORDER_PREPARING");
+        sent.Data.Should().ContainKey("messageId");
+        sent.Data.Should().ContainKey("orderId").WhoseValue.Should().Be(orderId);
+        sent.Data.Keys.Should().BeEquivalentTo(["templateCode", "messageId", "orderId"]);
+    }
+
+    [Fact]
     public async Task Worker_passes_the_sms_template_code_and_variables_in_template_order()
     {
         var session = await Factory.SignInCustomerAsync(null, Ct);
