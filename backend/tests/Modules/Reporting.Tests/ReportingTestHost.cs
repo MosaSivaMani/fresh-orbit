@@ -26,7 +26,7 @@ public sealed class ReportingSourcesModel : IModuleModel
 {
     public string Schema => "reporting_test";
 
-    public IEnumerable<string> DatabaseObjectsSql => [SourceTablesSql, ReportingDataset.SeedSql, .. new ReportingModuleModel().DatabaseObjectsSql];
+    public IEnumerable<string> DatabaseObjectsSql => [SourceTablesSql, ReportingDataset.SeedSql, BuyingDataset.SeedSql, .. new ReportingModuleModel().DatabaseObjectsSql];
 
     public void Configure(ModelBuilder modelBuilder)
     {
@@ -39,13 +39,35 @@ public sealed class ReportingSourcesModel : IModuleModel
         CREATE SCHEMA IF NOT EXISTS inventory;
         CREATE SCHEMA IF NOT EXISTS delivery;
         CREATE SCHEMA IF NOT EXISTS payments;
+        CREATE SCHEMA IF NOT EXISTS pricing;
         DROP TABLE IF EXISTS locations.cities, locations.fulfillment_locations, catalog.products, catalog.product_variants,
             ordering.orders, ordering.order_items, ordering.complaints, inventory.stock_items, inventory.stock_movements,
-            delivery.delivery_slots, payments.refunds, payments.reconciliation_issues CASCADE;
+            delivery.delivery_slots, payments.refunds, payments.reconciliation_issues, catalog.categories,
+            catalog.preparation_methods, catalog.variant_preparations, inventory.batches, inventory.stock_reservations,
+            pricing.variant_prices, pricing.tax_rules CASCADE;
+        CREATE TABLE catalog.categories (id uuid PRIMARY KEY, name text NOT NULL);
+        CREATE TABLE catalog.preparation_methods (id uuid PRIMARY KEY, code text NOT NULL, name text NOT NULL);
+        CREATE TABLE catalog.variant_preparations (
+            variant_id uuid NOT NULL, preparation_method_id uuid NOT NULL, yield_bp integer NOT NULL,
+            is_default boolean NOT NULL DEFAULT false, is_active boolean NOT NULL DEFAULT true, PRIMARY KEY (variant_id, preparation_method_id));
+        CREATE TABLE inventory.batches (
+            id uuid PRIMARY KEY, fulfillment_location_id uuid NOT NULL, variant_id uuid NOT NULL, received_at timestamptz NOT NULL,
+            received_quantity integer NOT NULL, total_cost_paise bigint NOT NULL, status text NOT NULL DEFAULT 'ACTIVE');
+        CREATE TABLE inventory.stock_reservations (
+            id uuid PRIMARY KEY, stock_item_id uuid NOT NULL, order_id uuid NOT NULL, order_item_id uuid NOT NULL,
+            quantity integer NOT NULL, status text NOT NULL);
+        CREATE TABLE pricing.variant_prices (
+            id uuid PRIMARY KEY, fulfillment_location_id uuid NOT NULL, variant_id uuid NOT NULL, unit_price_paise bigint NOT NULL,
+            compare_at_paise bigint, valid_from timestamptz NOT NULL, valid_to timestamptz);
+        CREATE TABLE pricing.tax_rules (
+            id uuid PRIMARY KEY, tax_category_code text NOT NULL, rate_bp integer NOT NULL, valid_from timestamptz NOT NULL, valid_to timestamptz);
         CREATE TABLE locations.cities (id uuid PRIMARY KEY, code text, name text, time_zone text NOT NULL);
         CREATE TABLE locations.fulfillment_locations (id uuid PRIMARY KEY, city_id uuid NOT NULL, code text, name text);
-        CREATE TABLE catalog.products (id uuid PRIMARY KEY, category_id uuid, name text NOT NULL);
-        CREATE TABLE catalog.product_variants (id uuid PRIMARY KEY, product_id uuid NOT NULL, sku text NOT NULL, name text NOT NULL, stock_unit text NOT NULL);
+        CREATE TABLE catalog.products (
+            id uuid PRIMARY KEY, category_id uuid, name text NOT NULL, status text NOT NULL DEFAULT 'ACTIVE', tax_category_code text);
+        CREATE TABLE catalog.product_variants (
+            id uuid PRIMARY KEY, product_id uuid NOT NULL, sku text NOT NULL, name text NOT NULL, stock_unit text NOT NULL,
+            sell_unit text NOT NULL DEFAULT 'KG', pack_size_grams integer, is_active boolean NOT NULL DEFAULT true);
         CREATE TABLE ordering.orders (
             id uuid PRIMARY KEY, order_number text, customer_id uuid NOT NULL, city_id uuid, fulfillment_location_id uuid NOT NULL,
             status text NOT NULL, payment_method text, slot_start_at timestamptz,
@@ -57,7 +79,8 @@ public sealed class ReportingSourcesModel : IModuleModel
             id uuid PRIMARY KEY, order_id uuid NOT NULL, line_no integer, product_id uuid NOT NULL, variant_id uuid NOT NULL,
             product_name text NOT NULL, variant_name text NOT NULL, sku text NOT NULL, preparation_code text,
             ordered_quantity integer NOT NULL, max_chargeable_quantity integer, packed_quantity integer, final_total_paise bigint,
-            status text NOT NULL DEFAULT 'ACTIVE');
+            status text NOT NULL DEFAULT 'ACTIVE', preparation_name text, sell_unit text NOT NULL DEFAULT 'KG',
+            stock_unit text NOT NULL DEFAULT 'GRAM', yield_bp integer NOT NULL DEFAULT 10000);
         CREATE TABLE ordering.complaints (id uuid PRIMARY KEY, order_id uuid NOT NULL, status text NOT NULL);
         CREATE TABLE inventory.stock_items (
             id uuid PRIMARY KEY, fulfillment_location_id uuid NOT NULL, variant_id uuid NOT NULL,
