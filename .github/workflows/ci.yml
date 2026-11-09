@@ -176,10 +176,5 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: TEMP upload resolved pubspec.lock
-        uses: actions/upload-artifact@v7
-        with:
-          name: mobile-pubspec-lock
-          path: apps/mobile/pubspec.lock
       - run: flutter analyze
       - run: flutter test
