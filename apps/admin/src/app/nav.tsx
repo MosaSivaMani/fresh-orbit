@@ -5,6 +5,7 @@ import {
   Bell,
   Building2,
   ClipboardList,
+  FileText,
   Images,
   Hash,
   LayoutDashboard,
@@ -59,6 +60,13 @@ export const NAVIGATION: readonly NavGroup[] = [
         label: "Orders",
         href: "/orders",
         icon: <ShoppingBag aria-hidden="true" />,
+        perm: "orders.view",
+      },
+      {
+        id: "invoices",
+        label: "Invoices",
+        href: "/invoices",
+        icon: <FileText aria-hidden="true" />,
         perm: "orders.view",
       },
       {

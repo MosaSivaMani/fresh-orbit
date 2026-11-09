@@ -1,11 +1,11 @@
 import { formatDateTime, formatPercentFromBp, formatQuantity, formatRupees } from "@fresh/core";
 import { Button } from "@fresh/ui";
-import { FileDown, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { useParams } from "react-router";
-import { useApiFile, useObjectUrl } from "../../api/files";
 import { useOrderInvoice } from "../../api/orders";
 import { type Invoice } from "../../api/types/orders";
 import { PageHeader, QueryView, Section } from "../../components/page";
+import { InvoicePdfDownload, PdfNotReady } from "./InvoicePdf";
 
 /**
  * The order's GST tax invoice (AD-5) from `GET /admin/orders/{id}/invoice`, laid out to print: "Print" prints only
@@ -32,7 +32,15 @@ function InvoiceView({ invoice }: { invoice: Invoice }) {
         description={`Issued ${formatDateTime(invoice.issuedAt)}`}
         actions={
           <div className="flex flex-wrap gap-2">
-            {invoice.pdfUrl && <PdfLink path={invoice.pdfUrl} name={invoice.invoiceNumber} />}
+            {invoice.pdfUrl ? (
+              <InvoicePdfDownload
+                path={invoice.pdfUrl}
+                invoiceNumber={invoice.invoiceNumber}
+                size="md"
+              />
+            ) : (
+              <PdfNotReady />
+            )}
             <Button leadingIcon={<Printer aria-hidden="true" />} onClick={() => window.print()}>
               Print
             </Button>
@@ -120,28 +128,5 @@ function InvoiceView({ invoice }: { invoice: Invoice }) {
         </Section>
       </div>
     </>
-  );
-}
-
-/** The server's PDF, fetched with the staff token (a plain link cannot carry it) and opened from an object URL. */
-function PdfLink({ path, name }: { path: string; name: string }) {
-  const file = useApiFile(path);
-  const href = useObjectUrl(file.data);
-  if (!href) {
-    return (
-      <Button variant="outline" disabled loading={file.isPending}>
-        {file.isError ? "PDF unavailable" : "Download PDF"}
-      </Button>
-    );
-  }
-  return (
-    <a
-      href={href}
-      download={`${name}.pdf`}
-      className="border-border hover:bg-muted inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-medium"
-    >
-      <FileDown aria-hidden="true" className="size-4" />
-      Download PDF
-    </a>
   );
 }

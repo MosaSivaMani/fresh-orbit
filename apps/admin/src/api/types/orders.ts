@@ -197,3 +197,19 @@ export interface DecideComplaintRequest {
 
 /** `GET /admin/orders/{id}/invoice`: the GST tax invoice issued at delivery (AD-5); amounts are the server's. */
 export type Invoice = Schema<"InvoiceResponse">;
+
+/**
+ * `GET /admin/invoices` row (D353): the invoice register. `invoiceDate` is the date printed on the invoice (business
+ * time zone); `pdfUrl` is the staff download path once the PDF is rendered, null while `pdfReady` is false.
+ */
+export type AdminInvoiceSummary = Schema<"AdminInvoiceListItem">;
+
+/** `fromDate` / `toDate` are invoice dates, both inclusive; `q` is part of an invoice or order number. */
+export interface AdminInvoiceListQuery {
+  fulfillmentLocationId?: Id;
+  fromDate?: CalendarDate;
+  toDate?: CalendarDate;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}
