@@ -2,9 +2,23 @@
 
 import type { Coded, Schema } from "./common";
 
-export type BusinessProfile = Schema<"BusinessProfileResponse">;
+/**
+ * Grievance officer fields of the business profile (D374). Declared here until the API client is regenerated from
+ * the OpenAPI document of this change; the intersection stays correct afterwards.
+ */
+interface GrievanceOfficerFields {
+  grievanceOfficerName?: string | null;
+  grievanceOfficerDesignation?: string | null;
+  grievanceOfficerEmail?: string | null;
+  grievanceOfficerPhone?: string | null;
+  grievanceResponseTime?: string | null;
+}
 
-export type SaveBusinessProfileRequest = Schema<"SaveBusinessProfileRequest">;
+export type BusinessProfile = Schema<"BusinessProfileResponse"> & GrievanceOfficerFields;
+
+type SaveProfileSchema = Schema<"SaveBusinessProfileRequest">;
+
+export type SaveBusinessProfileRequest = SaveProfileSchema & GrievanceOfficerFields;
 
 export type CancelAllowedUntilStatus = "PENDING_PAYMENT" | "CONFIRMED" | "PREPARING";
 export type PolicyPaymentMethod = Schema<"PaymentsPaymentMethod">;

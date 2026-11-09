@@ -41,7 +41,7 @@ public sealed class PaymentsOrderAdjustedHandler(OrderPaymentHandlers handlers) 
     public Task HandleAsync(OrderAdjusted domainEvent, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(domainEvent);
-        return handlers.OnOrderAdjustedAsync(new OrderAdjustedInput(domainEvent.OrderId, domainEvent.AdjustmentId, domainEvent.AmountDuePaise, domainEvent.RefundDuePaise, domainEvent.RequestedBy), cancellationToken);
+        return handlers.OnOrderAdjustedAsync(new OrderAdjustedInput(domainEvent.OrderId, domainEvent.AdjustmentId, domainEvent.AmountPaise, domainEvent.AmountDuePaise, domainEvent.RefundDuePaise, domainEvent.RequestedBy), cancellationToken);
     }
 }
 

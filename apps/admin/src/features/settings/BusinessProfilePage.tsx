@@ -21,6 +21,21 @@ const schema = z.object({
   supportEmail: z.string().trim().pipe(z.email("Enter a valid support email address.")),
   timeZone: z.string().trim().min(1, "Enter the time zone, e.g. Asia/Kolkata."),
   supportHours: z.string().trim().max(200, "Keep the support hours under 200 characters."),
+  // Grievance officer (D374): optional; the API refuses a name without an e-mail and the reverse.
+  grievanceOfficerName: z.string().trim().max(200, "Keep the name under 200 characters."),
+  grievanceOfficerDesignation: z
+    .string()
+    .trim()
+    .max(200, "Keep the designation under 200 characters."),
+  grievanceOfficerEmail: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || z.email().safeParse(v).success, "Enter a valid email address."),
+  grievanceOfficerPhone: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || /^\+[1-9]\d{6,14}$/.test(v), "Enter the phone with country code."),
+  grievanceResponseTime: z.string().trim().max(200, "Keep the response time under 200 characters."),
 });
 type Values = z.infer<typeof schema>;
 const FIELDS = Object.keys(schema.shape);
@@ -67,6 +82,11 @@ function ProfileForm({
       supportEmail: profile?.supportEmail ?? "",
       timeZone: profile?.timeZone ?? "Asia/Kolkata",
       supportHours: profile?.supportHours ?? "",
+      grievanceOfficerName: profile?.grievanceOfficerName ?? "",
+      grievanceOfficerDesignation: profile?.grievanceOfficerDesignation ?? "",
+      grievanceOfficerEmail: profile?.grievanceOfficerEmail ?? "",
+      grievanceOfficerPhone: profile?.grievanceOfficerPhone ?? "",
+      grievanceResponseTime: profile?.grievanceResponseTime ?? "",
     },
   });
 
@@ -79,6 +99,11 @@ function ProfileForm({
           gstin: v.gstin || null,
           fssaiLicenseNo: v.fssaiLicenseNo || null,
           supportHours: v.supportHours || null,
+          grievanceOfficerName: v.grievanceOfficerName || null,
+          grievanceOfficerDesignation: v.grievanceOfficerDesignation || null,
+          grievanceOfficerEmail: v.grievanceOfficerEmail || null,
+          grievanceOfficerPhone: v.grievanceOfficerPhone || null,
+          grievanceResponseTime: v.grievanceResponseTime || null,
         },
         version: profile?.version ?? null,
       },
@@ -124,6 +149,31 @@ function ProfileForm({
             name="supportHours"
             label="Support hours"
             hint="Shown to customers next to the support phone, e.g. 7 am to 9 pm, every day."
+            className="md:col-span-2"
+          />
+        </div>
+        <h3 className="text-sm font-semibold">Grievance officer</h3>
+        <p className="text-text-muted text-sm">Shown on the website footer and in the app Help.</p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <TextField form={form} name="grievanceOfficerName" label="Grievance officer name" />
+          <TextField form={form} name="grievanceOfficerDesignation" label="Designation" />
+          <TextField
+            form={form}
+            name="grievanceOfficerEmail"
+            label="Grievance officer email"
+            type="email"
+          />
+          <TextField
+            form={form}
+            name="grievanceOfficerPhone"
+            label="Grievance officer phone"
+            type="tel"
+          />
+          <TextField
+            form={form}
+            name="grievanceResponseTime"
+            label="Response time"
+            hint="e.g. Acknowledged within 48 hours, resolved within one month."
             className="md:col-span-2"
           />
         </div>

@@ -4,7 +4,6 @@ import { formatQuantity, formatWeight } from "@fresh/core";
 import { FoodCard, type FoodCardTone, PriceTag, toast } from "@fresh/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { Fish } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -19,6 +18,7 @@ import { discountLabel, freshnessLine, piecesText, servingLine } from "@/lib/pro
 import { queryKeys } from "@/lib/query-keys";
 import { availabilityMap, sellUnitLabels } from "@/lib/status-maps";
 import { useLocation } from "@/location/location-context";
+import { CardPicture } from "./card-picture";
 
 const tones: FoodCardTone[] = ["ice", "teal", "coral", "mango"];
 
@@ -173,10 +173,10 @@ export function ShopProductCard({
       pictureTone={tones[index % tones.length]}
       picture={
         product.imageUrl ? (
-          <Image
+          <CardPicture
             src={product.imageUrl}
+            sources={product.imageSources}
             alt=""
-            fill
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 480px) 50vw, 100vw"
             priority={priority}
             className="object-cover"
