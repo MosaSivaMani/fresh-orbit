@@ -7,6 +7,7 @@ import { customersRoutes } from "../features/customers/routes";
 import { dashboardRoutes } from "../features/dashboard/routes";
 import { deliveryRoutes } from "../features/delivery/routes";
 import { inventoryRoutes } from "../features/inventory/routes";
+import { operationsRoutes } from "../features/operations/routes";
 import { ordersRoutes } from "../features/orders/routes";
 import { paymentsRoutes } from "../features/payments/routes";
 import { pricingRoutes } from "../features/pricing/routes";
@@ -40,6 +41,7 @@ export const routes: RouteObject[] = [
           ...reportsRoutes,
           ...paymentsRoutes,
           ...settingsRoutes,
+          ...operationsRoutes,
           { path: "*", element: <NotFound /> },
         ],
       },

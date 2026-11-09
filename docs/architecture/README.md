@@ -35,7 +35,7 @@ Deployed with Docker Compose behind Caddy on one server (Oracle Always Free firs
 | Notifications | `notifications` | templates, messages, device tokens, preferences | Identity, Audit, Settings, Customers, Ordering, Payments, Delivery |
 | Reporting | `reporting` | read-only views over other schemas | — |
 | Audit | `audit` | append-only audit entries | — |
-| Settings | `settings` | business profile, order policies, number series | Audit, Delivery (implements `IDeliveryAttemptPolicy`) |
+| Settings | `settings` | business profile, order policies, number series | Audit, Delivery (implements `IDeliveryAttemptPolicy`), Locations and Notifications (store readiness report only, D358) |
 
 ## Projects
 

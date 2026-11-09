@@ -71,6 +71,8 @@ listed in §5; **left** = not built.
 | 10 | Order policies | `/settings/order-policies` | `settings.manage` | done | default and per-city policies |
 | 10 | Number series | `/settings/number-series` | `settings.manage` | done | list, update (If-Match) |
 | 10 | Notification templates | `/settings/notification-templates` | `notifications.manage` | done | list, update, send test |
+| 10 | Store readiness | `/settings/store-readiness` | `settings.manage` | done | `GET /admin/settings/store-readiness` (D358–D360): business profile fields, each location's FSSAI licence, SMS / e-mail / push provider; OK or Missing per row, Missing rows link to the page that fixes them |
+| 10 | Failed messages | `/settings/failed-messages` | `platform.manage` | done | `GET /admin/dead-letters` (Open by default, Replayed, All), details dialog (`GET …/{id}`), Replay with a confirmation step in the dialog (D357, D360) |
 | 10 | Audit log | `/settings/audit` | `audit.view` | done | list with filters; before/after per row |
 | 10 | My account | `/account` | — | done | profile, change password (signs out every device) |
 | 11 | Payments / detail / webhook events | `/payments`, `/payments/:id`, `/payments/webhook-events` | `payments.view` (webhooks: `all_loc`; reprocess `payments.manage`) | done | payments list and detail, webhook events, reprocess |

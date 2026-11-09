@@ -24,6 +24,7 @@ Error codes: `docs/api/README.md` §2 (Locations, Common).
 |---|---|---|
 | `ResolvePincodeAsync(pincode)` | `LocationContext { cityId, cityCode, timeZone, fulfillmentLocationId, fulfillmentLocationCode, serviceAreaId, deliveryFeePaise, freeDeliveryAbovePaise, minOrderPaise }` or error `PINCODE_NOT_SERVICEABLE` | Api host (X-Pincode), Cart, Ordering, Customers, Catalog |
 | `GetLocationsAsync(ids)` | id, code, name, cityId, status, timeZone, hasColdStorage, fssaiLicenseNo | Pricing, Inventory, Delivery, Ordering |
+| `GetAllFulfillmentLocationsAsync()` | every location of every city, any status, ordered by code (with its FSSAI licence number) | Settings (store readiness report, D358) |
 | `GetClosuresAsync(locationId, fromDate, toDate)` | closed dates | Delivery (slot generation) |
 | `GetOperatingHoursAsync(locationIds)` | day → opens/closes | Delivery |
 | `ICityActivationCheck` (interface implemented by other modules) | `IReadOnlyList<MissingItem>` for given location ids | Pricing, Inventory, Delivery implement |

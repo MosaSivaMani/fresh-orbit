@@ -1,4 +1,5 @@
-// Permission codes from docs/api/README.md §3 (+ `payments.manage`, ruling D15; `tax.manage`, D35). The API enforces them; the
+// Permission codes from docs/api/README.md §3 (+ `payments.manage`, ruling D15; `tax.manage`, D35;
+// `platform.manage`, D296: failed messages). The API enforces them; the
 // admin uses them only to decide which menus, routes and buttons to render.
 
 export const PERMISSIONS = [
@@ -28,6 +29,7 @@ export const PERMISSIONS = [
   "settings.manage",
   "staff.manage",
   "audit.view",
+  "platform.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

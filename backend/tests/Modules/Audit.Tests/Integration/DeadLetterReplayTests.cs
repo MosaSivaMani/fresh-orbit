@@ -32,6 +32,19 @@ public sealed class DeadLetterReplayTests(E1Database database) : E1ApiTestBase(d
         listed.GetProperty("handler").GetString().Should().Be("Tests.FailingHandler");
         listed.GetProperty("attempts").GetInt32().Should().Be(5);
         listed.GetProperty("replayedAt").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+        listed.GetProperty("error").GetString().Should().Be("System.InvalidOperationException: down");
+        listed.GetProperty("eventOccurredAt").ValueKind.Should().Be(System.Text.Json.JsonValueKind.String, "D357: when the event was raised");
+        listed.GetProperty("correlationId").GetString().Should().Be(CorrelationId);
+
+        // D357: one dead letter for the details panel, same fields as the list item.
+        var one = await operations.GetAsync($"/api/v1/admin/dead-letters/{deadLetterId}", Ct);
+        one.StatusCode.Should().Be(HttpStatusCode.OK);
+        var detail = await ReadJsonAsync(one);
+        detail.GetProperty("id").GetGuid().Should().Be(deadLetterId);
+        detail.GetProperty("handler").GetString().Should().Be("Tests.FailingHandler");
+        detail.GetProperty("eventType").GetString().Should().Be(EventType);
+        detail.GetProperty("attempts").GetInt32().Should().Be(5);
+        detail.GetProperty("correlationId").GetString().Should().Be(CorrelationId);
 
         var replay = await operations.PostAsync($"/api/v1/admin/dead-letters/{deadLetterId}/replay", null, Ct);
 
@@ -78,6 +91,10 @@ public sealed class DeadLetterReplayTests(E1Database database) : E1ApiTestBase(d
         var unknown = await operations.PostAsync($"/api/v1/admin/dead-letters/{Guid.CreateVersion7()}/replay", null, Ct);
         unknown.StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await ErrorCodeAsync(unknown)).Should().Be("DEAD_LETTER_NOT_FOUND");
+        var unknownDetail = await operations.GetAsync($"/api/v1/admin/dead-letters/{Guid.CreateVersion7()}", Ct);
+        unknownDetail.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await ErrorCodeAsync(unknownDetail)).Should().Be("DEAD_LETTER_NOT_FOUND");
+        (await auditor.GetAsync($"/api/v1/admin/dead-letters/{deadLetterId}", Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         (await auditor.PostAsync($"/api/v1/admin/dead-letters/{deadLetterId}/replay", null, Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await auditor.GetAsync("/api/v1/admin/dead-letters", Ct)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -92,6 +109,7 @@ public sealed class DeadLetterReplayTests(E1Database database) : E1ApiTestBase(d
     }
 
     private const string EventType = "FreshOrbit.Tests.GoneEvent, FreshOrbit.Tests";
+    private const string CorrelationId = "00-dead-letter-test-01";
 
     /// <summary>An outbox row whose two handlers failed every attempt (as the dispatcher leaves it), with its dead letters.</summary>
     private async Task<(Guid EventId, Guid DeadLetterId, Guid SiblingId)> SeedDeadLetteredEventAsync()
@@ -99,7 +117,7 @@ public sealed class DeadLetterReplayTests(E1Database database) : E1ApiTestBase(d
         var eventId = Guid.CreateVersion7();
         var now = DateTimeOffset.UtcNow;
         await using var db = Database.CreateDbContext();
-        db.Add(new OutboxMessage(eventId, EventType, "{}", now.AddHours(-7), null) { Attempts = 5, Error = "Tests.FailingHandler: down" });
+        db.Add(new OutboxMessage(eventId, EventType, "{}", now.AddHours(-7), CorrelationId) { Attempts = 5, Error = "Tests.FailingHandler: down" });
         var deadLetter = new DeadLetter(eventId, "Tests.FailingHandler", "System.InvalidOperationException: down", now);
         var sibling = new DeadLetter(eventId, "Tests.OtherFailingHandler", "System.InvalidOperationException: down", now);
         db.AddRange(deadLetter, sibling);
