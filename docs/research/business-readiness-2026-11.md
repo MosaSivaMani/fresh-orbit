@@ -99,8 +99,8 @@ Legend: **Have** = in the system today · **Gap** = missing · priority **P1** (
 | Record each purchase as a batch with supplier and cost | **Have**: receipts and batches; suppliers exist | — |
 | Record waste with reason | **Have**: `POST /admin/inventory/waste`, waste report | — |
 | **Order cut-off for next-morning delivery** ("order by 10 pm, delivered tomorrow 7–10 am") so the morning harbour purchase matches real orders | **Gap / to decide**: slots exist; the buying rhythm is a business decision first | **P1 decision** |
-| **Buying list**: tomorrow's confirmed orders summed per product and cut, plus a safety margin, before the harbour visit | **Gap**: no such view | **P1** |
-| Daily price update in minutes (harbour prices change every day) | **Partly**: price periods per location exist; no quick "today's prices" screen for many products at once | P1 |
+| **Buying list**: tomorrow's confirmed orders summed per product and cut, plus a safety margin, before the harbour visit | **Have** (D369): admin Inventory → Buying list for a location and delivery date; confirmed orders per variant and cut, raw grams after cleaning yield, stock on hand, shortfall; safety margin typed on screen; print and CSV | — |
+| Daily price update in minutes (harbour prices change every day) | **Have** (D370–D372): admin Pricing → Today's prices lists every variant with price, latest batch cost per net kg, margin and a suggested price from a target margin typed on screen; staff edit inline and save in bulk now or from tomorrow 00:00 after a dry-run review with large-change flags. Target margins are not stored yet (owner decision) | — |
 | Fish age per batch; stop selling or mark down old stock | **Partly**: batches have dates; no automatic hide or end-of-day clearance price | P2 |
 | Waste target and alert (e.g. above 5 % for a week) | **Gap** | P2 |
 | Demand forecast from past weeks (day of week, festivals, Lent, monsoon ban) | **Gap** | P3 |

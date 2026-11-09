@@ -14,6 +14,8 @@ Reads other schemas read-only through SQL (materialized views and dashboard quer
 | `customer_daily_orders` (backs repeat-customers) | materialized view | (business_date, fulfillment_location_id, customer_id) | `ordering.orders` |
 | `refresh_state` | table (Reporting-owned) | `view_name` PK; `refreshed_at`, `source_watermark`, `duration_ms`, `last_error` | written by the refresh job |
 | Dashboard | live queries, not stored | — | `ordering.orders`, `delivery.delivery_slots`, `inventory.stock_items`, `ordering.complaints`, `payments.refunds`, `payments.reconciliation_issues` |
+| Buying list (REP-R14) | live query, not stored | — | `ordering.orders`, `ordering.order_items`, `inventory.stock_reservations`, `inventory.stock_items`, `catalog.product_variants`, `locations.*` |
+| Today's prices (REP-R15) | live query, not stored | — | `catalog.product_variants`, `catalog.products`, `catalog.categories`, `catalog.variant_preparations`, `catalog.preparation_methods`, `pricing.variant_prices`, `pricing.tax_rules`, `inventory.batches`, `locations.*` |
 
 | Boundary rule |
 |---|
@@ -48,6 +50,8 @@ Source states used (owned elsewhere): order `DELIVERED` / `CANCELLED` and their 
 | REP-R11 | **Location scoping.** Staff `loc` claim restricts rows silently; `fulfillmentLocationId` outside access → 403 `LOCATION_ACCESS_DENIED`; `cityId` → locations of that city ∩ access; `cityId` and `fulfillmentLocationId` inconsistent → 422 `VALIDATION_FAILED`. |
 | REP-R12 | **CSV export** (`format=csv`): `text/csv; charset=utf-8` with BOM, `Content-Disposition: attachment; filename="<report>_<fromDate>_<toDate>.csv"`; header = snake_case column names; all rows (no paging), max 100 000 rows else 422 `VALIDATION_FAILED` on `toDate`; streamed; money as `_paise` integers plus `_inr` decimal strings (`1234.50`) (Q5); cells starting with `=`, `+`, `-`, `@` prefixed with `'`; final `TOTAL` row; response header `X-Report-As-Of`. Dashboard has no CSV (422). |
 | REP-R13 | Reports are read-only: no `If-Match`, no `Idempotency-Key`; `Cache-Control: private, max-age=60`. |
+| REP-R14 | **Buying list** (D369, permission `inventory.view`, live): `fulfillmentLocationId` required (403 `LOCATION_ACCESS_DENIED` outside access, 404 unknown), `deliveryDate` (local date, default today at the location), `safetyMarginBp` 0–10 000 (default 0, typed on the screen, never stored). Lines: ACTIVE items of orders in CONFIRMED or PREPARING whose `slot_start_at` falls in [local midnight of the date, next local midnight). Per line, with the line's own `yield_bp` and stock unit: needed = INV-R11 gross for GRAM, the count for PIECE/PACK; net grams = ordered (GRAM), packs × `pack_size_grams` (PACK), none (PIECE); raw grams = ceil(net × 10 000 / yield) when net grams are known. Grouped per variant (rows, sorted by product, variant, SKU) and per preparation code, name and yield (`preparations`). Per variant: `withMarginQuantity` = ceil(needed × (10 000 + margin) / 10 000) (raw grams likewise); `reservedForOtherOrders` = `stock_items.reserved` − Σ ACTIVE reservations of the listed lines (≥ 0); `availableQuantity` = on hand − that (≥ 0; 0 and `stockItemMissing` without a stock item); `shortfallQuantity` = max(0, with margin − available); `shortfallRawGrams` = the shortfall for GRAM, its share of the raw grams for PACK (rounded up), null for PIECE. Totals: `ordersCount`, `pendingPaymentOrders` (PENDING_PAYMENT orders of the date, not counted), Σ raw grams with margin, Σ raw shortfall. `format=csv`: BOM, `buying_list_<locationCode>_<date>.csv`, header `row_type,product_name,…,shortfall_raw_grams`, VARIANT rows each followed by its PREPARATION rows, final TOTAL row, text neutralised as REP-R12. `Cache-Control: no-store`. |
+| REP-R15 | **Today's prices** (D370–D372, permission `pricing.manage`, live): `fulfillmentLocationId` required (as REP-R14), `categoryId` optional, `targetMarginBp` 0–9 500, `categoryTargets=<categoryId>:<bp>,…` (each 0–9 500; a category target replaces the screen target). Rows: every active variant of a product that is not ARCHIVED, sorted by category name, product, variant, SKU, with the CURRENT price and next FUTURE price at the location (PRC-R2), the CURRENT tax rate of the product's tax category, the default active preparation and its yield, and the batch most recently received at the location. `costPerUnitPaise`: KG = round(batch cost × 1 000 × 10 000 / (received grams × yield)); PIECE/PACK = round(batch cost / received count). `marginBp` = trunc((price ex GST − cost) × 10 000 / price ex GST), price ex GST = round(price × 10 000 / (10 000 + rate)) (PRC-R10). `suggestedPricePaise` = ceil to whole rupees of ceil(ceil(cost × 10 000 / (10 000 − target)) × (10 000 + rate) / 10 000). Missing inputs give null figures and `issues`: `PRICE_MISSING`, `BATCH_MISSING`, `YIELD_MISSING` (KG only), `TAX_RULE_MISSING`. `tomorrowStartsAt` = next local midnight at the location (UTC). Read-only; saving goes through `POST /admin/pricing/prices/bulk` (D372). `Cache-Control: no-store`. |
 
 ## 4. Events
 
@@ -68,6 +72,8 @@ Source states used (owned elsewhere): order `DELIVERED` / `CANCELLED` and their 
 | GetRepeatCustomers | `GET /api/v1/admin/reports/repeat-customers` | `customer_daily_orders` | REP-R7, R11 | — | — |
 | GetDashboard | `GET /api/v1/admin/reports/dashboard` | live SQL per tile | REP-R8, R11 | — | — |
 | ExportCsv | the five reports with `format=csv` | same | REP-R12 | — | audit entry `REPORT_EXPORTED` (who, report, filters) |
+| GetBuyingList | `GET /api/v1/admin/reports/buying-list` (`inventory.view`; `format=csv`) | location + time zone; order lines with their ACTIVE reservations; PENDING_PAYMENT count; stock items of the listed variants (one SQL each) | REP-R14 (`BuyingRules`) | — | — |
+| GetTodaysPrices | `GET /api/v1/admin/reports/todays-prices` (`pricing.manage`) | location + time zone; one SQL: variants, products, categories, current/next price, tax rule, default preparation, latest batch | REP-R15 (`PriceRules`) | — | — |
 
 ### API gaps
 
@@ -128,6 +134,18 @@ revenue 305 306; all locations add F: 5 / 2 / 405 305 / 135 101 / 3 / 405 305.
 | T6 | Range 400 days; `fromDate > toDate` | 422 `VALIDATION_FAILED` |
 | T7 | Read during refresh | previous data returned, no error (CONCURRENTLY) |
 | T8 | Staff without `reports.view` | 403 `FORBIDDEN` |
+
+### Buying list and today's prices (fixture `BuyingDataset`, location L3, delivery 2026-11-06 IST)
+
+| # | Scenario | Expect |
+|---|---|---|
+| B1 | O1 CONFIRMED (pomfret curry cut 500 g at 6 500 bp, whole 1 000 g, 2 seer packs of 500 g at 7 000 bp), O2 PREPARING (pomfret curry cut 1 000 g, 3 lobsters, one cancelled line); O3 cancelled, O4 pending payment, O5 next day; margin 1 000 bp | 2 orders, 1 pending. Pomfret: ordered 2 500 g, needed 3 309 (770 + 1 539 + 1 000), with margin 3 640, on hand 5 300, reserved for others 1 924, available 3 376, shortfall 264 g. Seer packs: 2 packs = 1 000 g net, 1 429 g raw, with margin 3 packs / 1 572 g, no stock item, shortfall 3 packs / 1 572 g. Lobster: 3 → 4 pieces, 10 available, no shortfall, no grams. Totals: raw 5 212 g, shortfall 1 836 g |
+| B2 | No date, no margin, clock 2026-11-06 01:30 IST | date 2026-11-06, margin 0, pomfret with margin 3 309, shortfall 0 |
+| B3 | `format=csv` | BOM, `buying_list_L3_2026-11-06.csv`, 3 VARIANT and 4 PREPARATION rows, TOTAL ends with 1 836 |
+| B4 | No location; margin 10 001; bad date; scoped to L1; only `reports.view` | 422 on `fulfillmentLocationId` / `safetyMarginBp` / `deliveryDate`; 403 `LOCATION_ACCESS_DENIED`; 403 `FORBIDDEN` |
+| P1 | Clock 2026-11-05 17:30 IST, target 3 000, Sea fish 2 500, GST 500 bp | pomfret: price 90 000, next 95 000, cost 70 000 per net kg (455 000 / 10 000 g at 6 500), margin 1 833, target 2 500, suggested 98 100; seer pack: cost 50 000, margin 1 923, suggested 75 100; lobster: `PRICE_MISSING`, `BATCH_MISSING`, `TAX_RULE_MISSING`; archived sardine absent; `tomorrowStartsAt` 2026-11-05T18:30Z |
+| P2 | No target; `categoryId` = Sea fish | only pomfret; margin shown; no target or suggestion |
+| P3 | Target 9 600; malformed or 9 900 category target; scoped to L1; no `pricing.manage` | 422 `targetMarginBp` / `categoryTargets`; 403 `LOCATION_ACCESS_DENIED`; 403 |
 
 ## 7. Open questions (with proposed answers)
 
