@@ -1,13 +1,17 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
+import { HttpResponse, type HttpResponseResolver, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { type OrderDetail, type OrderItem, type OrderTracking } from "@/api/types/orders";
 import { problem } from "../../../test/fixtures";
 import { API } from "../../../test/msw/handlers";
 import { server } from "../../../test/msw/server";
 import { renderWithProviders, signedIn } from "../../../test/render";
+import { INVOICE_PREPARING } from "./order-actions";
 import { OrderDetailView } from "./order-detail-view";
+
+const saveFile = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/save-file", () => ({ saveFile }));
 
 const amounts = {
   itemsPaise: 64950,
@@ -469,7 +473,8 @@ describe("OrderDetailView", () => {
     expect(await within(steps).findByText(/23 Oct, 11:30/)).toBeInTheDocument();
     expect(within(steps).queryByText(/24 Oct/)).not.toBeInTheDocument();
   });
-  describe("Invoice (W-10)", () => {
+
+  describe("Download invoice (ORD-R53, D361)", () => {
     const withInvoice = () =>
       order({
         status: "DELIVERED",
@@ -481,53 +486,69 @@ describe("OrderDetailView", () => {
         },
       });
 
-    function fakeTab() {
-      return {
-        closed: false,
-        opener: {} as unknown,
-        location: { href: "about:blank" },
-        close: vi.fn(),
-      };
+    function delivered(pdf: HttpResponseResolver) {
+      server.use(
+        http.get(`${API}/orders/o1`, () => HttpResponse.json(withInvoice())),
+        http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
+        http.get(`${API}/orders/o1/invoice/pdf`, pdf),
+      );
+      renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
     }
 
-    it("opens the tab inside the click and then sends it to the invoice PDF", async () => {
-      const tab = fakeTab();
-      const open = vi.spyOn(window, "open").mockReturnValue(tab as unknown as Window);
-      let openedBeforeAnswer = false;
-      server.use(
-        http.get(`${API}/orders/o1`, () => HttpResponse.json(withInvoice())),
-        http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
-        http.get(`${API}/orders/o1/invoice`, () => {
-          openedBeforeAnswer = open.mock.calls.length === 1;
-          return HttpResponse.json({ id: "i1", pdfUrl: "https://media.test/invoices/i1.pdf" });
-        }),
-      );
-      renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
+    it("fetches the PDF with the session and saves it under the server's file name", async () => {
+      saveFile.mockClear();
+      let authorization: string | null = null;
+      delivered(({ request }) => {
+        authorization = request.headers.get("Authorization");
+        return HttpResponse.text("%PDF", {
+          status: 200,
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": "attachment; filename=INV-26-27-000001.pdf",
+          },
+        });
+      });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Invoice" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Download invoice" }));
 
-      await waitFor(() => expect(tab.location.href).toBe("https://media.test/invoices/i1.pdf"));
-      expect(openedBeforeAnswer).toBe(true);
-      expect(tab.opener).toBeNull();
-      expect(tab.close).not.toHaveBeenCalled();
-      open.mockRestore();
+      await waitFor(() => expect(saveFile).toHaveBeenCalledTimes(1));
+      const [blob, fileName] = saveFile.mock.calls[0] as [Blob, string];
+      expect(fileName).toBe("INV-26-27-000001.pdf");
+      expect(blob.size).toBe(4);
+      expect(authorization).toBe("Bearer access-1");
     });
 
-    it("closes the empty tab when the invoice is not ready yet", async () => {
-      const tab = fakeTab();
-      const open = vi.spyOn(window, "open").mockReturnValue(tab as unknown as Window);
+    it("says the invoice is being prepared while its PDF is not ready", async () => {
+      saveFile.mockClear();
+      delivered(() => HttpResponse.json(problem(404, "INVOICE_PDF_NOT_READY"), { status: 404 }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Download invoice" }));
+
+      expect(await screen.findByText(INVOICE_PREPARING)).toHaveAttribute("role", "status");
+      expect(saveFile).not.toHaveBeenCalled();
+      expect(screen.getByRole("button", { name: "Download invoice" })).toBeEnabled();
+    });
+
+    it("shows an error when the download fails", async () => {
+      saveFile.mockClear();
+      const refusal = problem(503, "STORAGE_UNAVAILABLE", { detail: "Test refusal." });
+      delivered(() => HttpResponse.json(refusal, { status: 503 }));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Download invoice" }));
+
+      expect(await screen.findByText("Test refusal.")).toHaveAttribute("role", "alert");
+      expect(saveFile).not.toHaveBeenCalled();
+    });
+
+    it("has no download before the server allows it", async () => {
       server.use(
-        http.get(`${API}/orders/o1`, () => HttpResponse.json(withInvoice())),
+        http.get(`${API}/orders/o1`, () => HttpResponse.json(order())),
         http.get(`${API}/orders/o1/tracking`, () => HttpResponse.json(tracking())),
-        http.get(`${API}/orders/o1/invoice`, () => HttpResponse.json({ id: "i1", pdfUrl: null })),
       );
       renderWithProviders(<OrderDetailView orderId="o1" />, { session: signedIn });
 
-      await userEvent.click(await screen.findByRole("button", { name: "Invoice" }));
-
-      await waitFor(() => expect(tab.close).toHaveBeenCalled());
-      expect(tab.location.href).toBe("about:blank");
-      open.mockRestore();
+      expect(await screen.findByRole("button", { name: "Cancel order" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Download invoice" })).not.toBeInTheDocument();
     });
   });
 });

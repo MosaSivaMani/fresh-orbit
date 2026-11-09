@@ -124,6 +124,23 @@ class ApiClient {
   Future<Object?> delete(String path, {Map<String, String>? headers}) =>
       _send(() => dio.delete<Object?>(path, options: Options(headers: headers)));
 
+  /// A file download (`GET` with `ResponseType.bytes`) with the bearer token, like every call; refusals arrive as
+  /// Problem Details bytes and become [ApiError] (see [problemBody]).
+  Future<BinaryResponse> getBytes(String path, {String accept = 'application/octet-stream'}) async {
+    try {
+      final response = await dio.get<List<int>>(
+        path,
+        options: Options(responseType: ResponseType.bytes, headers: {'Accept': '$accept, application/problem+json'}),
+      );
+      return BinaryResponse(
+        bytes: response.data ?? const <int>[],
+        contentDisposition: response.headers.value('content-disposition'),
+      );
+    } on DioException catch (e) {
+      throw ApiError.from(e);
+    }
+  }
+
   Future<Object?> _send(Future<Response<Object?>> Function() call) async {
     try {
       final response = await call();
@@ -131,6 +148,23 @@ class ApiClient {
     } on DioException catch (e) {
       throw ApiError.from(e);
     }
+  }
+}
+
+/// Bytes of a downloaded file and its `Content-Disposition` header (for the server's file name).
+class BinaryResponse {
+  const BinaryResponse({required this.bytes, this.contentDisposition});
+
+  final List<int> bytes;
+  final String? contentDisposition;
+
+  /// The `filename=` of `Content-Disposition` (quotes removed, path parts dropped); null when absent.
+  String? get fileName {
+    final header = contentDisposition;
+    if (header == null) return null;
+    final match = RegExp(r'filename\s*=\s*"?([^";]+)"?', caseSensitive: false).firstMatch(header);
+    final name = match?.group(1)?.trim().split(RegExp(r'[/\\]')).last;
+    return name == null || name.isEmpty ? null : name;
   }
 }
 

@@ -54,7 +54,7 @@ has been run against a live API or on a device yet (see §9).
 | Checkout | `/checkout` | Done. Address select/create, slot picker, payment method (from the preview), preview blockers, place order with `Idempotency-Key`, `PRICE_CHANGED` confirm | Widget (4), provider (8) |
 | Order success | `/order-success/:orderId` | Done | — |
 | My orders | `/orders` (tab) | Done. Paged list | — |
-| Order tracking | `/orders/:orderId` | Done. Timeline, delivery code while `OUT_FOR_DELIVERY`, rider call, items with weighed and charged quantities, cancel / complaint / reorder / invoice from `allowedActions`, reported problems; refresh every 30 s while active | Widget (2) |
+| Order tracking | `/orders/:orderId` | Done. Timeline, delivery code while `OUT_FOR_DELIVERY`, rider call, items with weighed and charged quantities, cancel / complaint / reorder / download invoice (D362) from `allowedActions`, reported problems; refresh every 30 s while active | Widget (2) |
 | Account | `/account` (tab) | Done. Sign-in prompt when signed out; appearance (system/light/dark); sign out | — |
 | Profile (edit, delete account) | `/account/profile` | Done. `If-Match`; 412 reloads; 409 refusal shown | — |
 | Addresses (list, add, edit, default, delete) | `/account/addresses`, `/new`, `/:addressId` | Done | — |
@@ -178,7 +178,7 @@ Paths are under `/api/v1/`.
 | Checkout | `GET me/addresses`, `POST me/addresses`, `GET delivery-slots?pincode=`, `POST checkout/preview`, `POST orders` (`Idempotency-Key`) |
 | Order success | `GET orders/{id}` |
 | My orders | `GET orders?page=&pageSize=&sort=-placedAt` |
-| Order tracking | `GET orders/{id}`, `GET orders/{id}/tracking`, `GET orders/{id}/complaints`, `POST orders/{id}/cancel` (IK), `POST orders/{id}/complaints` (multipart, IK), `POST orders/{id}/reorder`, `GET orders/{id}/invoice` |
+| Order tracking | `GET orders/{id}`, `GET orders/{id}/tracking`, `GET orders/{id}/complaints`, `POST orders/{id}/cancel` (IK), `POST orders/{id}/complaints` (multipart, IK), `POST orders/{id}/reorder`, `GET orders/{id}/invoice/pdf` (bytes, bearer token; saved and shared, D362) |
 | Account / profile | `GET me`, `PATCH me` (`If-Match`), `DELETE me` (`If-Match`), `POST auth/logout` |
 | Addresses | `GET/POST me/addresses`, `PUT/DELETE me/addresses/{id}` (`If-Match` on PUT), `POST me/addresses/{id}/default` |
 | Notifications | `GET me/notifications`, `POST me/notifications/{id}/read`, `POST me/notifications/read-all` |
@@ -287,7 +287,9 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | `shared_preferences` | 2.5.6 | BSD-3-Clause | Pincode, onboarding flag, theme mode |
 | `intl` | 0.20.3 | BSD-3-Clause | IST date and time formatting |
 | `uuid` | 4.6.0 | MIT | Idempotency keys |
-| `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF, website policy pages (D299) |
+| `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, website policy pages (D299) |
+| `path_provider` | 2.1.6 | BSD-3-Clause | The app's cache folder for the downloaded invoice PDF (D362); was already in the lock file through other plugins |
+| `share_plus` | 13.3.1 | BSD-3-Clause | Hands the invoice PDF to the platform share sheet (open, save to Files or Downloads, send) (D362) |
 | `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem; `pubspec.lock` must be refreshed with `flutter pub get` |
 | `fresh_theme` | path | Ours | Theme from design tokens |
 | `flutter_lints` (dev) | 6.0.0 | BSD-3-Clause | Lints |
