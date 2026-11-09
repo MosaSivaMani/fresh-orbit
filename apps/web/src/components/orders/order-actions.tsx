@@ -17,17 +17,18 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
-import { browserHttp } from "@/api/browser";
+import { browserApiBaseUrl, browserHttp } from "@/api/browser";
 import {
   addComplaintPhoto,
   cancelOrder,
-  getInvoice,
+  downloadInvoicePdf,
   raiseComplaint,
   reorder,
 } from "@/api/endpoints/orders";
 import { type CancelReasonCode, type ComplaintKind, type OrderDetail } from "@/api/types/orders";
-import { asApiError, describeError, fieldMessage } from "@/lib/errors";
+import { asApiError, describeError, fieldMessage, hasCode } from "@/lib/errors";
 import { queryKeys } from "@/lib/query-keys";
+import { saveFile } from "@/lib/save-file";
 
 const CANCEL_REASONS: { value: CancelReasonCode; label: string }[] = [
   { value: "CHANGED_MIND", label: "I changed my mind" },
@@ -250,12 +251,23 @@ function ComplaintSheet({ order, onClose }: { order: OrderDetail; onClose: () =>
   );
 }
 
+/** INVOICE_PDF_NOT_READY: the invoice is issued, its PDF is still being rendered (D343). */
+export const INVOICE_PREPARING = "Invoice is being prepared, try again in a minute.";
+/** INVOICE_NOT_ISSUED: the invoice is made when the order is delivered. */
+export const INVOICE_AFTER_DELIVERY = "The invoice is made when your order is delivered.";
+
+interface InvoiceNote {
+  tone: "info" | "danger";
+  text: string;
+}
+
 /** Only the actions the server allows for this order (`allowedActions`). */
 export function OrderActions({ order }: { order: OrderDetail }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState<"cancel" | "complaint" | null>(null);
   const [busy, setBusy] = useState<"reorder" | "invoice" | null>(null);
+  const [invoiceNote, setInvoiceNote] = useState<InvoiceNote | null>(null);
   const actions = order.allowedActions;
 
   async function doReorder() {
@@ -272,29 +284,24 @@ export function OrderActions({ order }: { order: OrderDetail }) {
   }
 
   /**
-   * Popup blockers allow a window only inside the click itself, and the invoice URL comes after an `await`. So the
-   * tab opens empty in the click and is sent to the PDF once the server answers; if the browser refused even that,
-   * the PDF opens in this tab (W-10, D315). On a refusal or "not ready yet" the empty tab closes again.
+   * "Download invoice" (ORD-R53): the PDF is fetched with the session's bearer token (its `pdfUrl` is an
+   * authenticated API path, D343, so a plain link or new tab would arrive signed out) and saved under the server's
+   * file name. A PDF still being rendered is a calm note, not an error; the button stays for another try.
    */
-  async function openInvoice() {
+  async function downloadInvoice() {
     setBusy("invoice");
-    const tab = window.open("about:blank", "_blank");
+    setInvoiceNote(null);
     try {
-      const invoice = await getInvoice(browserHttp(), order.id);
-      if (invoice.pdfUrl) {
-        if (tab && !tab.closed) {
-          tab.opener = null;
-          tab.location.href = invoice.pdfUrl;
-        } else {
-          window.location.assign(invoice.pdfUrl);
-        }
-      } else {
-        tab?.close();
-        toast({ title: "Your invoice is being prepared. Please try again shortly." });
-      }
+      const file = await downloadInvoicePdf(browserHttp(), browserApiBaseUrl(), order.id);
+      saveFile(file.blob, file.fileName);
     } catch (e) {
-      tab?.close();
-      toast({ title: describeError(e), tone: "danger" });
+      if (hasCode(e, "INVOICE_PDF_NOT_READY")) {
+        setInvoiceNote({ tone: "info", text: INVOICE_PREPARING });
+      } else if (hasCode(e, "INVOICE_NOT_ISSUED")) {
+        setInvoiceNote({ tone: "info", text: INVOICE_AFTER_DELIVERY });
+      } else {
+        setInvoiceNote({ tone: "danger", text: describeError(e) });
+      }
     } finally {
       setBusy(null);
     }
@@ -305,32 +312,46 @@ export function OrderActions({ order }: { order: OrderDetail }) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {actions.reorder && (
-        <Button loading={busy === "reorder"} onClick={() => void doReorder()}>
-          Order again
-        </Button>
-      )}
-      {actions.downloadInvoice && (
-        <Button variant="outline" loading={busy === "invoice"} onClick={() => void openInvoice()}>
-          Invoice
-        </Button>
-      )}
-      {actions.raiseComplaint && (
-        <Sheet open={open === "complaint"} onOpenChange={(o) => setOpen(o ? "complaint" : null)}>
-          <Button variant="outline" onClick={() => setOpen("complaint")}>
-            Report a problem
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
+        {actions.reorder && (
+          <Button loading={busy === "reorder"} onClick={() => void doReorder()}>
+            Order again
           </Button>
-          {open === "complaint" && <ComplaintSheet order={order} onClose={() => setOpen(null)} />}
-        </Sheet>
-      )}
-      {actions.cancel && (
-        <Dialog open={open === "cancel"} onOpenChange={(o) => setOpen(o ? "cancel" : null)}>
-          <Button variant="ghost" onClick={() => setOpen("cancel")}>
-            Cancel order
+        )}
+        {actions.downloadInvoice && (
+          <Button
+            variant="outline"
+            loading={busy === "invoice"}
+            onClick={() => void downloadInvoice()}
+          >
+            Download invoice
           </Button>
-          {open === "cancel" && <CancelDialog order={order} onClose={() => setOpen(null)} />}
-        </Dialog>
+        )}
+        {actions.raiseComplaint && (
+          <Sheet open={open === "complaint"} onOpenChange={(o) => setOpen(o ? "complaint" : null)}>
+            <Button variant="outline" onClick={() => setOpen("complaint")}>
+              Report a problem
+            </Button>
+            {open === "complaint" && <ComplaintSheet order={order} onClose={() => setOpen(null)} />}
+          </Sheet>
+        )}
+        {actions.cancel && (
+          <Dialog open={open === "cancel"} onOpenChange={(o) => setOpen(o ? "cancel" : null)}>
+            <Button variant="ghost" onClick={() => setOpen("cancel")}>
+              Cancel order
+            </Button>
+            {open === "cancel" && <CancelDialog order={order} onClose={() => setOpen(null)} />}
+          </Dialog>
+        )}
+      </div>
+      {invoiceNote && (
+        <p
+          role={invoiceNote.tone === "danger" ? "alert" : "status"}
+          className={invoiceNote.tone === "danger" ? "text-danger-text text-sm" : "text-sm"}
+        >
+          {invoiceNote.text}
+        </p>
       )}
     </div>
   );

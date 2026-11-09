@@ -300,6 +300,12 @@ class _DemoOrders implements OrderRepository {
 
   @override
   Future<InvoiceLink> invoice(String orderId) => _b._answer(() => const InvoiceLink(invoiceNumber: 'INV/26-27/000001'));
+
+  /// The demo has no rendered PDF: it answers as the server does before the PDF is ready.
+  @override
+  Future<InvoicePdf> invoicePdf(String orderId) => _b._answer(
+    () => throw const ApiError(status: 404, code: 'INVOICE_PDF_NOT_READY', traceId: 'demo-404'),
+  );
 }
 
 class _DemoAccount implements AccountRepository {
