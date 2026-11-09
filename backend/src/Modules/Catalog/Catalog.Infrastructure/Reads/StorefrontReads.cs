@@ -485,16 +485,20 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
             availability = new ListAvailability(status, StockMath.Message(status));
         }
 
+        var imageKey = r.IsDBNull(5) ? null : r.GetString(5);
         return new ProductListItem(
             r.GetGuid(0),
             r.GetString(1),
             r.GetString(2),
             r.GetFieldValue<string[]>(3),
             r.GetString(4).ToEnum<SourceType>(),
-            r.IsDBNull(5) ? null : ImageUrl(r.GetString(5), ImageRenditions.Medium),
+            imageKey is null ? null : ImageUrl(imageKey, ImageRenditions.Medium),
             fromPrice,
             availability,
-            !hasLocation);
+            !hasLocation)
+        {
+            ImageSources = imageKey is null ? [] : Sources(imageKey),
+        };
     }
 
     private StorefrontImage ToImage(ProductImage image) => new(
@@ -502,7 +506,9 @@ public sealed class StorefrontReads(FreshOrbitDbContext db, IFileStorage storage
         image.AltText,
         image.Width,
         image.Height,
-        [.. ImageRenditions.Widths.Select(w => new ImageSource(w, ImageUrl(image.StorageKey, w)))]);
+        Sources(image.StorageKey));
+
+    private ImageSource[] Sources(string prefix) => [.. ImageRenditions.Widths.Select(w => new ImageSource(w, ImageUrl(prefix, w)))];
 
     private StorefrontCategory ToCategory(Category category, IReadOnlyList<StorefrontCategory> children) => new(
         category.Id,

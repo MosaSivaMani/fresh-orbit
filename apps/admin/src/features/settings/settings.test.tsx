@@ -105,6 +105,66 @@ describe("Business profile", () => {
   });
 });
 
+describe("Grievance officer (D374)", () => {
+  it("keeps and sends the grievance officer fields", async () => {
+    server.use(
+      http.get(`${API}/admin/settings/business-profile`, () =>
+        HttpResponse.json({
+          ...PROFILE,
+          grievanceOfficerName: "A. Officer",
+          grievanceOfficerDesignation: "Grievance Officer",
+          grievanceOfficerEmail: "grievance@freshorbit.test",
+          grievanceOfficerPhone: null,
+          grievanceResponseTime: "Within 48 hours",
+        }),
+      ),
+    );
+    const seen = captureProfilePut();
+    const { user } = renderApp({
+      path: "/settings/business-profile",
+      permissions: ["settings.manage"],
+    });
+    expect(await screen.findByLabelText(/Grievance officer name/)).toHaveValue("A. Officer");
+    await user.type(screen.getByLabelText(/Grievance officer phone/), "+919800000001");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(seen).toHaveLength(1));
+    expect(seen[0]).toMatchObject({
+      ifMatch: '"7"',
+      body: {
+        grievanceOfficerName: "A. Officer",
+        grievanceOfficerDesignation: "Grievance Officer",
+        grievanceOfficerEmail: "grievance@freshorbit.test",
+        grievanceOfficerPhone: "+919800000001",
+        grievanceResponseTime: "Within 48 hours",
+      },
+    });
+  });
+
+  it("shows GRIEVANCE_OFFICER_INCOMPLETE at the email field", async () => {
+    server.use(
+      http.get(`${API}/admin/settings/business-profile`, () => HttpResponse.json(PROFILE)),
+      http.put(`${API}/admin/settings/business-profile`, () =>
+        problem(422, "VALIDATION_FAILED", {
+          errors: {
+            grievanceOfficerEmail: [
+              { code: "GRIEVANCE_OFFICER_INCOMPLETE", message: "Enter the officer's e-mail." },
+            ],
+          },
+        }),
+      ),
+    );
+    const { user } = renderApp({
+      path: "/settings/business-profile",
+      permissions: ["settings.manage"],
+    });
+    await user.type(await screen.findByLabelText(/Grievance officer name/), "A. Officer");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    const email = screen.getByLabelText(/Grievance officer email/);
+    await waitFor(() => expect(email).toHaveAttribute("aria-invalid", "true"));
+  });
+});
+
 describe("Staff", () => {
   it("shows PASSWORD_TOO_WEAK at the temporary password field", async () => {
     server.use(

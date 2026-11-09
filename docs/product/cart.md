@@ -105,6 +105,7 @@ Cart stores lines only; every read is priced from current data (`CART-R1`).
 | CART-R30 | Guest cart → `CONVERTED` in the same transaction. Unknown or already `CONVERTED` token → no-op, `mergedLineCount = 0` (idempotent). |
 | CART-R31 | Each cart line view carries the variant's order rules `minOrder`, `maxOrder` and `orderStep` (`{ value, unit }`, the same values the cart validates with), null when the variant is gone, so clients size the quantity stepper without their own rules (W4). |
 | CART-R33 | **Fixed net-weight packs (D348).** A line sold per PACK carries `packNetGrams` (net grams after cleaning in one pack, the variant's `packSizeGrams`), `piecesMin` and `piecesMax` (pieces in one pack; null when not stated); all three are null on KG and PIECE lines. Clients show "500 g net · 5–7 pieces · ₹X" and never a gross weight. A pack has one price: `maxLineTotalPaise` = `estimatedLineTotalPaise` whatever the overweight allowance. |
+| CART-R34 | **Card image sizes (D375).** Each line carries `imageSources: [{ width, url }]` (320, 640, 1280 px renditions of the product's primary image, from Catalog) and `imageUrl` is the 320 px one; both empty / null without an image. Before D375 `imageUrl` was `/media/{storage key prefix}`, which is not an image. |
 
 ## 4. Events
 

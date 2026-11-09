@@ -155,7 +155,16 @@ public sealed record CartLineView(
 
     /// <summary>Most pieces in one pack (D348); null like <see cref="PiecesMin"/>.</summary>
     public int? PiecesMax { get; init; }
+
+    /// <summary>
+    /// The product image in every rendition (320, 640, 1280 px wide), like the product gallery (audit W-9, D375);
+    /// empty without an image. <see cref="ImageUrl"/> is the 320 px one.
+    /// </summary>
+    public IReadOnlyList<CartImageSourceView> ImageSources { get; init; } = [];
 }
+
+/// <summary>One rendition of the line's product image: its width in pixels and public URL.</summary>
+public sealed record CartImageSourceView(int Width, string Url);
 
 /// <param name="Status">APPLIED / NOT_APPLICABLE / INVALID.</param>
 /// <param name="ReasonCode">COUPON_* reason when not applied.</param>

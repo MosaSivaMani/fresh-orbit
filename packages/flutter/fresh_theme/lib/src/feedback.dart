@@ -227,11 +227,34 @@ class FreshBadge extends StatelessWidget {
   }
 }
 
-/// Network image with a calm placeholder; decorative unless [semanticLabel] is given.
+/// One server rendition of a photo: its width in pixels and its URL (D375).
+class PhotoSource {
+  const PhotoSource({required this.width, required this.url});
+
+  final int width;
+  final String url;
+}
+
+/// The smallest rendition at least [pixels] wide, else the largest; null when there is none (W-9, D375).
+String? pickPhotoSource(List<PhotoSource> sources, double pixels) {
+  final usable = [
+    for (final s in sources)
+      if (s.width > 0 && s.url.isNotEmpty) s,
+  ]..sort((a, b) => a.width.compareTo(b.width));
+  if (usable.isEmpty) return null;
+  for (final s in usable) {
+    if (s.width >= pixels) return s.url;
+  }
+  return usable.last.url;
+}
+
+/// Network image with a calm placeholder; decorative unless [semanticLabel] is given. With [sources] it downloads the
+/// smallest rendition that fills the drawn width at the screen's pixel density (D375), else [url].
 class ProductPhoto extends StatelessWidget {
   const ProductPhoto({
     super.key,
     required this.url,
+    this.sources = const [],
     this.semanticLabel,
     this.aspectRatio = 1,
     this.radius = AppRadius.field,
@@ -239,6 +262,9 @@ class ProductPhoto extends StatelessWidget {
   });
 
   final String? url;
+
+  /// The server's renditions of the same photo (320, 640, 1280 px wide); empty to use [url] as it is.
+  final List<PhotoSource> sources;
   final String? semanticLabel;
   final double aspectRatio;
   final double radius;
@@ -254,20 +280,30 @@ class ProductPhoto extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(Icons.set_meal_rounded, color: ill.tealDeep.withValues(alpha: 0.75), size: 44),
     );
+    Widget picture(String src) => FreshNetworkImage(
+      src,
+      fit: BoxFit.cover,
+      semanticLabel: semanticLabel,
+      excludeFromSemantics: semanticLabel == null,
+      errorBuilder: (_, _, _) => placeholder,
+      loadingBuilder: (context, child, progress) => progress == null ? child : placeholder,
+    );
+    final single = url;
     return AspectRatio(
       aspectRatio: aspectRatio,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
-        child: url == null
+        child: sources.isNotEmpty
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  final pixels = constraints.maxWidth * MediaQuery.devicePixelRatioOf(context);
+                  final src = pickPhotoSource(sources, pixels) ?? single;
+                  return src == null ? ExcludeSemantics(child: placeholder) : picture(src);
+                },
+              )
+            : single == null
             ? ExcludeSemantics(child: placeholder)
-            : FreshNetworkImage(
-                url!,
-                fit: BoxFit.cover,
-                semanticLabel: semanticLabel,
-                excludeFromSemantics: semanticLabel == null,
-                errorBuilder: (_, _, _) => placeholder,
-                loadingBuilder: (context, child, progress) => progress == null ? child : placeholder,
-              ),
+            : picture(single),
       ),
     );
   }

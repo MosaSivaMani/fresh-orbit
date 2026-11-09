@@ -32,6 +32,19 @@ public sealed class BusinessProfile : AggregateRoot
     /// <summary>When support answers, as shown to customers (e.g. "7 AM to 9 PM, every day"); null until entered (W7).</summary>
     public string? SupportHours { get; private set; }
 
+    /// <summary>Grievance officer the Consumer Protection (E-Commerce) Rules 2020 require us to name (D374); null until entered.</summary>
+    public string? GrievanceOfficerName { get; private set; }
+
+    public string? GrievanceOfficerDesignation { get; private set; }
+
+    public string? GrievanceOfficerEmail { get; private set; }
+
+    /// <summary>E.164 phone number of the grievance officer, if one is published.</summary>
+    public string? GrievanceOfficerPhone { get; private set; }
+
+    /// <summary>How fast grievances are answered, as shown to customers (e.g. "Acknowledged within 48 hours, resolved within one month").</summary>
+    public string? GrievanceResponseTime { get; private set; }
+
     public static BusinessProfile Create(BusinessProfileData data)
     {
         var profile = new BusinessProfile();
@@ -56,8 +69,15 @@ public sealed class BusinessProfile : AggregateRoot
         SupportPhone = data.SupportPhone.Trim();
         SupportEmail = data.SupportEmail.Trim();
         TimeZone = data.TimeZone.Trim();
-        SupportHours = string.IsNullOrWhiteSpace(data.SupportHours) ? null : data.SupportHours.Trim();
+        SupportHours = OrNull(data.SupportHours);
+        GrievanceOfficerName = OrNull(data.GrievanceOfficerName);
+        GrievanceOfficerDesignation = OrNull(data.GrievanceOfficerDesignation);
+        GrievanceOfficerEmail = OrNull(data.GrievanceOfficerEmail);
+        GrievanceOfficerPhone = OrNull(data.GrievanceOfficerPhone);
+        GrievanceResponseTime = OrNull(data.GrievanceResponseTime);
     }
+
+    private static string? OrNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
 
 public sealed record BusinessProfileData(
@@ -69,4 +89,9 @@ public sealed record BusinessProfileData(
     string SupportPhone,
     string SupportEmail,
     string TimeZone,
-    string? SupportHours = null);
+    string? SupportHours = null,
+    string? GrievanceOfficerName = null,
+    string? GrievanceOfficerDesignation = null,
+    string? GrievanceOfficerEmail = null,
+    string? GrievanceOfficerPhone = null,
+    string? GrievanceResponseTime = null);

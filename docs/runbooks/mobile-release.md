@@ -147,8 +147,8 @@ The run refuses to start when a required value is missing. It uploads two artifa
 Console › Internal testing) and the `debug-info` symbols (keep them: `flutter symbolize -i <stack> -d debug-info/`
 turns an obfuscated crash stack back into file and line). The build number is the run number plus the
 `build-number-offset` input (default 100); raise the offset if Play says the version code was used. The version
-name comes from `pubspec.yaml`: set it (for example `1.0.0+1`) in a mobile change before the first store upload
-(L-80).
+name comes from `pubspec.yaml`, set to `1.0.0` for the first store upload (L-80, D376; the `+1` there is replaced by
+the workflow's `--build-number`). Raise the name in a mobile change for each later store release.
 
 What else the run refuses before building (D337): a ref other than `main` or a `v*` tag; an address that is not
 `https://<host>` with no path; a keystore that does not open with `UPLOAD_KEYSTORE_PASSWORD` and `UPLOAD_KEY_ALIAS`.
