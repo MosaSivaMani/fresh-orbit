@@ -80,10 +80,7 @@ export interface TodaysPricesQuery {
 }
 
 export type TodaysPriceIssue =
-  | "PRICE_MISSING"
-  | "BATCH_MISSING"
-  | "YIELD_MISSING"
-  | "TAX_RULE_MISSING";
+  "PRICE_MISSING" | "BATCH_MISSING" | "YIELD_MISSING" | "TAX_RULE_MISSING";
 
 export interface TodaysPriceItem {
   variantId: Id;
