@@ -1,4 +1,5 @@
 using FreshOrbit.Ordering.Application.Complaints;
+using FreshOrbit.Ordering.Application.Invoices;
 using FreshOrbit.Ordering.Application.Orders;
 using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Invoices;
@@ -117,6 +118,11 @@ public interface IOrderReads
     /// query), and the number of distinct orders those lines belong to (one count query, G18).
     /// </summary>
     Task<PickListData> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The invoice register (D353): invoices joined to their orders, newest first, one count query and one page query.
+    /// </summary>
+    Task<(IReadOnlyList<AdminInvoiceRow> Items, int Total)> ListInvoicesAsync(AdminInvoiceFilter filter, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<ComplaintResponse>> ListComplaintsForOrderAsync(Guid orderId, CancellationToken cancellationToken);
 

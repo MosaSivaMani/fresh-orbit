@@ -1,5 +1,6 @@
 using FreshOrbit.Ordering.Application.Abstractions;
 using FreshOrbit.Ordering.Application.Complaints;
+using FreshOrbit.Ordering.Application.Invoices;
 using FreshOrbit.Ordering.Application.Orders;
 using FreshOrbit.Ordering.Domain.Complaints;
 using FreshOrbit.Ordering.Domain.Invoices;
@@ -192,6 +193,62 @@ internal sealed class OrderReads(FreshOrbitDbContext db) : IOrderReads
             })
             .ToListAsync(cancellationToken);
         return ([.. items.Select(o => new AdminOrderListItem(o.Id, o.OrderNumber, o.Status.ToCode(), o.PaymentMethod.ToCode(), o.CustomerId, o.RecipientName, o.Phone, o.FulfillmentLocationId, o.DeliverySlotId, o.PlacedAt, o.SlotStartAt, o.SlotEndAt, o.ItemCount, o.TotalPaise, o.FinalTotalPaise, o.AmountDuePaise, OrderViews.VersionOf(o.Version)))], total);
+    }
+
+    public async Task<(IReadOnlyList<AdminInvoiceRow> Items, int Total)> ListInvoicesAsync(AdminInvoiceFilter filter, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        var query =
+            from i in db.Set<Invoice>().AsNoTracking()
+            join o in db.Set<Order>().AsNoTracking() on i.OrderId equals o.Id
+            select new { Invoice = i, Order = o };
+        if (filter.LocationIds is { } allowed)
+        {
+            var ids = allowed.ToList();
+            query = query.Where(x => ids.Contains(x.Order.FulfillmentLocationId));
+        }
+
+        if (filter.FulfillmentLocationId is { } locationId)
+        {
+            query = query.Where(x => x.Order.FulfillmentLocationId == locationId);
+        }
+
+        if (filter.IssuedFrom is { } from)
+        {
+            query = query.Where(x => x.Invoice.IssuedAt >= from);
+        }
+
+        if (filter.IssuedBefore is { } before)
+        {
+            query = query.Where(x => x.Invoice.IssuedAt < before);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Q))
+        {
+            var pattern = "%" + filter.Q.Trim().Replace("\\", "\\\\", StringComparison.Ordinal).Replace("%", "\\%", StringComparison.Ordinal).Replace("_", "\\_", StringComparison.Ordinal) + "%";
+            query = query.Where(x => EF.Functions.ILike(x.Invoice.InvoiceNumber, pattern) || EF.Functions.ILike(x.Order.OrderNumber, pattern));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(x => x.Invoice.IssuedAt)
+            .ThenByDescending(x => x.Invoice.InvoiceNumber)
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .Select(x => new AdminInvoiceRow(
+                x.Invoice.Id,
+                x.Invoice.InvoiceNumber,
+                x.Invoice.IssuedAt,
+                x.Order.Id,
+                x.Order.OrderNumber,
+                x.Order.RecipientName,
+                x.Order.FulfillmentLocationId,
+                x.Invoice.TaxablePaise,
+                x.Invoice.TaxPaise,
+                x.Invoice.TotalPaise,
+                x.Invoice.PdfStorageKey != null))
+            .ToListAsync(cancellationToken);
+        return (items, total);
     }
 
     public async Task<PickListData> PickListAsync(Guid fulfillmentLocationId, Guid slotId, CancellationToken cancellationToken)

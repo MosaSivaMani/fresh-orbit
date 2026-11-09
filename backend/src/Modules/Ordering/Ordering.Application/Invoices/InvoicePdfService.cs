@@ -47,12 +47,7 @@ public sealed class InvoicePdfService(
 
         var order = await orders.GetAsync(invoice.OrderId, cancellationToken)
             ?? throw new NotFoundException($"Order {invoice.OrderId} of invoice {invoice.InvoiceNumber} does not exist.");
-        var profile = await settings.GetBusinessProfileAsync(cancellationToken);
-        if (string.IsNullOrWhiteSpace(profile.TimeZone) || !TimeZoneInfo.TryFindSystemTimeZoneById(profile.TimeZone, out var zone))
-        {
-            throw new DomainException(OrderingErrors.ConfigurationMissing, "The business profile timeZone is not a known time zone; the invoice date cannot be printed.", "timeZone");
-        }
-
+        var zone = BusinessTimeZone(await settings.GetBusinessProfileAsync(cancellationToken));
         var bytes = renderer.Render(InvoicePdfContent.From(invoice, order, zone));
         var key = Invoice.PdfKey(invoice.Id);
         using (var content = new MemoryStream(bytes, writable: false))
@@ -78,7 +73,22 @@ public sealed class InvoicePdfService(
 
     /// <summary>Staff download path of the PDF (D343), or null while it is not rendered.</summary>
     public static string? StaffUrl(Invoice invoice)
-        => invoice is { PdfStorageKey: not null } ? $"/api/v1/admin/orders/{invoice.OrderId:D}/invoice/pdf" : null;
+        => invoice is { PdfStorageKey: not null } ? StaffPdfPath(invoice.OrderId) : null;
+
+    /// <summary>Staff download path of the PDF of <paramref name="orderId"/>'s invoice (D343).</summary>
+    public static string StaffPdfPath(Guid orderId) => $"/api/v1/admin/orders/{orderId:D}/invoice/pdf";
+
+    /// <summary>
+    /// The business time zone that dates and numbers invoices (ORD-R51, R53); missing or unknown → 422
+    /// <c>CONFIGURATION_MISSING</c> on <c>timeZone</c> (rule 7: never a guessed zone).
+    /// </summary>
+    public static TimeZoneInfo BusinessTimeZone(BusinessProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        return !string.IsNullOrWhiteSpace(profile.TimeZone) && TimeZoneInfo.TryFindSystemTimeZoneById(profile.TimeZone, out var zone)
+            ? zone
+            : throw new DomainException(OrderingErrors.ConfigurationMissing, "The business profile timeZone is not a known time zone; invoice dates cannot be worked out.", "timeZone");
+    }
 
     /// <summary>File name offered on download: the invoice number with <c>/</c> turned into <c>-</c>.</summary>
     public static string FileNameOf(Invoice invoice)
