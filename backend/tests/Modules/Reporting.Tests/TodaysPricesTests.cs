@@ -10,6 +10,7 @@ namespace FreshOrbit.Reporting.Tests;
 public sealed class TodaysPricesTests(ReportingDatabase database) : ReportingTestBase(database)
 {
     private static readonly string Url = $"/api/v1/admin/reports/todays-prices?fulfillmentLocationId={L3}";
+    private static readonly string[] ListedSkus = ["POMF-KG", "SEER-STEAK-500", "LOBSTER-PC"];
 
     private HttpClient Pricing() => Factory.CreateStaffClient(["pricing.manage"], new[] { L3 });
 
@@ -25,7 +26,7 @@ public sealed class TodaysPricesTests(ReportingDatabase database) : ReportingTes
         prices.GetProperty("tomorrowStartsAt").GetDateTimeOffset().Should().Be(new DateTimeOffset(2026, 11, 5, 18, 30, 0, TimeSpan.Zero));
         prices.GetProperty("targetMarginBp").GetInt32().Should().Be(3000);
         var skus = prices.GetProperty("items").EnumerateArray().Select(i => i.GetProperty("sku").GetString()).ToList();
-        skus.Should().Contain(new[] { "POMF-KG", "SEER-STEAK-500", "LOBSTER-PC" }).And.NotContain("SARDINE-KG", "archived products are not priced");
+        skus.Should().Contain(ListedSkus).And.NotContain("SARDINE-KG", "archived products are not priced");
         prices.GetProperty("totalCount").GetInt32().Should().Be(skus.Count);
 
         var pomfret = Item(prices, PomfretVariant);
