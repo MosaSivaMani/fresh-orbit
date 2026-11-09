@@ -93,6 +93,10 @@ public sealed class SettingsApiTests(E1Database database) : E1ApiTestBase(databa
             timeZone = "Asia/Kolkata",
         };
 
+        // The assembly shares one database, so count only the audit entries this test adds.
+        var auditedBefore = await InScopeAsync(p => p.GetRequiredService<FreshOrbitDbContext>().Database
+            .SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM audit.entries WHERE action = 'BUSINESS_PROFILE_CHANGED'").SingleAsync(Ct));
+
         var noCondition = await admin.PutAsJsonAsync("/api/v1/admin/settings/business-profile", body, Ct);
         noCondition.StatusCode.Should().Be(HttpStatusCode.PreconditionRequired);
 
@@ -118,7 +122,7 @@ public sealed class SettingsApiTests(E1Database database) : E1ApiTestBase(databa
         // Each accepted save leaves an audit entry in the same transaction.
         var audited = await InScopeAsync(p => p.GetRequiredService<FreshOrbitDbContext>().Database
             .SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM audit.entries WHERE action = 'BUSINESS_PROFILE_CHANGED'").SingleAsync(Ct));
-        audited.Should().Be(2);
+        (audited - auditedBefore).Should().Be(2);
 
         // The period now follows the business time zone.
         var period = await InScopeAsync(p => p.GetRequiredService<ISettingsApi>().GetFinancialPeriodAsync(new DateTimeOffset(2027, 3, 31, 20, 0, 0, TimeSpan.Zero), Ct));

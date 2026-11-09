@@ -200,6 +200,7 @@ Send `SMTP_FROM_ADDRESS` from this domain (for example `orders@<domain>`), never
 12. **Inventory**: a stock item per variant at the store and the opening stock (Receive stock).
 13. **Activate the city:** the city page's readiness list must show every check done (store, service area, pincode,
     slot template, price, stock; LOC-R6); then **Activate**.
+14. **Store readiness** (Settings › Store readiness): fix every Missing row before §7 (D358).
 
 ## 7. Production checks before opening
 
@@ -223,6 +224,12 @@ Send `SMTP_FROM_ADDRESS` from this domain (for example `orders@<domain>`), never
    e-mails arrive, the invoice is issued with the GSTIN, and the payment shows as collected. This is a real sale in
    the books; keep it.
 6. Search engines: `https://<domain>/robots.txt` allows crawling (Production only, D301).
+7. **Store readiness** (admin, Settings › Store readiness, D358): the page must say **Ready to trade**. It lists the
+   business profile (legal name, registered address, GSTIN, time zone), every location's FSSAI licence and whether
+   SMS (DLT), e-mail (SMTP) and push (FCM) use a real provider; each Missing row links to the admin page that fixes
+   it, or names the server setting (`security-configuration.md` §2). `DISABLED` e-mail or push shows as Missing on
+   purpose: open only if the owner accepts launching without that channel. Also look at **Settings › Failed
+   messages** (D357): it should say "No failed messages"; replay any open one only after its cause is fixed.
 
 ## 8. Alerts and the first week
 

@@ -91,6 +91,9 @@ public sealed class LocationsApi(FreshOrbitDbContext db, ILocationsReads reads, 
     public Task<IReadOnlyList<FulfillmentLocationSummary>> GetCityFulfillmentLocationsAsync(Guid cityId, CancellationToken cancellationToken = default)
         => Summaries(l => l.CityId == cityId, cancellationToken);
 
+    public Task<IReadOnlyList<FulfillmentLocationSummary>> GetAllFulfillmentLocationsAsync(CancellationToken cancellationToken = default)
+        => Summaries(_ => true, cancellationToken);
+
     public async Task<IReadOnlyList<DateOnly>> GetClosuresAsync(Guid fulfillmentLocationId, DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken = default)
         => await db.Set<LocationClosure>().AsNoTracking()
             .Where(c => c.FulfillmentLocationId == fulfillmentLocationId && c.ClosedOn >= fromDate && c.ClosedOn <= toDate)

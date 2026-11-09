@@ -24,6 +24,10 @@ public interface ILocationsApi
     Task<IReadOnlyList<FulfillmentLocationSummary>> GetCityFulfillmentLocationsAsync(Guid cityId, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);
 
+    /// <summary>Every fulfillment location of every city, any status, ordered by code (store readiness, D358).</summary>
+    Task<IReadOnlyList<FulfillmentLocationSummary>> GetAllFulfillmentLocationsAsync(CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(NewMemberNote);
+
     /// <summary>Dates (in the location's time zone) the location is closed between the two dates, inclusive.</summary>
     Task<IReadOnlyList<DateOnly>> GetClosuresAsync(Guid fulfillmentLocationId, DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken = default)
         => throw new NotSupportedException(NewMemberNote);

@@ -87,6 +87,7 @@ public sealed class NotificationsModule : IModule
         services.AddFreshOrbitEmail();
         services.AddFreshOrbitPush();
         services.AddHostedService<DisabledChannelsStartupReport>();
+        services.AddSingleton<INotificationProviders, NotificationProviders>();
 
         services.AddScoped<SendNotificationsJob>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IRecurringJobRegistration, NotificationsJobs>());

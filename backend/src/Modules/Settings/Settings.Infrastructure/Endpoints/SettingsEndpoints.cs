@@ -1,6 +1,7 @@
 using FreshOrbit.Settings.Application.BusinessProfiles;
 using FreshOrbit.Settings.Application.Numbering;
 using FreshOrbit.Settings.Application.OrderPolicies;
+using FreshOrbit.Settings.Application.Readiness;
 using FreshOrbit.Settings.Application.Shared;
 using FreshOrbit.SharedKernel.Web.Auth;
 using FreshOrbit.SharedKernel.Web.Concurrency;
@@ -42,6 +43,9 @@ internal static class SettingsEndpoints
             SetETag(http.Response, profile.Version);
             return TypedResults.Ok(profile);
         }).WithValidation<SaveBusinessProfileRequest>();
+
+        // D358, SET-R10: what still blocks real trading (profile, location FSSAI licences, sender providers); read-only.
+        group.MapGet("/store-readiness", async (IStoreReadinessReportService service, CancellationToken ct) => TypedResults.Ok(await service.GetAsync(ct)));
 
         group.MapGet("/order-policies", async (IOrderPolicyService service, CancellationToken ct) => TypedResults.Ok(await service.ListAsync(ct)));
 

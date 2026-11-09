@@ -18,6 +18,7 @@ Owner: E1. Schema `notifications`. Uses `Identity.Public`. Endpoints: `docs/api/
 |---|---|---|
 | `INotificationsApi.QueueAsync(request)` | Renders the template for each allowed channel and tracks one message per channel; saved by the caller. `DedupeKey` makes it idempotent per (key, channel). | any module, event handlers |
 | `INotificationsApi.QueueForCustomerAsync(request)` | Same, recipient given as customer id (resolved through `ICustomerAccountDirectory`). | Ordering / Payments event adapters |
+| `INotificationProviders.GetStatus()` | The SMS, e-mail and push provider code in force (`DLT`/`DEVELOPMENT`; `SMTP`/`DISABLED`/`DEVELOPMENT`; `FCM`/`DISABLED`/`DEVELOPMENT`) and whether each really delivers (a real provider; the hosts refuse an incomplete one at start). Never a key, host, sender id or other setting value (D358). | Settings (store readiness report) |
 | `IOtpSender` (Identity.Public) | Renders `OTP_LOGIN` / `OTP_VERIFY_PHONE` and sends the SMS immediately; nothing stored. A failed send throws 503 `SMS_PROVIDER_UNAVAILABLE` (NOT-R12). | Identity |
 
 ## 2. States

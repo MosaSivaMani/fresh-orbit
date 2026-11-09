@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FreshOrbit.SharedKernel.EntityFramework.Outbox;
 
-/// <summary>One dead letter with its event (list and replay responses, D296).</summary>
+/// <summary>One dead letter with its event (list, detail and replay responses, D296, D357).</summary>
+/// <param name="EventOccurredAt">When the event was raised (its outbox row was created).</param>
+/// <param name="CorrelationId">The request that raised the event, to find it in the logs; null for background work.</param>
 public sealed record DeadLetterView(
     Guid Id,
     Guid EventId,
@@ -15,7 +17,9 @@ public sealed record DeadLetterView(
     DateTimeOffset FailedAt,
     int Attempts,
     DateTimeOffset? ReplayedAt,
-    Guid? ReplayedBy);
+    Guid? ReplayedBy,
+    DateTimeOffset EventOccurredAt,
+    string? CorrelationId);
 
 /// <summary>Status filter of the dead-letter list: <c>OPEN</c> (not replayed yet) or <c>REPLAYED</c>.</summary>
 public enum DeadLetterStatus
@@ -53,10 +57,22 @@ public sealed class DeadLetterStore(FreshOrbitDbContext db, IClock clock)
                 db.Set<OutboxMessage>().AsNoTracking(),
                 d => d.EventId,
                 m => m.Id,
-                (d, m) => new DeadLetterView(d.Id, d.EventId, m.EventType, d.Handler, d.Error, d.FailedAt, m.Attempts, d.ReplayedAt, d.ReplayedBy))
+                (d, m) => new DeadLetterView(d.Id, d.EventId, m.EventType, d.Handler, d.Error, d.FailedAt, m.Attempts, d.ReplayedAt, d.ReplayedBy, m.OccurredAt, m.CorrelationId))
             .ToListAsync(cancellationToken);
         return (items, total);
     }
+
+    /// <summary>One dead letter with its event (D357); 404 <c>DEAD_LETTER_NOT_FOUND</c> when it or its event is gone.</summary>
+    public async Task<DeadLetterView> GetAsync(Guid deadLetterId, CancellationToken cancellationToken)
+        => await db.Set<DeadLetter>().AsNoTracking()
+            .Where(d => d.Id == deadLetterId)
+            .Join(
+                db.Set<OutboxMessage>().AsNoTracking(),
+                d => d.EventId,
+                m => m.Id,
+                (d, m) => new DeadLetterView(d.Id, d.EventId, m.EventType, d.Handler, d.Error, d.FailedAt, m.Attempts, d.ReplayedAt, d.ReplayedBy, m.OccurredAt, m.CorrelationId))
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(NotFoundCode, "The dead letter does not exist; check the deadLetterId.");
 
     /// <summary>
     /// Puts the event of <paramref name="deadLetterId"/> back in the queue: the outbox row gets attempts 0 and is due now,
@@ -84,6 +100,6 @@ public sealed class DeadLetterStore(FreshOrbitDbContext db, IClock clock)
 
         message.Attempts = 0;
         message.NextAttemptAt = null;
-        return new DeadLetterView(deadLetter.Id, deadLetter.EventId, message.EventType, deadLetter.Handler, deadLetter.Error, deadLetter.FailedAt, message.Attempts, deadLetter.ReplayedAt, deadLetter.ReplayedBy);
+        return new DeadLetterView(deadLetter.Id, deadLetter.EventId, message.EventType, deadLetter.Handler, deadLetter.Error, deadLetter.FailedAt, message.Attempts, deadLetter.ReplayedAt, deadLetter.ReplayedBy, message.OccurredAt, message.CorrelationId);
     }
 }

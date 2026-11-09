@@ -21,7 +21,7 @@ public static class ModuleCatalog
         ["Notifications"] = ["Identity", "Audit", "Settings", "Customers", "Ordering", "Payments", "Delivery"],
         ["Reporting"] = [],
         ["Audit"] = [],
-        ["Settings"] = ["Audit", "Delivery"],
+        ["Settings"] = ["Audit", "Delivery", "Locations", "Notifications"],
     };
 
     public static readonly string[] Layers = ["Domain", "Application", "Infrastructure", "Public"];

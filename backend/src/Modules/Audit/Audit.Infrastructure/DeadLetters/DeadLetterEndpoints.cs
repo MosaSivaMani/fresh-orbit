@@ -52,6 +52,13 @@ public static class DeadLetterEndpoints
             .RequirePermission(AuditModule.DeadLettersPermission)
             .WithTags("Operations");
 
+        // D357: one dead letter for the admin details panel (same fields as a list item).
+        endpoints.MapGet("/admin/dead-letters/{deadLetterId:guid}", async (Guid deadLetterId, DeadLetterStore store, CancellationToken ct) =>
+                TypedResults.Ok(await store.GetAsync(deadLetterId, ct)))
+            .RequirePermission(AuditModule.DeadLettersPermission)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .WithTags("Operations");
+
         endpoints.MapPost("/admin/dead-letters/{deadLetterId:guid}/replay", async (Guid deadLetterId, DeadLetterStore store, IAuditApi audit, ICurrentActor actor, FreshOrbitDbContext db, CancellationToken ct) =>
             {
                 var replayed = await store.ReplayAsync(deadLetterId, actor.UserId, ct);

@@ -4,6 +4,8 @@
     <ProjectReference Include="..\Settings.Public\Settings.Public.csproj" />
     <ProjectReference Include="..\..\Audit\Audit.Public\Audit.Public.csproj" />
     <ProjectReference Include="..\..\Delivery\Delivery.Public\Delivery.Public.csproj" />
+    <ProjectReference Include="..\..\Locations\Locations.Public\Locations.Public.csproj" />
+    <ProjectReference Include="..\..\Notifications\Notifications.Public\Notifications.Public.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
