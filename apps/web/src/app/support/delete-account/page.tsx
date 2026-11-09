@@ -65,13 +65,17 @@ export default async function DeleteAccountPage() {
       <section id="in-the-app" className="flex flex-col gap-2">
         <h2>In the app or on this website</h2>
         <p className="text-text-muted">{TEXT.inApp}</p>
-        <Link href="/account/settings" className={link}>Open your account settings</Link>
+        <Link href="/account/settings" className={link}>
+          Open your account settings
+        </Link>
       </section>
       <section id="by-email" className="flex flex-col gap-2">
         <h2>By e-mail</h2>
         <p className="text-text-muted">{TEXT.byEmail}</p>
         {email ? (
-          <a href={`mailto:${email}`} className={link}>{email}</a>
+          <a href={`mailto:${email}`} className={link}>
+            {email}
+          </a>
         ) : (
           <Link href="/support#contact" className={link}>
             Find our support e-mail on the Help page
@@ -89,7 +93,9 @@ export default async function DeleteAccountPage() {
       <section id="before" className="flex flex-col gap-2">
         <h2>Before you delete</h2>
         <p className="text-text-muted">{TEXT.before}</p>
-        <Link href="/support/privacy-policy" className={link}>Read our privacy policy</Link>
+        <Link href="/support/privacy-policy" className={link}>
+          Read our privacy policy
+        </Link>
       </section>
     </ContentPage>
   );
