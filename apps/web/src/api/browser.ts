@@ -5,9 +5,14 @@ import { endSession, refreshSession, sessionStore } from "@/auth/session-store";
 
 let client: HttpClient | null = null;
 
+/** This site's API proxy base, e.g. `https://example.in/api/v1` (for `browserHttp().fetch` downloads). */
+export function browserApiBaseUrl(): string {
+  return `${window.location.origin}/api/v1`;
+}
+
 export function browserHttp(): HttpClient {
   client ??= createHttpClient({
-    baseUrl: `${window.location.origin}/api/v1`,
+    baseUrl: browserApiBaseUrl(),
     getAccessToken: () => sessionStore.getAccessToken(),
     refresh: refreshSession,
     onAuthFailure: endSession,

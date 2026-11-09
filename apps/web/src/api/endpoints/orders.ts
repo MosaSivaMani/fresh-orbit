@@ -1,6 +1,14 @@
 // Checkout and orders (docs/api §4.8). Writes that need `Idempotency-Key` take it from the caller, who keeps one
 // key per user action and reuses it on retries.
-import { type HttpClient } from "@fresh/core";
+import {
+  ApiError,
+  CLIENT_ERROR_CODES,
+  type HttpClient,
+  apiErrorFromResponse,
+  buildUrl,
+  isApiError,
+  readBody,
+} from "@fresh/core";
 import { type Cart } from "../types/cart";
 import {
   type CheckoutPreview,
@@ -97,6 +105,52 @@ export function listComplaints(http: HttpClient, orderId: string): Promise<Compl
 
 export function getInvoice(http: HttpClient, orderId: string): Promise<InvoiceResponse> {
   return http.get<InvoiceResponse>(`/orders/${encodeURIComponent(orderId)}/invoice`);
+}
+
+/** A downloaded file: its bytes and the server's file name (`Content-Disposition`). */
+export interface DownloadedFile {
+  blob: Blob;
+  fileName: string;
+}
+
+/** The `filename=` of a `Content-Disposition` header without quotes or folder parts; undefined when absent. */
+export function fileNameFromDisposition(header: string | null): string | undefined {
+  const match = header ? /filename\s*=\s*"?([^";]+)"?/i.exec(header) : null;
+  const name = match?.[1]?.trim().split(/[/\\]/).pop();
+  return name ? name : undefined;
+}
+
+/**
+ * The GST invoice PDF (ORD-R53), fetched with the session's bearer token through the same-origin proxy (the
+ * access token lives in memory, so a plain link or new tab would arrive unauthenticated). 404
+ * `INVOICE_NOT_ISSUED` before delivery, 404 `INVOICE_PDF_NOT_READY` until the PDF is rendered (D343).
+ * `apiBaseUrl` is the client's base (`…/api/v1`).
+ */
+export async function downloadInvoicePdf(
+  http: HttpClient,
+  apiBaseUrl: string,
+  orderId: string,
+): Promise<DownloadedFile> {
+  let response: Response;
+  try {
+    response = await http.fetch(
+      buildUrl(apiBaseUrl, `/orders/${encodeURIComponent(orderId)}/invoice/pdf`),
+      { headers: { Accept: "application/pdf, application/problem+json" } },
+    );
+  } catch (cause) {
+    if (isApiError(cause)) throw cause;
+    throw new ApiError({
+      status: 0,
+      code: CLIENT_ERROR_CODES.NETWORK_ERROR,
+      message: "The server could not be reached.",
+      cause,
+    });
+  }
+  if (!response.ok) throw apiErrorFromResponse(response, await readBody(response));
+  return {
+    blob: await response.blob(),
+    fileName: fileNameFromDisposition(response.headers.get("Content-Disposition")) ?? "invoice.pdf",
+  };
 }
 
 /** Accepts or rejects a substitution the store proposed; returns the re-priced order. */
