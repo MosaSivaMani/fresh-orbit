@@ -1,5 +1,6 @@
 using FluentValidation;
 using FreshOrbit.Delivery.Application.Common;
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shared;
 using FreshOrbit.Delivery.Domain.Shipments;
@@ -57,6 +58,7 @@ public sealed class ShipmentService(
     IDeliverySlotRepository slots,
     ILocationCalendar calendar,
     IDeliveryPolicyProvider policy,
+    ILocationCostRatesRepository costRates,
     IUnitOfWork unitOfWork,
     ICurrentActor actor,
     IClock clock)
@@ -83,7 +85,10 @@ public sealed class ShipmentService(
         return shipment;
     }
 
-    /// <summary>A wrong code is saved (failure counter) and then refused with DELIVERY_CODE_INVALID.</summary>
+    /// <summary>
+    /// A wrong code is saved (failure counter) and then refused with DELIVERY_CODE_INVALID. A delivery records the
+    /// location's delivery and packaging cost as configured now (DEL-R28, D366), in the same save.
+    /// </summary>
     public async Task<Shipment> DeliverAsync(Guid shipmentId, DeliverShipmentRequest request, uint expectedVersion, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -91,7 +96,9 @@ public sealed class ShipmentService(
         CashReceipt? cash = request.CashCollectedPaise is { } amount
             ? new CashReceipt(amount, request.CashMode ?? throw DeliveryErrors.Invalid("cashMode", "Cash mode (CASH or UPI) is required with cash collected."), request.UpiReference?.Trim())
             : null;
-        var outcome = shipment.Deliver(request.DeliveryCode, cash, clock.UtcNow);
+        var rates = await costRates.GetByLocationAsync(shipment.FulfillmentLocationId, cancellationToken);
+        var costs = rates?.Snapshot() ?? OrderCostSnapshot.NotConfigured;
+        var outcome = shipment.Deliver(request.DeliveryCode, cash, costs, clock.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         if (outcome == DeliverOutcome.CodeInvalid)
         {

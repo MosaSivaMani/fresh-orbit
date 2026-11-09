@@ -16,6 +16,7 @@ import {
   useUpdateFulfillmentLocation,
 } from "../../api/locations";
 import { type DayOfWeekName, type FulfillmentLocation } from "../../api/types/locations";
+import { useCan } from "../../app/services";
 import { SelectField, SwitchField, TextField } from "../../components/form";
 import { PageHeader, QueryView, Section } from "../../components/page";
 import { errorMessage } from "../../lib/errors";
@@ -24,6 +25,7 @@ import { LOCATION_STATUS } from "../../lib/status";
 import { todayInIndia } from "../../lib/units";
 import { ServiceAreaList } from "./CityDetailPage";
 import { CreateServiceAreaDialog } from "./dialogs";
+import { LocationCostRatesSection } from "./LocationCostRates";
 import { LOCATION_FIELD_NAMES, locationFields } from "./schemas";
 import {
   FormAlert,
@@ -37,6 +39,7 @@ import {
 export function LocationDetailPage() {
   const { locationId = "" } = useParams();
   const location = useFulfillmentLocation(locationId);
+  const can = useCan();
   return (
     <QueryView query={location} what="location">
       {(l) => (
@@ -56,6 +59,7 @@ export function LocationDetailPage() {
               onReload={() => void location.refetch()}
             />
             <Closures locationId={l.id} />
+            {can("delivery.manage") && <LocationCostRatesSection locationId={l.id} />}
             <LocationServiceAreas location={l} />
           </div>
         </>

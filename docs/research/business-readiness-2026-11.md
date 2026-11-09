@@ -85,8 +85,8 @@ Legend: **Have** = in the system today · **Gap** = missing · priority **P1** (
 |---|---|---|
 | Fish cost per batch, cost of every sale and waste movement | **Have**: inventory batches carry cost; movements carry `cost_paise` (INV-R15) | — |
 | Contribution margin and waste reports | **Have**: `contribution_margin`, `waste_summary`, `product_performance` (Reporting) | — |
-| Delivery cost per order | **Gap**: the margin report's delivery cost is always 0 (Reporting Q4). Record rider pay per drop or per shift | **P1** |
-| Packaging cost per order | **Gap**: not recorded anywhere. A fixed per-order cost in settings is enough at first | P1 |
+| Delivery cost per order | **Built (2026-11-09, D365–D368, branch `business/order-costs`)**: rider pay per drop set per location in the admin, frozen on each shipment at delivery; the margin report subtracts it and says "not configured" where it is missing. Per-shift pay waits for the owner's choice (D368) | **P1** |
+| Packaging cost per order | **Built (2026-11-09, D365–D367)**: a fixed packaging cost per order per location, frozen at delivery and subtracted in the margin report | P1 |
 | Fixed costs and a monthly profit view | **Gap**: outside the system today. A simple monthly sheet first; an "expenses" list in admin later | P2 |
 | Marketing cost per new customer | **Gap**: no record of where customers come from (no UTM or referral source) | P2 |
 | Daily owner dashboard: orders, sales, contribution, waste %, new vs repeat | **Partly**: sales tiles exist; contribution, waste % and repeat share are not on one screen | P2 |

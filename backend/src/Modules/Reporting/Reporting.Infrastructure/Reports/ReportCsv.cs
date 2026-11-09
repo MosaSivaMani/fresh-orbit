@@ -72,6 +72,9 @@ public static class ReportCsv
             case ColumnKind.Text:
                 cells.Add(Neutralize(value as string ?? string.Empty));
                 break;
+            case ColumnKind.Flag:
+                cells.Add(value is bool flag ? (flag ? "true" : "false") : string.Empty);
+                break;
             default:
                 cells.Add(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
                 break;
