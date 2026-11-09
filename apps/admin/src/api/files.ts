@@ -1,5 +1,5 @@
 import { apiErrorFromResponse, readBody } from "@fresh/core";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useServices } from "../app/services";
 
@@ -33,6 +33,34 @@ export function useApiFile(path: string | null) {
     enabled: path !== null,
     staleTime: 5 * 60_000,
   });
+}
+
+/**
+ * Downloads the file at `path` only when asked (a list row, D355): fetched with the staff token like
+ * {@link useApiFile}, then saved under `fileName` through a short-lived object URL. Errors are the usual ApiError.
+ */
+export function useDownloadApiFile() {
+  const { http, apiBaseUrl } = useServices();
+  return useMutation({
+    mutationFn: async ({ path, fileName }: { path: string; fileName: string }) => {
+      const response = await http.fetch(resolveApiUrl(apiBaseUrl, path));
+      if (!response.ok) throw apiErrorFromResponse(response, await readBody(response));
+      saveBlob(await response.blob(), fileName);
+      return fileName;
+    },
+  });
+}
+
+/** Saves `blob` as `fileName` (the browser's download), then frees the object URL. */
+export function saveBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
 /** An object URL for `blob` while the caller is mounted; revoked when the blob changes or the caller unmounts. */

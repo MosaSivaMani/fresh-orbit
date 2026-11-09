@@ -1,8 +1,9 @@
 import { formatRupees } from "@fresh/core";
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
 import { WORK_LIST_POLL_MS } from "../../api/orders";
 import {
+  type AdminInvoiceSummary,
   type AdminOrderDetailResponse,
   type AdminOrderSummary,
   type ComplaintDetail,
@@ -581,6 +582,7 @@ describe("order invoice (AD-5)", () => {
           }),
         ),
       ),
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () => HttpResponse.json(INVOICE)),
     );
     const { user } = renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
 
@@ -622,5 +624,232 @@ describe("order invoice (AD-5)", () => {
 
     expect(await screen.findByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Print" })).not.toBeInTheDocument();
+  });
+
+  it("says the PDF is not ready on the invoice page while the server renders it", async () => {
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () => HttpResponse.json(INVOICE)),
+    );
+    renderApp({ path: `/orders/${ORDER_ID}/invoice`, permissions: ["orders.view"] });
+
+    expect(await screen.findByText("PDF not ready")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Download PDF/ })).not.toBeInTheDocument();
+  });
+});
+
+const PDF_PATH = `/api/v1/admin/orders/${ORDER_ID}/invoice/pdf`;
+
+function invoiceRow(overrides: Partial<AdminInvoiceSummary> = {}): AdminInvoiceSummary {
+  return {
+    id: "0192d400-0000-7000-8000-000000000001",
+    invoiceNumber: "INV/26-27/000042",
+    issuedAt: "2026-10-24T09:30:00Z",
+    invoiceDate: "2026-10-24",
+    orderId: ORDER_ID,
+    orderNumber: "FO-HYD-000123",
+    customerName: "Ravi K",
+    fulfillmentLocationId: LOCATION_A,
+    taxablePaise: 59429,
+    taxPaise: 2971,
+    totalPaise: 62400,
+    pdfReady: true,
+    pdfUrl: PDF_PATH,
+    ...overrides,
+  };
+}
+
+/** Records the file name of every download the page saves through a temporary link. */
+function captureDownloads(): string[] {
+  const names: string[] = [];
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click");
+  click.mockImplementation(function (this: HTMLAnchorElement) {
+    names.push(this.download);
+  });
+  return names;
+}
+
+describe("invoice register (MF-2, MF-8, D353-D355)", () => {
+  beforeEach(() => {
+    // jsdom has no object URLs; the download saves the PDF through one.
+    URL.createObjectURL = vi.fn(() => "blob:invoice");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("is in the navigation for staff who can view orders", async () => {
+    server.use(http.get(`${API}/admin/invoices`, () => HttpResponse.json(page([invoiceRow()]))));
+    renderApp({ path: "/invoices", permissions: ["orders.view"] });
+
+    const nav = (await screen.findAllByRole("navigation", { name: "Main" }))[0]!;
+    expect(within(nav).getByRole("link", { name: "Invoices" })).toHaveAttribute(
+      "href",
+      "/invoices",
+    );
+  });
+
+  it("sends the URL filters and the scoped location, and shows the server's columns", async () => {
+    const requests: URL[] = [];
+    server.use(
+      http.get(`${API}/admin/invoices`, ({ request }) => {
+        requests.push(new URL(request.url));
+        return HttpResponse.json(
+          page([
+            invoiceRow(),
+            invoiceRow({
+              id: "0192d400-0000-7000-8000-000000000002",
+              invoiceNumber: "INV/26-27/000041",
+              orderId: "0192d000-0000-7000-8000-000000000011",
+              orderNumber: "FO-HYD-000122",
+              customerName: "Meena S",
+              totalPaise: 31500,
+              pdfReady: false,
+              pdfUrl: null,
+            }),
+          ]),
+        );
+      }),
+    );
+    const { router } = renderApp({
+      path: "/invoices?fromDate=2026-10-01&toDate=2026-10-24&q=000042",
+      permissions: ["orders.view"],
+    });
+
+    const table = await screen.findByRole("table", { name: "Invoices" });
+    const first = requests[0]!;
+    expect(first.searchParams.get("fromDate")).toBe("2026-10-01");
+    expect(first.searchParams.get("toDate")).toBe("2026-10-24");
+    expect(first.searchParams.get("q")).toBe("000042");
+    expect(first.searchParams.get("fulfillmentLocationId")).toBe(LOCATION_A);
+
+    const ready = (await within(table).findByText("INV/26-27/000042")).closest("tr")!;
+    expect(within(ready).getByRole("link", { name: "INV/26-27/000042" })).toHaveAttribute(
+      "href",
+      `/orders/${ORDER_ID}/invoice`,
+    );
+    expect(within(ready).getByRole("link", { name: "FO-HYD-000123" })).toHaveAttribute(
+      "href",
+      `/orders/${ORDER_ID}`,
+    );
+    expect(within(ready).getByText("Ravi K")).toBeInTheDocument();
+    expect(within(ready).getByText(formatRupees(59429))).toBeInTheDocument();
+    expect(within(ready).getByText(formatRupees(2971))).toBeInTheDocument();
+    expect(within(ready).getByText(formatRupees(62400))).toBeInTheDocument();
+    expect(
+      within(ready).getByRole("button", { name: "Download PDF of invoice INV/26-27/000042" }),
+    ).toBeInTheDocument();
+
+    const pending = within(table).getByText("INV/26-27/000041").closest("tr")!;
+    expect(within(pending).getByText("PDF not ready")).toBeInTheDocument();
+    expect(within(pending).queryByRole("button")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-09-01" } });
+    await waitFor(() => expect(requests.at(-1)?.searchParams.get("fromDate")).toBe("2026-09-01"));
+    expect(router.state.location.search).toContain("fromDate=2026-09-01");
+  });
+
+  it("downloads a PDF with the staff token only when asked, named after the invoice", async () => {
+    let authorization: string | null = null;
+    let pdfRequests = 0;
+    server.use(
+      http.get(`${API}/admin/invoices`, () => HttpResponse.json(page([invoiceRow()]))),
+      http.get(`${API_ORIGIN}${PDF_PATH}`, ({ request }) => {
+        pdfRequests += 1;
+        authorization = request.headers.get("Authorization");
+        return new HttpResponse(new Uint8Array([37, 80, 68, 70, 45]), {
+          headers: { "Content-Type": "application/pdf" },
+        });
+      }),
+    );
+    const names = captureDownloads();
+    const { user } = renderApp({ path: "/invoices", permissions: ["orders.view"] });
+
+    const button = await screen.findByRole("button", {
+      name: "Download PDF of invoice INV/26-27/000042",
+    });
+    expect(pdfRequests).toBe(0);
+
+    await user.click(button);
+
+    await waitFor(() => expect(names).toEqual(["INV-26-27-000042.pdf"]));
+    expect(pdfRequests).toBe(1);
+    expect(authorization).toMatch(/^Bearer /);
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows an empty register", async () => {
+    server.use(http.get(`${API}/admin/invoices`, () => HttpResponse.json(page([]))));
+    renderApp({ path: "/invoices", permissions: ["orders.view"] });
+
+    expect(await screen.findByText("No invoices match these filters")).toBeInTheDocument();
+  });
+});
+
+function delivered(): AdminOrderDetailResponse {
+  return orderDetail({
+    status: "DELIVERED",
+    invoice: { id: INVOICE.id, invoiceNumber: INVOICE.invoiceNumber, issuedAt: INVOICE.issuedAt },
+  });
+}
+
+describe("order detail invoice block (AD-5, D356)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("links the printable invoice and says the PDF is not ready yet", async () => {
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () => HttpResponse.json(delivered())),
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () => HttpResponse.json(INVOICE)),
+    );
+    renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
+
+    const block = (await screen.findByRole("heading", { name: "Invoice" })).closest("section")!;
+    expect(within(block).getByText(INVOICE.invoiceNumber)).toBeInTheDocument();
+    expect(within(block).getByRole("link", { name: "View" })).toHaveAttribute(
+      "href",
+      `/orders/${ORDER_ID}/invoice`,
+    );
+    expect(await within(block).findByText("PDF not ready")).toBeInTheDocument();
+  });
+
+  it("downloads the rendered PDF with the staff token", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:invoice");
+    URL.revokeObjectURL = vi.fn();
+    let authorization: string | null = null;
+    server.use(
+      http.get(`${API}/admin/orders/${ORDER_ID}`, () => HttpResponse.json(delivered())),
+      http.get(`${API}/admin/orders/${ORDER_ID}/invoice`, () =>
+        HttpResponse.json({ ...INVOICE, pdfUrl: PDF_PATH }),
+      ),
+      http.get(`${API_ORIGIN}${PDF_PATH}`, ({ request }) => {
+        authorization = request.headers.get("Authorization");
+        return new HttpResponse(new Uint8Array([37, 80, 68, 70, 45]), {
+          headers: { "Content-Type": "application/pdf" },
+        });
+      }),
+    );
+    const names = captureDownloads();
+    const { user } = renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: `Download PDF of invoice ${INVOICE.invoiceNumber}`,
+      }),
+    );
+
+    await waitFor(() => expect(names).toEqual([`${INVOICE.invoiceNumber}.pdf`]));
+    expect(authorization).toMatch(/^Bearer /);
+  });
+
+  it("says the invoice comes at delivery before it is issued", async () => {
+    server.use(http.get(`${API}/admin/orders/${ORDER_ID}`, () => HttpResponse.json(orderDetail())));
+    renderApp({ path: `/orders/${ORDER_ID}`, permissions: ["orders.view"] });
+
+    expect(
+      await screen.findByText("The invoice is issued when the order is delivered."),
+    ).toBeInTheDocument();
   });
 });

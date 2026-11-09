@@ -5807,6 +5807,92 @@
         }
       }
     },
+    "/api/v1/admin/invoices": {
+      "get": {
+        "tags": [
+          "Admin invoices"
+        ],
+        "parameters": [
+          {
+            "name": "fulfillmentLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfAdminInvoiceListItem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orders": {
       "post": {
         "tags": [
@@ -6305,6 +6391,39 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InvoiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{orderId}/invoice/pdf": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -6816,6 +6935,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InvoiceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/orders/{orderId}/invoice/pdf": {
+      "get": {
+        "tags": [
+          "Admin orders"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -9726,6 +9888,76 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "AdminInvoiceListItem": {
+        "required": [
+          "id",
+          "invoiceNumber",
+          "issuedAt",
+          "invoiceDate",
+          "orderId",
+          "orderNumber",
+          "customerName",
+          "fulfillmentLocationId",
+          "taxablePaise",
+          "taxPaise",
+          "totalPaise",
+          "pdfReady",
+          "pdfUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "invoiceDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "fulfillmentLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taxablePaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taxPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPaise": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pdfReady": {
+            "type": "boolean"
+          },
+          "pdfUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -14767,6 +14999,18 @@
               "null",
               "string"
             ]
+          },
+          "sellerAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sellerFssaiLicenseNo": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -16145,6 +16389,35 @@
           },
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "PagedResponseOfAdminInvoiceListItem": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInvoiceListItem"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -22382,6 +22655,9 @@
     },
     {
       "name": "Checkout"
+    },
+    {
+      "name": "Admin invoices"
     },
     {
       "name": "Orders"

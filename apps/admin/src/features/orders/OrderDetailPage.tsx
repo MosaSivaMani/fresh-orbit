@@ -29,6 +29,7 @@ import {
   ProposeSubstitutionDialog,
   RecordSubstitutionAnswer,
 } from "./OrderDialogs";
+import { OrderInvoiceSection } from "./InvoicePdf";
 import { PackForm, PackResult } from "./PackForm";
 
 type Order = AdminOrderDetail & { version: string };
@@ -268,6 +269,7 @@ function OrderDetail({ order, reload }: { order: Order; reload: () => unknown })
               </p>
             )}
           </Section>
+          <OrderInvoiceSection orderId={order.id} invoice={order.invoice} />
         </aside>
       </div>
 

@@ -5644,6 +5644,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    fulfillmentLocationId?: string;
+                    fromDate?: string;
+                    toDate?: string;
+                    q?: string;
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PagedResponseOfAdminInvoiceListItem"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unprocessable Entity */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders": {
         parameters: {
             query?: never;
@@ -6131,6 +6191,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{orderId}/invoice/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/{orderId}/reorder": {
         parameters: {
             query?: never;
@@ -6601,6 +6705,59 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/invoice/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orderId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -9269,6 +9426,29 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
         };
+        AdminInvoiceListItem: {
+            /** Format: uuid */
+            id: string;
+            invoiceNumber: string;
+            /** Format: date-time */
+            issuedAt: string;
+            /** Format: date */
+            invoiceDate: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            customerName: string;
+            /** Format: uuid */
+            fulfillmentLocationId: string;
+            /** Format: int64 */
+            taxablePaise: number;
+            /** Format: int64 */
+            taxPaise: number;
+            /** Format: int64 */
+            totalPaise: number;
+            pdfReady: boolean;
+            pdfUrl: null | string;
+        };
         AdminOrderDetailResponse: {
             order: components["schemas"]["OrderDetailResponse"];
             /** Format: uuid */
@@ -10596,6 +10776,8 @@ export interface components {
             /** Format: int64 */
             totalPaise: number;
             pdfUrl: null | string;
+            sellerAddress?: null | string;
+            sellerFssaiLicenseNo?: null | string;
         };
         /** @enum {string} */
         IssueKind: "AMOUNT_MISMATCH" | "MISSED_WEBHOOK" | "COLLECTION_DIFFERENCE" | "REFUND_CAPPED" | "REFUND_STUCK" | "DELIVERED_NOT_COLLECTED" | "UNSETTLED_CASH" | "SETTLEMENT_AGED" | "CASH_DIFFERENCE" | "WEBHOOK_ERROR" | "REFUND_METHOD_REQUIRED";
@@ -10957,6 +11139,15 @@ export interface components {
             /** Format: int64 */
             adjustmentPaise: number;
             status: string;
+        };
+        PagedResponseOfAdminInvoiceListItem: {
+            items: components["schemas"]["AdminInvoiceListItem"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            totalCount: number;
         };
         PagedResponseOfAdminOrderListItem: {
             items: components["schemas"]["AdminOrderListItem"][];
