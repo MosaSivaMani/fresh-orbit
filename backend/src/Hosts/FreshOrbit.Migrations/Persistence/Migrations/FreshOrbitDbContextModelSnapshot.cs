@@ -1043,6 +1043,61 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.ToTable("wishlist_items", "customers");
                 });
 
+            modelBuilder.Entity("FreshOrbit.Delivery.Domain.Costs.LocationCostRates", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<long?>("DeliveryCostPerDropPaise")
+                        .HasColumnType("bigint")
+                        .HasColumnName("delivery_cost_per_drop_paise");
+
+                    b.Property<Guid>("FulfillmentLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fulfillment_location_id");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_at");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<long?>("PackagingCostPerOrderPaise")
+                        .HasColumnType("bigint")
+                        .HasColumnName("packaging_cost_per_order_paise");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_location_cost_rates");
+
+                    b.HasIndex("FulfillmentLocationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_location_cost_rates_fulfillment_location_id");
+
+                    b.ToTable("location_cost_rates", "delivery", t =>
+                        {
+                            t.HasCheckConstraint("ck_location_cost_rates_delivery", "delivery_cost_per_drop_paise IS NULL OR delivery_cost_per_drop_paise BETWEEN 0 AND 100000");
+
+                            t.HasCheckConstraint("ck_location_cost_rates_packaging", "packaging_cost_per_order_paise IS NULL OR packaging_cost_per_order_paise BETWEEN 0 AND 50000");
+                        });
+                });
+
             modelBuilder.Entity("FreshOrbit.Delivery.Domain.Riders.Rider", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1210,6 +1265,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("delivery_code_failures");
 
+                    b.Property<long?>("DeliveryCostPaise")
+                        .HasColumnType("bigint")
+                        .HasColumnName("delivery_cost_paise");
+
                     b.Property<Guid>("DeliverySlotId")
                         .HasColumnType("uuid")
                         .HasColumnName("delivery_slot_id");
@@ -1238,6 +1297,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid")
                         .HasColumnName("order_id");
+
+                    b.Property<long?>("PackagingCostPaise")
+                        .HasColumnType("bigint")
+                        .HasColumnName("packaging_cost_paise");
 
                     b.Property<DateTimeOffset?>("PackedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1299,6 +1362,10 @@ namespace FreshOrbit.Migrations.Persistence.Migrations
                             t.HasCheckConstraint("ck_shipments_cash_mode", "cash_mode IS NULL OR cash_mode IN ('CASH', 'UPI')");
 
                             t.HasCheckConstraint("ck_shipments_code_failures", "delivery_code_failures >= 0");
+
+                            t.HasCheckConstraint("ck_shipments_delivery_cost", "delivery_cost_paise IS NULL OR delivery_cost_paise >= 0");
+
+                            t.HasCheckConstraint("ck_shipments_packaging_cost", "packaging_cost_paise IS NULL OR packaging_cost_paise >= 0");
 
                             t.HasCheckConstraint("ck_shipments_status", "status IN ('PENDING', 'ASSIGNED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED')");
                         });

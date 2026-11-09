@@ -80,6 +80,13 @@ public static class ReportingDataset
             ordered_quantity, max_chargeable_quantity, packed_quantity, final_total_paise) VALUES
             ('0199e000-0000-7000-8000-00000000f001', '0199e000-0000-7000-8000-00000000f000', 1, '{SeerProduct}', '{SeerVariant}', '=HYPERLINK("http://x")', 'Seer per kg', 'SEER-KG', 'WHOLE', 1000, 1100, 1000, 99999);
 
+        -- Shipments with the costs frozen at delivery (D366): A and B at L1 carry ₹45 rider pay and ₹20 packaging each;
+        -- F at L2 was delivered while L2 had no cost rates (both null); the 2026-09-10 order E has no shipment row.
+        INSERT INTO delivery.shipments (id, order_id, fulfillment_location_id, status, delivered_at, delivery_cost_paise, packaging_cost_paise) VALUES
+            ('0199e000-0000-7000-8000-000000000901', '0199e000-0000-7000-8000-00000000a000', '{L1}', 'DELIVERED', '2026-10-23T08:30:00Z', 4500, 2000),
+            ('0199e000-0000-7000-8000-000000000902', '0199e000-0000-7000-8000-00000000b000', '{L1}', 'DELIVERED', '2026-10-23T18:00:00Z', 4500, 2000),
+            ('0199e000-0000-7000-8000-000000000903', '0199e000-0000-7000-8000-00000000f000', '{L2}', 'DELIVERED', '2026-10-23T09:00:00Z', NULL, NULL);
+
         -- SALE movements per line (reference ORDER_ITEM) and the SEER waste.
         INSERT INTO inventory.stock_movements (id, stock_item_id, kind, quantity, cost_paise, reason_code, reference_type, reference_id, occurred_at) VALUES
             ('0199e000-0000-7000-8000-000000000501', '0199e000-0000-7000-8000-000000000401', 'SALE', -772, -67164, NULL, 'ORDER_ITEM', '0199e000-0000-7000-8000-00000000a001', '2026-10-23T06:00:00Z'),

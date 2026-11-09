@@ -430,6 +430,7 @@ public sealed class ReportReader(FreshOrbitDbContext db, ICurrentActor actor, IC
             ColumnKind.Date => reader.GetFieldValue<DateOnly>(ordinal),
             ColumnKind.Uuid => reader.GetGuid(ordinal),
             ColumnKind.Text => reader.GetString(ordinal),
+            ColumnKind.Flag => reader.GetBoolean(ordinal),
             _ => Convert.ToInt64(reader.GetValue(ordinal), CultureInfo.InvariantCulture),
         };
     }

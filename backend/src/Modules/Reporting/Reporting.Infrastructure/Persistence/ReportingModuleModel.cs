@@ -78,7 +78,7 @@ public static class ReportViews
     public static readonly ReportView ContributionMargin = new(
         "contribution_margin",
         "03_contribution_margin.sql",
-        ["ordering.orders", "ordering.order_items", "inventory.stock_movements", "payments.refunds", "locations.fulfillment_locations", "locations.cities"]);
+        ["ordering.orders", "ordering.order_items", "inventory.stock_movements", "payments.refunds", "delivery.shipments", "locations.fulfillment_locations", "locations.cities"]);
 
     public static readonly ReportView WasteSummary = new(
         "waste_summary",

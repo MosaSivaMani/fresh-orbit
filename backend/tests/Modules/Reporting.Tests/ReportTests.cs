@@ -59,18 +59,73 @@ public sealed class ReportTests(ReportingDatabase database) : ReportingTestBase(
     }
 
     [Fact]
-    public async Task R3_contribution_margin()
+    public async Task R3_contribution_margin_after_recorded_delivery_and_packaging_cost()
     {
         await RefreshAsync();
 
         var report = await GetJsonAsync(Reports([L1]), $"/api/v1/admin/reports/contribution-margin?{Day}");
 
-        AssertNumbers(report.GetProperty("items")[0], new()
+        // A and B each carry ₹45 rider pay and ₹20 packaging frozen at delivery (D366): 39 181 − 9 000 − 4 000.
+        var row = report.GetProperty("items")[0];
+        AssertNumbers(row, new()
         {
-            ["revenueExTaxPaise"] = 305306, ["saleCostPaise"] = 261125, ["refundsPaise"] = 5000, ["deliveryCostPaise"] = 0,
-            ["contributionPaise"] = 39181, ["contributionMarginBp"] = 1283,
+            ["ordersDelivered"] = 2, ["revenueExTaxPaise"] = 305306, ["saleCostPaise"] = 261125, ["refundsPaise"] = 5000,
+            ["grossContributionPaise"] = 39181, ["deliveryCostPaise"] = 9000, ["packagingCostPaise"] = 4000,
+            ["contributionPaise"] = 26181, ["contributionMarginBp"] = 857, ["ordersWithoutCosts"] = 0,
         });
-        report.GetProperty("totals").GetProperty("contributionMarginBp").GetInt64().Should().Be(1283);
+        row.GetProperty("costsNotConfigured").GetBoolean().Should().BeFalse();
+        var totals = report.GetProperty("totals");
+        AssertNumbers(totals, new() { ["deliveryCostPaise"] = 9000, ["packagingCostPaise"] = 4000, ["contributionPaise"] = 26181, ["contributionMarginBp"] = 857 });
+        totals.GetProperty("costsNotConfigured").GetBoolean().Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task R3b_costs_not_configured_are_shown_as_such_never_as_zero()
+    {
+        await RefreshAsync();
+
+        // F at L2 was delivered without cost rates: costs and contribution after them are null, the flag is set.
+        var l2 = await GetJsonAsync(Reports(all: true), $"/api/v1/admin/reports/contribution-margin?{Day}&fulfillmentLocationId={L2}");
+        var row = l2.GetProperty("items").EnumerateArray().Should().ContainSingle().Which;
+        AssertNumbers(row, new() { ["ordersDelivered"] = 1, ["revenueExTaxPaise"] = 99999, ["grossContributionPaise"] = 99999, ["ordersWithoutCosts"] = 1 });
+        foreach (var name in new[] { "deliveryCostPaise", "packagingCostPaise", "contributionPaise", "contributionMarginBp" })
+        {
+            row.GetProperty(name).ValueKind.Should().Be(JsonValueKind.Null, name);
+        }
+
+        row.GetProperty("costsNotConfigured").GetBoolean().Should().BeTrue();
+
+        // Over both locations the configured L1 costs are not passed off as the whole day's cost.
+        var all = await GetJsonAsync(Reports(all: true), $"/api/v1/admin/reports/contribution-margin?{Day}");
+        var totals = all.GetProperty("totals");
+        AssertNumbers(totals, new() { ["ordersDelivered"] = 3, ["grossContributionPaise"] = 39181 + 99999, ["ordersWithoutCosts"] = 1 });
+        foreach (var name in new[] { "deliveryCostPaise", "packagingCostPaise", "contributionPaise", "contributionMarginBp" })
+        {
+            totals.GetProperty(name).ValueKind.Should().Be(JsonValueKind.Null, name);
+        }
+
+        totals.GetProperty("costsNotConfigured").GetBoolean().Should().BeTrue();
+
+        // An order delivered with no shipment cost recorded at all (order E, 2026-09-10) counts as not configured too.
+        var history = await GetJsonAsync(Reports([L1]), "/api/v1/admin/reports/contribution-margin?fromDate=2026-09-10&toDate=2026-09-10");
+        history.GetProperty("items")[0].GetProperty("costsNotConfigured").GetBoolean().Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task R3c_csv_marks_costs_not_configured()
+    {
+        await RefreshAsync();
+        using var client = Reports(all: true);
+
+        var response = await client.GetAsync($"/api/v1/admin/reports/contribution-margin?{Day}&format=csv", Ct);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var bytes = await response.Content.ReadAsByteArrayAsync(Ct);
+        var lines = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3).Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        lines[0].Should().Contain("delivery_cost_paise,delivery_cost_inr,packaging_cost_paise,packaging_cost_inr");
+        lines[0].Should().EndWith("orders_without_costs,costs_not_configured");
+        lines[^1].Should().StartWith("TOTAL,");
+        lines[^1].Should().EndWith(",1,true");
     }
 
     [Fact]

@@ -48,6 +48,11 @@ internal static class SaveSupport
         {
             throw new ConflictException(DeliveryErrors.Duplicate, "Another active rider has this phone number.", "phone");
         }
+        catch (DbUpdateException exception) when (exception.InnerException is PostgresException { SqlState: UniqueViolation, TableName: "location_cost_rates" })
+        {
+            // Two first saves raced (If-None-Match: *): the loser is told the rates now exist.
+            throw new ConflictException(DeliveryErrors.Duplicate, "This location's cost rates already exist; reload and update them with If-Match.");
+        }
     }
 
     public static void Page(int page, int pageSize)

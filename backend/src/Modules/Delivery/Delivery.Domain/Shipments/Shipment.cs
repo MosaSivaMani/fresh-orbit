@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shared;
 using FreshOrbit.Delivery.Public.Events;
@@ -117,6 +118,12 @@ public sealed class Shipment : AggregateRoot
 
     public DateTimeOffset? CashCollectedAt { get; private set; }
 
+    /// <summary>Rider pay for this drop, frozen at delivery from the location's rates (D366); null = not configured then.</summary>
+    public long? DeliveryCostPaise { get; private set; }
+
+    /// <summary>Packaging and ice for this order, frozen at delivery (D366); null = not configured then.</summary>
+    public long? PackagingCostPaise { get; private set; }
+
     public IReadOnlyList<DeliveryAttempt> Attempts => _attempts;
 
     public bool IsDeliveryCodeLocked => DeliveryCodeFailures >= MaxDeliveryCodeFailures;
@@ -230,10 +237,12 @@ public sealed class Shipment : AggregateRoot
 
     /// <summary>
     /// DEL-R7: OUT_FOR_DELIVERY; locked after 5 wrong codes; a wrong code counts a failure and returns
-    /// <see cref="DeliverOutcome.CodeInvalid"/> (the caller saves the counter, then refuses).
+    /// <see cref="DeliverOutcome.CodeInvalid"/> (the caller saves the counter, then refuses). A delivery records the
+    /// location's delivery and packaging cost as they are now (DEL-R28, D366); a missing cost never blocks it.
     /// </summary>
-    public DeliverOutcome Deliver(string deliveryCode, CashReceipt? cash, DateTimeOffset now)
+    public DeliverOutcome Deliver(string deliveryCode, CashReceipt? cash, OrderCostSnapshot costs, DateTimeOffset now)
     {
+        ArgumentNullException.ThrowIfNull(costs);
         if (Status != ShipmentStatus.OutForDelivery)
         {
             throw InvalidTransition("delivered");
@@ -267,7 +276,19 @@ public sealed class Shipment : AggregateRoot
             CashCollectedAt = now;
         }
 
-        Raise(new ShipmentDelivered(Id, OrderId, FulfillmentLocationId, riderId, now, cash?.AmountPaise, cash?.Mode.ToCode(), cash?.UpiReference));
+        DeliveryCostPaise = costs.DeliveryCostPaise;
+        PackagingCostPaise = costs.PackagingCostPaise;
+        Raise(new ShipmentDelivered(
+            Id,
+            OrderId,
+            FulfillmentLocationId,
+            riderId,
+            now,
+            cash?.AmountPaise,
+            cash?.Mode.ToCode(),
+            cash?.UpiReference,
+            DeliveryCostPaise,
+            PackagingCostPaise));
         return DeliverOutcome.Delivered;
     }
 

@@ -1146,6 +1146,8 @@ Rules: `amountPaise` ≤ paid/collected − refunded − pending → else 422 `R
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/return` | delivery.manage | IM | `DELIVERY_FAILED` → `RETURNED` |
 | POST | `/api/v1/admin/delivery/shipments/{shipmentId}/cash-collected` | delivery.manage | IK | Record COD / UPI-on-delivery collection (`amountPaise`, `mode` `CASH`/`UPI`, `upiReference`) when not given at deliver. Implemented by Payments (D14): order must be `OUT_FOR_DELIVERY`/`DELIVERED` (else 409), `amountPaise` must equal the amount due (422 `CASH_AMOUNT_MISMATCH`), second record 409 `CASH_ALREADY_COLLECTED`; returns the payment |
 | GET | `/api/v1/admin/delivery/shipments/{shipmentId}` | delivery.manage | ETag | Shipment detail with attempts (A9); source of the shipment `If-Match` |
+| GET | `/api/v1/admin/delivery/locations/{fulfillmentLocationId}/cost-rates` | delivery.manage | ETag | D365: `{ fulfillmentLocationId, deliveryCostPerDropPaise, packagingCostPerOrderPaise, configured, version }`; nulls and `version: null` before the first save (null = not configured); unknown location 404 |
+| PUT | `/api/v1/admin/delivery/locations/{fulfillmentLocationId}/cost-rates` | delivery.manage | IM / If-None-Match | D365: `{ deliveryCostPerDropPaise 0–100000 \| null, packagingCostPerOrderPaise 0–50000 \| null }`; create with `If-None-Match: *` (409 `DUPLICATE` if they exist), update with `If-Match`; out of range 422 on the field. Each delivery freezes the values on its shipment (D366) |
 
 Delivery request bodies (Phase 2, D13). Every list item and command response carries `version`; commands return the
 updated resource and its `ETag`. Staff outside the resource's location → 403 `LOCATION_ACCESS_DENIED`; lists are filtered.
@@ -1253,7 +1255,7 @@ All `GET`, permission `reports.view`, params `fulfillmentLocationId`, `cityId`, 
 |---|---|
 | `/api/v1/admin/reports/daily-sales` | Orders, gross, discounts, delivery fees, net revenue per day |
 | `/api/v1/admin/reports/product-performance` | Quantity and revenue per variant |
-| `/api/v1/admin/reports/contribution-margin` | Revenue − SALE cost − refunds |
+| `/api/v1/admin/reports/contribution-margin` | Revenue − SALE cost − refunds (`grossContributionPaise`) − delivery cost − packaging cost (`contributionPaise`); `deliveryCostPaise`, `packagingCostPaise`, `contributionPaise`, `contributionMarginBp` are null and `costsNotConfigured` true when any delivered order has no recorded cost (`ordersWithoutCosts`), in rows and totals (D367) |
 | `/api/v1/admin/reports/waste` | Waste quantity and cost by reason |
 | `/api/v1/admin/reports/repeat-customers` | Repeat rate, cohorts |
 | `/api/v1/admin/reports/dashboard` | Today's tiles: orders by status, slot fill, low stock, open complaints |

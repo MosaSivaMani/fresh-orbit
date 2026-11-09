@@ -97,6 +97,90 @@ describe("Reports", () => {
     expect(screen.getByText("Reason: Spoiled")).toBeInTheDocument();
   });
 
+  it("shows delivery and packaging cost, and says when costs are not configured", async () => {
+    server.use(
+      http.get(`${API}/admin/reports/contribution-margin`, () =>
+        HttpResponse.json({
+          ...emptyReport(),
+          totals: {
+            ordersDelivered: 3,
+            revenueExTaxPaise: 405_305,
+            grossContributionPaise: 139_180,
+            deliveryCostPaise: null,
+            packagingCostPaise: null,
+            contributionPaise: null,
+            contributionMarginBp: null,
+            ordersWithoutCosts: 1,
+            costsNotConfigured: true,
+          },
+          items: [
+            {
+              businessDate: "2026-10-23",
+              fulfillmentLocationId: LOCATION_A,
+              ordersDelivered: 2,
+              revenueExTaxPaise: 305_306,
+              saleCostPaise: 261_125,
+              refundsPaise: 5_000,
+              grossContributionPaise: 39_181,
+              deliveryCostPaise: 9_000,
+              packagingCostPaise: 4_000,
+              contributionPaise: 26_181,
+              contributionMarginBp: 857,
+              ordersWithoutCosts: 0,
+              costsNotConfigured: false,
+            },
+            {
+              businessDate: "2026-10-23",
+              fulfillmentLocationId: "0192b400-0002-7000-8000-000000000009",
+              ordersDelivered: 1,
+              revenueExTaxPaise: 99_999,
+              saleCostPaise: 0,
+              refundsPaise: 0,
+              grossContributionPaise: 99_999,
+              deliveryCostPaise: null,
+              packagingCostPaise: null,
+              contributionPaise: null,
+              contributionMarginBp: null,
+              ordersWithoutCosts: 1,
+              costsNotConfigured: true,
+            },
+          ],
+          totalCount: 2,
+        }),
+      ),
+    );
+    renderApp({ path: "/reports?report=contribution-margin", permissions: ["reports.view"] });
+
+    const totals = await screen.findByTestId("report-totals");
+    expect(within(totals).getAllByText("Not configured")).toHaveLength(4);
+    expect(within(totals).getByText(formatRupees(139_180))).toBeInTheDocument();
+    expect(screen.getByTestId("report-notice")).toHaveTextContent(/Costs not configured/);
+
+    const table = screen.getByRole("table");
+    expect(within(table).getByText(formatRupees(9_000))).toBeInTheDocument();
+    expect(within(table).getByText(formatRupees(4_000))).toBeInTheDocument();
+    expect(within(table).getByText(formatPercentFromBp(857))).toBeInTheDocument();
+    expect(within(table).getAllByText("Not configured")).toHaveLength(4);
+    expect(within(table).getByText("Yes")).toBeInTheDocument();
+    expect(within(table).getByText("No")).toBeInTheDocument();
+  });
+
+  it("shows no cost notice when every delivered order has its costs", async () => {
+    server.use(
+      http.get(`${API}/admin/reports/contribution-margin`, () =>
+        HttpResponse.json({
+          ...emptyReport(),
+          totals: { contributionPaise: 26_181, costsNotConfigured: false, ordersWithoutCosts: 0 },
+        }),
+      ),
+    );
+    renderApp({ path: "/reports?report=contribution-margin", permissions: ["reports.view"] });
+
+    const totals = await screen.findByTestId("report-totals");
+    expect(within(totals).getByText(formatRupees(26_181))).toBeInTheDocument();
+    expect(screen.queryByTestId("report-notice")).not.toBeInTheDocument();
+  });
+
   it("exports CSV with format=csv and without paging", async () => {
     let csvUrl: URL | undefined;
     server.use(
