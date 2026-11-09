@@ -8,8 +8,7 @@
         "FRESH_API_ORIGIN",
         "NEXT_PUBLIC_SITE_URL",
         "NEXT_PUBLIC_DEMO_MODE",
-        "APP_ENVIRONMENT",
-        "FRESH_GRIEVANCE_*"
+        "APP_ENVIRONMENT"
       ]
     }
   }

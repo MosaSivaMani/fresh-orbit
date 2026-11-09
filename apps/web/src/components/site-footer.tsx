@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getBusinessProfile, getCities } from "@/api/endpoints/catalog";
 import { publicHttp } from "@/api/server";
 import { type PublicBusinessProfile, type PublicCity } from "@/api/types/locations";
-import { getGrievanceOfficer } from "@/server/config";
+import { grievanceOfficerOf } from "./grievance-officer";
 import { Logo } from "./logo";
 
 /**
@@ -49,6 +49,8 @@ const helpLinks = [
   { href: "/support/refund-policy", label: "Refund policy" },
   { href: "/support/privacy-policy", label: "Privacy policy" },
   { href: "/support/terms", label: "Terms of use" },
+  // Account deletion without the app, the page Google Play links to (L-82, D376).
+  { href: "/support/delete-account", label: "Delete your account" },
   { href: "/about", label: "About us" },
 ];
 
@@ -110,8 +112,8 @@ interface LegalRow {
  */
 export async function SiteFooter() {
   const [cities, profile] = await Promise.all([loadCities(), loadProfile()]);
-  // The grievance officer is linked only once configured (L-7, D300).
-  const help = getGrievanceOfficer() ? [...helpLinks, grievanceLink] : helpLinks;
+  // The grievance officer is linked only once the business profile names one (L-7, D374).
+  const help = grievanceOfficerOf(profile) ? [...helpLinks, grievanceLink] : helpLinks;
   return (
     <footer className="bg-outline-ink text-on-outline-ink mt-12">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">

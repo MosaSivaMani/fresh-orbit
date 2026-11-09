@@ -80,6 +80,12 @@ public sealed record ProductListItem(
     /// </summary>
     public ListVariant? DefaultVariant { get; init; }
 
+    /// <summary>
+    /// The primary image in every rendition (320, 640 and 1280 px wide), like the product gallery, so a card can pick
+    /// the size it shows (audit W-9, D375); empty without an image. <see cref="ImageUrl"/> stays the 640 px one.
+    /// </summary>
+    public IReadOnlyList<ImageSource> ImageSources { get; init; } = [];
+
     /// <summary>Freshness of <see cref="DefaultVariant"/> at the location (CAT-R25); null without location or when unknown.</summary>
     public FreshnessInfo? Freshness { get; init; }
 

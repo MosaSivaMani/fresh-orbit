@@ -47,7 +47,13 @@ export function CartLineRow({ line }: { line: CartLine }) {
         tabIndex={-1}
         aria-hidden="true"
       >
-        <ProductImage src={line.imageUrl} alt="" sizes="96px" className="aspect-square" />
+        <ProductImage
+          src={line.imageUrl}
+          sources={line.imageSources}
+          alt=""
+          sizes="96px"
+          className="aspect-square"
+        />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-start justify-between gap-3">

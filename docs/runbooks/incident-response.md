@@ -19,7 +19,7 @@ Fill the names before launch and keep this table current. One person can hold se
 |---|---|---|
 | Decision maker | {{OWNER: the owner}} (deputy {{OWNER: name}}) | Declares the incident, decides whether it is a personal-data breach, approves every notice, talks to the lawyer |
 | Technical lead | {{OWNER: the engineer on call}} | Contains, collects evidence, finds what and who was affected, fixes the cause |
-| Grievance officer | `FRESH_GRIEVANCE_OFFICER_NAME` in `.env.prod` | Sends the notices to customers and answers their questions (the business contact named in the notice) |
+| Grievance officer | Business profile in admin Settings (D374) | Sends the notices to customers and answers their questions (the business contact named in the notice) |
 | Lawyer | {{OWNER: law firm and phone}} | Confirms the Board report and its wording; CERT-In report if needed |
 | Scribe | Anyone not doing the above | Keeps the incident log (§6) from the first minute |
 

@@ -24,7 +24,7 @@ marked.
 | SMTP provider account with the domain verified | `SMTP_*`, mail DNS (§2.2) | L-48, L-49 |
 | Legal name, registered address, GSTIN, FSSAI licence of the store | Business profile and store (§6) | L-4, L-5 |
 | CA-confirmed GST rates per product kind | Tax rules (§6) | L-13 |
-| Grievance officer name and e-mail | `FRESH_GRIEVANCE_OFFICER_*` | L-7 |
+| Grievance officer name and e-mail | Business profile in admin Settings (§6, D374) | L-7 |
 | Offsite bucket (Cloudflare R2 or Backblaze B2) and a bucket-scoped key | `rclone.conf` (§4) | L-10 |
 | A free healthchecks.io check (backups) and a free uptime monitor (site) | `BACKUP_PING_URL`, §8 | L-30, L-44 |
 | The team password manager, named | Every secret below | L-66 |
@@ -113,7 +113,6 @@ Send `SMTP_FROM_ADDRESS` from this domain (for example `orders@<domain>`), never
    | `POSTGRES_PASSWORD`, `JWT_SIGNING_KEY` | from step 2 |
    | `BUSINESS_NAME`, `SMTP_FROM_NAME` | `Fresh Orbitt` (D170, the template's value since L-75). It goes into every SMS, so keep it as the owner registered the brand on DLT |
    | `SUPPORT_PHONE`, `SUPPORT_EMAIL` | the store's support contacts |
-   | `FRESH_GRIEVANCE_OFFICER_NAME`, `_DESIGNATION`, `_EMAIL`, `FRESH_GRIEVANCE_RESPONSE_TIME` | from the owner (shown on the website only when name, e-mail and response time are all set) |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USE_TLS`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS` | from the SMTP provider. An empty `SMTP_HOST` only logs e-mails (L-19), so never leave it empty here |
    | `SMS_DLT_API_KEY`, `SMS_DLT_SENDER_ID`, `SMS_DLT_PRINCIPAL_ENTITY_ID`, all 13 `SMS_DLT_TEMPLATE_*` | from the DLT registration (`security-configuration.md` §2.1). The api and worker refuse to start without them |
    | `COMPOSE_PROFILES` | `monitoring` (alerts, L-29) |

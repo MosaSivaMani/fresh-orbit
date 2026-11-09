@@ -3,6 +3,8 @@
 // docs/api/README.md §4.4: GET /home, /categories, /products, /products/{slug}, /search/suggest.
 // Nullable price/availability fields follow §1.4: without a pincode they are null and `locationRequired` is true.
 
+import 'package:fresh_theme/fresh_theme.dart' show PhotoSource;
+
 import 'common.dart';
 import 'json.dart';
 
@@ -34,6 +36,7 @@ class ProductSummary {
     required this.locationRequired,
     this.freshness,
     this.defaultVariant,
+    this.imageSources = const [],
   });
 
   factory ProductSummary.fromJson(Json j) {
@@ -47,6 +50,7 @@ class ProductSummary {
       localNames: stringList(j, 'localNames'),
       sourceType: optString(j, 'sourceType'),
       imageUrl: optString(j, 'imageUrl'),
+      imageSources: imageSourcesOf(j, 'imageSources'),
       fromPrice: price == null ? null : FromPrice.fromJson(price),
       availability: optAvailability(j, 'availability'),
       locationRequired: optBool(j, 'locationRequired') ?? false,
@@ -60,6 +64,9 @@ class ProductSummary {
   final List<String> localNames;
   final String? sourceType;
   final String? imageUrl;
+
+  /// The primary image's renditions (320, 640, 1280 px) so the card downloads the size it shows (D375).
+  final List<PhotoSource> imageSources;
   final FromPrice? fromPrice;
   final Availability? availability;
   final bool locationRequired;
@@ -216,6 +223,13 @@ class HomeData {
   final List<ProductSummary> featuredProducts;
   final bool locationRequired;
 }
+
+/// `imageSources` / `sources` of the API: the renditions of one image (D375); empty when the server sent none.
+List<PhotoSource> imageSourcesOf(Json j, String field) => listOrEmpty(
+  j,
+  field,
+  (s) => PhotoSource(width: reqInt(s, 'width'), url: reqString(s, 'url')),
+);
 
 class ProductImage {
   const ProductImage({required this.url, required this.altText});
@@ -499,6 +513,7 @@ class BusinessProfile {
     this.address,
     this.gstin,
     this.fssaiLicenseNo,
+    this.grievanceOfficer,
   });
 
   factory BusinessProfile.fromJson(Json j) => BusinessProfile(
@@ -510,6 +525,10 @@ class BusinessProfile {
     supportPhone: optString(j, 'supportPhone'),
     supportEmail: optString(j, 'supportEmail'),
     supportHours: optString(j, 'supportHours'),
+    grievanceOfficer: switch (asJsonOrNull(j['grievanceOfficer'], 'grievanceOfficer')) {
+      final o? => GrievanceOfficer.fromJson(o),
+      null => null,
+    },
   );
 
   final String? tradeName;
@@ -522,6 +541,28 @@ class BusinessProfile {
   final String? address;
   final String? gstin;
   final String? fssaiLicenseNo;
+
+  /// The grievance officer the law requires us to name (D374); null until the owner enters one.
+  final GrievanceOfficer? grievanceOfficer;
+}
+
+/// `grievanceOfficer` of the public business profile (D374): name and e-mail always, the rest when entered.
+class GrievanceOfficer {
+  const GrievanceOfficer({required this.name, this.designation, required this.email, this.phone, this.responseTime});
+
+  factory GrievanceOfficer.fromJson(Json j) => GrievanceOfficer(
+    name: reqString(j, 'name'),
+    designation: optString(j, 'designation'),
+    email: reqString(j, 'email'),
+    phone: optString(j, 'phone'),
+    responseTime: optString(j, 'responseTime'),
+  );
+
+  final String name;
+  final String? designation;
+  final String email;
+  final String? phone;
+  final String? responseTime;
 }
 
 class SearchSuggestion {
