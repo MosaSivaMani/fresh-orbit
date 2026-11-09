@@ -31,6 +31,7 @@ import 'features/orders/order_tracking_screen.dart';
 import 'features/orders/orders_screen.dart';
 import 'state/cart_state.dart';
 import 'state/first_run.dart';
+import 'state/push_state.dart';
 import 'state/session.dart';
 import 'widgets/bold.dart';
 import 'widgets/refresh_on_resume.dart';
@@ -180,6 +181,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       onAsked: () => ref.read(aboutYouDueProvider.notifier).set(false),
     ),
   );
+  // Push (D349, D351): a tapped notification opens its screen once the launch screen has routed.
+  ref.onDispose(ref.read(pushCoordinatorProvider).attach(router));
   return router;
 });
 

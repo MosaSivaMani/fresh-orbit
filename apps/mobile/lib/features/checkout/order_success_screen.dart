@@ -3,6 +3,8 @@
 // with the rider, Track order / Continue shopping, and the sea floor at the bottom (D289). The screen only
 // composes `fresh_theme` parts (D207); every value is the server's order, only formatted (rule 4).
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fresh_theme/fresh_theme.dart';
@@ -13,16 +15,33 @@ import '../../core/format.dart';
 import '../../illustrations/illustration.dart';
 import '../../state/checkout_state.dart';
 import '../../state/orders_state.dart';
+import '../../state/push_state.dart';
 import '../../widgets/commerce.dart';
 import '../../widgets/states.dart';
 
-class OrderSuccessScreen extends ConsumerWidget {
+class OrderSuccessScreen extends ConsumerStatefulWidget {
   const OrderSuccessScreen({super.key, required this.orderId});
 
   final String orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
+}
+
+class _OrderSuccessScreenState extends ConsumerState<OrderSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Push (D352): after the first order the customer has a reason to want updates, so the phone's notification
+    // question is asked here, once. Later only from Settings.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(ref.read(pushCoordinatorProvider).askAfterOrder());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final orderId = widget.orderId;
     final c = illustratedColors(context);
     final live = ref.watch(orderDetailProvider(orderId));
     final placed = ref.watch(placedOrdersProvider)[orderId];

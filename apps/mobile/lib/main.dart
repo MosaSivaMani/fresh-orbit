@@ -6,6 +6,8 @@ import 'api/token_store.dart';
 import 'app.dart';
 import 'core/app_prefs.dart';
 import 'core/crash_reporter.dart';
+import 'core/fcm_push_service.dart';
+import 'core/push_config.dart';
 import 'demo/demo_app.dart';
 import 'demo/demo_backend.dart';
 import 'state/core_providers.dart';
@@ -34,12 +36,20 @@ Future<void> main() async {
   }
   final tokens = TokenStore(SecureSecretStore());
   await tokens.load();
+  // Push (D350): Firebase only when the build carries its values; otherwise push is off, said once in the log.
+  final push = selectPushService(
+    values: FirebaseValues.fromDefines,
+    isWeb: kIsWeb,
+    firebase: (values) => FcmPushService(values, debugPrint),
+    log: debugPrint,
+  );
   runApp(
     ProviderScope(
       overrides: [
         appPrefsProvider.overrideWithValue(prefs),
         tokenStoreProvider.overrideWithValue(tokens),
         crashReporterProvider.overrideWithValue(reporter),
+        pushServiceProvider.overrideWithValue(push),
       ],
       // Screens show an error with a "Try again" button instead of silent automatic retries.
       retry: (_, _) => null,
