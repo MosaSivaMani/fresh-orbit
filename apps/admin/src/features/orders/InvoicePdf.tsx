@@ -100,7 +100,11 @@ export function OrderInvoiceSection({
 function OrderInvoicePdf({ orderId, invoiceNumber }: { orderId: Id; invoiceNumber: string }) {
   const invoice = useOrderInvoice(orderId);
   if (invoice.isPending) {
-    return <Button variant="outline" size="sm" disabled loading>PDF</Button>;
+    return (
+      <Button variant="outline" size="sm" disabled loading>
+        PDF
+      </Button>
+    );
   }
   if (invoice.isError) {
     return <span className="text-text-muted text-sm">The PDF link could not be loaded.</span>;
