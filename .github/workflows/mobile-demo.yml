@@ -16,6 +16,11 @@
 # A second APK, `fresh-orbit-live-<sha>.apk`, is a profile build WITHOUT DEMO, pointed at the free Render demo API
 # (vars.DEMO_API_ORIGIN, default below), so the owner sees the real sample catalogue, pictures, OTP sign-in and orders.
 #
+# Push (D350): the live APK gets the Firebase values from the repository secrets FIREBASE_API_KEY, FIREBASE_APP_ID,
+# FIREBASE_MESSAGING_SENDER_ID and FIREBASE_PROJECT_ID when they exist (docs/runbooks/mobile-release.md, "Push
+# notifications"). Without them push is off in the app (a notice says so); some but not all of them fail the run.
+# The DEMO APK has no server, so it never gets push.
+#
 # Both APKs hold only the 64-bit ARM code (D321): the owner's phone download of the two-ABI APK (79 MB) kept stalling
 # on mobile data; nearly every Android phone since 2019 is arm64, and 32-bit-only phones cannot install these builds.
 #
@@ -108,11 +113,45 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "### Demo APK" >> "$GITHUB_STEP_SUMMARY"
           echo "\`$name\`: $((size_bytes / 1024 / 1024)) MB ($size_bytes bytes)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Check the Firebase values (push)
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          set_count=0
+          missing=""
+          for name in FIREBASE_API_KEY FIREBASE_APP_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_PROJECT_ID; do
+            if [ -n "${!name}" ]; then set_count=$((set_count + 1)); else missing="$missing $name"; fi
+          done
+          echo "### Push" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$set_count" -eq 0 ]; then
+            msg="No Firebase secrets, so push notifications are off in the live APK (docs/runbooks/mobile-release.md, Push notifications)."
+            echo "::notice title=Push off::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$missing" ]; then
+            echo "::error title=Firebase values incomplete::These secrets are missing:$missing (docs/runbooks/mobile-release.md, Push notifications)."
+            exit 1
+          else
+            echo "The live APK has push notifications (Firebase project $FIREBASE_PROJECT_ID)." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Build profile APK against the Render demo API
         env:
           API_ORIGIN: ${{ vars.DEMO_API_ORIGIN || 'https://fresh-orbit-demo-api.onrender.com' }}
           WEB_ORIGIN: ${{ vars.DEMO_WEB_ORIGIN || 'https://fresh-orbit-demo-web.onrender.com' }}
-        run: flutter build apk --profile --dart-define=API_BASE_URL="$API_ORIGIN" --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" --target-platform android-arm64
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          flutter build apk --profile --target-platform android-arm64 \
+            --dart-define=API_BASE_URL="$API_ORIGIN" \
+            --dart-define=WEBSITE_BASE_URL="$WEB_ORIGIN" \
+            --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \
+            --dart-define=FIREBASE_APP_ID="$FIREBASE_APP_ID" \
+            --dart-define=FIREBASE_MESSAGING_SENDER_ID="$FIREBASE_MESSAGING_SENDER_ID" \
+            --dart-define=FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID"
       - name: Name the live APK
         id: live
         run: |

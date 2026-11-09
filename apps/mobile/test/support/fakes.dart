@@ -1,6 +1,8 @@
 // In-memory repositories for provider and widget tests. Each method delegates to an overridable handler and
 // records its calls; unset handlers throw so a test notices calls it did not expect.
 
+import 'dart:async';
+
 import 'package:fresh_orbit_app/api/models/account.dart';
 import 'package:fresh_orbit_app/api/models/auth.dart';
 import 'package:fresh_orbit_app/api/models/cart.dart';
@@ -10,6 +12,7 @@ import 'package:fresh_orbit_app/api/models/common.dart';
 import 'package:fresh_orbit_app/api/models/locations.dart';
 import 'package:fresh_orbit_app/api/models/orders.dart';
 import 'package:fresh_orbit_app/api/repositories.dart';
+import 'package:fresh_orbit_app/core/push_service.dart';
 
 Never _unexpected(String name) => throw StateError('Unexpected call: $name');
 
@@ -343,11 +346,16 @@ class FakeAccountRepository implements AccountRepository {
   Future<List<NotificationPreference>> replacePreferences(List<NotificationPreference> preferences) async =>
       prefs = preferences;
 
-  @override
-  Future<void> registerDeviceToken({required String pushToken, required String platform}) async {}
+  /// `PUT /me/device-tokens` calls as `token@platform`, and `DELETE` calls.
+  final List<String> registeredTokens = [];
+  final List<String> unregisteredTokens = [];
 
   @override
-  Future<void> unregisterDeviceToken(String pushToken) async {}
+  Future<void> registerDeviceToken({required String pushToken, required String platform}) async =>
+      registeredTokens.add('$pushToken@$platform');
+
+  @override
+  Future<void> unregisterDeviceToken(String pushToken) async => unregisteredTokens.add(pushToken);
 
   final List<String> stockAlerts = [];
 
@@ -394,3 +402,62 @@ Address address({String id = 'a1', String pincode = '600041', bool isDefault = t
   'isServiceable': null,
   'version': '1',
 });
+
+/// Push without Firebase (D349): permission answers, a token, and taps and refreshes a test can send.
+class FakePushService implements PushService {
+  FakePushService({
+    this.available = true,
+    this.current = PushPermission.denied,
+    this.answer = PushPermission.granted,
+    this.pushToken = 'fcm-token-1',
+    this.initialOpen,
+  });
+
+  @override
+  final bool available;
+
+  /// What [permission] reports; [requestPermission] sets it to [answer].
+  PushPermission current;
+  PushPermission answer;
+  String? pushToken;
+  PushOpen? initialOpen;
+  int permissionRequests = 0;
+  int initializeCalls = 0;
+  final _refreshes = StreamController<String>.broadcast();
+  final _opened = StreamController<PushOpen>.broadcast();
+
+  void refreshToken(String token) {
+    pushToken = token;
+    _refreshes.add(token);
+  }
+
+  void tap(Map<String, String> data) => _opened.add(PushOpen(data));
+
+  @override
+  Future<void> initialize() async => initializeCalls++;
+
+  @override
+  Future<PushPermission> permission() async => current;
+
+  @override
+  Future<PushPermission> requestPermission() async {
+    permissionRequests++;
+    return current = answer;
+  }
+
+  @override
+  Future<String?> token() async => pushToken;
+
+  @override
+  Stream<String> get tokenRefreshes => _refreshes.stream;
+
+  @override
+  Stream<PushOpen> get opened => _opened.stream;
+
+  @override
+  Future<PushOpen?> takeInitialOpen() async {
+    final open = initialOpen;
+    initialOpen = null;
+    return open;
+  }
+}

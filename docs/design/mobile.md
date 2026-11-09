@@ -121,7 +121,7 @@ repositories know HTTP.
 | File | Providers | Notes |
 |---|---|---|
 | `core_providers.dart` | `appPrefsProvider`, `tokenStoreProvider` (overridden in `main.dart`), `apiBaseUrlProvider`, `pushServiceProvider`, `dioProvider`, `apiClientProvider`, one provider per repository | Tests override the repositories with fakes |
-| `session.dart` | `sessionProvider` (`SessionController`) | `requestOtp`, `verifyOtp` (sends the guest cart token for the merge, stores tokens, registers the push token), `signOut`; the interceptor calls `onSessionEnded` when refresh fails |
+| `session.dart` | `sessionProvider` (`SessionController`) | `requestOtp`, `verifyOtp` (sends the guest cart token for the merge, stores tokens, registers the push token through `PushCoordinator`, D349), `signOut` (removes the push token first, D349); the interceptor calls `onSessionEnded` when refresh fails |
 | `location_state.dart` | `pincodeProvider`, `serviceabilityProvider(pincode)`, `currentServiceabilityProvider`, `deliverySlotsProvider(pincode)` | Pincode persists in shared_preferences and goes out as `X-Pincode` |
 | `catalog_state.dart` | `homeProvider`, `categoriesProvider`, `productListProvider(ProductRequest)` (paged, `loadMore`), `productDetailProvider`, `searchSuggestionsProvider` | Re-read when the pincode changes (prices are per location) |
 | `cart_state.dart` | `cartProvider` (`CartController`), `cartLineCountProvider` | Every write replaces state with the cart the server returns. `CART_NOT_FOUND` → empty cart and the guest token cleared. Re-read on sign-in/out |
@@ -174,7 +174,7 @@ Paths are under `/api/v1/`.
 | Product detail | `GET products/{slug}?preparation=`, `POST cart/items`, `PUT/DELETE me/wishlist/{productId}` |
 | Wishlist | `GET me/wishlist` |
 | Cart | `GET cart`, `PATCH/DELETE cart/items/{lineId}`, `DELETE cart`, `PUT/DELETE cart/coupon`; product detail on demand for the quantity sheet |
-| Login | `POST auth/otp/request`, `POST auth/otp/verify` (with `guestCartToken`), `PUT me/device-tokens` (when push is set up) |
+| Login | `POST auth/otp/request`, `POST auth/otp/verify` (with `guestCartToken`), `PUT me/device-tokens` (when push is on and permitted, D349) |
 | Checkout | `GET me/addresses`, `POST me/addresses`, `GET delivery-slots?pincode=`, `POST checkout/preview`, `POST orders` (`Idempotency-Key`) |
 | Order success | `GET orders/{id}` |
 | My orders | `GET orders?page=&pageSize=&sort=-placedAt` |
@@ -227,25 +227,31 @@ The app now uses the price quote, the business profile and stock alerts (§17); 
   Cart and Ordering are merged.
 - Complaint photos: the complaint is sent as multipart without images; an image picker is still to add.
 - Final illustrations are not in yet: every slot draws its placeholder until the owner's PNGs land (§14).
-- FCM is not added (below). The Android 13 `POST_NOTIFICATIONS` permission is already declared (MA-6).
+- Push (FCM) is wired (§10, D349–D352); it is off in builds without the Firebase values.
 
-## 10. Push notifications (FCM)
+## 10. Push notifications (FCM, D349–D352)
 
-The app depends only on `PushService` (`lib/core/push_service.dart`); `NoopPushService` is used today.
-`firebase_messaging` is **not** added until the owner creates a Firebase project. Steps then:
+Screens and state depend only on `PushService` (`lib/core/push_service.dart`, no Firebase import). Two
+implementations: `FcmPushService` (`lib/core/fcm_push_service.dart`, the only file that imports `firebase_core` and
+`firebase_messaging`) and `NoopPushService` (push off). `main.dart` picks one with `selectPushService`
+(`lib/core/push_config.dart`) and overrides `pushServiceProvider`.
 
-1. Create a Firebase project (free Spark plan). Add an Android app `in.freshorbit.app` and an iOS app
-   `in.freshorbit.app`.
-2. Download `google-services.json` → `apps/mobile/android/app/`, `GoogleService-Info.plist` →
-   `apps/mobile/ios/Runner/`. Keep both out of git (they are per-environment); CI writes them from secrets.
-3. Add `firebase_core` and `firebase_messaging` (BSD-3) with pinned versions; run `flutterfire configure` or
-   add the Google services Gradle plugin by hand.
-4. iOS: upload an APNs key (.p8) to Firebase; enable Push Notifications and Background Modes → Remote
-   notifications in Xcode.
-5. Write `FcmPushService implements PushService` (permission request, `getToken`, `onTokenRefresh`,
-   `onMessageOpenedApp` → `PushOpen`), and override `pushServiceProvider` in `main.dart`.
-6. The session already sends the token with `PUT me/device-tokens` after sign-in and removes it on sign-out.
-7. Backend: configure the FCM adapter behind `IPushSender` (D28) with the service account.
+| Part | What the app does |
+|---|---|
+| Configuration (D350) | Firebase starts from `--dart-define` values `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID` (`Firebase.initializeApp(options: …)`), so there is no `google-services.json`, no `firebase_options.dart` and no Google Services Gradle plugin; `.gitignore` keeps those files out. None set → `NoopPushService` and one log line "Push notifications are off: …". Some set → push off, the log names the missing ones (the workflows refuse such a build). The web preview never has push. If Firebase fails to start on the phone (no Google Play services), push is off for that run, logged once, never a crash. |
+| Permission (D352) | Never at launch. Asked once on the order-placed screen after the first order (`AppPrefs.pushPermissionAsked`), then only from Settings › Notifications › "Notifications on this phone" (On / Off with "Turn on"; a refused question says to allow it in the phone settings). The row is hidden when the build has no push. Android 13+ asks through `POST_NOTIFICATIONS` (declared in the manifest). |
+| Token (D349) | `PushCoordinator` (`lib/state/push_state.dart`) registers the token with `PUT /me/device-tokens` (`provider` FCM, `platform` ANDROID/IOS) while signed in and permitted: after a sign-in (not awaited, the sign-in never waits for Firebase), at launch when already signed in, on every `onTokenRefresh`, and right after the customer allows notifications. A failed call is quiet and tried again at the next of those moments. Sign-out calls `DELETE /me/device-tokens/{token}` first, while the access token still works, then logs out. |
+| Tap (D351) | The server sends `data { templateCode, messageId, orderId?, productSlug? }`. `pushRoute` maps it: `orderId` (a UUID) → `/orders/{orderId}`, `productSlug` (lower-case words and dashes) → `/product/{slug}`, any other message of ours → `/account/notifications`, anything else → nothing. Values are checked before they become a path. A tap that launched the app waits until the splash screen has routed (never over `/splash` or `/onboarding`), then `go`es to the route; a signed-out customer passes through the sign-in and returns (`from`). |
+| App open | Android shows no notification while the app is in front; the screens refresh on resume and by pull (D313). An in-app banner is a follow-up. |
+
+Tests (`test/state/push_test.dart`, `FakePushService` in `test/support/fakes.dart`, no Firebase): values missing,
+partial and complete; routes from data, including malformed ids; registration after sign-in, at launch, on refresh,
+never signed out or unpermitted; unregister on sign-out; asking once after an order and again from Settings; the
+Settings row; a tap and a launching tap opening the order.
+
+iOS still needs the owner's Apple team (MA-4), an APNs key in Firebase, the iOS app's own App ID as
+`FIREBASE_APP_ID` in iOS builds, and the Push Notifications and Background Modes › Remote notifications capabilities.
+Owner steps for Android: `runbooks/mobile-release.md`, "Push notifications".
 
 ## 11. Release needs
 
@@ -287,6 +293,8 @@ All from pub.dev, permissive licences, versions pinned exactly in `pubspec.yaml`
 | `shared_preferences` | 2.5.6 | BSD-3-Clause | Pincode, onboarding flag, theme mode |
 | `intl` | 0.20.3 | BSD-3-Clause | IST date and time formatting |
 | `uuid` | 4.6.0 | MIT | Idempotency keys |
+| `firebase_core` | 5.1.0 | BSD-3-Clause (Firebase Android/iOS SDKs Apache-2.0) | Starts Firebase from the build's values (D350) |
+| `firebase_messaging` | 17.0.1 | BSD-3-Clause (Firebase SDKs Apache-2.0) | Push: token, permission, taps (D349) |
 | `url_launcher` | 6.3.3 | BSD-3-Clause | Call rider / support, e-mail, invoice PDF, website policy pages (D299) |
 | `image_picker` | 1.1.2 | BSD-3-Clause (Apache-2.0 for the Android part) | Photos for Report a problem; `pubspec.lock` must be refreshed with `flutter pub get` |
 | `fresh_theme` | path | Ours | Theme from design tokens |
@@ -804,12 +812,12 @@ mobile-account-app).
 | Pictures (MB-7, D310) | `FreshNetworkImage`: 7-day disk cache, decoded at the shown width | `fresh_theme` `network_picture*.dart` | `test/core/picture_cache_test.dart` |
 | Load more (MB-8) | Only the grid's own vertical scroll loads the next page | `product_grid.dart` (`isGridScrollNearEnd`) | `browse_sizes_test.dart` |
 | Checkout (MO-1 to MO-5, D311) | "Deliver this cart to …"; empty-cart preview read, "Back to cart"; Back while placing stays; pending Idempotency-Key kept (`pendingPlaceProvider`); order-placed shows the `POST /orders` answer (`placedOrdersProvider`); only COD and UPI on delivery offered | `features/checkout/`, `state/checkout_state.dart`, `api/models/checkout.dart` | `test/widgets/checkout_edges_test.dart` |
-| Push prep (MA-6) | `POST_NOTIFICATIONS` declared; push stays `NoopPushService` until the Firebase project exists (§10) | `AndroidManifest.xml` | — |
+| Push (MA-6, D349–D352) | Real FCM client; off without the Firebase build values; permission after the first order or from Settings; token registered and removed; taps open the order (§10) | `core/push_service.dart`, `core/fcm_push_service.dart`, `core/push_config.dart`, `state/push_state.dart` | `test/state/push_test.dart` |
 | Store build (MA-7, D309) | Manual signed AAB with obfuscation and kept symbols | `.github/workflows/mobile-release.yml` | — |
 | Languages (MA-8, D312) | Language choice hidden while only English exists | `app.dart` (`availableLanguages`), `settings_screen.dart`, `account_screens.dart` | `bold_screens_test.dart` |
 | Home text size (D306) | Above text scale 1.0 the first screen keeps its natural size and the page scrolls; at 1.0 it still fits | `features/catalog/home_screen.dart` (`homeFitMaxTextScale`) | `home_screen_test.dart` |
 | Refresh (MB-20, MO-12, MO-15, D313) | Home pull-to-refresh; after 5 minutes in the background the home, lists, cart, slots and orders are read again; the empty orders block can be pulled | `home_screen.dart`, `widgets/refresh_on_resume.dart`, `orders_screen.dart` | `home_screen_test.dart`, `test/widgets/refresh_test.dart` |
 
-Still open: MA-4 (needs the owner's Apple team), MA-6 push itself (needs the Firebase project), MA-9 map pin / "use
+Still open: MA-4 (needs the owner's Apple team), MA-6 push on a real phone (needs the owner's Firebase project, §10), MA-9 map pin / "use
 my location" (needs a location plugin and a map choice; not started), and the admin's `createAuthFetch` refresh rule
 (D307).

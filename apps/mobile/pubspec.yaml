@@ -13,6 +13,9 @@ dependencies:
   flutter:
     sdk: flutter
   dio: 5.11.1
+  # Push (D349, D350): FCM. Started only when the build carries the Firebase --dart-define values.
+  firebase_core: 5.1.0
+  firebase_messaging: 17.0.1
   flutter_riverpod: 3.4.3
   flutter_secure_storage: 11.2.0
   fresh_theme:

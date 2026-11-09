@@ -206,12 +206,48 @@ run GlitchTip (free, MIT; one Docker container plus Postgres and Redis, on the s
 hosted plan), create a project, and copy its DSN (`https://<key>@<host>/<project>`) into the repository variable
 `CRASH_REPORT_DSN`. The app sends only scrubbed text: no phone numbers, codes, tokens, e-mail addresses or user ids.
 
-## Push notifications: what is ready (MA-6)
+## Push notifications (D349–D352, MA-6)
 
-Code side, done without an account: the `PushService` seam (`lib/core/push_service.dart`, no-op today), the
-device-token calls after sign-in and sign-out, and the Android 13 `POST_NOTIFICATIONS` permission in the manifest
-(asked at a natural moment once push works, never at launch). Owner side, still needed: the Firebase project and the
-APNs key; then follow `docs/design/mobile.md` §10.
+The app has a real push client (`firebase_messaging`). It starts Firebase from four build values, never from a file
+in the repository (D350): `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID` and
+`FIREBASE_PROJECT_ID`. Without them the app builds and runs with push off (one line in the device log,
+`adb logcat | grep "Push notifications are off"`); with only some of them the workflows refuse the build. The app asks
+for the notification permission once, on the order-placed screen after the first order, and otherwise only from
+Settings › "Notifications on this phone" (D352).
+
+What the owner does (once, about 15 minutes, free Spark plan):
+
+1. Open <https://console.firebase.google.com>, **Add project** (for example "Fresh Orbit"; Google Analytics is not
+   needed, turn it off).
+2. In the project, **Add app › Android**. Package name: `in.freshorbit.app` (the `applicationId` in
+   `apps/mobile/android/app/build.gradle.kts`). The nickname is free; the SHA-1 is not needed for push. Click
+   **Register app**. Firebase offers `google-services.json`: download it only to read four values from it, then
+   delete it (it is never committed; `apps/mobile/.gitignore` keeps it out). Skip the "Add Firebase SDK" steps:
+   the app already has them.
+3. Read the four values (Project settings › General › Your apps › the Android app shows them too):
+
+   | GitHub secret | Where in Firebase | In `google-services.json` |
+   |---|---|---|
+   | `FIREBASE_API_KEY` | Project settings › General › Web API key (or the Android app's API key) | `client[0].api_key[0].current_key` |
+   | `FIREBASE_APP_ID` | Your apps › Android › App ID (`1:…:android:…`) | `client[0].client_info.mobilesdk_app_id` |
+   | `FIREBASE_MESSAGING_SENDER_ID` | Project settings › Cloud Messaging › Sender ID (the project number) | `project_info.project_number` |
+   | `FIREBASE_PROJECT_ID` | Project settings › General › Project ID | `project_info.project_id` |
+
+4. GitHub › the repository › Settings › Secrets and variables › Actions › **New repository secret**, once for each
+   of the four names above. These values are not passwords (they end up inside every APK), but keeping them as
+   secrets keeps them out of the logs.
+5. Run **Mobile demo APK** from main. The run summary's "Push" section says "The live APK has push notifications";
+   the store build (**Mobile release**) passes the same four values.
+6. Server side, same project: the service account key and `PUSH_PROVIDER=FCM` (`runbooks/security-configuration.md`
+   §2.3). The Render demo API needs `PUSH_PROVIDER`, `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` in its
+   environment for the live APK to receive pushes.
+7. Check on a phone: install the live APK, sign in, place an order, allow notifications when asked, close the app;
+   in the admin, move the order to Preparing. The phone shows the ORDER_PREPARING notice; tapping it opens that
+   order.
+
+iOS is not wired yet (no Apple team, MA-4): it needs an iOS app in the same Firebase project (its own App ID passed
+as `FIREBASE_APP_ID` in the iOS build), an APNs key (.p8) uploaded to Firebase, and Push Notifications plus
+Background Modes › Remote notifications in Xcode.
 
 ## iOS team (MA-4)
 

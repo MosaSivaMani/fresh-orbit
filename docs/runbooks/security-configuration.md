@@ -173,8 +173,9 @@ What the owner does (once):
 2. Project settings → Service accounts → **Generate new private key**. Put the file's content on one line (it is
    already valid JSON on one line once the line breaks between fields are removed; keep the `\n` inside
    `private_key` as they are) and set `FCM_SERVICE_ACCOUNT_JSON='<that line>'`. Delete the downloaded file afterwards.
-3. Set `PUSH_PROVIDER=FCM` and redeploy. Until the mobile app registers real FCM tokens (the app's `PushService` is
-   still a stub, a follow-up), no customer device receives push; the in-app inbox still shows every notice.
+3. Set `PUSH_PROVIDER=FCM` and redeploy. The app registers its FCM token once it is built with the same project's
+   Firebase values (D349, D350; `runbooks/mobile-release.md`, "Push notifications"); a phone with an app built
+   without them gets no push, and the in-app inbox still shows every notice.
 
 What the hosts refuse:
 - Outside Development, Testing and Demo, the Api and Worker refuse to start when `PUSH_PROVIDER` is empty,
