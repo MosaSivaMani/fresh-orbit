@@ -60,8 +60,10 @@ function formatValue(
   row: ReportRow | null,
   nameOf: (id: string) => string,
 ): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return column.nullLabel ?? "—";
   switch (column.kind) {
+    case "flag":
+      return value === true ? "Yes" : "No";
     case "date":
       return formatCalendarDate(String(value));
     case "month":
@@ -238,6 +240,7 @@ export function ReportsPage() {
           />
         </FilterBar>
 
+        <ReportNotice report={report} totals={data?.totals} />
         <Totals report={report} totals={data?.totals} nameOf={scope.nameOf} />
 
         <DataTable
@@ -315,6 +318,27 @@ function ReportFilters({
         </div>
       ),
     );
+}
+
+/** The report's warning about its server totals, e.g. costs not configured (D367). */
+function ReportNotice({
+  report,
+  totals,
+}: {
+  report: ReportDefinition;
+  totals: ReportRow | undefined;
+}) {
+  const text = totals && report.notice ? report.notice(totals) : null;
+  if (!text) return null;
+  return (
+    <p
+      role="status"
+      data-testid="report-notice"
+      className="bg-warning-subtle text-warning-text rounded-md px-3 py-2 text-sm"
+    >
+      {text}
+    </p>
+  );
 }
 
 /** Server totals over every matching row (not only this page). */

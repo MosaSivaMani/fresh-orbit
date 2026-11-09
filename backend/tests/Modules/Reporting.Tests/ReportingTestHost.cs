@@ -41,7 +41,7 @@ public sealed class ReportingSourcesModel : IModuleModel
         CREATE SCHEMA IF NOT EXISTS payments;
         DROP TABLE IF EXISTS locations.cities, locations.fulfillment_locations, catalog.products, catalog.product_variants,
             ordering.orders, ordering.order_items, ordering.complaints, inventory.stock_items, inventory.stock_movements,
-            delivery.delivery_slots, payments.refunds, payments.reconciliation_issues CASCADE;
+            delivery.delivery_slots, delivery.shipments, payments.refunds, payments.reconciliation_issues CASCADE;
         CREATE TABLE locations.cities (id uuid PRIMARY KEY, code text, name text, time_zone text NOT NULL);
         CREATE TABLE locations.fulfillment_locations (id uuid PRIMARY KEY, city_id uuid NOT NULL, code text, name text);
         CREATE TABLE catalog.products (id uuid PRIMARY KEY, category_id uuid, name text NOT NULL);
@@ -69,6 +69,9 @@ public sealed class ReportingSourcesModel : IModuleModel
         CREATE TABLE delivery.delivery_slots (
             id uuid PRIMARY KEY, fulfillment_location_id uuid NOT NULL, slot_date date NOT NULL, start_at timestamptz NOT NULL,
             end_at timestamptz NOT NULL, capacity integer NOT NULL, booked_count integer NOT NULL DEFAULT 0, status text NOT NULL DEFAULT 'OPEN');
+        CREATE TABLE delivery.shipments (
+            id uuid PRIMARY KEY, order_id uuid NOT NULL UNIQUE, fulfillment_location_id uuid NOT NULL, status text NOT NULL,
+            delivered_at timestamptz, delivery_cost_paise bigint, packaging_cost_paise bigint);
         CREATE TABLE payments.refunds (
             id uuid PRIMARY KEY, payment_id uuid, order_id uuid NOT NULL, fulfillment_location_id uuid NOT NULL, amount_paise bigint NOT NULL,
             reason_code text NOT NULL, method text NOT NULL DEFAULT 'ORIGINAL', status text NOT NULL, succeeded_at timestamptz,

@@ -1,4 +1,4 @@
-import { type ReportKey } from "../../api/types/reports";
+import { type ReportKey, type ReportRow } from "../../api/types/reports";
 
 // How each report's server columns are shown. Names are the API's camelCase JSON names (docs/api §4.20,
 // backend Reporting ReportDefinitions.cs). The admin only formats values; every number, including totals,
@@ -14,13 +14,17 @@ export type ColumnKind =
   | "money"
   | "bp"
   /** Stock quantity in the row's `stockUnit` (grams or pieces). */
-  | "quantity";
+  | "quantity"
+  /** A server true/false flag, shown as Yes / No. */
+  | "flag";
 
 export interface ReportColumn {
   name: string;
   label: string;
   kind: ColumnKind;
   sortable?: boolean;
+  /** Shown instead of "—" when the server sends null (e.g. a cost that is not configured, D367). */
+  nullLabel?: string;
 }
 
 export interface ReportFilterDef {
@@ -42,6 +46,8 @@ export interface ReportDefinition {
   filters: readonly ReportFilterDef[];
   /** False for reports without server paging / sorting (repeat customers). */
   paged: boolean;
+  /** A warning to show above the totals, from server values only (never derived). */
+  notice?: (totals: ReportRow) => string | null;
 }
 
 const col = (name: string, label: string, kind: ColumnKind, sortable = true): ReportColumn => ({
@@ -49,6 +55,12 @@ const col = (name: string, label: string, kind: ColumnKind, sortable = true): Re
   label,
   kind,
   sortable,
+});
+
+/** D367: the server sends null for a cost (and the contribution after it) that is not configured. */
+const notConfiguredWhenNull = (column: ReportColumn): ReportColumn => ({
+  ...column,
+  nullLabel: "Not configured",
 });
 
 const DATE = col("businessDate", "Date", "date");
@@ -132,27 +144,39 @@ export const REPORTS: readonly ReportDefinition[] = [
   {
     key: "contribution-margin",
     title: "Contribution margin",
-    description: "Revenue after cost of goods, refunds and delivery cost.",
+    description: "Revenue after cost of goods, refunds, delivery cost and packaging cost.",
     paged: true,
     columns: [
       DATE,
       LOCATION,
+      col("ordersDelivered", "Delivered", "count"),
       col("revenueExTaxPaise", "Revenue (ex. tax)", "money"),
       col("saleCostPaise", "Cost of goods", "money"),
       col("refundsPaise", "Refunds", "money"),
-      col("deliveryCostPaise", "Delivery cost", "money"),
-      col("contributionPaise", "Contribution", "money"),
-      col("contributionMarginBp", "Margin", "bp"),
+      col("grossContributionPaise", "Before delivery and packaging", "money"),
+      notConfiguredWhenNull(col("deliveryCostPaise", "Delivery cost", "money")),
+      notConfiguredWhenNull(col("packagingCostPaise", "Packaging cost", "money")),
+      notConfiguredWhenNull(col("contributionPaise", "Contribution", "money")),
+      notConfiguredWhenNull(col("contributionMarginBp", "Margin", "bp")),
+      col("costsNotConfigured", "Costs not configured", "flag"),
     ],
     totals: [
+      col("ordersDelivered", "Delivered orders", "count"),
       col("revenueExTaxPaise", "Revenue (ex. tax)", "money"),
       col("saleCostPaise", "Cost of goods", "money"),
       col("refundsPaise", "Refunds", "money"),
-      col("deliveryCostPaise", "Delivery cost", "money"),
-      col("contributionPaise", "Contribution", "money"),
-      col("contributionMarginBp", "Margin", "bp"),
+      col("grossContributionPaise", "Before delivery and packaging", "money"),
+      notConfiguredWhenNull(col("deliveryCostPaise", "Delivery cost", "money")),
+      notConfiguredWhenNull(col("packagingCostPaise", "Packaging cost", "money")),
+      notConfiguredWhenNull(col("contributionPaise", "Contribution", "money")),
+      notConfiguredWhenNull(col("contributionMarginBp", "Margin", "bp")),
+      col("ordersWithoutCosts", "Orders without costs", "count"),
     ],
     filters: [],
+    notice: (totals) =>
+      totals.costsNotConfigured === true
+        ? "Costs not configured: some delivered orders have no recorded delivery or packaging cost, so those costs and the contribution after them are not shown. Set the costs on each location's page; orders delivered before that stay not configured."
+        : null,
   },
   {
     key: "waste",

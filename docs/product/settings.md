@@ -53,3 +53,10 @@ Owner: E1. Schema `settings`. Uses `Audit.Public`, `Delivery.Public` (implements
 | SaveBusinessProfile | `PUT /admin/settings/business-profile` | BusinessProfile |
 | SaveOrderPolicy | `PUT /admin/settings/order-policies/{cityId|default}` | OrderPolicy |
 | SaveNumberSeries | `PUT /admin/settings/number-series/{code}/{period}` | NumberSeries |
+
+## 5. Not in Settings: delivery and packaging cost (D365)
+
+Per-order costs of a fulfillment location (rider pay per drop, packaging per order) are **not** store settings: they are
+owned by Delivery (`delivery.location_cost_rates`, `GET/PUT /admin/delivery/locations/{fulfillmentLocationId}/cost-rates`,
+`docs/product/delivery.md` §12), because Delivery records them on each shipment at delivery (D366). Staff set them on
+the location page in the admin.

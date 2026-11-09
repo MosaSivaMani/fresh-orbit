@@ -1,3 +1,4 @@
+using FreshOrbit.Delivery.Domain.Costs;
 using FreshOrbit.Delivery.Domain.Riders;
 using FreshOrbit.Delivery.Domain.Shipments;
 using FreshOrbit.Delivery.Domain.Slots;
@@ -63,4 +64,12 @@ internal sealed class ShipmentRepository(FreshOrbitDbContext db) : IShipmentRepo
         => db.Set<Shipment>().CountAsync(s => s.RiderId == riderId && (s.Status == ShipmentStatus.Assigned || s.Status == ShipmentStatus.OutForDelivery || s.Status == ShipmentStatus.Failed), cancellationToken);
 
     public void Add(Shipment shipment) => db.Add(shipment);
+}
+
+internal sealed class LocationCostRatesRepository(FreshOrbitDbContext db) : ILocationCostRatesRepository
+{
+    public Task<LocationCostRates?> GetByLocationAsync(Guid fulfillmentLocationId, CancellationToken cancellationToken)
+        => db.Set<LocationCostRates>().FirstOrDefaultAsync(r => r.FulfillmentLocationId == fulfillmentLocationId, cancellationToken);
+
+    public void Add(LocationCostRates rates) => db.Add(rates);
 }
